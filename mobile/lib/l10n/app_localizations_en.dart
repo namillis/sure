@@ -1343,4 +1343,160 @@ class AppLocalizationsEn extends AppLocalizations {
   String tradeQuantityAtPrice(String quantity, String price) {
     return '$quantity @ $price';
   }
+
+  @override
+  String get accountActions => 'More actions';
+
+  @override
+  String get accountActionsUpdateBalance => 'Update balance';
+
+  @override
+  String get accountActionsAddTrade => 'Add trade';
+
+  @override
+  String get accountActionsEditTrade => 'Edit trade';
+
+  @override
+  String get accountActionsSyncNow => 'Sync now';
+
+  @override
+  String get accountActionsDate => 'Date';
+
+  @override
+  String get accountActionsNewBalance => 'New balance';
+
+  @override
+  String accountActionsCurrentBalance(String amount) {
+    return 'Current balance: $amount';
+  }
+
+  @override
+  String get accountActionsNote => 'Note (optional)';
+
+  @override
+  String get accountActionsSave => 'Save';
+
+  @override
+  String get accountActionsRequired => 'Required';
+
+  @override
+  String get accountActionsBalanceRequired => 'Enter the new balance';
+
+  @override
+  String get accountActionsInvalidNumber => 'Enter a valid number';
+
+  @override
+  String get accountActionsMustBePositive => 'Must be greater than zero';
+
+  @override
+  String get accountActionsFeeInvalid => 'Fees can\'t be negative';
+
+  @override
+  String get accountActionsBalanceUpdated => 'Balance updated';
+
+  @override
+  String get accountActionsBuy => 'Buy';
+
+  @override
+  String get accountActionsSell => 'Sell';
+
+  @override
+  String get accountActionsSecurity => 'Security';
+
+  @override
+  String get accountActionsSecurityHint => 'Ticker, e.g. AAPL';
+
+  @override
+  String get accountActionsSecurityRequired => 'Enter a ticker';
+
+  @override
+  String get accountActionsEditTradeNote =>
+      'The security and fees can\'t be changed. Delete and re-add the trade instead.';
+
+  @override
+  String get accountActionsQuantity => 'Quantity';
+
+  @override
+  String get accountActionsPrice => 'Price per share';
+
+  @override
+  String get accountActionsFee => 'Fees (optional)';
+
+  @override
+  String get accountActionsTotalCost => 'Total cost';
+
+  @override
+  String get accountActionsTotalProceeds => 'Total proceeds';
+
+  @override
+  String get accountActionsTradeAdded => 'Trade added';
+
+  @override
+  String get accountActionsTradeUpdated => 'Trade updated';
+
+  @override
+  String get accountActionsTradeDeleted => 'Trade deleted';
+
+  @override
+  String get accountActionsDeleteTrade => 'Delete trade';
+
+  @override
+  String get accountActionsDeleteTradeConfirm =>
+      'Delete this trade? This can\'t be undone.';
+
+  @override
+  String get accountActionsSyncStarting => 'Starting sync...';
+
+  @override
+  String get accountActionsSyncing => 'Syncing...';
+
+  @override
+  String accountActionsSyncElapsed(String elapsed) {
+    return '$elapsed elapsed';
+  }
+
+  @override
+  String get accountActionsSyncComplete => 'Sync complete';
+
+  @override
+  String get accountActionsSyncFailed => 'Sync failed';
+
+  @override
+  String accountActionsSyncFailedDetail(String message) {
+    return 'Sync failed: $message';
+  }
+
+  @override
+  String get accountActionsSyncTimeout =>
+      'Still syncing after 2 minutes. It will keep running in the background.';
+
+  @override
+  String get accountActionsHide => 'Hide';
+
+  @override
+  String get accountActionsClose => 'Close';
+
+  @override
+  String get accountActionsNeverSynced => 'Not synced yet';
+
+  @override
+  String get accountActionsSyncedJustNow => 'Synced just now';
+
+  @override
+  String accountActionsSyncedMinutesAgo(int count) {
+    return 'Synced ${count}m ago';
+  }
+
+  @override
+  String accountActionsSyncedHoursAgo(int count) {
+    return 'Synced ${count}h ago';
+  }
+
+  @override
+  String accountActionsSyncedDaysAgo(int count) {
+    return 'Synced ${count}d ago';
+  }
+
+  @override
+  String get accountActionsSyncChipHint => 'Starts a sync of all accounts';
 }

@@ -8,6 +8,8 @@ import '../providers/categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../screens/transaction_edit_screen.dart';
 import '../screens/transaction_form_screen.dart';
+import '../screens/trade_form_screen.dart';
+import '../widgets/account_actions_menu.dart';
 import '../widgets/account_detail_header.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/holdings_list.dart';
@@ -41,6 +43,14 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
   bool _isSelectionMode = false;
   final Set<String> _selectedTransactions = {};
   Set<String> _selectedCategoryIds = {};
+
+  // Bumped after an account action so the header and lists rebuild and reload.
+  int _refreshTick = 0;
+
+  void _onAccountChanged() {
+    setState(() => _refreshTick++);
+    _loadTransactions();
+  }
 
   bool get _hasInvestmentSections =>
       widget.account.accountType == 'investment' ||
@@ -399,11 +409,18 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
               onPressed: _toggleSelectionMode,
             ),
           ],
+          AccountActionsMenu(
+            account: widget.account,
+            onChanged: _onAccountChanged,
+          ),
         ],
       ),
       body: Column(
         children: [
-          AccountDetailHeader(account: widget.account),
+          AccountDetailHeader(
+            key: ValueKey('header-$_refreshTick'),
+            account: widget.account,
+          ),
           if (_hasInvestmentSections)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -432,8 +449,19 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
             ),
           Expanded(
             child: switch (_section) {
-              _AccountSection.holdings => HoldingsList(account: widget.account),
-              _AccountSection.activity => TradesList(account: widget.account),
+              _AccountSection.holdings => HoldingsList(
+                  key: ValueKey('holdings-$_refreshTick'),
+                  account: widget.account,
+                ),
+              _AccountSection.activity => TradesList(
+                  key: ValueKey('trades-$_refreshTick'),
+                  account: widget.account,
+                  onTradeTap: (trade) async {
+                    final changed = await openTradeEditor(context,
+                        account: widget.account, trade: trade);
+                    if (changed && mounted) _onAccountChanged();
+                  },
+                ),
               _AccountSection.transactions => Consumer<TransactionsProvider>(
               builder: (context, transactionsProvider, child) {
           if (transactionsProvider.isLoading) {

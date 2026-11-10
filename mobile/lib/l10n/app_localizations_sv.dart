@@ -1357,4 +1357,160 @@ class AppLocalizationsSv extends AppLocalizations {
   String tradeQuantityAtPrice(String quantity, String price) {
     return '$quantity à $price';
   }
+
+  @override
+  String get accountActions => 'Fler åtgärder';
+
+  @override
+  String get accountActionsUpdateBalance => 'Uppdatera saldo';
+
+  @override
+  String get accountActionsAddTrade => 'Lägg till affär';
+
+  @override
+  String get accountActionsEditTrade => 'Redigera affär';
+
+  @override
+  String get accountActionsSyncNow => 'Synka nu';
+
+  @override
+  String get accountActionsDate => 'Datum';
+
+  @override
+  String get accountActionsNewBalance => 'Nytt saldo';
+
+  @override
+  String accountActionsCurrentBalance(String amount) {
+    return 'Nuvarande saldo: $amount';
+  }
+
+  @override
+  String get accountActionsNote => 'Anteckning (valfritt)';
+
+  @override
+  String get accountActionsSave => 'Spara';
+
+  @override
+  String get accountActionsRequired => 'Obligatoriskt';
+
+  @override
+  String get accountActionsBalanceRequired => 'Ange det nya saldot';
+
+  @override
+  String get accountActionsInvalidNumber => 'Ange ett giltigt tal';
+
+  @override
+  String get accountActionsMustBePositive => 'Måste vara större än noll';
+
+  @override
+  String get accountActionsFeeInvalid => 'Avgifter kan inte vara negativa';
+
+  @override
+  String get accountActionsBalanceUpdated => 'Saldot har uppdaterats';
+
+  @override
+  String get accountActionsBuy => 'Köp';
+
+  @override
+  String get accountActionsSell => 'Sälj';
+
+  @override
+  String get accountActionsSecurity => 'Värdepapper';
+
+  @override
+  String get accountActionsSecurityHint => 'Ticker, t.ex. AAPL';
+
+  @override
+  String get accountActionsSecurityRequired => 'Ange en ticker';
+
+  @override
+  String get accountActionsEditTradeNote =>
+      'Värdepapper och avgifter kan inte ändras. Ta bort affären och lägg till den igen i stället.';
+
+  @override
+  String get accountActionsQuantity => 'Antal';
+
+  @override
+  String get accountActionsPrice => 'Pris per andel';
+
+  @override
+  String get accountActionsFee => 'Avgifter (valfritt)';
+
+  @override
+  String get accountActionsTotalCost => 'Total kostnad';
+
+  @override
+  String get accountActionsTotalProceeds => 'Totalt belopp';
+
+  @override
+  String get accountActionsTradeAdded => 'Affären har lagts till';
+
+  @override
+  String get accountActionsTradeUpdated => 'Affären har uppdaterats';
+
+  @override
+  String get accountActionsTradeDeleted => 'Affären har tagits bort';
+
+  @override
+  String get accountActionsDeleteTrade => 'Ta bort affär';
+
+  @override
+  String get accountActionsDeleteTradeConfirm =>
+      'Ta bort den här affären? Det går inte att ångra.';
+
+  @override
+  String get accountActionsSyncStarting => 'Startar synk...';
+
+  @override
+  String get accountActionsSyncing => 'Synkar...';
+
+  @override
+  String accountActionsSyncElapsed(String elapsed) {
+    return '$elapsed har gått';
+  }
+
+  @override
+  String get accountActionsSyncComplete => 'Synken är klar';
+
+  @override
+  String get accountActionsSyncFailed => 'Synken misslyckades';
+
+  @override
+  String accountActionsSyncFailedDetail(String message) {
+    return 'Synken misslyckades: $message';
+  }
+
+  @override
+  String get accountActionsSyncTimeout =>
+      'Synkar fortfarande efter 2 minuter. Den fortsätter i bakgrunden.';
+
+  @override
+  String get accountActionsHide => 'Dölj';
+
+  @override
+  String get accountActionsClose => 'Stäng';
+
+  @override
+  String get accountActionsNeverSynced => 'Inte synkad än';
+
+  @override
+  String get accountActionsSyncedJustNow => 'Synkad nyss';
+
+  @override
+  String accountActionsSyncedMinutesAgo(int count) {
+    return 'Synkad för $count min sedan';
+  }
+
+  @override
+  String accountActionsSyncedHoursAgo(int count) {
+    return 'Synkad för $count tim sedan';
+  }
+
+  @override
+  String accountActionsSyncedDaysAgo(int count) {
+    return 'Synkad för $count d sedan';
+  }
+
+  @override
+  String get accountActionsSyncChipHint => 'Startar en synk av alla konton';
 }
