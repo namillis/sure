@@ -1182,22 +1182,37 @@ class _ActivityRow extends StatelessWidget {
                             _FlagIcon(Icons.swap_horiz, l.activityTransfer),
                         ],
                       ),
-                      if (categoryName != null && categoryName.isNotEmpty) ...[
+                      // Category chip and account share one line so a
+                      // row stays two lines tall.
+                      if ((categoryName != null && categoryName.isNotEmpty) ||
+                          subtitle.isNotEmpty) ...[
                         const SizedBox(height: SureSpacing.xs),
-                        _CategoryChip(
-                          name: categoryName,
-                          color: parseCategoryColor(row.categoryColor),
-                        ),
-                      ],
-                      if (subtitle.isNotEmpty) ...[
-                        const SizedBox(height: SureSpacing.xs),
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: palette.textSecondary,
-                          ),
+                        Row(
+                          children: [
+                            if (categoryName != null &&
+                                categoryName.isNotEmpty) ...[
+                              // Up to half the line; long names ellipsize.
+                              Flexible(
+                                child: _CategoryChip(
+                                  name: categoryName,
+                                  color: parseCategoryColor(row.categoryColor),
+                                ),
+                              ),
+                              if (subtitle.isNotEmpty)
+                                const SizedBox(width: SureSpacing.sm),
+                            ],
+                            if (subtitle.isNotEmpty)
+                              Expanded(
+                                child: Text(
+                                  subtitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: palette.textSecondary,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ],

@@ -3865,6 +3865,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split removed'**
   String get txnDetailSplitRemoved;
+
+  /// Tags row value on the transaction editor when the transaction has none.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags'**
+  String get txnDetailNoTags;
 }
 
 class _AppLocalizationsDelegate

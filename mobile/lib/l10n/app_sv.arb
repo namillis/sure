@@ -632,5 +632,6 @@
   "txnDetailSplitRemoveConfirmTitle": "Ta bort uppdelningen?",
   "txnDetailSplitRemoveConfirmBody": "Delarna tas bort och den ursprungliga transaktionen räknas igen.",
   "txnDetailSplitSaved": "Uppdelningen sparades",
-  "txnDetailSplitRemoved": "Uppdelningen togs bort"
+  "txnDetailSplitRemoved": "Uppdelningen togs bort",
+  "txnDetailNoTags": "Inga taggar"
 }

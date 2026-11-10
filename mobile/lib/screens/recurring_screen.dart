@@ -260,6 +260,8 @@ class _RecurringScreenState extends State<RecurringScreen> {
                 for (final item in groups[group]!)
                   _RecurringRow(
                     item: item,
+                    onLiability: _accounts.any((account) =>
+                        account.id == item.accountId && account.isLiability),
                     onTap: () => _openForm(item),
                     onSetStatus: (status) => _setStatus(item, status),
                     onDelete: () => _delete(item),
@@ -388,9 +390,14 @@ class _RecurringRow extends StatelessWidget {
     required this.onTap,
     required this.onSetStatus,
     required this.onDelete,
+    this.onLiability = false,
   });
 
   final RecurringTransaction item;
+
+  /// True when the item belongs to a loan or credit card. Money flowing into
+  /// a liability is a payment toward it, not income.
+  final bool onLiability;
   final VoidCallback onTap;
   final ValueChanged<String> onSetStatus;
   final VoidCallback onDelete;
@@ -403,6 +410,7 @@ class _RecurringRow extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final hidden = context.watch<PrivacyProvider>().hidden;
 
+    final income = item.isInflow && !onLiability;
     final amount = RecurringGrouping.amountOf(item).abs();
     final formatted = MoneyMasker.mask(
       InvestmentMath.formatMoney(amount, currency: item.currency, locale: locale),
@@ -428,13 +436,13 @@ class _RecurringRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                item.isInflow ? '+$formatted' : formatted,
+                income ? '+$formatted' : formatted,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: item.isInflow ? palette.success : palette.textPrimary,
+                  color: income ? palette.success : palette.textPrimary,
                 ),
               ),
-              if (item.isInflow)
+              if (income)
                 Text(l.recurringIncome,
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: palette.textSecondary)),

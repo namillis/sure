@@ -29,8 +29,14 @@ class TransactionMetadataPickers {
   }) async {
     final l = AppLocalizations.of(context);
     final provider = context.read<CategoriesProvider>();
+    // Sorted by full path so each subcategory sits under its parent
+    // ("Food & Dining", "Food & Dining > Groceries", ...).
+    final sortedCategories = provider.categories.toList()
+      ..sort((left, right) => left.displayName
+          .toLowerCase()
+          .compareTo(right.displayName.toLowerCase()));
     final options = _merge(
-      provider.categories
+      sortedCategories
           .map((models.Category c) => PickerOption(id: c.id, label: c.displayName)),
       extraOptions,
     );

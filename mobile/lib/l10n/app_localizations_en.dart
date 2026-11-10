@@ -2172,4 +2172,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txnDetailSplitRemoved => 'Split removed';
+
+  @override
+  String get txnDetailNoTags => 'No tags';
 }

@@ -553,7 +553,11 @@ class DashboardScreenState extends State<DashboardScreen> {
                 // Insights and spending vs normal hide themselves when the
                 // server has nothing (or the preview feature is off).
                 SliverToBoxAdapter(
-                  child: InsightsCard(key: ValueKey('insights-$_homeRefreshCount')),
+                  // Two keeps the card compact so accounts stay near the top.
+                  child: InsightsCard(
+                    key: ValueKey('insights-$_homeRefreshCount'),
+                    maxItems: 2,
+                  ),
                 ),
                 SliverToBoxAdapter(
                   child: SpendingVsNormalCard(

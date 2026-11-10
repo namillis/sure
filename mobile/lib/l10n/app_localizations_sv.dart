@@ -2190,4 +2190,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get txnDetailSplitRemoved => 'Uppdelningen togs bort';
+
+  @override
+  String get txnDetailNoTags => 'Inga taggar';
 }

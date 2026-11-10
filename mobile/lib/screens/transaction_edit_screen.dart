@@ -620,7 +620,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
                   _row(
                     title: l.transactionEditTagsLabel,
                     value: _selectedTagIds.isEmpty
-                        ? l.transactionEditNoTags
+                        ? l.txnDetailNoTags
                         : l.txnDetailTagCount(_selectedTagIds.length),
                     icon: Icons.sell_outlined,
                     onTap: enabled ? () => _pickTags(online) : null,

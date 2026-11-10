@@ -1828,5 +1828,7 @@
   "txnDetailSplitSaved": "Split saved",
   "@txnDetailSplitSaved": {"description": "Snackbar after the split was saved."},
   "txnDetailSplitRemoved": "Split removed",
-  "@txnDetailSplitRemoved": {"description": "Snackbar after the split was removed."}
+  "@txnDetailSplitRemoved": {"description": "Snackbar after the split was removed."},
+  "txnDetailNoTags": "No tags",
+  "@txnDetailNoTags": {"description": "Tags row value on the transaction editor when the transaction has none."}
 }
