@@ -109,16 +109,26 @@ class _HoldingsListState extends State<HoldingsList> {
         itemCount: _holdings.length,
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) =>
-            _HoldingRow(holding: _holdings[index]),
+            HoldingTile(holding: _holdings[index]),
       ),
     );
   }
 }
 
-class _HoldingRow extends StatelessWidget {
-  const _HoldingRow({required this.holding});
+/// One position: ticker and name, shares at price, market value and
+/// unrealized gain. [accountName] prefixes the subtitle when positions from
+/// several accounts share a list.
+class HoldingTile extends StatelessWidget {
+  const HoldingTile({
+    super.key,
+    required this.holding,
+    this.accountName,
+    this.onTap,
+  });
 
   final AccountHolding holding;
+  final String? accountName;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +158,7 @@ class _HoldingRow extends StatelessWidget {
             ? palette.destructive
             : palette.success;
 
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,6 +176,15 @@ class _HoldingRow extends StatelessWidget {
                 if (showName)
                   Text(
                     name!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if (accountName?.isNotEmpty == true)
+                  Text(
+                    accountName!,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -205,6 +224,9 @@ class _HoldingRow extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap == null) return row;
+    return InkWell(onTap: onTap, child: row);
   }
 }
 

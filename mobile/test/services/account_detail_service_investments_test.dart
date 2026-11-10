@@ -157,6 +157,34 @@ void main() {
       expect(trade.quantity, '5.0');
     });
 
+    test('queries several accounts with repeated account_ids[] keys',
+        () async {
+      final service = AccountDetailService(
+        client: MockClient((request) async {
+          expect(request.url.queryParametersAll['account_ids[]'], ['a1', 'a2']);
+          expect(request.url.queryParameters.containsKey('account_id'), false);
+          expect(request.url.queryParameters['per_page'], '10');
+          return http.Response(
+            '{"trades":[{"id":"t1","date":"2026-11-03","name":"Buy VTI",'
+            '"amount":"\$10.00","currency":"USD","qty":"1","price":"\$10.00",'
+            '"account":{"id":"a2","name":"Roth IRA"},"security":null}],'
+            '"pagination":{"page":1,"total_pages":1}}',
+            200,
+          );
+        }),
+      );
+
+      final result = await service.getTrades(
+        accessToken: 'token',
+        accountIds: ['a1', 'a2'],
+        perPage: 10,
+      );
+
+      final trade = (result['trades'] as List).single as AccountTrade;
+      expect(trade.accountId, 'a2');
+      expect(trade.accountName, 'Roth IRA');
+    });
+
     test('handles trades without a security', () async {
       final service = AccountDetailService(
         client: MockClient((request) async => http.Response(

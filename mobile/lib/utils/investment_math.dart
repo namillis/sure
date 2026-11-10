@@ -7,9 +7,16 @@ import 'amount_parser.dart';
 
 /// Unrealized gain/loss for a position: market value minus cost basis.
 class HoldingGain {
-  const HoldingGain({required this.amount, required this.percent});
+  const HoldingGain({
+    required this.amount,
+    required this.percent,
+    this.costBasis = 0,
+  });
 
   final double amount;
+
+  /// Total cost (quantity × average cost) the gain is measured against.
+  final double costBasis;
 
   /// Fraction of cost basis (0.12 == 12%).
   final double percent;
@@ -49,7 +56,11 @@ class InvestmentMath {
     if (costBasis == 0) return null;
 
     final gain = marketValue - costBasis;
-    return HoldingGain(amount: gain, percent: gain / costBasis.abs());
+    return HoldingGain(
+      amount: gain,
+      percent: gain / costBasis.abs(),
+      costBasis: costBasis,
+    );
   }
 
   /// Formats [value] in [currency]; with [signed], positives get a leading `+`.

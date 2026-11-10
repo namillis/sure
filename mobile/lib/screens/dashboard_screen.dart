@@ -17,9 +17,11 @@ import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
 import '../theme/sure_tokens.dart';
 import '../theme/sure_typography.dart';
+import 'portfolio_screen.dart';
 import 'transaction_form_screen.dart';
 import 'transactions_list_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/investments_summary_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -360,6 +362,28 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  List<Account> _investmentAccounts(AccountsProvider accountsProvider) =>
+      accountsProvider.accounts
+          .where((account) =>
+              account.accountType == 'investment' ||
+              account.accountType == 'crypto')
+          .toList();
+
+  Future<void> _openPortfolio(
+    AccountsProvider accountsProvider,
+    String currency,
+  ) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PortfolioScreen(
+          accounts: _investmentAccounts(accountsProvider),
+          initialCurrency: currency,
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleAccountSwipe(Account account) async {
     await Navigator.push(
       context,
@@ -513,6 +537,19 @@ class DashboardScreenState extends State<DashboardScreen> {
                     isStale: accountsProvider.isBalanceSheetStale,
                   ),
                 ),
+
+                // Investments entry point, when there is anything to show
+                if (_investmentAccounts(accountsProvider).isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: InvestmentsSummaryCard(
+                      accounts: _investmentAccounts(accountsProvider),
+                      familyCurrency: accountsProvider.familyCurrency,
+                      onTap: (currency) => _openPortfolio(
+                        accountsProvider,
+                        currency,
+                      ),
+                    ),
+                  ),
 
                 // Currency filter
                 SliverToBoxAdapter(

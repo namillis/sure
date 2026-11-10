@@ -180,16 +180,24 @@ class AccountDetailService {
     );
   }
 
-  /// One page of investment activity for [accountId], newest first.
+  /// One page of investment activity, newest first: for [accountId], or across
+  /// [accountIds] when that is given instead.
   Future<Map<String, dynamic>> getTrades({
     required String accessToken,
-    required String accountId,
+    String? accountId,
+    List<String>? accountIds,
     int page = 1,
     int perPage = 25,
   }) async {
+    assert(
+      (accountId == null) != (accountIds == null),
+      'Pass exactly one of accountId or accountIds.',
+    );
     final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/trades').replace(
-      queryParameters: {
-        'account_id': accountId,
+      queryParameters: <String, dynamic>{
+        if (accountId != null) 'account_id': accountId,
+        // Rails reads repeated `account_ids[]` keys as an array.
+        if (accountIds != null) 'account_ids[]': accountIds,
         'page': page.toString(),
         'per_page': perPage.toString(),
       },

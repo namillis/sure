@@ -383,5 +383,13 @@
   "tradesLoadFailed": "Kunde inte läsa in aktivitet",
   "tradeBuy": "Köp",
   "tradeSell": "Sälj",
+  "portfolioTitle": "Investeringar",
+  "portfolioAccountCount": "{count, plural, =1{1 konto} other{{count} konton}}",
+  "portfolioUnrealizedGain": "Orealiserat {amount} ({percent})",
+  "portfolioAllocation": "Fördelning",
+  "portfolioAllocationOther": "Övrigt",
+  "portfolioAllocationCash": "Kontanter",
+  "portfolioRecentActivity": "Senaste aktivitet",
+  "portfolioLoadFailed": "Kunde inte läsa in dina investeringar",
   "tradeQuantityAtPrice": "{quantity} à {price}"
 }

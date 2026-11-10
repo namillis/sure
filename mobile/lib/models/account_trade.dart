@@ -14,6 +14,8 @@ class AccountTrade {
   final String? activityLabel;
   final String? ticker;
   final String? securityName;
+  final String? accountId;
+  final String? accountName;
 
   AccountTrade({
     required this.id,
@@ -26,11 +28,15 @@ class AccountTrade {
     this.activityLabel,
     this.ticker,
     this.securityName,
+    this.accountId,
+    this.accountName,
   });
 
   factory AccountTrade.fromJson(Map<String, dynamic> json) {
     final securityJson = json['security'];
     final security = securityJson is Map<String, dynamic> ? securityJson : null;
+    final accountJson = json['account'];
+    final account = accountJson is Map<String, dynamic> ? accountJson : null;
 
     return AccountTrade(
       id: json['id'].toString(),
@@ -44,6 +50,8 @@ class AccountTrade {
       activityLabel: JsonParsing.parseString(json['investment_activity_label']),
       ticker: JsonParsing.parseString(security?['ticker']),
       securityName: JsonParsing.parseString(security?['name']),
+      accountId: JsonParsing.parseString(account?['id']),
+      accountName: JsonParsing.parseString(account?['name']),
     );
   }
 }
