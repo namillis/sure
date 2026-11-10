@@ -1460,4 +1460,156 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shellWebOpenFailed => 'Couldn\'t open the link';
+
+  @override
+  String get activity => 'Activity';
+
+  @override
+  String get activitySearchHint => 'Search transactions';
+
+  @override
+  String get activityClearSearch => 'Clear search';
+
+  @override
+  String get activityFilterDate => 'Date';
+
+  @override
+  String get activityDateThisMonth => 'This month';
+
+  @override
+  String get activityDateLastMonth => 'Last month';
+
+  @override
+  String get activityDateLast90Days => 'Last 90 days';
+
+  @override
+  String get activityDateThisYear => 'This year';
+
+  @override
+  String get activityDateAll => 'All time';
+
+  @override
+  String get activityDateCustom => 'Custom range…';
+
+  @override
+  String activityDateRange(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String get activityFilterCategory => 'Category';
+
+  @override
+  String get activityFilterAccount => 'Account';
+
+  @override
+  String get activityFilterTags => 'Tags';
+
+  @override
+  String get activityFilterType => 'Type';
+
+  @override
+  String get activityTypeAll => 'All types';
+
+  @override
+  String get activityTypeExpense => 'Expenses';
+
+  @override
+  String get activityTypeIncome => 'Income';
+
+  @override
+  String activityFilterCount(String label, int count) {
+    return '$label · $count';
+  }
+
+  @override
+  String get activityClearAll => 'Clear all';
+
+  @override
+  String get activityFilterClear => 'Clear';
+
+  @override
+  String get activityFilterApply => 'Apply';
+
+  @override
+  String get activityFilterSearchHint => 'Find';
+
+  @override
+  String get activityFilterNoOptions => 'Nothing to choose from yet';
+
+  @override
+  String get activityToday => 'Today';
+
+  @override
+  String get activityYesterday => 'Yesterday';
+
+  @override
+  String get activityUnknownDate => 'No date';
+
+  @override
+  String get activityEmpty => 'No transactions this month';
+
+  @override
+  String get activityEmptyFiltered => 'No transactions match.';
+
+  @override
+  String get activityClearFilters => 'Clear filters';
+
+  @override
+  String get activityLoadFailed => 'Couldn\'t load transactions';
+
+  @override
+  String get activityAdd => 'Add transaction';
+
+  @override
+  String get activityPickAccount => 'Choose an account';
+
+  @override
+  String get activityNoAccounts => 'Add an account first.';
+
+  @override
+  String get activitySplit => 'Split';
+
+  @override
+  String get activityTransfer => 'Transfer';
+
+  @override
+  String activitySelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get activityCategorize => 'Categorize';
+
+  @override
+  String get activityPickCategory => 'Choose a category';
+
+  @override
+  String activityCategorizing(int done, int total) {
+    return 'Categorizing $done of $total…';
+  }
+
+  @override
+  String activityCategorized(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Categorized $count transactions',
+      one: 'Categorized 1 transaction',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityDeleting(int done, int total) {
+    return 'Deleting $done of $total…';
+  }
+
+  @override
+  String activityBulkPartial(int done, int total, int failed) {
+    return '$done of $total done. $failed failed and are still selected.';
+  }
+
+  @override
+  String get activitySessionExpired => 'Your session expired. Sign in again.';
 }
