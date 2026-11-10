@@ -2034,4 +2034,142 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountActionsSyncChipHint => 'Starts a sync of all accounts';
+
+  @override
+  String get txnDetail => 'Transaction';
+
+  @override
+  String get txnDetailOfflineNote =>
+      'You\'re offline. Changes can be saved once you\'re back online.';
+
+  @override
+  String get txnDetailSplitLockedFields =>
+      'Amount, date and type come from the split. Edit the split to change them.';
+
+  @override
+  String txnDetailTagCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tags',
+      one: '1 tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get txnDetailRemoveTag => 'Remove tag';
+
+  @override
+  String get txnDetailChooseCategory => 'Choose category';
+
+  @override
+  String get txnDetailChooseMerchant => 'Choose merchant';
+
+  @override
+  String get txnDetailChooseTags => 'Choose tags';
+
+  @override
+  String get txnDetailSearchHint => 'Search';
+
+  @override
+  String txnDetailCreateOption(String name) {
+    return 'Create “$name”';
+  }
+
+  @override
+  String get txnDetailCreateFailed => 'Couldn\'t create it. Please try again.';
+
+  @override
+  String get txnDetailCreateOffline =>
+      'Connect to the internet to create new items.';
+
+  @override
+  String get txnDetailPickerEmpty => 'No matches';
+
+  @override
+  String get txnDetailDone => 'Done';
+
+  @override
+  String get txnDetailSplitAction => 'Split transaction';
+
+  @override
+  String get txnDetailSplitHeading => 'Split';
+
+  @override
+  String get txnDetailEditSplit => 'Edit split';
+
+  @override
+  String get txnDetailSplitOffline => 'Splits need an internet connection.';
+
+  @override
+  String get txnDetailSplitLoadFailed => 'Couldn\'t load the split details.';
+
+  @override
+  String get txnDetailSplitTitle => 'Split transaction';
+
+  @override
+  String txnDetailSplitTotal(String amount) {
+    return 'Total $amount';
+  }
+
+  @override
+  String txnDetailSplitRemaining(String amount) {
+    return 'Remaining: $amount';
+  }
+
+  @override
+  String txnDetailSplitOver(String amount) {
+    return 'Over by $amount';
+  }
+
+  @override
+  String get txnDetailSplitBalanced => 'The parts add up to the total.';
+
+  @override
+  String get txnDetailSplitSignHint =>
+      'Positive amounts go the same way as the total; use a negative amount for a part that goes the other way.';
+
+  @override
+  String txnDetailSplitPartLabel(int number) {
+    return 'Part $number';
+  }
+
+  @override
+  String get txnDetailSplitRemoveRow => 'Remove part';
+
+  @override
+  String get txnDetailSplitRowName => 'Name (optional)';
+
+  @override
+  String get txnDetailSplitInvalidAmount =>
+      'Enter a nonzero amount with at most 4 decimals.';
+
+  @override
+  String get txnDetailSplitUseRemaining => 'Use remaining amount';
+
+  @override
+  String get txnDetailSplitAddRow => 'Add part';
+
+  @override
+  String get txnDetailSplitNeedTwo => 'Add at least two parts.';
+
+  @override
+  String get txnDetailSplitSave => 'Save split';
+
+  @override
+  String get txnDetailSplitRemove => 'Remove split';
+
+  @override
+  String get txnDetailSplitRemoveConfirmTitle => 'Remove split?';
+
+  @override
+  String get txnDetailSplitRemoveConfirmBody =>
+      'The parts are deleted and the original transaction counts again.';
+
+  @override
+  String get txnDetailSplitSaved => 'Split saved';
+
+  @override
+  String get txnDetailSplitRemoved => 'Split removed';
 }

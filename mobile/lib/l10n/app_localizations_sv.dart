@@ -2051,4 +2051,143 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get accountActionsSyncChipHint => 'Startar en synk av alla konton';
+
+  @override
+  String get txnDetail => 'Transaktion';
+
+  @override
+  String get txnDetailOfflineNote =>
+      'Du är offline. Ändringar kan sparas när du är online igen.';
+
+  @override
+  String get txnDetailSplitLockedFields =>
+      'Belopp, datum och typ kommer från uppdelningen. Ändra uppdelningen för att ändra dem.';
+
+  @override
+  String txnDetailTagCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count taggar',
+      one: '1 tagg',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get txnDetailRemoveTag => 'Ta bort tagg';
+
+  @override
+  String get txnDetailChooseCategory => 'Välj kategori';
+
+  @override
+  String get txnDetailChooseMerchant => 'Välj handlare';
+
+  @override
+  String get txnDetailChooseTags => 'Välj taggar';
+
+  @override
+  String get txnDetailSearchHint => 'Sök';
+
+  @override
+  String txnDetailCreateOption(String name) {
+    return 'Skapa ”$name”';
+  }
+
+  @override
+  String get txnDetailCreateFailed => 'Kunde inte skapa den. Försök igen.';
+
+  @override
+  String get txnDetailCreateOffline =>
+      'Anslut till internet för att skapa nya poster.';
+
+  @override
+  String get txnDetailPickerEmpty => 'Inga träffar';
+
+  @override
+  String get txnDetailDone => 'Klar';
+
+  @override
+  String get txnDetailSplitAction => 'Dela upp transaktion';
+
+  @override
+  String get txnDetailSplitHeading => 'Uppdelning';
+
+  @override
+  String get txnDetailEditSplit => 'Ändra uppdelning';
+
+  @override
+  String get txnDetailSplitOffline =>
+      'Uppdelningar kräver en internetanslutning.';
+
+  @override
+  String get txnDetailSplitLoadFailed => 'Kunde inte läsa in uppdelningen.';
+
+  @override
+  String get txnDetailSplitTitle => 'Dela upp transaktion';
+
+  @override
+  String txnDetailSplitTotal(String amount) {
+    return 'Totalt $amount';
+  }
+
+  @override
+  String txnDetailSplitRemaining(String amount) {
+    return 'Kvar: $amount';
+  }
+
+  @override
+  String txnDetailSplitOver(String amount) {
+    return '$amount för mycket';
+  }
+
+  @override
+  String get txnDetailSplitBalanced => 'Delarna summerar till totalen.';
+
+  @override
+  String get txnDetailSplitSignHint =>
+      'Positiva belopp går åt samma håll som totalen; använd ett negativt belopp för en del som går åt andra hållet.';
+
+  @override
+  String txnDetailSplitPartLabel(int number) {
+    return 'Del $number';
+  }
+
+  @override
+  String get txnDetailSplitRemoveRow => 'Ta bort del';
+
+  @override
+  String get txnDetailSplitRowName => 'Namn (valfritt)';
+
+  @override
+  String get txnDetailSplitInvalidAmount =>
+      'Ange ett belopp som inte är noll, med högst 4 decimaler.';
+
+  @override
+  String get txnDetailSplitUseRemaining => 'Använd återstående belopp';
+
+  @override
+  String get txnDetailSplitAddRow => 'Lägg till del';
+
+  @override
+  String get txnDetailSplitNeedTwo => 'Lägg till minst två delar.';
+
+  @override
+  String get txnDetailSplitSave => 'Spara uppdelning';
+
+  @override
+  String get txnDetailSplitRemove => 'Ta bort uppdelning';
+
+  @override
+  String get txnDetailSplitRemoveConfirmTitle => 'Ta bort uppdelningen?';
+
+  @override
+  String get txnDetailSplitRemoveConfirmBody =>
+      'Delarna tas bort och den ursprungliga transaktionen räknas igen.';
+
+  @override
+  String get txnDetailSplitSaved => 'Uppdelningen sparades';
+
+  @override
+  String get txnDetailSplitRemoved => 'Uppdelningen togs bort';
 }

@@ -1,16 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../models/category.dart' as models;
-import '../models/merchant.dart';
+import '../models/account.dart';
 import '../models/offline_transaction.dart';
-import '../models/transaction_tag.dart';
+import '../models/transaction.dart';
+import '../models/transaction_split.dart';
+import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/categories_provider.dart';
 import '../providers/merchants_provider.dart';
+import '../providers/privacy_provider.dart';
 import '../providers/tags_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../services/connectivity_service.dart';
+import '../services/transaction_split_service.dart';
+import '../services/transactions_service.dart';
+import '../theme/sure_colors.dart';
+import '../theme/sure_spacing.dart';
+import '../theme/sure_tokens.dart';
+import '../utils/amount_parser.dart';
+import '../utils/investment_math.dart';
+import '../utils/money_masker.dart';
+import '../utils/split_math.dart';
+import '../widgets/metadata_picker_sheet.dart';
+import '../widgets/sure_button.dart';
+import '../widgets/sure_card.dart';
+import '../widgets/sure_list_group.dart';
+import '../widgets/sure_segmented_control.dart';
+import '../widgets/sure_text_field.dart';
+import '../widgets/transaction_metadata_pickers.dart';
+import 'transaction_split_screen.dart';
 
+/// Edits one synced transaction: name, date, type, amount, category,
+/// merchant, tags, notes, and its split. Pops with `true` when anything was
+/// saved (including a split change), so the caller can reload.
+///
+/// Edits are online-only, as before: the offline queue holds creates and
+/// deletes, not updates.
 class TransactionEditScreen extends StatefulWidget {
   final OfflineTransaction transaction;
 
@@ -25,31 +52,82 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   static const _maxNotesLength = 2000;
 
   final _formKey = GlobalKey<FormState>();
+  final _transactionsService = TransactionsService();
+  final _splitService = TransactionSplitService();
+  final _pickers = TransactionMetadataPickers();
+
   late final TextEditingController _nameController;
   late final TextEditingController _notesController;
+  late final TextEditingController _amountController;
+  String _initialAmountText = '';
+  late String _date;
+  late String _nature;
+
   String? _selectedCategoryId;
+  String? _selectedCategoryLabel;
   String? _selectedMerchantId;
-  late Set<String> _selectedTagIds;
+  String? _selectedMerchantLabel;
+  late List<String> _selectedTagIds;
+  final Map<String, String> _tagLabels = {};
+
+  /// The transaction as the server has it now: carries `amount_decimal` and
+  /// `split_parent`, which the local cache doesn't store.
+  Transaction? _fresh;
+  TransactionSplit? _split;
+  bool _loadingDetails = false;
+  String? _splitError;
+  bool _splitChanged = false;
+
   bool _isSaving = false;
+  String? _error;
+
+  OfflineTransaction get _txn => widget.transaction;
+  bool get _isSplitParent => _fresh?.splitParent == true;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.transaction.name);
-    _notesController = TextEditingController(
-      text: widget.transaction.notes ?? '',
-    );
-    _selectedCategoryId = widget.transaction.categoryId;
-    _selectedMerchantId = widget.transaction.merchantId;
-    _selectedTagIds = widget.transaction.tagIds.toSet();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadMetadata());
+    _nameController = TextEditingController(text: _txn.name);
+    _notesController = TextEditingController(text: _txn.notes ?? '');
+    _amountController = TextEditingController();
+    _date = _txn.date;
+    _nature = _txn.nature;
+    _selectedCategoryId = _txn.categoryId;
+    _selectedCategoryLabel = _txn.categoryName;
+    _selectedMerchantId = _txn.merchantId;
+    _selectedMerchantLabel = _txn.merchantName;
+    _selectedTagIds = [..._txn.tagIds];
+    for (var i = 0; i < _txn.tagIds.length; i++) {
+      final name = i < _txn.tagNames.length ? _txn.tagNames[i] : '';
+      if (name.isNotEmpty) _tagLabels[_txn.tagIds[i]] = name;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _amountController.text = _initialAmountText = SplitMath.toEditText(
+        _amountUnits(_txn).abs(),
+        locale: _locale(),
+      );
+      _loadMetadata();
+      _loadDetails();
+    });
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _notesController.dispose();
+    _amountController.dispose();
     super.dispose();
+  }
+
+  String _locale() =>
+      Localizations.maybeLocaleOf(context)?.toString() ?? Intl.getCurrentLocale();
+
+  /// The stored amount in units, positive = outflow.
+  int _amountUnits(Transaction transaction) {
+    final exact = SplitMath.toUnits(transaction.amountDecimal);
+    if (exact != null) return exact;
+    final parsed = InvestmentMath.parse(transaction.amount) ?? 0;
+    return SplitMath.toUnits(parsed.toStringAsFixed(SplitMath.scale)) ?? 0;
   }
 
   Future<void> _loadMetadata() async {
@@ -77,14 +155,90 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     }
   }
 
+  /// Fetches the server's copy of the transaction and, when it is split, the
+  /// split. Skipped offline; the screen then works from the cached copy.
+  Future<void> _loadDetails() async {
+    final id = _txn.id;
+    if (id == null || !mounted) return;
+    if (!context.read<ConnectivityService>().isOnline) return;
+
+    setState(() {
+      _loadingDetails = true;
+      _splitError = null;
+    });
+    final l = AppLocalizations.of(context);
+    final token = await context.read<AuthProvider>().getValidAccessToken();
+    if (token == null || !mounted) {
+      if (mounted) setState(() => _loadingDetails = false);
+      return;
+    }
+
+    final result = await _transactionsService.getTransaction(
+      accessToken: token,
+      transactionId: id,
+    );
+    if (!mounted) return;
+    final fresh = result['transaction'];
+    TransactionSplit? split;
+    String? splitError;
+    if (fresh is Transaction && fresh.splitParent == true) {
+      final splitResult =
+          await _splitService.getSplit(accessToken: token, transactionId: id);
+      if (!mounted) return;
+      if (splitResult['success'] == true) {
+        split = splitResult['split'] as TransactionSplit;
+      } else if (splitResult['notSplit'] != true) {
+        splitError = l.txnDetailSplitLoadFailed;
+      }
+    }
+
+    setState(() {
+      _loadingDetails = false;
+      if (fresh is Transaction) {
+        _fresh = fresh;
+        // Show the exact stored amount unless the user already typed one.
+        if (_amountController.text == _initialAmountText) {
+          _amountController.text = _initialAmountText = SplitMath.toEditText(
+            _amountUnits(fresh).abs(),
+            locale: _locale(),
+          );
+        }
+      } else {
+        splitError = l.txnDetailSplitLoadFailed;
+      }
+      _split = split;
+      _splitError = splitError;
+    });
+  }
+
+  Future<void> _openSplit() async {
+    final fresh = _fresh;
+    if (fresh == null) return;
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => TransactionSplitScreen(
+          transaction: fresh,
+          split: _split,
+          splitService: _splitService,
+          pickers: _pickers,
+        ),
+      ),
+    );
+    if (changed == true && mounted) {
+      setState(() => _splitChanged = true);
+      await _loadDetails();
+    }
+  }
+
   Future<void> _save() async {
     final l = AppLocalizations.of(context);
-    if (!_formKey.currentState!.validate() || widget.transaction.id == null) {
+    if (!_formKey.currentState!.validate() || _txn.id == null) {
       return;
     }
 
     setState(() {
       _isSaving = true;
+      _error = null;
     });
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -96,15 +250,9 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
 
     if (accessToken == null) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l.transactionEditSessionExpired),
-          backgroundColor: Colors.red,
-        ),
-      );
       setState(() {
         _isSaving = false;
+        _error = l.transactionEditSessionExpired;
       });
       return;
     }
@@ -112,36 +260,54 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     // Empty notes intentionally clear the server-side note.
     final notesText = _notesController.text.trim();
 
+    // A split parent's amount, date and type belong to the split; the server
+    // refuses them even unchanged, so they are only sent when edited.
+    String? date;
+    String? amount;
+    String? nature;
+    if (!_isSplitParent) {
+      if (_date != _txn.date) date = _date;
+      final amountChanged = _amountController.text != _initialAmountText;
+      if (amountChanged || _nature != _txn.nature) {
+        amount = AmountParser.canonicalize(
+          _amountController.text,
+          locale: _locale(),
+        ).replaceFirst('-', '');
+        nature = _nature;
+      }
+    }
+
     final success = await transactionsProvider.updateTransaction(
       accessToken: accessToken,
-      transaction: widget.transaction,
+      transaction: _txn,
       name: _nameController.text.trim(),
       notes: notesText,
       categoryId: _selectedCategoryId,
       merchantId: _selectedMerchantId,
-      tagIds: _selectedTagIds.toList(),
+      tagIds: _selectedTagIds,
+      date: date,
+      amount: amount,
+      nature: nature,
     );
 
     if (!mounted) return;
 
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.transactionEditUpdated)),
+      );
+      Navigator.pop(context, true);
+      return;
+    }
+
+    final error = transactionsProvider.error;
     setState(() {
       _isSaving = false;
+      _error = error == 'unauthorized'
+          ? l.transactionEditSessionExpired
+          : error ?? l.transactionEditUpdateFailed;
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? l.transactionEditUpdated
-              : transactionsProvider.error ?? l.transactionEditUpdateFailed,
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
-    );
-
-    if (success) {
-      Navigator.pop(context, true);
-    }
+    if (error == 'unauthorized') await authProvider.logout();
   }
 
   String? _validateName(String? value) {
@@ -178,6 +344,22 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     return null;
   }
 
+  String? _validateAmount(String? value) {
+    final l = AppLocalizations.of(context);
+    if (_isSplitParent) return null;
+    if (value == null || value.trim().isEmpty) {
+      return l.transactionFormAmountRequiredPrompt;
+    }
+    final double amount;
+    try {
+      amount = AmountParser.parse(value, locale: _locale()).value;
+    } on FormatException {
+      return l.transactionFormAmountInvalidNumber;
+    }
+    if (amount <= 0) return l.transactionFormAmountTooSmall;
+    return null;
+  }
+
   bool _containsControlCharacter(
     String value, {
     bool allowWhitespace = false,
@@ -194,234 +376,505 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     return false;
   }
 
-  List<DropdownMenuItem<String?>> _categoryItems(
-    List<models.Category> categories,
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final initial = DateTime.tryParse(_date) ?? now;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(now.year - 30),
+      lastDate: DateTime(now.year + 5, 12, 31),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _date = DateFormat('yyyy-MM-dd').format(picked));
+  }
+
+  Future<void> _pickCategory(bool online) async {
+    final picked = await _pickers.pickCategory(
+      context,
+      online: online,
+      selectedId: _selectedCategoryId,
+      extraOptions: [
+        if (_selectedCategoryId != null)
+          PickerOption(
+            id: _selectedCategoryId!,
+            label: _selectedCategoryLabel ??
+                AppLocalizations.of(context).transactionEditCurrentCategory,
+          ),
+      ],
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _selectedCategoryId = picked.id;
+      _selectedCategoryLabel = picked.label;
+    });
+  }
+
+  Future<void> _pickMerchant(bool online) async {
+    final picked = await _pickers.pickMerchant(
+      context,
+      online: online,
+      selectedId: _selectedMerchantId,
+      extraOptions: [
+        if (_selectedMerchantId != null)
+          PickerOption(
+            id: _selectedMerchantId!,
+            label: _selectedMerchantLabel ??
+                AppLocalizations.of(context).transactionEditCurrentMerchant,
+          ),
+      ],
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _selectedMerchantId = picked.id;
+      _selectedMerchantLabel = picked.label;
+    });
+  }
+
+  Future<void> _pickTags(bool online) async {
+    final l = AppLocalizations.of(context);
+    final picked = await _pickers.pickTags(
+      context,
+      online: online,
+      selectedIds: _selectedTagIds.toSet(),
+      extraOptions: [
+        for (final id in _selectedTagIds)
+          PickerOption(id: id, label: _tagLabels[id] ?? l.transactionEditUnknownTag),
+      ],
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _selectedTagIds = [for (final option in picked) option.id];
+      for (final option in picked) {
+        _tagLabels[option.id] = option.label;
+      }
+    });
+  }
+
+  String? _categoryLabel(CategoriesProvider provider) {
+    if (_selectedCategoryId == null) return null;
+    for (final category in provider.categories) {
+      if (category.id == _selectedCategoryId) return category.displayName;
+    }
+    return _selectedCategoryLabel ??
+        AppLocalizations.of(context).transactionEditCurrentCategory;
+  }
+
+  String? _merchantLabel(MerchantsProvider provider) {
+    if (_selectedMerchantId == null) return null;
+    for (final merchant in provider.merchants) {
+      if (merchant.id == _selectedMerchantId) return merchant.name;
+    }
+    return _selectedMerchantLabel ??
+        AppLocalizations.of(context).transactionEditCurrentMerchant;
+  }
+
+  String _tagLabel(String id, TagsProvider provider) {
+    for (final tag in provider.tags) {
+      if (tag.id == id) return tag.name;
+    }
+    return _tagLabels[id] ?? AppLocalizations.of(context).transactionEditUnknownTag;
+  }
+
+  String _formatDate(String date) {
+    final parsed = DateTime.tryParse(date);
+    if (parsed == null) return date;
+    return DateFormat.yMMMd(_locale()).format(parsed);
+  }
+
+  String? _accountName() {
+    try {
+      final accounts = context.watch<AccountsProvider>().accounts;
+      for (final Account account in accounts) {
+        if (account.id == _txn.accountId) return account.name;
+      }
+    } on ProviderNotFoundException {
+      // No accounts provider above this screen.
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final theme = Theme.of(context);
+    final hidden = context.watch<PrivacyProvider>().hidden;
+    final online = context.watch<ConnectivityService>().isOnline;
+    final categories = context.watch<CategoriesProvider>();
+    final merchants = context.watch<MerchantsProvider>();
+    final tags = context.watch<TagsProvider>();
+
+    final canEdit = _txn.id != null && _txn.syncStatus == SyncStatus.synced;
+    final enabled = canEdit && !_isSaving;
+    final financialEnabled = enabled && !_isSplitParent;
+    final accountName = _accountName();
+    final categoryLabel = _categoryLabel(categories);
+    final merchantLabel = _merchantLabel(merchants);
+
+    return PopScope(
+      // After a split change the caller must reload even if nothing else is
+      // saved, so report it on the way out.
+      canPop: !_splitChanged,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) Navigator.of(context).pop(true);
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(l.txnDetail)),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(SureSpacing.xl),
+            children: [
+              _buildHeader(l, palette, theme, hidden, accountName),
+              const SizedBox(height: SureSpacing.xl),
+              if (!canEdit) ...[
+                _notice(l.transactionEditSyncedOnly, palette.destructive, theme),
+                const SizedBox(height: SureSpacing.lg),
+              ] else if (!online) ...[
+                _notice(l.txnDetailOfflineNote, palette.warning, theme),
+                const SizedBox(height: SureSpacing.lg),
+              ],
+              SureTextField(
+                controller: _nameController,
+                label: l.transactionEditNameLabel,
+                enabled: enabled,
+                validator: _validateName,
+                maxLength: _maxNameLength,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: SureSpacing.lg),
+              Opacity(
+                opacity: financialEnabled ? 1 : 0.5,
+                child: IgnorePointer(
+                  ignoring: !financialEnabled,
+                  child: SureSegmentedControl<String>(
+                    selected: _nature,
+                    onChanged: (value) => setState(() => _nature = value),
+                    segments: [
+                      SureSegment(
+                        value: 'expense',
+                        label: l.transactionFormTypeExpense,
+                        icon: const Icon(Icons.arrow_downward),
+                      ),
+                      SureSegment(
+                        value: 'income',
+                        label: l.transactionFormTypeIncome,
+                        icon: const Icon(Icons.arrow_upward),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: SureSpacing.lg),
+              SureTextField(
+                controller: _amountController,
+                label: l.transactionFormAmountLabel,
+                enabled: financialEnabled,
+                obscureText: hidden,
+                validator: _validateAmount,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                textInputAction: TextInputAction.done,
+                suffixIcon: Padding(
+                  padding: const EdgeInsets.only(right: SureSpacing.lg),
+                  child: Center(
+                    widthFactor: 1,
+                    child: Text(_txn.currency),
+                  ),
+                ),
+              ),
+              if (_isSplitParent) ...[
+                const SizedBox(height: SureSpacing.sm),
+                Text(
+                  l.txnDetailSplitLockedFields,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: palette.textSecondary),
+                ),
+              ],
+              const SizedBox(height: SureSpacing.lg),
+              SureListGroup(
+                children: [
+                  _row(
+                    title: l.transactionFormDateLabel,
+                    value: _formatDate(_date),
+                    icon: Icons.event,
+                    onTap: financialEnabled ? _pickDate : null,
+                    palette: palette,
+                  ),
+                  _row(
+                    title: l.transactionEditCategoryLabel,
+                    value: categoryLabel ?? l.transactionEditNoCategory,
+                    icon: Icons.category_outlined,
+                    onTap: enabled ? () => _pickCategory(online) : null,
+                    palette: palette,
+                  ),
+                  _row(
+                    title: l.transactionEditMerchantLabel,
+                    value: merchantLabel ?? l.transactionEditNoMerchant,
+                    icon: Icons.storefront_outlined,
+                    onTap: enabled ? () => _pickMerchant(online) : null,
+                    palette: palette,
+                  ),
+                  _row(
+                    title: l.transactionEditTagsLabel,
+                    value: _selectedTagIds.isEmpty
+                        ? l.transactionEditNoTags
+                        : l.txnDetailTagCount(_selectedTagIds.length),
+                    icon: Icons.sell_outlined,
+                    onTap: enabled ? () => _pickTags(online) : null,
+                    palette: palette,
+                  ),
+                ],
+              ),
+              if (_selectedTagIds.isNotEmpty) ...[
+                const SizedBox(height: SureSpacing.md),
+                Wrap(
+                  spacing: SureSpacing.md,
+                  runSpacing: SureSpacing.md,
+                  children: [
+                    for (final id in _selectedTagIds)
+                      InputChip(
+                        label: Text(_tagLabel(id, tags)),
+                        onDeleted: enabled
+                            ? () => setState(() => _selectedTagIds.remove(id))
+                            : null,
+                        deleteButtonTooltipMessage: l.txnDetailRemoveTag,
+                      ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: SureSpacing.lg),
+              SureTextField(
+                controller: _notesController,
+                label: l.transactionEditNotesLabel,
+                enabled: enabled,
+                validator: _validateNotes,
+                maxLength: _maxNotesLength,
+                minLines: 3,
+                maxLines: 6,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: SureSpacing.lg),
+              _buildSplitSection(l, palette, theme, hidden, online, enabled),
+              if (_error != null) ...[
+                const SizedBox(height: SureSpacing.lg),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    _error!,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: palette.destructive),
+                  ),
+                ),
+              ],
+              const SizedBox(height: SureSpacing.xl),
+              SureButton(
+                label: _isSaving ? l.transactionEditSaving : l.commonSave,
+                fullWidth: true,
+                size: SureButtonSize.lg,
+                loading: _isSaving,
+                onPressed: enabled ? _save : null,
+              ),
+              const SizedBox(height: SureSpacing.xl),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _notice(String text, Color color, ThemeData theme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.info_outline, color: color, size: 20),
+        const SizedBox(width: SureSpacing.md),
+        Expanded(
+          child: Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: color)),
+        ),
+      ],
+    );
+  }
+
+  Widget _row({
+    required String title,
+    required String value,
+    required IconData icon,
+    required VoidCallback? onTap,
+    required SureTokenPalette palette,
+  }) {
+    return Opacity(
+      opacity: onTap == null ? 0.5 : 1,
+      child: SureListRow(
+        title: title,
+        subtitle: value,
+        leading: Icon(icon, color: palette.textSecondary),
+        showChevron: onTap != null,
+        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    AppLocalizations l,
+    SureTokenPalette palette,
+    ThemeData theme,
+    bool hidden,
+    String? accountName,
   ) {
-    final l = AppLocalizations.of(context);
-    final items = <DropdownMenuItem<String?>>[];
-    if (_selectedCategoryId == null) {
-      items.add(
-        DropdownMenuItem<String?>(
-          value: null,
-          child: Text(l.transactionEditNoCategory),
-        ),
-      );
-    }
+    final details = [
+      _formatDate(_txn.date),
+      if (accountName != null && accountName.isNotEmpty) accountName,
+    ].join(' · ');
 
-    final hasCurrent = _selectedCategoryId == null ||
-        categories.any((category) => category.id == _selectedCategoryId);
-    if (!hasCurrent) {
-      items.add(
-        DropdownMenuItem<String?>(
-          value: _selectedCategoryId,
-          child: Text(widget.transaction.categoryName ?? l.transactionEditCurrentCategory),
-        ),
-      );
-    }
-
-    items.addAll(
-      categories.map((category) {
-        return DropdownMenuItem<String?>(
-          value: category.id,
-          child: Text(category.displayName),
-        );
-      }),
+    return SureCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            MoneyMasker.mask(_txn.amount, hidden: hidden),
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: palette.textPrimary,
+            ),
+          ),
+          const SizedBox(height: SureSpacing.xs),
+          Text(
+            _txn.isIncome
+                ? l.transactionFormTypeIncome
+                : l.transactionFormTypeExpense,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: palette.textSecondary),
+          ),
+          const SizedBox(height: SureSpacing.md),
+          Text(
+            details,
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: palette.textSecondary),
+          ),
+        ],
+      ),
     );
-
-    return items;
   }
 
-  List<DropdownMenuItem<String?>> _merchantItems(List<Merchant> merchants) {
-    final l = AppLocalizations.of(context);
-    final items = <DropdownMenuItem<String?>>[];
-    if (_selectedMerchantId == null) {
-      items.add(
-        DropdownMenuItem<String?>(
-          value: null,
-          child: Text(l.transactionEditNoMerchant),
-        ),
-      );
-    }
+  Widget _buildSplitSection(
+    AppLocalizations l,
+    SureTokenPalette palette,
+    ThemeData theme,
+    bool hidden,
+    bool online,
+    bool enabled,
+  ) {
+    final split = _split;
+    final canOpen = enabled && online && _fresh != null && !_loadingDetails;
 
-    final hasCurrent = _selectedMerchantId == null ||
-        merchants.any((merchant) => merchant.id == _selectedMerchantId);
-    if (!hasCurrent) {
-      items.add(
-        DropdownMenuItem<String?>(
-          value: _selectedMerchantId,
-          child: Text(widget.transaction.merchantName ?? l.transactionEditCurrentMerchant),
-        ),
-      );
-    }
+    final children = <Widget>[
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              l.txnDetailSplitHeading,
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+          if (_loadingDetails)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+        ],
+      ),
+    ];
 
-    items.addAll(
-      merchants.map((merchant) {
-        return DropdownMenuItem<String?>(
-          value: merchant.id,
-          child: Text(merchant.name),
-        );
-      }),
-    );
-
-    return items;
-  }
-
-  Widget _buildTags(List<TransactionTag> tags, {required bool enabled}) {
-    final l = AppLocalizations.of(context);
-    if (tags.isEmpty && _selectedTagIds.isEmpty) {
-      return Text(l.transactionEditNoTags);
-    }
-
-    final tagById = {for (final tag in tags) tag.id: tag};
-    final combinedTags = [...tags];
-    for (final selectedId in _selectedTagIds) {
-      if (!tagById.containsKey(selectedId)) {
-        final nameIndex = widget.transaction.tagIds.indexOf(selectedId);
-        final fallbackName =
-            nameIndex >= 0 && nameIndex < widget.transaction.tagNames.length
-                ? widget.transaction.tagNames[nameIndex]
-                : '';
-        combinedTags.add(
-          TransactionTag(
-            id: selectedId,
-            name: fallbackName.isNotEmpty ? fallbackName : l.transactionEditUnknownTag,
+    if (split != null) {
+      for (final child in split.children) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(top: SureSpacing.md),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(child.name, style: theme.textTheme.bodyLarge),
+                      if (child.categoryName != null)
+                        Text(
+                          child.categoryName!,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: palette.textSecondary),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: SureSpacing.lg),
+                Text(
+                  MoneyMasker.mask(child.amount, hidden: hidden),
+                  style: theme.textTheme.bodyLarge,
+                ),
+              ],
+            ),
           ),
         );
       }
     }
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: combinedTags.map((tag) {
-        final selected = _selectedTagIds.contains(tag.id);
-        return FilterChip(
-          label: Text(tag.name),
-          selected: selected,
-          onSelected: enabled
-              ? (value) {
-                  setState(() {
-                    if (value) {
-                      _selectedTagIds.add(tag.id);
-                    } else {
-                      _selectedTagIds.remove(tag.id);
-                    }
-                  });
-                }
-              : null,
-        );
-      }).toList(),
-    );
-  }
+    String? note;
+    if (!online) {
+      note = l.txnDetailSplitOffline;
+    } else if (_splitError != null) {
+      note = _splitError;
+    }
+    if (note != null) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.only(top: SureSpacing.md),
+          child: Text(
+            note,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: _splitError != null && online
+                  ? palette.destructive
+                  : palette.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final canEdit = widget.transaction.id != null &&
-        widget.transaction.syncStatus == SyncStatus.synced;
-
-    final l = AppLocalizations.of(context);
-
-    return Scaffold(
-      appBar: AppBar(title: Text(l.transactionEditTitle)),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+    children.add(
+      Padding(
+        padding: const EdgeInsets.only(top: SureSpacing.lg),
+        child: Wrap(
+          spacing: SureSpacing.md,
+          runSpacing: SureSpacing.md,
           children: [
-            if (!canEdit) ...[
-              Card(
-                color: colorScheme.errorContainer,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    l.transactionEditSyncedOnly,
-                    style: TextStyle(color: colorScheme.onErrorContainer),
-                  ),
-                ),
+            SureButton(
+              label: _isSplitParent ? l.txnDetailEditSplit : l.txnDetailSplitAction,
+              variant: SureButtonVariant.outline,
+              leading: const Icon(Icons.call_split),
+              onPressed: canOpen && (!_isSplitParent || split != null)
+                  ? _openSplit
+                  : null,
+            ),
+            if (_splitError != null && online)
+              SureButton(
+                label: l.commonTryAgain,
+                variant: SureButtonVariant.ghost,
+                onPressed: _loadingDetails ? null : _loadDetails,
               ),
-              const SizedBox(height: 16),
-            ],
-            TextFormField(
-              controller: _nameController,
-              enabled: canEdit && !_isSaving,
-              validator: _validateName,
-              maxLength: _maxNameLength,
-              decoration: InputDecoration(
-                labelText: l.transactionEditNameLabel,
-                prefixIcon: const Icon(Icons.label),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _notesController,
-              enabled: canEdit && !_isSaving,
-              validator: _validateNotes,
-              maxLength: _maxNotesLength,
-              minLines: 2,
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: l.transactionEditNotesLabel,
-                prefixIcon: const Icon(Icons.notes),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Consumer<CategoriesProvider>(
-              builder: (context, categoriesProvider, _) {
-                return DropdownButtonFormField<String?>(
-                  value: _selectedCategoryId,
-                  decoration: InputDecoration(
-                    labelText: l.transactionEditCategoryLabel,
-                    prefixIcon: const Icon(Icons.category),
-                    helperText: l.transactionEditCategoryHelper,
-                  ),
-                  isExpanded: true,
-                  items: _categoryItems(categoriesProvider.categories),
-                  onChanged: canEdit && !_isSaving
-                      ? (value) => setState(() => _selectedCategoryId = value)
-                      : null,
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            Consumer<MerchantsProvider>(
-              builder: (context, merchantsProvider, _) {
-                return DropdownButtonFormField<String?>(
-                  value: _selectedMerchantId,
-                  decoration: InputDecoration(
-                    labelText: l.transactionEditMerchantLabel,
-                    prefixIcon: const Icon(Icons.storefront),
-                    helperText: l.transactionEditMerchantHelper,
-                  ),
-                  isExpanded: true,
-                  items: _merchantItems(merchantsProvider.merchants),
-                  onChanged: canEdit && !_isSaving
-                      ? (value) => setState(() => _selectedMerchantId = value)
-                      : null,
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            Text(l.transactionEditTagsLabel, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Consumer<TagsProvider>(
-              builder: (context, tagsProvider, _) =>
-                  _buildTags(tagsProvider.tags, enabled: canEdit && !_isSaving),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: canEdit && !_isSaving ? _save : null,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save),
-              label: Text(_isSaving ? l.transactionEditSaving : l.commonSave),
-            ),
           ],
         ),
+      ),
+    );
+
+    return SureCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
       ),
     );
   }

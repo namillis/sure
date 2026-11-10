@@ -285,6 +285,9 @@ class TransactionsProvider with ChangeNotifier {
     String? categoryId,
     String? merchantId,
     List<String>? tagIds,
+    String? date,
+    String? amount,
+    String? nature,
   }) async {
     _lastAccessToken = accessToken;
     _currentAccountId = transaction.accountId;
@@ -313,6 +316,9 @@ class TransactionsProvider with ChangeNotifier {
         categoryId: categoryId,
         merchantId: merchantId,
         tagIds: tagIds,
+        date: date,
+        amount: amount,
+        nature: nature,
       );
 
       if (result['success'] == true) {

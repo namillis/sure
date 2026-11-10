@@ -3637,6 +3637,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starts a sync of all accounts'**
   String get accountActionsSyncChipHint;
+
+  /// Title of the transaction detail and edit screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction'**
+  String get txnDetail;
+
+  /// Notice on the transaction screen while the device is offline.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. Changes can be saved once you\'re back online.'**
+  String get txnDetailOfflineNote;
+
+  /// Shown under the amount field when the transaction is split.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount, date and type come from the split. Edit the split to change them.'**
+  String get txnDetailSplitLockedFields;
+
+  /// Summary of how many tags are selected on the transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 tag} other{{count} tags}}'**
+  String txnDetailTagCount(int count);
+
+  /// Tooltip for the delete button on a selected tag chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove tag'**
+  String get txnDetailRemoveTag;
+
+  /// Title of the category picker sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose category'**
+  String get txnDetailChooseCategory;
+
+  /// Title of the merchant picker sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose merchant'**
+  String get txnDetailChooseMerchant;
+
+  /// Title of the tag picker sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose tags'**
+  String get txnDetailChooseTags;
+
+  /// Placeholder of the search field in the picker sheets.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get txnDetailSearchHint;
+
+  /// Picker row that creates a new category, merchant or tag with the searched name.
+  ///
+  /// In en, this message translates to:
+  /// **'Create “{name}”'**
+  String txnDetailCreateOption(String name);
+
+  /// Error when creating a category, merchant or tag fails without a server message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create it. Please try again.'**
+  String get txnDetailCreateFailed;
+
+  /// Shown in a picker instead of the create row while offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to create new items.'**
+  String get txnDetailCreateOffline;
+
+  /// Empty state of a picker sheet search.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get txnDetailPickerEmpty;
+
+  /// Button that closes the multi-select tag picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get txnDetailDone;
+
+  /// Button that opens the split editor for an unsplit transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Split transaction'**
+  String get txnDetailSplitAction;
+
+  /// Heading of the split section on the transaction screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get txnDetailSplitHeading;
+
+  /// Button that opens the split editor for a split transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit split'**
+  String get txnDetailEditSplit;
+
+  /// Shown when splitting is unavailable because the device is offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Splits need an internet connection.'**
+  String get txnDetailSplitOffline;
+
+  /// Error when the transaction's split could not be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the split details.'**
+  String get txnDetailSplitLoadFailed;
+
+  /// Title of the split editor screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Split transaction'**
+  String get txnDetailSplitTitle;
+
+  /// Split editor: the transaction's total that the parts must add up to.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {amount}'**
+  String txnDetailSplitTotal(String amount);
+
+  /// Split editor: how much of the total the parts don't cover yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining: {amount}'**
+  String txnDetailSplitRemaining(String amount);
+
+  /// Split editor: the parts add up to more than the total.
+  ///
+  /// In en, this message translates to:
+  /// **'Over by {amount}'**
+  String txnDetailSplitOver(String amount);
+
+  /// Split editor: the parts match the total exactly.
+  ///
+  /// In en, this message translates to:
+  /// **'The parts add up to the total.'**
+  String get txnDetailSplitBalanced;
+
+  /// Split editor: explains the sign of part amounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive amounts go the same way as the total; use a negative amount for a part that goes the other way.'**
+  String get txnDetailSplitSignHint;
+
+  /// Split editor: heading of one part.
+  ///
+  /// In en, this message translates to:
+  /// **'Part {number}'**
+  String txnDetailSplitPartLabel(int number);
+
+  /// Tooltip for the button that removes a part in the split editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove part'**
+  String get txnDetailSplitRemoveRow;
+
+  /// Label of a split part's name field; empty uses the transaction's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get txnDetailSplitRowName;
+
+  /// Validation error for a split part's amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a nonzero amount with at most 4 decimals.'**
+  String get txnDetailSplitInvalidAmount;
+
+  /// Tooltip for the button that fills a part with what is left of the total.
+  ///
+  /// In en, this message translates to:
+  /// **'Use remaining amount'**
+  String get txnDetailSplitUseRemaining;
+
+  /// Button that adds a part to the split.
+  ///
+  /// In en, this message translates to:
+  /// **'Add part'**
+  String get txnDetailSplitAddRow;
+
+  /// Split editor: a split needs two or more parts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two parts.'**
+  String get txnDetailSplitNeedTwo;
+
+  /// Button that saves the split.
+  ///
+  /// In en, this message translates to:
+  /// **'Save split'**
+  String get txnDetailSplitSave;
+
+  /// Button that removes the split and restores the original transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove split'**
+  String get txnDetailSplitRemove;
+
+  /// Title of the confirmation dialog for removing a split.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove split?'**
+  String get txnDetailSplitRemoveConfirmTitle;
+
+  /// Body of the confirmation dialog for removing a split.
+  ///
+  /// In en, this message translates to:
+  /// **'The parts are deleted and the original transaction counts again.'**
+  String get txnDetailSplitRemoveConfirmBody;
+
+  /// Snackbar after the split was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Split saved'**
+  String get txnDetailSplitSaved;
+
+  /// Snackbar after the split was removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Split removed'**
+  String get txnDetailSplitRemoved;
 }
 
 class _AppLocalizationsDelegate
