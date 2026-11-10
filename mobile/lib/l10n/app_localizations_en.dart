@@ -1343,4 +1343,121 @@ class AppLocalizationsEn extends AppLocalizations {
   String tradeQuantityAtPrice(String quantity, String price) {
     return '$quantity @ $price';
   }
+
+  @override
+  String get shellNavActivity => 'Activity';
+
+  @override
+  String get shellNavPlan => 'Plan';
+
+  @override
+  String get shellNavInvest => 'Invest';
+
+  @override
+  String get shellSettingsTitle => 'Settings';
+
+  @override
+  String get shellSectionData => 'Data';
+
+  @override
+  String get shellSectionTools => 'Tools';
+
+  @override
+  String get shellSectionYou => 'You';
+
+  @override
+  String get shellSectionApp => 'App';
+
+  @override
+  String get shellConnections => 'Connections';
+
+  @override
+  String get shellImport => 'Import';
+
+  @override
+  String get shellCategories => 'Categories';
+
+  @override
+  String get shellTags => 'Tags';
+
+  @override
+  String get shellMerchants => 'Merchants';
+
+  @override
+  String get shellRules => 'Rules';
+
+  @override
+  String get shellExport => 'Export';
+
+  @override
+  String get shellProfile => 'Profile';
+
+  @override
+  String get shellPreferences => 'Preferences';
+
+  @override
+  String get shellSecurity => 'Security';
+
+  @override
+  String get shellServer => 'Server';
+
+  @override
+  String get shellOpensOnWeb => 'Opens on the web';
+
+  @override
+  String get shellPlanBudget => 'Budget';
+
+  @override
+  String get shellPlanRecurring => 'Recurring';
+
+  @override
+  String get shellPlanGoals => 'Goals';
+
+  @override
+  String get shellPlanBills => 'Bills';
+
+  @override
+  String get shellComingSoon => 'Coming soon';
+
+  @override
+  String get shellComingSoonBody => 'This part of the app is on its way.';
+
+  @override
+  String get shellGoalsOnWeb =>
+      'Goals live on the web for now. Open them here to track your progress.';
+
+  @override
+  String get shellBillsOnWeb =>
+      'Bills live on the web for now. Open them here to see what\'s coming up.';
+
+  @override
+  String get shellOpenOnWeb => 'Open on the web';
+
+  @override
+  String get shellInvestEmptyTitle => 'No investment accounts';
+
+  @override
+  String get shellInvestEmptyBody =>
+      'Investment and crypto accounts you add show up here.';
+
+  @override
+  String get shellInvestLoadFailed => 'Couldn\'t load your accounts';
+
+  @override
+  String get shellWebBack => 'Back';
+
+  @override
+  String get shellWebForward => 'Forward';
+
+  @override
+  String get shellWebOpenInSafari => 'Open in Safari';
+
+  @override
+  String get shellWebOpenInBrowser => 'Open in browser';
+
+  @override
+  String get shellWebLoadFailed => 'Couldn\'t load this page';
+
+  @override
+  String get shellWebOpenFailed => 'Couldn\'t open the link';
 }

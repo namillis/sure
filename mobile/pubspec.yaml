@@ -34,6 +34,8 @@ dependencies:
   flutter_markdown: ^0.7.2
   sentry_flutter: ^8.14.2
   upgrader: ^13.5.0
+  # Exact pin: 4.13.0 is the newest release that still supports Flutter 3.27.
+  webview_flutter: 4.13.0
 
 dev_dependencies:
   flutter_test:

@@ -11,7 +11,7 @@ import 'package:sure_mobile/models/cash_flow.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/screens/cash_flow_category_transactions_screen.dart';
 import 'package:sure_mobile/screens/cash_flow_screen.dart';
-import 'package:sure_mobile/screens/more_screen.dart';
+import 'package:sure_mobile/screens/settings_links.dart';
 import 'package:sure_mobile/services/cash_flow_service.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/services/transactions_service.dart';
@@ -314,7 +314,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
-  testWidgets('More screen links to Cash Flow', (tester) async {
+  testWidgets('Settings Tools section links to Cash Flow', (tester) async {
     usePhoneSurface(tester);
     await tester.pumpWidget(ChangeNotifierProvider<PrivacyProvider>.value(
       value: PrivacyProvider(initialHidden: false),
@@ -322,7 +322,9 @@ void main() {
         theme: SureTheme.light,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const MoreScreen(),
+        home: const Scaffold(
+          body: SingleChildScrollView(child: SettingsLinkGroups()),
+        ),
       ),
     ));
     expect(find.text('Cash Flow'), findsOneWidget);
@@ -333,7 +335,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(CashFlowScreen), findsOneWidget);
-    expect(find.byType(MoreScreen), findsNothing);
+    expect(find.byType(SettingsLinkGroups), findsNothing);
   });
 
   testWidgets('This month and Last month follow the family month start day',

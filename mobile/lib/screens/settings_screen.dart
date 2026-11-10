@@ -15,6 +15,7 @@ import '../services/biometric_service.dart';
 import '../services/preferences_service.dart';
 import '../services/user_service.dart';
 import 'log_viewer_screen.dart';
+import 'settings_links.dart';
 import '../models/custom_proxy_header.dart';
 import '../services/api_config.dart';
 import '../services/custom_proxy_headers_service.dart';
@@ -328,7 +329,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final accessToken = await authProvider.getValidAccessToken();
       if (accessToken == null) {
-        await authProvider.logout();
+        await _signOut(authProvider);
         return;
       }
 
@@ -353,7 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         );
 
-        await authProvider.logout();
+        await _signOut(authProvider);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -400,7 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final accessToken = await authProvider.getValidAccessToken();
       if (accessToken == null) {
-        await authProvider.logout();
+        await _signOut(authProvider);
         return;
       }
 
@@ -410,7 +411,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!context.mounted) return;
 
       if (result['success'] == true) {
-        await authProvider.logout();
+        await _signOut(authProvider);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -447,8 +448,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed == true && context.mounted) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.logout();
+      await _signOut(authProvider);
     }
+  }
+
+  /// Settings is pushed over the shell, so leave it before signing out;
+  /// otherwise it would stay on top of the login screen.
+  Future<void> _signOut(AuthProvider authProvider) async {
+    if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+    await authProvider.logout();
   }
 
   Future<void> _showCustomHeadersDialog() async {
@@ -538,6 +546,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
+      appBar: AppBar(title: Text(l.shellSettingsTitle)),
       body: ListView(
         children: [
           // User info section
@@ -592,6 +601,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+            ),
+          ),
+
+          const SettingsLinkGroups(),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Text(
+              l.shellSectionApp.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.4,
+                  ),
             ),
           ),
 
@@ -725,6 +748,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Colors.grey,
               ),
             ),
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.dns_outlined),
+            title: Text(l.shellServer),
+            subtitle: Text(ApiConfig.baseUrl),
           ),
 
           ListTile(

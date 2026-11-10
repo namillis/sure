@@ -3,16 +3,27 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../widgets/sure_icon.dart';
 import '../widgets/sure_logo.dart';
+import 'app_tabs.dart';
 import 'chat_list_screen.dart';
 import 'dashboard_screen.dart';
 import 'intro_screen.dart';
-import 'more_screen.dart';
+import 'invest_screen.dart';
+import 'plan_screen.dart';
 import 'settings_screen.dart';
 import '../l10n/app_localizations.dart';
 
+/// The bottom tabs of the main shell.
+enum ShellTab { home, intro, activity, plan, invest, assistant }
+
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  const MainNavigationScreen({super.key, this.tabBodyBuilder});
+
+  /// Replaces every tab body. Injected in tests so the shell can be pumped
+  /// without the network-backed screens.
+  @visibleForTesting
+  final Widget Function(BuildContext context, ShellTab tab)? tabBodyBuilder;
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -21,37 +32,86 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   final _dashboardKey = GlobalKey<DashboardScreenState>();
+  // Tabs are built on first visit, then kept alive by the IndexedStack, so
+  // the Activity, Plan and Invest loads don't all fire at launch.
+  final Set<ShellTab> _visited = {};
 
-  List<Widget> _buildScreens(bool introLayout, VoidCallback? onStartChat) {
-    final screens = <Widget>[];
+  List<ShellTab> _tabs(bool introLayout) => introLayout
+      ? const [ShellTab.intro, ShellTab.assistant]
+      : const [
+          ShellTab.home,
+          ShellTab.activity,
+          ShellTab.plan,
+          ShellTab.invest,
+          ShellTab.assistant,
+        ];
 
-    if (!introLayout) {
-      screens.add(DashboardScreen(key: _dashboardKey));
+  Widget _buildBody(ShellTab tab, VoidCallback onStartChat) {
+    final override = widget.tabBodyBuilder;
+    if (override != null) return override(context, tab);
+    switch (tab) {
+      case ShellTab.home:
+        return DashboardScreen(key: _dashboardKey);
+      case ShellTab.intro:
+        return IntroScreen(onStartChat: onStartChat);
+      case ShellTab.activity:
+        return AppTabs.activity(context);
+      case ShellTab.plan:
+        return const PlanScreen();
+      case ShellTab.invest:
+        return const InvestScreen();
+      case ShellTab.assistant:
+        return const ChatListScreen();
     }
+  }
 
-    if (introLayout) {
-      screens.add(IntroScreen(onStartChat: onStartChat));
+  NavigationDestination _destination(ShellTab tab, AppLocalizations l) {
+    switch (tab) {
+      case ShellTab.home:
+        return NavigationDestination(
+          icon: const SureIcon(SureIcons.house),
+          label: l.navHome,
+        );
+      case ShellTab.intro:
+        return NavigationDestination(
+          icon: const Icon(Icons.auto_awesome_outlined),
+          selectedIcon: const Icon(Icons.auto_awesome),
+          label: l.navIntro,
+        );
+      case ShellTab.activity:
+        return NavigationDestination(
+          icon: const SureIcon(SureIcons.receipt),
+          label: l.shellNavActivity,
+        );
+      case ShellTab.plan:
+        return NavigationDestination(
+          icon: const Icon(Icons.pie_chart_outline),
+          selectedIcon: const Icon(Icons.pie_chart),
+          label: l.shellNavPlan,
+        );
+      case ShellTab.invest:
+        return NavigationDestination(
+          icon: const SureIcon(SureIcons.trendingUp),
+          label: l.shellNavInvest,
+        );
+      case ShellTab.assistant:
+        return NavigationDestination(
+          icon: const Icon(Icons.chat_bubble_outline),
+          selectedIcon: const Icon(Icons.chat_bubble),
+          label: l.navAssistant,
+        );
     }
-
-    screens.add(const ChatListScreen());
-
-    if (!introLayout) {
-      screens.add(const MoreScreen());
-    }
-
-    screens.add(const SettingsScreen());
-
-    return screens;
   }
 
   Future<void> _handleDestinationSelected(
     int index,
     AuthProvider authProvider,
-    bool introLayout,
+    List<ShellTab> tabs,
   ) async {
-    const chatIndex = 1;
+    if (index < 0 || index >= tabs.length) return;
+    final tab = tabs[index];
 
-    if (index == chatIndex && !authProvider.aiEnabled) {
+    if (tab == ShellTab.assistant && !authProvider.aiEnabled) {
       final enabled = await _showEnableAiPrompt();
       if (!enabled) {
         return;
@@ -63,62 +123,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         _currentIndex = index;
       });
 
-      if (!introLayout && index == 0) {
+      if (tab == ShellTab.home) {
         _dashboardKey.currentState?.reloadPreferences();
       }
     }
   }
 
-  Future<void> _handleSelectSettings(AuthProvider authProvider, bool introLayout) async {
-    final settingsIndex = introLayout ? 2 : 3;
-    await _handleDestinationSelected(settingsIndex, authProvider, introLayout);
-  }
-
-  List<NavigationDestination> _buildDestinations(bool introLayout, AppLocalizations l) {
-    final destinations = <NavigationDestination>[];
-
-    if (!introLayout) {
-      destinations.add(
-        NavigationDestination(
-          icon: const Icon(Icons.home_outlined),
-          selectedIcon: const Icon(Icons.home),
-          label: l.navHome,
-        ),
-      );
-    }
-
-    if (introLayout) {
-      destinations.add(
-        NavigationDestination(
-          icon: const Icon(Icons.auto_awesome_outlined),
-          selectedIcon: const Icon(Icons.auto_awesome),
-          label: l.navIntro,
-        ),
-      );
-    }
-
-    destinations.add(
-      NavigationDestination(
-        icon: const Icon(Icons.chat_bubble_outline),
-        selectedIcon: const Icon(Icons.chat_bubble),
-        label: l.navAssistant,
-      ),
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
     );
-
-    if (!introLayout) {
-      destinations.add(
-        NavigationDestination(
-          icon: const Icon(Icons.more_horiz),
-          selectedIcon: const Icon(Icons.more_horiz),
-          label: l.navMore,
-        ),
-      );
-    }
-
-    return destinations;
+    // Settings can change dashboard preferences (e.g. group by type).
+    _dashboardKey.currentState?.reloadPreferences();
   }
 
-  PreferredSizeWidget _buildTopBar(AuthProvider authProvider, bool introLayout) {
+  PreferredSizeWidget _buildTopBar(AppLocalizations l) {
     return AppBar(
       automaticallyImplyLeading: false,
       toolbarHeight: 60,
@@ -160,14 +179,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: Center(
-            child: InkWell(
-              onTap: () {
-                _handleSelectSettings(authProvider, introLayout);
-              },
-              child: const SizedBox(
-                width: 36,
-                height: 36,
-                child: Icon(Icons.settings_outlined),
+            child: Tooltip(
+              message: l.shellSettingsTitle,
+              child: InkWell(
+                onTap: _openSettings,
+                child: SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Icon(
+                    Icons.settings_outlined,
+                    semanticLabel: l.shellSettingsTitle,
+                  ),
+                ),
               ),
             ),
           ),
@@ -219,52 +242,39 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     return enabled;
   }
 
-  int _resolveBottomSelectedIndex(List<NavigationDestination> destinations) {
-    if (destinations.isEmpty) {
-      return 0;
-    }
-
-    if (_currentIndex < 0) {
-      return 0;
-    }
-
-    if (_currentIndex >= destinations.length) {
-      return destinations.length - 1;
-    }
-
-    return _currentIndex;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
-        final introLayout = authProvider.isIntroLayout;
-        const chatIndex = 1;
-        final screens = _buildScreens(
-          introLayout,
-          () => _handleDestinationSelected(chatIndex, authProvider, introLayout),
-        );
-        final destinations = _buildDestinations(introLayout, l);
-        final bottomNavIndex = _resolveBottomSelectedIndex(destinations);
+        final tabs = _tabs(authProvider.isIntroLayout);
 
-        if (_currentIndex >= screens.length) {
+        if (_currentIndex >= tabs.length) {
           _currentIndex = 0;
         }
+        _visited.add(tabs[_currentIndex]);
+
+        final chatIndex = tabs.indexOf(ShellTab.assistant);
+        void startChat() =>
+            _handleDestinationSelected(chatIndex, authProvider, tabs);
 
         return Scaffold(
-          appBar: _buildTopBar(authProvider, introLayout),
+          appBar: _buildTopBar(l),
           body: IndexedStack(
             index: _currentIndex,
-            children: screens,
+            children: [
+              for (final tab in tabs)
+                _visited.contains(tab)
+                    ? _buildBody(tab, startChat)
+                    : const SizedBox.shrink(),
+            ],
           ),
           bottomNavigationBar: NavigationBar(
-            selectedIndex: bottomNavIndex,
+            selectedIndex: _currentIndex,
             onDestinationSelected: (index) {
-              _handleDestinationSelected(index, authProvider, introLayout);
+              _handleDestinationSelected(index, authProvider, tabs);
             },
-            destinations: destinations,
+            destinations: [for (final tab in tabs) _destination(tab, l)],
           ),
         );
       },

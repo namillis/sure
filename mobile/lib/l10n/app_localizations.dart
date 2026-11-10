@@ -63,7 +63,7 @@ import 'app_localizations_sv.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('sv'),
+    Locale('sv')
   ];
 
   /// Application title shown in the OS task switcher.
@@ -2437,6 +2437,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{quantity} @ {price}'**
   String tradeQuantityAtPrice(String quantity, String price);
+
+  /// Bottom navigation label for the Activity (transactions) tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get shellNavActivity;
+
+  /// Bottom navigation label for the Plan tab (budget, recurring, goals, bills).
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get shellNavPlan;
+
+  /// Bottom navigation label for the Invest (portfolio) tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Invest'**
+  String get shellNavInvest;
+
+  /// Title of the settings screen and tooltip of the header button that opens it.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get shellSettingsTitle;
+
+  /// Settings section for connections, imports, categories, tags, merchants, rules and exports.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get shellSectionData;
+
+  /// Settings section for calendar, cash flow and recent transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get shellSectionTools;
+
+  /// Settings section for the user's profile, preferences and security.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get shellSectionYou;
+
+  /// Settings section for this app's own settings (theme, privacy, sign out).
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get shellSectionApp;
+
+  /// Settings row: bank sync providers and connections (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Connections'**
+  String get shellConnections;
+
+  /// Settings row: import data from a file (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get shellImport;
+
+  /// Settings row: manage categories (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get shellCategories;
+
+  /// Settings row: manage tags (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get shellTags;
+
+  /// Settings row: manage merchants (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Merchants'**
+  String get shellMerchants;
+
+  /// Settings row: manage transaction rules (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Rules'**
+  String get shellRules;
+
+  /// Settings row: export your data (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get shellExport;
+
+  /// Settings row: the user's profile (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get shellProfile;
+
+  /// Settings row: account preferences such as currency and locale (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get shellPreferences;
+
+  /// Settings row: password, MFA and sessions (opens the web).
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get shellSecurity;
+
+  /// Settings row label showing the Sure server URL the app talks to.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get shellServer;
+
+  /// Accessibility label of the globe icon on rows that open a web page in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens on the web'**
+  String get shellOpensOnWeb;
+
+  /// Plan tab segment: monthly budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget'**
+  String get shellPlanBudget;
+
+  /// Plan tab segment: recurring transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get shellPlanRecurring;
+
+  /// Plan tab segment: savings goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get shellPlanGoals;
+
+  /// Plan tab segment: upcoming bills.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills'**
+  String get shellPlanBills;
+
+  /// Placeholder title for a section that isn't in the app yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get shellComingSoon;
+
+  /// Placeholder body for a section that isn't in the app yet.
+  ///
+  /// In en, this message translates to:
+  /// **'This part of the app is on its way.'**
+  String get shellComingSoonBody;
+
+  /// Plan tab, Goals segment: explains goals aren't in the app yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals live on the web for now. Open them here to track your progress.'**
+  String get shellGoalsOnWeb;
+
+  /// Plan tab, Bills segment: explains bills aren't in the app yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills live on the web for now. Open them here to see what\'s coming up.'**
+  String get shellBillsOnWeb;
+
+  /// Button and tooltip that open the current feature in the in-app web view.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on the web'**
+  String get shellOpenOnWeb;
+
+  /// Invest tab empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No investment accounts'**
+  String get shellInvestEmptyTitle;
+
+  /// Invest tab empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment and crypto accounts you add show up here.'**
+  String get shellInvestEmptyBody;
+
+  /// Invest tab error state when accounts failed to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your accounts'**
+  String get shellInvestLoadFailed;
+
+  /// Web view toolbar button: go back one page.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get shellWebBack;
+
+  /// Web view toolbar button: go forward one page.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get shellWebForward;
+
+  /// Web view toolbar button on iOS: open the current page in Safari.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Safari'**
+  String get shellWebOpenInSafari;
+
+  /// Web view toolbar button on other platforms: open the current page in the browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get shellWebOpenInBrowser;
+
+  /// Web view error state title.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this page'**
+  String get shellWebLoadFailed;
+
+  /// Snackbar when a link can't be opened outside the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the link'**
+  String get shellWebOpenFailed;
 }
 
 class _AppLocalizationsDelegate
@@ -2466,9 +2694,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

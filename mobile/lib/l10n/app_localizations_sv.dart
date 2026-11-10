@@ -1357,4 +1357,121 @@ class AppLocalizationsSv extends AppLocalizations {
   String tradeQuantityAtPrice(String quantity, String price) {
     return '$quantity à $price';
   }
+
+  @override
+  String get shellNavActivity => 'Aktivitet';
+
+  @override
+  String get shellNavPlan => 'Planera';
+
+  @override
+  String get shellNavInvest => 'Investera';
+
+  @override
+  String get shellSettingsTitle => 'Inställningar';
+
+  @override
+  String get shellSectionData => 'Data';
+
+  @override
+  String get shellSectionTools => 'Verktyg';
+
+  @override
+  String get shellSectionYou => 'Du';
+
+  @override
+  String get shellSectionApp => 'App';
+
+  @override
+  String get shellConnections => 'Kopplingar';
+
+  @override
+  String get shellImport => 'Importera';
+
+  @override
+  String get shellCategories => 'Kategorier';
+
+  @override
+  String get shellTags => 'Taggar';
+
+  @override
+  String get shellMerchants => 'Handlare';
+
+  @override
+  String get shellRules => 'Regler';
+
+  @override
+  String get shellExport => 'Exportera';
+
+  @override
+  String get shellProfile => 'Profil';
+
+  @override
+  String get shellPreferences => 'Inställningar för kontot';
+
+  @override
+  String get shellSecurity => 'Säkerhet';
+
+  @override
+  String get shellServer => 'Server';
+
+  @override
+  String get shellOpensOnWeb => 'Öppnas på webben';
+
+  @override
+  String get shellPlanBudget => 'Budget';
+
+  @override
+  String get shellPlanRecurring => 'Återkommande';
+
+  @override
+  String get shellPlanGoals => 'Mål';
+
+  @override
+  String get shellPlanBills => 'Räkningar';
+
+  @override
+  String get shellComingSoon => 'Kommer snart';
+
+  @override
+  String get shellComingSoonBody => 'Den här delen av appen är på väg.';
+
+  @override
+  String get shellGoalsOnWeb =>
+      'Mål finns på webben än så länge. Öppna dem här för att följa hur det går.';
+
+  @override
+  String get shellBillsOnWeb =>
+      'Räkningar finns på webben än så länge. Öppna dem här för att se vad som är på väg.';
+
+  @override
+  String get shellOpenOnWeb => 'Öppna på webben';
+
+  @override
+  String get shellInvestEmptyTitle => 'Inga investeringskonton';
+
+  @override
+  String get shellInvestEmptyBody =>
+      'Investerings- och kryptokonton som du lägger till visas här.';
+
+  @override
+  String get shellInvestLoadFailed => 'Kunde inte läsa in dina konton';
+
+  @override
+  String get shellWebBack => 'Bakåt';
+
+  @override
+  String get shellWebForward => 'Framåt';
+
+  @override
+  String get shellWebOpenInSafari => 'Öppna i Safari';
+
+  @override
+  String get shellWebOpenInBrowser => 'Öppna i webbläsaren';
+
+  @override
+  String get shellWebLoadFailed => 'Kunde inte läsa in sidan';
+
+  @override
+  String get shellWebOpenFailed => 'Kunde inte öppna länken';
 }
