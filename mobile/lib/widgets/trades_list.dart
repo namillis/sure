@@ -18,10 +18,14 @@ class TradesList extends StatefulWidget {
     super.key,
     required this.account,
     this.accountDetailService,
+    this.onTradeTap,
   });
 
   final Account account;
   final AccountDetailService? accountDetailService;
+
+  /// Passed to each [TradeTile.onTap].
+  final void Function(AccountTrade trade)? onTradeTap;
 
   @override
   State<TradesList> createState() => _TradesListState();
@@ -178,7 +182,12 @@ class _TradesListState extends State<TradesList> {
               ),
             );
           }
-          return TradeTile(trade: _trades[index]);
+          final trade = _trades[index];
+          final onTap = widget.onTradeTap;
+          return TradeTile(
+            trade: trade,
+            onTap: onTap == null ? null : () => onTap(trade),
+          );
         },
       ),
     );
@@ -189,10 +198,18 @@ class _TradesListState extends State<TradesList> {
 /// amount. [showAccount] adds the trade's account to the subtitle when
 /// activity from several accounts shares a list.
 class TradeTile extends StatelessWidget {
-  const TradeTile({super.key, required this.trade, this.showAccount = false});
+  const TradeTile({
+    super.key,
+    required this.trade,
+    this.showAccount = false,
+    this.onTap,
+  });
 
   final AccountTrade trade;
   final bool showAccount;
+
+  /// Makes the row tappable (e.g. to edit the trade).
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +252,7 @@ class TradeTile extends StatelessWidget {
         ),
     ].join(' · ');
 
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
@@ -280,5 +297,6 @@ class TradeTile extends StatelessWidget {
         ],
       ),
     );
+    return onTap == null ? row : InkWell(onTap: onTap, child: row);
   }
 }

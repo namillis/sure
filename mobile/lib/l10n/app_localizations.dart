@@ -3355,6 +3355,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} · normal {normal}'**
   String spendingVsNormalCategoryNormal(String amount, String normal);
+
+  /// Tooltip of the account screen's overflow menu button.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get accountActions;
+
+  /// Menu item and screen title for setting an account's balance on a date.
+  ///
+  /// In en, this message translates to:
+  /// **'Update balance'**
+  String get accountActionsUpdateBalance;
+
+  /// Menu item and screen title for recording a buy or sell.
+  ///
+  /// In en, this message translates to:
+  /// **'Add trade'**
+  String get accountActionsAddTrade;
+
+  /// Title of the screen that edits an existing buy or sell.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit trade'**
+  String get accountActionsEditTrade;
+
+  /// Menu item and dialog title that starts a sync of all accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get accountActionsSyncNow;
+
+  /// Label of a date field in the balance and trade forms.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get accountActionsDate;
+
+  /// Label of the balance field in the Update balance form.
+  ///
+  /// In en, this message translates to:
+  /// **'New balance'**
+  String get accountActionsNewBalance;
+
+  /// The account's current balance shown above the Update balance form.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance: {amount}'**
+  String accountActionsCurrentBalance(String amount);
+
+  /// Label of the optional note field in the Update balance form.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get accountActionsNote;
+
+  /// Submit button of the balance and trade forms.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get accountActionsSave;
+
+  /// Validation error for an empty required field.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get accountActionsRequired;
+
+  /// Validation error when the new balance is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the new balance'**
+  String get accountActionsBalanceRequired;
+
+  /// Validation error when a number field has no digits.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get accountActionsInvalidNumber;
+
+  /// Validation error for a quantity or price of zero or less.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be greater than zero'**
+  String get accountActionsMustBePositive;
+
+  /// Validation error for a negative trade fee.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees can\'t be negative'**
+  String get accountActionsFeeInvalid;
+
+  /// Confirmation after the server accepted a new balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance updated'**
+  String get accountActionsBalanceUpdated;
+
+  /// Trade form segment for a purchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get accountActionsBuy;
+
+  /// Trade form segment for a sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get accountActionsSell;
+
+  /// Label of the ticker field in the trade form.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get accountActionsSecurity;
+
+  /// Placeholder of the ticker field in the trade form.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticker, e.g. AAPL'**
+  String get accountActionsSecurityHint;
+
+  /// Validation error when the trade form's ticker is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a ticker'**
+  String get accountActionsSecurityRequired;
+
+  /// Helper under the read-only security field when editing a trade.
+  ///
+  /// In en, this message translates to:
+  /// **'The security and fees can\'t be changed. Delete and re-add the trade instead.'**
+  String get accountActionsEditTradeNote;
+
+  /// Label of the share quantity field in the trade form.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get accountActionsQuantity;
+
+  /// Label of the price field in the trade form.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per share'**
+  String get accountActionsPrice;
+
+  /// Label of the optional fee field in the trade form.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees (optional)'**
+  String get accountActionsFee;
+
+  /// Live total of a buy: quantity times price plus fees.
+  ///
+  /// In en, this message translates to:
+  /// **'Total cost'**
+  String get accountActionsTotalCost;
+
+  /// Live total of a sell: quantity times price minus fees.
+  ///
+  /// In en, this message translates to:
+  /// **'Total proceeds'**
+  String get accountActionsTotalProceeds;
+
+  /// Confirmation after a trade was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade added'**
+  String get accountActionsTradeAdded;
+
+  /// Confirmation after a trade was edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade updated'**
+  String get accountActionsTradeUpdated;
+
+  /// Confirmation after a trade was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade deleted'**
+  String get accountActionsTradeDeleted;
+
+  /// Button tooltip and dialog title for deleting a trade.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete trade'**
+  String get accountActionsDeleteTrade;
+
+  /// Confirmation text before deleting a trade.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this trade? This can\'t be undone.'**
+  String get accountActionsDeleteTradeConfirm;
+
+  /// Sync dialog status before the server answered.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting sync...'**
+  String get accountActionsSyncStarting;
+
+  /// Sync dialog and status chip text while a sync runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get accountActionsSyncing;
+
+  /// Time since Sync now started, e.g. '0:12 elapsed'.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed} elapsed'**
+  String accountActionsSyncElapsed(String elapsed);
+
+  /// Sync dialog and status chip text after a successful sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync complete'**
+  String get accountActionsSyncComplete;
+
+  /// Sync dialog and status chip text after a failed sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed'**
+  String get accountActionsSyncFailed;
+
+  /// Sync dialog text after a failed sync, with the server's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed: {message}'**
+  String accountActionsSyncFailedDetail(String message);
+
+  /// Sync dialog text when the sync did not finish within two minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Still syncing after 2 minutes. It will keep running in the background.'**
+  String get accountActionsSyncTimeout;
+
+  /// Closes the sync dialog while the sync keeps running.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get accountActionsHide;
+
+  /// Closes the sync dialog after the sync finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get accountActionsClose;
+
+  /// Status chip text when the family has never synced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get accountActionsNeverSynced;
+
+  /// Status chip text for a sync that finished under a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced just now'**
+  String get accountActionsSyncedJustNow;
+
+  /// Status chip text for a sync that finished minutes ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {count}m ago'**
+  String accountActionsSyncedMinutesAgo(int count);
+
+  /// Status chip text for a sync that finished hours ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {count}h ago'**
+  String accountActionsSyncedHoursAgo(int count);
+
+  /// Status chip text for a sync that finished days ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {count}d ago'**
+  String accountActionsSyncedDaysAgo(int count);
+
+  /// Screen reader hint on the sync status chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts a sync of all accounts'**
+  String get accountActionsSyncChipHint;
 }
 
 class _AppLocalizationsDelegate
