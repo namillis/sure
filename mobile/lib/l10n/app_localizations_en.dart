@@ -1612,4 +1612,270 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activitySessionExpired => 'Your session expired. Sign in again.';
+
+  @override
+  String get recurring => 'Recurring';
+
+  @override
+  String get recurringAdd => 'Add recurring';
+
+  @override
+  String get recurringGroupUpcoming => 'Upcoming this month';
+
+  @override
+  String get recurringGroupLater => 'Later';
+
+  @override
+  String get recurringGroupSuggested => 'Suggested';
+
+  @override
+  String get recurringGroupInactive => 'Inactive';
+
+  @override
+  String get recurringMonthlyOut => 'Monthly out';
+
+  @override
+  String get recurringMonthlyIn => 'Monthly in';
+
+  @override
+  String get recurringEmptyTitle => 'No recurring transactions yet';
+
+  @override
+  String get recurringEmptyBody =>
+      'Add bills, subscriptions and income that repeat to see what\'s coming up.';
+
+  @override
+  String get recurringLoadFailed => 'Couldn\'t load recurring transactions';
+
+  @override
+  String get recurringRetry => 'Try again';
+
+  @override
+  String recurringEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Weekly',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Monthly',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Yearly',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringMonthlyOnDay(int day) {
+    return 'Monthly on day $day';
+  }
+
+  @override
+  String recurringNextDate(String date) {
+    return 'Next $date';
+  }
+
+  @override
+  String get recurringStatusActive => 'Active';
+
+  @override
+  String get recurringStatusPaused => 'Paused';
+
+  @override
+  String get recurringStatusInactive => 'Inactive';
+
+  @override
+  String get recurringStatusSuggested => 'Suggested';
+
+  @override
+  String get recurringStatusEnded => 'Ended';
+
+  @override
+  String get recurringIncome => 'Income';
+
+  @override
+  String get recurringExpense => 'Expense';
+
+  @override
+  String get recurringActionEdit => 'Edit';
+
+  @override
+  String get recurringActionPause => 'Pause';
+
+  @override
+  String get recurringActionActivate => 'Activate';
+
+  @override
+  String recurringMoreActions(String name) {
+    return 'More actions for $name';
+  }
+
+  @override
+  String recurringDeleteTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get recurringDeleteBody =>
+      'This removes the recurring item. Your past transactions stay as they are.';
+
+  @override
+  String get recurringDeleted => 'Recurring item deleted';
+
+  @override
+  String recurringPausedMessage(String name) {
+    return '$name paused';
+  }
+
+  @override
+  String recurringActivatedMessage(String name) {
+    return '$name activated';
+  }
+
+  @override
+  String get recurringActionFailed => 'Couldn\'t update. Please try again.';
+
+  @override
+  String get recurringNewTitle => 'New recurring';
+
+  @override
+  String get recurringEditTitle => 'Edit recurring';
+
+  @override
+  String get recurringFieldName => 'Name';
+
+  @override
+  String get recurringFieldAmount => 'Amount';
+
+  @override
+  String get recurringFieldCurrency => 'Currency';
+
+  @override
+  String get recurringFieldAccount => 'Account';
+
+  @override
+  String get recurringNoAccount => 'No account';
+
+  @override
+  String get recurringFieldNextDate => 'Next expected date';
+
+  @override
+  String get recurringFieldLastDate => 'Last occurrence';
+
+  @override
+  String get recurringFieldActive => 'Active';
+
+  @override
+  String get recurringFieldActiveHint =>
+      'Inactive items aren\'t expected or counted in totals';
+
+  @override
+  String get recurringFieldAutopay => 'Autopay';
+
+  @override
+  String get recurringFieldPaymentUrl => 'Payment link';
+
+  @override
+  String get recurringFieldNotes => 'Notes';
+
+  @override
+  String get recurringCadenceNote =>
+      'New items repeat monthly on the day of the next expected date. Change the schedule on the web.';
+
+  @override
+  String get recurringLockedNote =>
+      'Name, amount, currency, account and schedule can only be changed on the web.';
+
+  @override
+  String get recurringErrorNameRequired => 'Enter a name';
+
+  @override
+  String get recurringErrorAmountInvalid => 'Enter an amount greater than zero';
+
+  @override
+  String get recurringErrorCurrencyInvalid => 'Use a 3-letter code, like USD';
+
+  @override
+  String get recurringErrorUrlInvalid =>
+      'Enter a link starting with http:// or https://';
+
+  @override
+  String get recurringErrorLastAfterNext =>
+      'Must be before the next expected date';
+
+  @override
+  String get recurringSaveFailed => 'Couldn\'t save. Please try again.';
+
+  @override
+  String get insightsTitle => 'Insights';
+
+  @override
+  String get insightsDismiss => 'Dismiss';
+
+  @override
+  String get insightsPriorityHigh => 'High priority';
+
+  @override
+  String get insightsShowDetails => 'Show details';
+
+  @override
+  String get insightsHideDetails => 'Hide details';
+
+  @override
+  String get insightsDismissFailed => 'Couldn\'t dismiss the insight';
+
+  @override
+  String get spendingVsNormalTitle => 'Spending vs normal';
+
+  @override
+  String spendingVsNormalSoFar(String amount) {
+    return '$amount so far';
+  }
+
+  @override
+  String spendingVsNormalNormal(String amount) {
+    return 'Normal $amount';
+  }
+
+  @override
+  String spendingVsNormalAbove(String percent) {
+    return '$percent above normal';
+  }
+
+  @override
+  String spendingVsNormalBelow(String percent) {
+    return '$percent below normal';
+  }
+
+  @override
+  String get spendingVsNormalNew => 'New';
+
+  @override
+  String get spendingVsNormalShowAll => 'Show all categories';
+
+  @override
+  String get spendingVsNormalShowLess => 'Show less';
+
+  @override
+  String spendingVsNormalCategoryNormal(String amount, String normal) {
+    return '$amount · normal $normal';
+  }
 }

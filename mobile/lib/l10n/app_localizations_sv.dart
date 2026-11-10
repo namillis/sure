@@ -1627,4 +1627,272 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get activitySessionExpired =>
       'Din session har gått ut. Logga in igen.';
+
+  @override
+  String get recurring => 'Återkommande';
+
+  @override
+  String get recurringAdd => 'Lägg till återkommande';
+
+  @override
+  String get recurringGroupUpcoming => 'Kommande denna månad';
+
+  @override
+  String get recurringGroupLater => 'Senare';
+
+  @override
+  String get recurringGroupSuggested => 'Förslag';
+
+  @override
+  String get recurringGroupInactive => 'Inaktiva';
+
+  @override
+  String get recurringMonthlyOut => 'Ut per månad';
+
+  @override
+  String get recurringMonthlyIn => 'In per månad';
+
+  @override
+  String get recurringEmptyTitle => 'Inga återkommande transaktioner än';
+
+  @override
+  String get recurringEmptyBody =>
+      'Lägg till räkningar, prenumerationer och inkomster som upprepas för att se vad som väntar.';
+
+  @override
+  String get recurringLoadFailed =>
+      'Kunde inte läsa in återkommande transaktioner';
+
+  @override
+  String get recurringRetry => 'Försök igen';
+
+  @override
+  String recurringEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Var $count:e vecka',
+      one: 'Varje vecka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Var $count:e månad',
+      one: 'Varje månad',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vart $count:e år',
+      one: 'Varje år',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringMonthlyOnDay(int day) {
+    return 'Varje månad den $day:e';
+  }
+
+  @override
+  String recurringNextDate(String date) {
+    return 'Nästa $date';
+  }
+
+  @override
+  String get recurringStatusActive => 'Aktiv';
+
+  @override
+  String get recurringStatusPaused => 'Pausad';
+
+  @override
+  String get recurringStatusInactive => 'Inaktiv';
+
+  @override
+  String get recurringStatusSuggested => 'Förslag';
+
+  @override
+  String get recurringStatusEnded => 'Avslutad';
+
+  @override
+  String get recurringIncome => 'Inkomst';
+
+  @override
+  String get recurringExpense => 'Utgift';
+
+  @override
+  String get recurringActionEdit => 'Redigera';
+
+  @override
+  String get recurringActionPause => 'Pausa';
+
+  @override
+  String get recurringActionActivate => 'Aktivera';
+
+  @override
+  String recurringMoreActions(String name) {
+    return 'Fler åtgärder för $name';
+  }
+
+  @override
+  String recurringDeleteTitle(String name) {
+    return 'Ta bort $name?';
+  }
+
+  @override
+  String get recurringDeleteBody =>
+      'Det återkommande objektet tas bort. Dina tidigare transaktioner påverkas inte.';
+
+  @override
+  String get recurringDeleted => 'Återkommande objekt borttaget';
+
+  @override
+  String recurringPausedMessage(String name) {
+    return '$name pausad';
+  }
+
+  @override
+  String recurringActivatedMessage(String name) {
+    return '$name aktiverad';
+  }
+
+  @override
+  String get recurringActionFailed => 'Kunde inte uppdatera. Försök igen.';
+
+  @override
+  String get recurringNewTitle => 'Ny återkommande';
+
+  @override
+  String get recurringEditTitle => 'Redigera återkommande';
+
+  @override
+  String get recurringFieldName => 'Namn';
+
+  @override
+  String get recurringFieldAmount => 'Belopp';
+
+  @override
+  String get recurringFieldCurrency => 'Valuta';
+
+  @override
+  String get recurringFieldAccount => 'Konto';
+
+  @override
+  String get recurringNoAccount => 'Inget konto';
+
+  @override
+  String get recurringFieldNextDate => 'Nästa förväntade datum';
+
+  @override
+  String get recurringFieldLastDate => 'Senaste tillfälle';
+
+  @override
+  String get recurringFieldActive => 'Aktiv';
+
+  @override
+  String get recurringFieldActiveHint =>
+      'Inaktiva objekt förväntas inte och räknas inte med i summorna';
+
+  @override
+  String get recurringFieldAutopay => 'Autogiro';
+
+  @override
+  String get recurringFieldPaymentUrl => 'Betalningslänk';
+
+  @override
+  String get recurringFieldNotes => 'Anteckningar';
+
+  @override
+  String get recurringCadenceNote =>
+      'Nya objekt upprepas varje månad på samma dag som nästa förväntade datum. Ändra schemat på webben.';
+
+  @override
+  String get recurringLockedNote =>
+      'Namn, belopp, valuta, konto och schema kan bara ändras på webben.';
+
+  @override
+  String get recurringErrorNameRequired => 'Ange ett namn';
+
+  @override
+  String get recurringErrorAmountInvalid => 'Ange ett belopp större än noll';
+
+  @override
+  String get recurringErrorCurrencyInvalid =>
+      'Använd en kod med tre bokstäver, som SEK';
+
+  @override
+  String get recurringErrorUrlInvalid =>
+      'Ange en länk som börjar med http:// eller https://';
+
+  @override
+  String get recurringErrorLastAfterNext =>
+      'Måste vara före nästa förväntade datum';
+
+  @override
+  String get recurringSaveFailed => 'Kunde inte spara. Försök igen.';
+
+  @override
+  String get insightsTitle => 'Insikter';
+
+  @override
+  String get insightsDismiss => 'Avfärda';
+
+  @override
+  String get insightsPriorityHigh => 'Hög prioritet';
+
+  @override
+  String get insightsShowDetails => 'Visa detaljer';
+
+  @override
+  String get insightsHideDetails => 'Dölj detaljer';
+
+  @override
+  String get insightsDismissFailed => 'Kunde inte avfärda insikten';
+
+  @override
+  String get spendingVsNormalTitle => 'Utgifter mot normalt';
+
+  @override
+  String spendingVsNormalSoFar(String amount) {
+    return '$amount hittills';
+  }
+
+  @override
+  String spendingVsNormalNormal(String amount) {
+    return 'Normalt $amount';
+  }
+
+  @override
+  String spendingVsNormalAbove(String percent) {
+    return '$percent över det normala';
+  }
+
+  @override
+  String spendingVsNormalBelow(String percent) {
+    return '$percent under det normala';
+  }
+
+  @override
+  String get spendingVsNormalNew => 'Ny';
+
+  @override
+  String get spendingVsNormalShowAll => 'Visa alla kategorier';
+
+  @override
+  String get spendingVsNormalShowLess => 'Visa färre';
+
+  @override
+  String spendingVsNormalCategoryNormal(String amount, String normal) {
+    return '$amount · normalt $normal';
+  }
 }
