@@ -612,8 +612,8 @@ class DashboardScreenState extends State<DashboardScreen> {
               final account = accounts[index];
               return AccountCard(
                 account: account,
-                onTap: () => _handleAccountTap(account),
-                onSwipe: () => _handleAccountSwipe(account),
+                onTap: () => _handleAccountSwipe(account),
+                onSwipe: () => _handleAccountTap(account),
               );
             },
             childCount: accounts.length,
@@ -669,8 +669,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                   final account = groupAccounts[index];
                   return AccountCard(
                     account: account,
-                    onTap: () => _handleAccountTap(account),
-                    onSwipe: () => _handleAccountSwipe(account),
+                    onTap: () => _handleAccountSwipe(account),
+                    onSwipe: () => _handleAccountTap(account),
                   );
                 },
                 childCount: groupAccounts.length,

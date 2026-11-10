@@ -154,17 +154,14 @@ class AccountCard extends StatelessWidget {
             color: Colors.blue,
             borderRadius: BorderRadius.circular(SureTokens.radiusLg),
           ),
+          // Tapping a card opens the account; swiping is the quick-add shortcut.
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SureIcon(
-                SureIcons.receipt,
-                color: Colors.white,
-                size: SureIconSize.xl,
-              ),
+              Icon(Icons.add_circle_outline, color: Colors.white, size: 28),
               SizedBox(height: 4),
               Text(
-                'Transactions',
+                'Add',
                 style: TextStyle(color: Colors.white, fontSize: 12),
               ),
             ],
