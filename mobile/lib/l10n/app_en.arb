@@ -1241,6 +1241,29 @@
   "@tradeBuy": { "description": "Trade row label for a purchase when the server sent no activity label." },
   "tradeSell": "Sell",
   "@tradeSell": { "description": "Trade row label for a sale when the server sent no activity label." },
+  "portfolioTitle": "Investments",
+  "@portfolioTitle": { "description": "Title of the dashboard investments card and the portfolio screen." },
+  "portfolioAccountCount": "{count, plural, =1{1 account} other{{count} accounts}}",
+  "@portfolioAccountCount": {
+    "description": "How many investment accounts the dashboard investments card covers.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "portfolioUnrealizedGain": "Unrealized {amount} ({percent})",
+  "@portfolioUnrealizedGain": {
+    "description": "Total unrealized gain or loss across holdings with a cost basis, e.g. 'Unrealized +$9,880.00 (+13.3%)'.",
+    "placeholders": { "amount": { "type": "String" }, "percent": { "type": "String" } }
+  },
+  "portfolioAllocation": "Allocation",
+  "@portfolioAllocation": { "description": "Section heading for the portfolio allocation bar." },
+  "portfolioAllocationOther": "Other",
+  "@portfolioAllocationOther": { "description": "Allocation slice grouping every position after the largest few." },
+  "portfolioAllocationCash": "Cash",
+  "@portfolioAllocationCash": { "description": "Allocation slice for uninvested cash in the investment accounts." },
+  "portfolioRecentActivity": "Recent activity",
+  "@portfolioRecentActivity": { "description": "Section heading for the latest trades across investment accounts." },
+  "portfolioLoadFailed": "Couldn't load your investments",
+  "@portfolioLoadFailed": { "description": "Error state of the portfolio screen." },
+
   "tradeQuantityAtPrice": "{quantity} @ {price}",
   "@tradeQuantityAtPrice": {
     "description": "Trade row subtitle: quantity traded at a price.",

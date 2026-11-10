@@ -178,17 +178,21 @@ class _TradesListState extends State<TradesList> {
               ),
             );
           }
-          return _TradeRow(trade: _trades[index]);
+          return TradeTile(trade: _trades[index]);
         },
       ),
     );
   }
 }
 
-class _TradeRow extends StatelessWidget {
-  const _TradeRow({required this.trade});
+/// One trade: Buy/Sell label and security, date and quantity at price, and
+/// amount. [showAccount] adds the trade's account to the subtitle when
+/// activity from several accounts shares a list.
+class TradeTile extends StatelessWidget {
+  const TradeTile({super.key, required this.trade, this.showAccount = false});
 
   final AccountTrade trade;
+  final bool showAccount;
 
   @override
   Widget build(BuildContext context) {
@@ -218,6 +222,7 @@ class _TradeRow extends StatelessWidget {
     final title = label == null ? security : '$label $security';
 
     final showQuantity = quantity != null && quantity != 0;
+    final accountName = showAccount ? trade.accountName?.trim() : null;
     final subtitle = [
       DateFormat.yMMMd(locale).format(trade.date),
       if (showQuantity)
@@ -244,6 +249,15 @@ class _TradeRow extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (accountName?.isNotEmpty == true)
+                  Text(
+                    accountName!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,

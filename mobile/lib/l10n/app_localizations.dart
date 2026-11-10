@@ -2384,6 +2384,54 @@ abstract class AppLocalizations {
   /// **'Sell'**
   String get tradeSell;
 
+  /// Title of the dashboard investments card and the portfolio screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Investments'**
+  String get portfolioTitle;
+
+  /// How many investment accounts the dashboard investments card covers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 account} other{{count} accounts}}'**
+  String portfolioAccountCount(int count);
+
+  /// Total unrealized gain or loss across holdings with a cost basis, e.g. 'Unrealized +$9,880.00 (+13.3%)'.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrealized {amount} ({percent})'**
+  String portfolioUnrealizedGain(String amount, String percent);
+
+  /// Section heading for the portfolio allocation bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocation'**
+  String get portfolioAllocation;
+
+  /// Allocation slice grouping every position after the largest few.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get portfolioAllocationOther;
+
+  /// Allocation slice for uninvested cash in the investment accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get portfolioAllocationCash;
+
+  /// Section heading for the latest trades across investment accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get portfolioRecentActivity;
+
+  /// Error state of the portfolio screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your investments'**
+  String get portfolioLoadFailed;
+
   /// Trade row subtitle: quantity traded at a price.
   ///
   /// In en, this message translates to:

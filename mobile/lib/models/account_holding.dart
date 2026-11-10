@@ -15,6 +15,10 @@ class AccountHolding {
   /// provider supplied no cost basis.
   final String? avgCost;
 
+  /// The account holding this position (from the API's nested `account`).
+  final String? accountId;
+  final String? accountName;
+
   AccountHolding({
     required this.id,
     required this.date,
@@ -26,11 +30,15 @@ class AccountHolding {
     this.securityName,
     this.securityId,
     this.avgCost,
+    this.accountId,
+    this.accountName,
   });
 
   factory AccountHolding.fromJson(Map<String, dynamic> json) {
     final securityJson = json['security'];
     final security = securityJson is Map<String, dynamic> ? securityJson : null;
+    final accountJson = json['account'];
+    final account = accountJson is Map<String, dynamic> ? accountJson : null;
 
     return AccountHolding(
       id: json['id'].toString(),
@@ -55,6 +63,8 @@ class AccountHolding {
       securityName: JsonParsing.parseString(security?['name']),
       securityId: JsonParsing.parseString(security?['id']),
       avgCost: JsonParsing.parseString(json['avg_cost']),
+      accountId: JsonParsing.parseString(account?['id']),
+      accountName: JsonParsing.parseString(account?['name']),
     );
   }
 }

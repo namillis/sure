@@ -10,6 +10,7 @@ import '../l10n/app_localizations.dart';
 import '../theme/sure_colors.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
+import '../utils/portfolio_math.dart';
 import 'balance_history_chart.dart';
 import 'sure_segmented_control.dart';
 
@@ -148,38 +149,6 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
     }
   }
 
-  /// Change between the first and last charted balance, in major units, plus
-  /// the fraction of the starting balance. Null with fewer than two points.
-  ({double amount, double? percent})? _rangeChange() {
-    final points =
-        _balances.where((balance) => balance.balanceCents != null).toList();
-    if (points.length < 2) return null;
-
-    final currency = points.last.currency;
-    final start = InvestmentMath.fromMinorUnits(
-      points.first.balanceCents!,
-      currency: currency,
-    );
-    final end = InvestmentMath.fromMinorUnits(
-      points.last.balanceCents!,
-      currency: currency,
-    );
-    return (
-      amount: end - start,
-      percent: start == 0 ? null : (end - start) / start.abs(),
-    );
-  }
-
-  String _rangeLabel(AppLocalizations l, AccountChartRange range) {
-    return switch (range) {
-      AccountChartRange.week => l.accountRangeWeek,
-      AccountChartRange.month => l.accountRangeMonth,
-      AccountChartRange.quarter => l.accountRangeQuarter,
-      AccountChartRange.year => l.accountRangeYear,
-      AccountChartRange.all => l.accountRangeAll,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -189,7 +158,7 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
     final locale = Localizations.localeOf(context).toString();
     final hideAmounts = context.watch<PrivacyProvider>().hidden;
 
-    final change = _rangeChange();
+    final change = PortfolioMath.change(_balances);
     // Rising debt is bad news, so liabilities read the trend inverted.
     final trendIsGood = change == null ||
         (_account.isLiability ? change.amount <= 0 : change.amount >= 0);
@@ -343,7 +312,7 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
               onChanged: _selectRange,
               segments: [
                 for (final range in AccountChartRange.values)
-                  SureSegment(value: range, label: _rangeLabel(l, range)),
+                  SureSegment(value: range, label: range.label(l)),
               ],
             ),
             if (_detailsUnavailable) ...[

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/account_balance.dart';
 
 /// Time windows offered above the balance chart.
@@ -22,6 +23,15 @@ enum AccountChartRange {
     final today = DateTime(now.year, now.month, now.day);
     return today.subtract(Duration(days: days));
   }
+
+  /// Short chip label, e.g. `1M`.
+  String label(AppLocalizations l) => switch (this) {
+        AccountChartRange.week => l.accountRangeWeek,
+        AccountChartRange.month => l.accountRangeMonth,
+        AccountChartRange.quarter => l.accountRangeQuarter,
+        AccountChartRange.year => l.accountRangeYear,
+        AccountChartRange.all => l.accountRangeAll,
+      };
 }
 
 /// Line chart of an account's balance over time. Press and drag to inspect a

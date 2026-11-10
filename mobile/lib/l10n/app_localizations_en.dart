@@ -1306,6 +1306,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tradeSell => 'Sell';
 
   @override
+  String get portfolioTitle => 'Investments';
+
+  @override
+  String portfolioAccountCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count accounts',
+      one: '1 account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String portfolioUnrealizedGain(String amount, String percent) {
+    return 'Unrealized $amount ($percent)';
+  }
+
+  @override
+  String get portfolioAllocation => 'Allocation';
+
+  @override
+  String get portfolioAllocationOther => 'Other';
+
+  @override
+  String get portfolioAllocationCash => 'Cash';
+
+  @override
+  String get portfolioRecentActivity => 'Recent activity';
+
+  @override
+  String get portfolioLoadFailed => 'Couldn\'t load your investments';
+
+  @override
   String tradeQuantityAtPrice(String quantity, String price) {
     return '$quantity @ $price';
   }
