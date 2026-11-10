@@ -63,7 +63,7 @@ import 'app_localizations_sv.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('sv'),
+    Locale('sv')
   ];
 
   /// Application title shown in the OS task switcher.
@@ -2437,6 +2437,432 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{quantity} @ {price}'**
   String tradeQuantityAtPrice(String quantity, String price);
+
+  /// Name of the Recurring segment of the Plan tab: bills, subscriptions and income that repeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get recurring;
+
+  /// Button that opens the form to add a recurring transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add recurring'**
+  String get recurringAdd;
+
+  /// Recurring list section: active items due by the end of this month, overdue included.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming this month'**
+  String get recurringGroupUpcoming;
+
+  /// Recurring list section: active items due after this month.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get recurringGroupLater;
+
+  /// Recurring list section: items Sure detected that the user has not confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get recurringGroupSuggested;
+
+  /// Recurring list section: paused, inactive and ended items.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get recurringGroupInactive;
+
+  /// Label for the monthly total of active recurring expenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly out'**
+  String get recurringMonthlyOut;
+
+  /// Label for the monthly total of active recurring income.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly in'**
+  String get recurringMonthlyIn;
+
+  /// Empty state title of the Recurring list.
+  ///
+  /// In en, this message translates to:
+  /// **'No recurring transactions yet'**
+  String get recurringEmptyTitle;
+
+  /// Empty state body of the Recurring list.
+  ///
+  /// In en, this message translates to:
+  /// **'Add bills, subscriptions and income that repeat to see what\'s coming up.'**
+  String get recurringEmptyBody;
+
+  /// Error state of the Recurring list.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load recurring transactions'**
+  String get recurringLoadFailed;
+
+  /// Button that reloads the Recurring list after an error.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get recurringRetry;
+
+  /// Cadence of a weekly recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Weekly} other{Every {count} weeks}}'**
+  String recurringEveryWeeks(int count);
+
+  /// Cadence of a monthly recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Monthly} other{Every {count} months}}'**
+  String recurringEveryMonths(int count);
+
+  /// Cadence of a yearly recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Yearly} other{Every {count} years}}'**
+  String recurringEveryYears(int count);
+
+  /// Cadence of a recurring item without explicit rules: monthly on a day of the month.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly on day {day}'**
+  String recurringMonthlyOnDay(int day);
+
+  /// Next expected date of a recurring item, e.g. 'Next Nov 15'.
+  ///
+  /// In en, this message translates to:
+  /// **'Next {date}'**
+  String recurringNextDate(String date);
+
+  /// Recurring item status.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get recurringStatusActive;
+
+  /// Recurring item status.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get recurringStatusPaused;
+
+  /// Recurring item status.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get recurringStatusInactive;
+
+  /// Recurring item status: detected, not confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get recurringStatusSuggested;
+
+  /// Recurring item status.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get recurringStatusEnded;
+
+  /// Marks a recurring item as money in; also the income option in the form.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get recurringIncome;
+
+  /// Expense option in the recurring form.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get recurringExpense;
+
+  /// Menu action that edits a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get recurringActionEdit;
+
+  /// Menu action that sets a recurring item inactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get recurringActionPause;
+
+  /// Menu action that sets a recurring item active.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get recurringActionActivate;
+
+  /// Tooltip of a recurring row's action menu.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions for {name}'**
+  String recurringMoreActions(String name);
+
+  /// Title of the confirm dialog for deleting a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String recurringDeleteTitle(String name);
+
+  /// Body of the confirm dialog for deleting a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the recurring item. Your past transactions stay as they are.'**
+  String get recurringDeleteBody;
+
+  /// Snackbar after deleting a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring item deleted'**
+  String get recurringDeleted;
+
+  /// Snackbar after pausing a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paused'**
+  String recurringPausedMessage(String name);
+
+  /// Snackbar after activating a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} activated'**
+  String recurringActivatedMessage(String name);
+
+  /// Snackbar when pausing, activating or deleting a recurring item fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update. Please try again.'**
+  String get recurringActionFailed;
+
+  /// Title of the form that adds a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'New recurring'**
+  String get recurringNewTitle;
+
+  /// Title of the form that edits a recurring item.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recurring'**
+  String get recurringEditTitle;
+
+  /// Recurring form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get recurringFieldName;
+
+  /// Recurring form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get recurringFieldAmount;
+
+  /// Recurring form field: 3-letter currency code.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get recurringFieldCurrency;
+
+  /// Recurring form field: the account it is paid from or into.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get recurringFieldAccount;
+
+  /// Account option meaning the recurring item is not tied to an account.
+  ///
+  /// In en, this message translates to:
+  /// **'No account'**
+  String get recurringNoAccount;
+
+  /// Recurring form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Next expected date'**
+  String get recurringFieldNextDate;
+
+  /// Recurring form field: when it last happened.
+  ///
+  /// In en, this message translates to:
+  /// **'Last occurrence'**
+  String get recurringFieldLastDate;
+
+  /// Recurring form switch: whether the item is expected.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get recurringFieldActive;
+
+  /// Helper under the Active switch in the recurring form.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive items aren\'t expected or counted in totals'**
+  String get recurringFieldActiveHint;
+
+  /// Recurring form switch: the bill is paid automatically.
+  ///
+  /// In en, this message translates to:
+  /// **'Autopay'**
+  String get recurringFieldAutopay;
+
+  /// Recurring form field: web address where the bill is paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment link'**
+  String get recurringFieldPaymentUrl;
+
+  /// Recurring form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get recurringFieldNotes;
+
+  /// Note in the add form: the app cannot set a cadence other than monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'New items repeat monthly on the day of the next expected date. Change the schedule on the web.'**
+  String get recurringCadenceNote;
+
+  /// Note in the edit form about fields the app cannot change.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, amount, currency, account and schedule can only be changed on the web.'**
+  String get recurringLockedNote;
+
+  /// Recurring form validation error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get recurringErrorNameRequired;
+
+  /// Recurring form validation error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than zero'**
+  String get recurringErrorAmountInvalid;
+
+  /// Recurring form validation error.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a 3-letter code, like USD'**
+  String get recurringErrorCurrencyInvalid;
+
+  /// Recurring form validation error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a link starting with http:// or https://'**
+  String get recurringErrorUrlInvalid;
+
+  /// Recurring form validation error on the last occurrence date.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be before the next expected date'**
+  String get recurringErrorLastAfterNext;
+
+  /// Error when saving a recurring item fails without a server message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save. Please try again.'**
+  String get recurringSaveFailed;
+
+  /// Title of the Home insights card.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get insightsTitle;
+
+  /// Button that acknowledges an insight so it stops showing.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get insightsDismiss;
+
+  /// Label on a high-priority insight.
+  ///
+  /// In en, this message translates to:
+  /// **'High priority'**
+  String get insightsPriorityHigh;
+
+  /// Accessibility hint for expanding an insight.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get insightsShowDetails;
+
+  /// Accessibility hint for collapsing an insight.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide details'**
+  String get insightsHideDetails;
+
+  /// Snackbar when acknowledging an insight fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t dismiss the insight'**
+  String get insightsDismissFailed;
+
+  /// Title of the Home card comparing this period's spending with normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending vs normal'**
+  String get spendingVsNormalTitle;
+
+  /// Spending in the unfinished current period.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} so far'**
+  String spendingVsNormalSoFar(String amount);
+
+  /// What is normal to have spent by now.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal {amount}'**
+  String spendingVsNormalNormal(String amount);
+
+  /// Overall spending is above normal, e.g. '12% above normal'.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} above normal'**
+  String spendingVsNormalAbove(String percent);
+
+  /// Overall spending is below normal, e.g. '8% below normal'.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} below normal'**
+  String spendingVsNormalBelow(String percent);
+
+  /// A category with spending this period and none normally.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get spendingVsNormalNew;
+
+  /// Expands the spending card to every category.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all categories'**
+  String get spendingVsNormalShowAll;
+
+  /// Collapses the spending card.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get spendingVsNormalShowLess;
+
+  /// Category row in the expanded spending card: spent and normal.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · normal {normal}'**
+  String spendingVsNormalCategoryNormal(String amount, String normal);
 }
 
 class _AppLocalizationsDelegate
@@ -2466,9 +2892,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }
