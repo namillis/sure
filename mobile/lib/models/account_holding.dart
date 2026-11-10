@@ -9,6 +9,11 @@ class AccountHolding {
   final String currency;
   final String? ticker;
   final String? securityName;
+  final String? securityId;
+
+  /// Formatted average cost per share (e.g. `$290.12`), or null when the
+  /// provider supplied no cost basis.
+  final String? avgCost;
 
   AccountHolding({
     required this.id,
@@ -19,6 +24,8 @@ class AccountHolding {
     required this.currency,
     this.ticker,
     this.securityName,
+    this.securityId,
+    this.avgCost,
   });
 
   factory AccountHolding.fromJson(Map<String, dynamic> json) {
@@ -46,6 +53,8 @@ class AccountHolding {
       ),
       ticker: JsonParsing.parseString(security?['ticker']),
       securityName: JsonParsing.parseString(security?['name']),
+      securityId: JsonParsing.parseString(security?['id']),
+      avgCost: JsonParsing.parseString(json['avg_cost']),
     );
   }
 }

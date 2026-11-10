@@ -593,12 +593,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get accountDetailRefreshTooltip => 'Uppdatera kontouppgifter';
 
   @override
-  String get accountDetailRecentBalanceHistory => 'Senaste saldohistorik';
-
-  @override
-  String get accountDetailTopHoldings => 'Största innehav';
-
-  @override
   String get accountDetailHoldingFallback => 'Innehav';
 
   @override
@@ -1261,4 +1255,72 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get cashFlowTransactionsLoadFailed =>
       'Kunde inte läsa in transaktioner';
+
+  @override
+  String get accountRangeWeek => '1V';
+
+  @override
+  String get accountRangeMonth => '1M';
+
+  @override
+  String get accountRangeQuarter => '3M';
+
+  @override
+  String get accountRangeYear => '1Å';
+
+  @override
+  String get accountRangeAll => 'Alla';
+
+  @override
+  String get accountChartNoHistory => 'Ingen saldohistorik för perioden';
+
+  @override
+  String accountChartChangeLabel(String change, String percent) {
+    return '$change ($percent) under perioden';
+  }
+
+  @override
+  String accountChartChangeOnlyLabel(String change) {
+    return '$change under perioden';
+  }
+
+  @override
+  String get accountTabHoldings => 'Innehav';
+
+  @override
+  String get accountTabActivity => 'Aktivitet';
+
+  @override
+  String get accountTabTransactions => 'Transaktioner';
+
+  @override
+  String get holdingsEmpty => 'Inga innehav synkade än';
+
+  @override
+  String get holdingsLoadFailed => 'Kunde inte läsa in innehav';
+
+  @override
+  String holdingSharesAtPrice(String quantity, String price) {
+    return '$quantity st · $price';
+  }
+
+  @override
+  String get holdingNoCostBasis => 'Inget anskaffningsvärde';
+
+  @override
+  String get tradesEmpty => 'Ingen investeringsaktivitet än';
+
+  @override
+  String get tradesLoadFailed => 'Kunde inte läsa in aktivitet';
+
+  @override
+  String get tradeBuy => 'Köp';
+
+  @override
+  String get tradeSell => 'Sälj';
+
+  @override
+  String tradeQuantityAtPrice(String quantity, String price) {
+    return '$quantity à $price';
+  }
 }

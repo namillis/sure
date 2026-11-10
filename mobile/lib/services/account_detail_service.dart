@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import '../models/account.dart';
 import '../models/account_balance.dart';
 import '../models/account_holding.dart';
+import '../models/account_trade.dart';
 import '../utils/json_parsing.dart';
 import 'api_config.dart';
 import 'log_service.dart';
 
 class AccountDetailService {
   static const int _holdingsPageSize = 100;
+  static const int _balancesPageSize = 100;
 
   final http.Client _client;
   final bool _ownsClient;
@@ -94,12 +97,142 @@ class AccountDetailService {
     }
   }
 
+  /// Daily balances for [accountId] on or after [startDate] (all history when
+  /// null), oldest first. Walks every page up to [maxPages] of 100.
+  Future<Map<String, dynamic>> getBalanceHistory({
+    required String accessToken,
+    required String accountId,
+    DateTime? startDate,
+    int maxPages = 40,
+  }) async {
+    Uri pageUrl(int page) =>
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/balances').replace(
+          queryParameters: {
+            'account_id': accountId,
+            'page': page.toString(),
+            'per_page': _balancesPageSize.toString(),
+            if (startDate != null)
+              'start_date': DateFormat('yyyy-MM-dd').format(startDate),
+          },
+        );
+
+    Future<http.Response> fetch(int page) => _client
+        .get(pageUrl(page), headers: ApiConfig.getAuthHeaders(accessToken))
+        .timeout(const Duration(seconds: 30));
+
+    List<AccountBalance> parse(http.Response response) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return (data['balances'] as List<dynamic>? ?? [])
+          .map((json) => AccountBalance.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+
+    try {
+      final first = await fetch(1);
+      if (first.statusCode != 200) {
+        return _failureFromStatus(
+            first.statusCode, 'Failed to fetch balances');
+      }
+
+      final balances = parse(first);
+      final pagination =
+          (jsonDecode(first.body) as Map<String, dynamic>)['pagination']
+              as Map<String, dynamic>?;
+      final totalPages =
+          (JsonParsing.parseInt(pagination?['total_pages']) ?? 1)
+              .clamp(1, maxPages)
+              .toInt();
+
+      if (totalPages > 1) {
+        final rest = await Future.wait([
+          for (var page = 2; page <= totalPages; page++) fetch(page),
+        ]);
+        for (final response in rest) {
+          if (response.statusCode != 200) {
+            return _failureFromStatus(
+                response.statusCode, 'Failed to fetch balances');
+          }
+          balances.addAll(parse(response));
+        }
+      }
+
+      // The API returns newest first; charts want oldest first.
+      balances.sort((left, right) => left.date.compareTo(right.date));
+      return {'success': true, 'balances': balances};
+    } catch (e) {
+      _logFailure('getBalanceHistory', e);
+      return {
+        'success': false,
+        'error': 'Unable to load balance history. Please try again later.',
+      };
+    }
+  }
+
+  /// Every position on the account's latest holdings date, largest first.
+  Future<Map<String, dynamic>> getCurrentHoldings({
+    required String accessToken,
+    required String accountId,
+  }) {
+    return getHoldings(
+      accessToken: accessToken,
+      accountId: accountId,
+      perPage: null,
+    );
+  }
+
+  /// One page of investment activity for [accountId], newest first.
+  Future<Map<String, dynamic>> getTrades({
+    required String accessToken,
+    required String accountId,
+    int page = 1,
+    int perPage = 25,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/trades').replace(
+      queryParameters: {
+        'account_id': accountId,
+        'page': page.toString(),
+        'per_page': perPage.toString(),
+      },
+    );
+
+    try {
+      final response = await _client
+          .get(url, headers: ApiConfig.getAuthHeaders(accessToken))
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode != 200) {
+        return _failureFromStatus(response.statusCode, 'Failed to fetch trades');
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final trades = (data['trades'] as List<dynamic>? ?? [])
+          .map((json) => AccountTrade.fromJson(json as Map<String, dynamic>))
+          .toList();
+      final pagination = data['pagination'] as Map<String, dynamic>?;
+      final totalPages = JsonParsing.parseInt(pagination?['total_pages']) ?? 1;
+
+      return {
+        'success': true,
+        'trades': trades,
+        'hasMore': page < totalPages,
+      };
+    } catch (e) {
+      _logFailure('getTrades', e);
+      return {
+        'success': false,
+        'error': 'Unable to load investment activity. Please try again later.',
+      };
+    }
+  }
+
+  /// Positions on the latest holdings date, largest first. [perPage] caps how
+  /// many are returned; null returns all of them.
   Future<Map<String, dynamic>> getHoldings({
     required String accessToken,
     required String accountId,
-    int perPage = 5,
+    int? perPage = 5,
   }) async {
-    final displayLimit = perPage.clamp(1, _holdingsPageSize).toInt();
+    final displayLimit = perPage?.clamp(1, _holdingsPageSize).toInt();
 
     try {
       final firstPage = await _getHoldingsPage(
@@ -202,14 +335,16 @@ class AccountDetailService {
 
   List<AccountHolding> _topHoldings(
     List<AccountHolding> holdings,
-    int displayLimit,
+    int? displayLimit,
   ) {
     final sorted = holdings.toList()
       ..sort(
         (left, right) =>
             _amountValue(right.amount).compareTo(_amountValue(left.amount)),
       );
-    return sorted.take(displayLimit).toList();
+    return displayLimit == null
+        ? sorted
+        : sorted.take(displayLimit).toList();
   }
 
   double _amountValue(String amount) {

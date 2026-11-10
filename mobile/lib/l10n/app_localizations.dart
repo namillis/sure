@@ -1166,18 +1166,6 @@ abstract class AppLocalizations {
   /// **'Refresh account details'**
   String get accountDetailRefreshTooltip;
 
-  /// Section heading for the balance history chart in the account detail header.
-  ///
-  /// In en, this message translates to:
-  /// **'Recent balance history'**
-  String get accountDetailRecentBalanceHistory;
-
-  /// Section heading for the top holdings list in the account detail header.
-  ///
-  /// In en, this message translates to:
-  /// **'Top holdings'**
-  String get accountDetailTopHoldings;
-
   /// Fallback label when a holding has no name.
   ///
   /// In en, this message translates to:
@@ -2281,6 +2269,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load transactions'**
   String get cashFlowTransactionsLoadFailed;
+
+  /// Balance chart range chip: last 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'1W'**
+  String get accountRangeWeek;
+
+  /// Balance chart range chip: last 30 days.
+  ///
+  /// In en, this message translates to:
+  /// **'1M'**
+  String get accountRangeMonth;
+
+  /// Balance chart range chip: last 90 days.
+  ///
+  /// In en, this message translates to:
+  /// **'3M'**
+  String get accountRangeQuarter;
+
+  /// Balance chart range chip: last 365 days.
+  ///
+  /// In en, this message translates to:
+  /// **'1Y'**
+  String get accountRangeYear;
+
+  /// Balance chart range chip: full history.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get accountRangeAll;
+
+  /// Shown in place of the balance chart when the selected range has fewer than two balances.
+  ///
+  /// In en, this message translates to:
+  /// **'No balance history for this period'**
+  String get accountChartNoHistory;
+
+  /// Balance change over the selected chart range, e.g. '+$1,204.00 (+1.4%) this period'.
+  ///
+  /// In en, this message translates to:
+  /// **'{change} ({percent}) this period'**
+  String accountChartChangeLabel(String change, String percent);
+
+  /// Balance change over the selected range when no percentage applies (the range started at zero).
+  ///
+  /// In en, this message translates to:
+  /// **'{change} this period'**
+  String accountChartChangeOnlyLabel(String change);
+
+  /// Investment account section: current positions.
+  ///
+  /// In en, this message translates to:
+  /// **'Holdings'**
+  String get accountTabHoldings;
+
+  /// Investment account section: trades and other investment activity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get accountTabActivity;
+
+  /// Investment account section: cash transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get accountTabTransactions;
+
+  /// Empty state of the holdings list.
+  ///
+  /// In en, this message translates to:
+  /// **'No holdings synced yet'**
+  String get holdingsEmpty;
+
+  /// Error state of the holdings list.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load holdings'**
+  String get holdingsLoadFailed;
+
+  /// Holding row subtitle: share count and current price.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} shares · {price}'**
+  String holdingSharesAtPrice(String quantity, String price);
+
+  /// Shown instead of gain/loss when the provider sent no cost basis for a holding.
+  ///
+  /// In en, this message translates to:
+  /// **'No cost basis'**
+  String get holdingNoCostBasis;
+
+  /// Empty state of the investment activity list.
+  ///
+  /// In en, this message translates to:
+  /// **'No investment activity yet'**
+  String get tradesEmpty;
+
+  /// Error state of the investment activity list.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load activity'**
+  String get tradesLoadFailed;
+
+  /// Trade row label for a purchase when the server sent no activity label.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get tradeBuy;
+
+  /// Trade row label for a sale when the server sent no activity label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get tradeSell;
+
+  /// Trade row subtitle: quantity traded at a price.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} @ {price}'**
+  String tradeQuantityAtPrice(String quantity, String price);
 }
 
 class _AppLocalizationsDelegate

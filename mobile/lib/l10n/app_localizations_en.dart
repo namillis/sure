@@ -586,12 +586,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountDetailRefreshTooltip => 'Refresh account details';
 
   @override
-  String get accountDetailRecentBalanceHistory => 'Recent balance history';
-
-  @override
-  String get accountDetailTopHoldings => 'Top holdings';
-
-  @override
   String get accountDetailHoldingFallback => 'Holding';
 
   @override
@@ -1247,4 +1241,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashFlowTransactionsLoadFailed => 'Couldn\'t load transactions';
+
+  @override
+  String get accountRangeWeek => '1W';
+
+  @override
+  String get accountRangeMonth => '1M';
+
+  @override
+  String get accountRangeQuarter => '3M';
+
+  @override
+  String get accountRangeYear => '1Y';
+
+  @override
+  String get accountRangeAll => 'All';
+
+  @override
+  String get accountChartNoHistory => 'No balance history for this period';
+
+  @override
+  String accountChartChangeLabel(String change, String percent) {
+    return '$change ($percent) this period';
+  }
+
+  @override
+  String accountChartChangeOnlyLabel(String change) {
+    return '$change this period';
+  }
+
+  @override
+  String get accountTabHoldings => 'Holdings';
+
+  @override
+  String get accountTabActivity => 'Activity';
+
+  @override
+  String get accountTabTransactions => 'Transactions';
+
+  @override
+  String get holdingsEmpty => 'No holdings synced yet';
+
+  @override
+  String get holdingsLoadFailed => 'Couldn\'t load holdings';
+
+  @override
+  String holdingSharesAtPrice(String quantity, String price) {
+    return '$quantity shares · $price';
+  }
+
+  @override
+  String get holdingNoCostBasis => 'No cost basis';
+
+  @override
+  String get tradesEmpty => 'No investment activity yet';
+
+  @override
+  String get tradesLoadFailed => 'Couldn\'t load activity';
+
+  @override
+  String get tradeBuy => 'Buy';
+
+  @override
+  String get tradeSell => 'Sell';
+
+  @override
+  String tradeQuantityAtPrice(String quantity, String price) {
+    return '$quantity @ $price';
+  }
 }

@@ -10,6 +10,9 @@ import '../screens/transaction_edit_screen.dart';
 import '../screens/transaction_form_screen.dart';
 import '../widgets/account_detail_header.dart';
 import '../widgets/category_filter.dart';
+import '../widgets/holdings_list.dart';
+import '../widgets/sure_segmented_control.dart';
+import '../widgets/trades_list.dart';
 import '../widgets/sync_status_badge.dart';
 import '../services/log_service.dart';
 import '../theme/sure_tokens.dart';
@@ -31,10 +34,21 @@ class TransactionsListScreen extends StatefulWidget {
   State<TransactionsListScreen> createState() => _TransactionsListScreenState();
 }
 
+/// Sections of an investment/crypto account screen.
+enum _AccountSection { holdings, activity, transactions }
+
 class _TransactionsListScreenState extends State<TransactionsListScreen> {
   bool _isSelectionMode = false;
   final Set<String> _selectedTransactions = {};
   Set<String> _selectedCategoryIds = {};
+
+  bool get _hasInvestmentSections =>
+      widget.account.accountType == 'investment' ||
+      widget.account.accountType == 'crypto';
+
+  late _AccountSection _section = _hasInvestmentSections
+      ? _AccountSection.holdings
+      : _AccountSection.transactions;
 
   @override
   void initState() {
@@ -374,22 +388,53 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
       appBar: AppBar(
         title: Text(widget.account.name),
         actions: [
-          if (_isSelectionMode)
+          if (_section == _AccountSection.transactions) ...[
+            if (_isSelectionMode)
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: _selectedTransactions.isEmpty ? null : _deleteSelectedTransactions,
+              ),
             IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _selectedTransactions.isEmpty ? null : _deleteSelectedTransactions,
+              icon: Icon(_isSelectionMode ? Icons.close : Icons.checklist),
+              onPressed: _toggleSelectionMode,
             ),
-          IconButton(
-            icon: Icon(_isSelectionMode ? Icons.close : Icons.checklist),
-            onPressed: _toggleSelectionMode,
-          ),
+          ],
         ],
       ),
       body: Column(
         children: [
           AccountDetailHeader(account: widget.account),
+          if (_hasInvestmentSections)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: SureSegmentedControl<_AccountSection>(
+                selected: _section,
+                onChanged: (section) => setState(() {
+                  _section = section;
+                  _isSelectionMode = false;
+                  _selectedTransactions.clear();
+                }),
+                segments: [
+                  SureSegment(
+                    value: _AccountSection.holdings,
+                    label: l.accountTabHoldings,
+                  ),
+                  SureSegment(
+                    value: _AccountSection.activity,
+                    label: l.accountTabActivity,
+                  ),
+                  SureSegment(
+                    value: _AccountSection.transactions,
+                    label: l.accountTabTransactions,
+                  ),
+                ],
+              ),
+            ),
           Expanded(
-            child: Consumer<TransactionsProvider>(
+            child: switch (_section) {
+              _AccountSection.holdings => HoldingsList(account: widget.account),
+              _AccountSection.activity => TradesList(account: widget.account),
+              _AccountSection.transactions => Consumer<TransactionsProvider>(
               builder: (context, transactionsProvider, child) {
           if (transactionsProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -746,13 +791,16 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
           );
               },
             ),
+            },
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTransactionForm,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _section == _AccountSection.transactions
+          ? FloatingActionButton(
+              onPressed: _showAddTransactionForm,
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
