@@ -63,7 +63,7 @@ import 'app_localizations_sv.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('sv'),
+    Locale('sv')
   ];
 
   /// Application title shown in the OS task switcher.
@@ -2437,6 +2437,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{quantity} @ {price}'**
   String tradeQuantityAtPrice(String quantity, String price);
+
+  /// Title of the Activity tab: every transaction across accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activity;
+
+  /// Placeholder of the Activity search field. Searches names, notes and merchants.
+  ///
+  /// In en, this message translates to:
+  /// **'Search transactions'**
+  String get activitySearchHint;
+
+  /// Tooltip of the button that empties the Activity search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get activityClearSearch;
+
+  /// Heading of the date filter sheet on the Activity tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get activityFilterDate;
+
+  /// Activity date filter: the current calendar month (the default).
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get activityDateThisMonth;
+
+  /// Activity date filter: the previous calendar month.
+  ///
+  /// In en, this message translates to:
+  /// **'Last month'**
+  String get activityDateLastMonth;
+
+  /// Activity date filter: today and the 89 days before it.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 90 days'**
+  String get activityDateLast90Days;
+
+  /// Activity date filter: the current calendar year.
+  ///
+  /// In en, this message translates to:
+  /// **'This year'**
+  String get activityDateThisYear;
+
+  /// Activity date filter: no date limit.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get activityDateAll;
+
+  /// Activity date filter option that opens a date range picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range…'**
+  String get activityDateCustom;
+
+  /// Label of the date filter chip for a custom range, e.g. 'Oct 1 – Oct 15'.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String activityDateRange(String start, String end);
+
+  /// Activity filter chip and sheet title for categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get activityFilterCategory;
+
+  /// Activity filter chip and sheet title for accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get activityFilterAccount;
+
+  /// Activity filter chip and sheet title for tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get activityFilterTags;
+
+  /// Activity filter chip and sheet title for income or expense.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get activityFilterType;
+
+  /// Activity type filter option: both income and expenses.
+  ///
+  /// In en, this message translates to:
+  /// **'All types'**
+  String get activityTypeAll;
+
+  /// Activity type filter option: money out only.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get activityTypeExpense;
+
+  /// Activity type filter option: money in only.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get activityTypeIncome;
+
+  /// Filter chip label with how many values are selected, e.g. 'Category · 2'.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} · {count}'**
+  String activityFilterCount(String label, int count);
+
+  /// Button that resets the Activity search and every filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get activityClearAll;
+
+  /// Button in a filter sheet that deselects every value.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get activityFilterClear;
+
+  /// Button in a filter sheet that applies the selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get activityFilterApply;
+
+  /// Placeholder of the search field inside a long filter or category list.
+  ///
+  /// In en, this message translates to:
+  /// **'Find'**
+  String get activityFilterSearchHint;
+
+  /// Shown in a filter or category sheet that has no values.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to choose from yet'**
+  String get activityFilterNoOptions;
+
+  /// Day header in the Activity list for today's transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get activityToday;
+
+  /// Day header in the Activity list for yesterday's transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get activityYesterday;
+
+  /// Day header for transactions whose date could not be read.
+  ///
+  /// In en, this message translates to:
+  /// **'No date'**
+  String get activityUnknownDate;
+
+  /// Activity empty state with the default view (this month, no filters).
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions this month'**
+  String get activityEmpty;
+
+  /// Activity empty state when a search or filter is set.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions match.'**
+  String get activityEmptyFiltered;
+
+  /// Button in the filtered empty state that resets the search and filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get activityClearFilters;
+
+  /// Error state of the Activity list.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load transactions'**
+  String get activityLoadFailed;
+
+  /// Tooltip of the Activity app bar button that starts a new transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add transaction'**
+  String get activityAdd;
+
+  /// Title of the sheet that picks the account for a new transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an account'**
+  String get activityPickAccount;
+
+  /// Shown when adding a transaction but there are no accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an account first.'**
+  String get activityNoAccounts;
+
+  /// Accessibility label of the icon on a transaction that is split into parts.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get activitySplit;
+
+  /// Accessibility label of the icon on a transaction that is part of a transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get activityTransfer;
+
+  /// App bar title in Activity multi-select mode.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String activitySelectedCount(int count);
+
+  /// Bottom bar action that sets one category on every selected transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorize'**
+  String get activityCategorize;
+
+  /// Title of the sheet that picks the category for bulk categorize.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category'**
+  String get activityPickCategory;
+
+  /// Progress while bulk categorizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorizing {done} of {total}…'**
+  String activityCategorizing(int done, int total);
+
+  /// Result after every selected transaction was categorized.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Categorized 1 transaction} other{Categorized {count} transactions}}'**
+  String activityCategorized(int count);
+
+  /// Progress while deleting the selected transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting {done} of {total}…'**
+  String activityDeleting(int done, int total);
+
+  /// Result of a bulk categorize or delete where some items failed.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done. {failed} failed and are still selected.'**
+  String activityBulkPartial(int done, int total, int failed);
+
+  /// Shown when no access token is available for an Activity action.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session expired. Sign in again.'**
+  String get activitySessionExpired;
 }
 
 class _AppLocalizationsDelegate
@@ -2466,9 +2730,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

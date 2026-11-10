@@ -1357,4 +1357,157 @@ class AppLocalizationsSv extends AppLocalizations {
   String tradeQuantityAtPrice(String quantity, String price) {
     return '$quantity à $price';
   }
+
+  @override
+  String get activity => 'Aktivitet';
+
+  @override
+  String get activitySearchHint => 'Sök transaktioner';
+
+  @override
+  String get activityClearSearch => 'Rensa sökningen';
+
+  @override
+  String get activityFilterDate => 'Datum';
+
+  @override
+  String get activityDateThisMonth => 'Den här månaden';
+
+  @override
+  String get activityDateLastMonth => 'Förra månaden';
+
+  @override
+  String get activityDateLast90Days => 'Senaste 90 dagarna';
+
+  @override
+  String get activityDateThisYear => 'I år';
+
+  @override
+  String get activityDateAll => 'All tid';
+
+  @override
+  String get activityDateCustom => 'Eget intervall…';
+
+  @override
+  String activityDateRange(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String get activityFilterCategory => 'Kategori';
+
+  @override
+  String get activityFilterAccount => 'Konto';
+
+  @override
+  String get activityFilterTags => 'Taggar';
+
+  @override
+  String get activityFilterType => 'Typ';
+
+  @override
+  String get activityTypeAll => 'Alla typer';
+
+  @override
+  String get activityTypeExpense => 'Utgifter';
+
+  @override
+  String get activityTypeIncome => 'Inkomster';
+
+  @override
+  String activityFilterCount(String label, int count) {
+    return '$label · $count';
+  }
+
+  @override
+  String get activityClearAll => 'Rensa alla';
+
+  @override
+  String get activityFilterClear => 'Rensa';
+
+  @override
+  String get activityFilterApply => 'Använd';
+
+  @override
+  String get activityFilterSearchHint => 'Hitta';
+
+  @override
+  String get activityFilterNoOptions => 'Det finns inget att välja än';
+
+  @override
+  String get activityToday => 'I dag';
+
+  @override
+  String get activityYesterday => 'I går';
+
+  @override
+  String get activityUnknownDate => 'Inget datum';
+
+  @override
+  String get activityEmpty => 'Inga transaktioner den här månaden';
+
+  @override
+  String get activityEmptyFiltered => 'Inga transaktioner matchar.';
+
+  @override
+  String get activityClearFilters => 'Rensa filter';
+
+  @override
+  String get activityLoadFailed => 'Kunde inte läsa in transaktioner';
+
+  @override
+  String get activityAdd => 'Lägg till transaktion';
+
+  @override
+  String get activityPickAccount => 'Välj ett konto';
+
+  @override
+  String get activityNoAccounts => 'Lägg till ett konto först.';
+
+  @override
+  String get activitySplit => 'Delad';
+
+  @override
+  String get activityTransfer => 'Överföring';
+
+  @override
+  String activitySelectedCount(int count) {
+    return '$count valda';
+  }
+
+  @override
+  String get activityCategorize => 'Kategorisera';
+
+  @override
+  String get activityPickCategory => 'Välj en kategori';
+
+  @override
+  String activityCategorizing(int done, int total) {
+    return 'Kategoriserar $done av $total…';
+  }
+
+  @override
+  String activityCategorized(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transaktioner kategoriserade',
+      one: '1 transaktion kategoriserad',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityDeleting(int done, int total) {
+    return 'Raderar $done av $total…';
+  }
+
+  @override
+  String activityBulkPartial(int done, int total, int failed) {
+    return '$done av $total klara. $failed misslyckades och är fortfarande valda.';
+  }
+
+  @override
+  String get activitySessionExpired =>
+      'Din session har gått ut. Logga in igen.';
 }
