@@ -28,7 +28,8 @@ class PlanScreen extends StatefulWidget {
   /// Body of the Recurring segment. Defaults to [AppTabs.recurring].
   final WidgetBuilder recurringBuilder;
 
-  static Widget _buildBudget(BuildContext context) => const BudgetsScreen();
+  static Widget _buildBudget(BuildContext context) =>
+      const BudgetsScreen(embedded: true);
 
   @override
   State<PlanScreen> createState() => _PlanScreenState();
@@ -67,6 +68,18 @@ class _PlanScreenState extends State<PlanScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // Own Scaffold: the shell shows its logo bar on Home only, and segments
+    // such as Recurring show SnackBars.
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(l.shellNavPlan),
+      ),
+      body: _content(context, l),
+    );
+  }
+
+  Widget _content(BuildContext context, AppLocalizations l) {
     return Column(
       children: [
         Padding(

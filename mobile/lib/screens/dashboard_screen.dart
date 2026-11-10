@@ -21,7 +21,9 @@ import 'portfolio_screen.dart';
 import 'transaction_form_screen.dart';
 import 'transactions_list_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/insights_card.dart';
 import '../widgets/investments_summary_card.dart';
+import '../widgets/spending_vs_normal_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -131,7 +133,17 @@ class DashboardScreenState extends State<DashboardScreen> {
     _loadPreferences();
   }
 
+  /// Reloads accounts and the Home cards, e.g. after a sync finishes.
+  Future<void> reloadData() async {
+    setState(() => _homeRefreshCount += 1);
+    await _loadAccounts();
+  }
+
+  // Bumped on pull to refresh; keys the self-loading Home cards so they reload.
+  int _homeRefreshCount = 0;
+
   Future<void> _handleRefresh() async {
+    setState(() => _homeRefreshCount += 1);
     await _performManualSync();
   }
 
@@ -535,6 +547,17 @@ class DashboardScreenState extends State<DashboardScreen> {
                     formatAmount: _formatAmount,
                     netWorthFormatted: accountsProvider.netWorthFormatted,
                     isStale: accountsProvider.isBalanceSheetStale,
+                  ),
+                ),
+
+                // Insights and spending vs normal hide themselves when the
+                // server has nothing (or the preview feature is off).
+                SliverToBoxAdapter(
+                  child: InsightsCard(key: ValueKey('insights-$_homeRefreshCount')),
+                ),
+                SliverToBoxAdapter(
+                  child: SpendingVsNormalCard(
+                    key: ValueKey('spending-$_homeRefreshCount'),
                   ),
                 ),
 

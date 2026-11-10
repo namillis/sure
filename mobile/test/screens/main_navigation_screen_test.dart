@@ -45,12 +45,14 @@ void main() {
           findsOneWidget);
     }
     expect(find.text('body:home'), findsOneWidget);
+    expect(find.byTooltip('Settings'), findsOneWidget);
     // Tabs are built lazily.
     expect(find.text('body:plan', skipOffstage: false), findsNothing);
 
     await tester.tap(find.text('Plan'));
     await tester.pumpAndSettle();
     expect(find.text('body:plan'), findsOneWidget);
-    expect(find.byTooltip('Settings'), findsOneWidget);
+    // The logo bar with Settings belongs to Home; other tabs bring their own.
+    expect(find.byTooltip('Settings'), findsNothing);
   });
 }

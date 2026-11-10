@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../widgets/sure_icon.dart';
 import '../widgets/sure_logo.dart';
+import '../widgets/sync_status_chip.dart';
 import 'app_tabs.dart';
 import 'chat_list_screen.dart';
 import 'dashboard_screen.dart';
@@ -155,6 +156,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ),
       ),
       actions: [
+        // Last sync time; tapping it syncs now and then reloads Home.
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Center(
+            child: SyncStatusChip(
+              onSynced: () => _dashboardKey.currentState?.reloadData(),
+            ),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: Center(
@@ -258,8 +268,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         void startChat() =>
             _handleDestinationSelected(chatIndex, authProvider, tabs);
 
+        // The logo bar (privacy toggle, settings) belongs to Home. Every
+        // other tab draws its own titled app bar.
+        final onHome = tabs[_currentIndex] == ShellTab.home;
         return Scaffold(
-          appBar: _buildTopBar(l),
+          appBar: onHome ? _buildTopBar(l) : null,
           body: IndexedStack(
             index: _currentIndex,
             children: [

@@ -23,7 +23,16 @@ import 'budget_category_transactions_screen.dart';
 /// subcategories nested under their parent. Tapping a category opens its
 /// transactions for that budget period. Read-only: budgets are edited on web.
 class BudgetsScreen extends StatefulWidget {
-  const BudgetsScreen({super.key, this.provider, this.accessTokenLoader});
+  const BudgetsScreen({
+    super.key,
+    this.provider,
+    this.accessTokenLoader,
+    this.embedded = false,
+  });
+
+  /// True when shown inside a parent that already has its own app bar (the
+  /// Plan tab), so the screen leaves out its own.
+  final bool embedded;
 
   /// Injected for tests; otherwise the screen owns its provider.
   final BudgetsProvider? provider;
@@ -138,7 +147,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     final hideAmounts = context.watch<PrivacyProvider>().hidden;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.budgetsTitle)),
+      appBar: widget.embedded ? null : AppBar(title: Text(l.budgetsTitle)),
       body: RefreshIndicator(
         onRefresh: () => _load(forceRefresh: true),
         child: ListView(

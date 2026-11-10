@@ -41,15 +41,24 @@ class InvestScreen extends StatelessWidget {
             account.accountType == 'crypto')
         .toList();
 
+    // Loading and empty states get the same titled bar PortfolioScreen has.
+    Widget titled(Widget body) => Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: Text(l.portfolioTitle),
+          ),
+          body: body,
+        );
+
     if (accounts.isEmpty &&
         (accountsProvider.isInitializing || accountsProvider.isLoading)) {
-      return const Center(child: CircularProgressIndicator());
+      return titled(const Center(child: CircularProgressIndicator()));
     }
 
     if (accounts.isEmpty) {
       final failed = accountsProvider.errorMessage != null &&
           accountsProvider.errorMessage != 'unauthorized';
-      return RefreshIndicator(
+      return titled(RefreshIndicator(
         onRefresh: () => _reload(context),
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
@@ -97,7 +106,7 @@ class InvestScreen extends StatelessWidget {
             ),
           ),
         ),
-      );
+      ));
     }
 
     // Same rule as the dashboard's Investments card: the family currency when

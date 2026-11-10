@@ -13,7 +13,10 @@ void main() {
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: recurring == null
-            ? PlanScreen(budgetBuilder: (_) => const Text('budget body'))
+            ? PlanScreen(
+                budgetBuilder: (_) => const Text('budget body'),
+                recurringBuilder: (_) => const ComingSoonView(),
+              )
             : PlanScreen(
                 budgetBuilder: (_) => const Text('budget body'),
                 recurringBuilder: recurring,
