@@ -1,3 +1,4 @@
+import '../models/account.dart';
 import '../models/account_balance.dart';
 import '../models/account_holding.dart';
 import 'investment_math.dart';
@@ -193,6 +194,27 @@ class PortfolioMath {
       amount: end - start,
       percent: start == 0 ? null : (end - start) / start.abs(),
     );
+  }
+
+  /// The currency the Invest tab opens in: [familyCurrency] when some account
+  /// is in it, otherwise the currency with the largest total balance. Null
+  /// for no accounts.
+  static String? primaryCurrency(
+    Iterable<Account> accounts, {
+    String? familyCurrency,
+  }) {
+    final totals = <String, double>{};
+    for (final account in accounts) {
+      totals[account.currency] = (totals[account.currency] ?? 0) +
+          (InvestmentMath.parse(account.balance) ?? 0);
+    }
+    if (totals.isEmpty) return null;
+    if (familyCurrency != null && totals.containsKey(familyCurrency)) {
+      return familyCurrency;
+    }
+    return totals.entries
+        .reduce((best, entry) => entry.value > best.value ? entry : best)
+        .key;
   }
 
   static DateTime _day(DateTime date) =>

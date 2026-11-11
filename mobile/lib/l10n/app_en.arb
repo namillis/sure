@@ -2588,5 +2588,11 @@
   "dshSyncFailedShort": "Failed",
   "@dshSyncFailedShort": {"description": "Home sync pill when the last sync failed."},
   "dshAddTransaction": "Add",
-  "@dshAddTransaction": {"description": "Swipe action on an account row that opens the new transaction form."}
+  "@dshAddTransaction": {"description": "Swipe action on an account row that opens the new transaction form."},
+  "ds2iEmptyTitle": "No investments yet",
+  "@ds2iEmptyTitle": {"description": "Invest tab empty state title."},
+  "ds2iEmptyBody": "Connect a brokerage or add an investment account on the web.",
+  "@ds2iEmptyBody": {"description": "Invest tab empty state body."},
+  "ds2iCurrency": "Currency",
+  "@ds2iCurrency": {"description": "Accessibility label of the Invest tab's currency switcher (e.g. GBP | USD)."}
 }

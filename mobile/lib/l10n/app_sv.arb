@@ -1003,5 +1003,8 @@
   "dshAgoNow": "nu",
   "dshSyncShort": "Synka",
   "dshSyncFailedShort": "Misslyckades",
-  "dshAddTransaction": "Lägg till"
+  "dshAddTransaction": "Lägg till",
+  "ds2iEmptyTitle": "Inga investeringar ännu",
+  "ds2iEmptyBody": "Koppla en mäklare eller lägg till ett investeringskonto på webben.",
+  "ds2iCurrency": "Valuta"
 }

@@ -3565,4 +3565,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dshAddTransaction => 'Add';
+
+  @override
+  String get ds2iEmptyTitle => 'No investments yet';
+
+  @override
+  String get ds2iEmptyBody =>
+      'Connect a brokerage or add an investment account on the web.';
+
+  @override
+  String get ds2iCurrency => 'Currency';
 }

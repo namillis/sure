@@ -4,17 +4,19 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
-import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../widgets/investments_summary_card.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_icon.dart';
+import '../utils/portfolio_math.dart';
+import '../widgets/ds/ds.dart';
+import '../widgets/open_on_web_action.dart';
 import 'portfolio_screen.dart';
 
 /// The Invest tab: the [PortfolioScreen] over the investment and crypto
 /// accounts in [AccountsProvider] (loaded by the dashboard).
 class InvestScreen extends StatelessWidget {
   const InvestScreen({super.key});
+
+  /// The web's new account flow, where a brokerage or an investment account
+  /// is added.
+  static const newAccountPath = '/accounts/new';
 
   Future<void> _reload(BuildContext context) async {
     final authProvider = context.read<AuthProvider>();
@@ -33,7 +35,6 @@ class InvestScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
     final accountsProvider = context.watch<AccountsProvider>();
     final accounts = accountsProvider.accounts
         .where((account) =>
@@ -41,81 +42,54 @@ class InvestScreen extends StatelessWidget {
             account.accountType == 'crypto')
         .toList();
 
-    // Loading and empty states get the same titled bar PortfolioScreen has.
-    Widget titled(Widget body) => Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            title: Text(l.portfolioTitle),
-          ),
-          body: body,
+    // Loading, error and empty states share the tab's large title.
+    Widget titled(Widget state) => SureLargeTitleScaffold(
+          title: l.shellNavInvest,
+          automaticallyImplyLeading: false,
+          onRefresh: () => _reload(context),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: state),
+            ),
+          ],
         );
 
     if (accounts.isEmpty &&
         (accountsProvider.isInitializing || accountsProvider.isLoading)) {
-      return titled(const Center(child: CircularProgressIndicator()));
+      return titled(const CircularProgressIndicator());
     }
 
     if (accounts.isEmpty) {
       final failed = accountsProvider.errorMessage != null &&
           accountsProvider.errorMessage != 'unauthorized';
-      return titled(RefreshIndicator(
-        onRefresh: () => _reload(context),
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(SureSpacing.xxxl),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SureIcon(
-                        failed ? SureIcons.circleAlert : SureIcons.trendingUp,
-                        size: 64,
-                        color:
-                            failed ? palette.destructive : palette.textSubdued,
-                      ),
-                      const SizedBox(height: SureSpacing.xl),
-                      Text(
-                        failed
-                            ? l.shellInvestLoadFailed
-                            : l.shellInvestEmptyTitle,
-                        style: Theme.of(context).textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      if (!failed) ...[
-                        const SizedBox(height: SureSpacing.md),
-                        Text(
-                          l.shellInvestEmptyBody,
-                          style: TextStyle(color: palette.textSecondary),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                      const SizedBox(height: SureSpacing.xxxl),
-                      SureButton(
-                        label: failed ? l.commonTryAgain : l.commonRefresh,
-                        onPressed: () => _reload(context),
-                        leading: const SureIcon(SureIcons.refresh, size: 18),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+      if (failed) {
+        return titled(SureEmptyState(
+          key: const ValueKey('investLoadFailed'),
+          icon: SureIcons.circleAlert,
+          title: l.shellInvestLoadFailed,
+          primaryLabel: l.commonTryAgain,
+          onPrimary: () => _reload(context),
+        ));
+      }
+      return titled(SureEmptyState(
+        key: const ValueKey('investEmpty'),
+        icon: SureIcons.trendingUp,
+        title: l.ds2iEmptyTitle,
+        body: l.ds2iEmptyBody,
+        secondaryLabel: l.shellOpenOnWeb,
+        onSecondary: () => openWebFallback(
+          context,
+          title: l.dshAddAccount,
+          path: newAccountPath,
         ),
       ));
     }
 
-    // Same rule as the dashboard's Investments card: the family currency when
-    // it has investments, otherwise the currency with the largest total.
-    final currency = InvestmentsSummaryCard(
-      accounts: accounts,
+    final currency = PortfolioMath.primaryCurrency(
+      accounts,
       familyCurrency: accountsProvider.familyCurrency,
-      onTap: (_) {},
-    ).primaryCurrency;
+    )!;
 
     return PortfolioScreen(
       // A new account set or currency rebuilds the portfolio from scratch.

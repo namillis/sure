@@ -3599,4 +3599,14 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dshAddTransaction => 'Lägg till';
+
+  @override
+  String get ds2iEmptyTitle => 'Inga investeringar ännu';
+
+  @override
+  String get ds2iEmptyBody =>
+      'Koppla en mäklare eller lägg till ett investeringskonto på webben.';
+
+  @override
+  String get ds2iCurrency => 'Valuta';
 }

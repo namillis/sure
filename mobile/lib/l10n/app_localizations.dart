@@ -6073,6 +6073,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get dshAddTransaction;
+
+  /// Invest tab empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No investments yet'**
+  String get ds2iEmptyTitle;
+
+  /// Invest tab empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a brokerage or add an investment account on the web.'**
+  String get ds2iEmptyBody;
+
+  /// Accessibility label of the Invest tab's currency switcher (e.g. GBP | USD).
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get ds2iCurrency;
 }
 
 class _AppLocalizationsDelegate

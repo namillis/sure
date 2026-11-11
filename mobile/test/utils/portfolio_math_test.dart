@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sure_mobile/models/account.dart';
 import 'package:sure_mobile/models/account_balance.dart';
 import 'package:sure_mobile/models/account_holding.dart';
 import 'package:sure_mobile/utils/portfolio_math.dart';
@@ -168,6 +169,40 @@ void main() {
     test('has no percent when the range started at zero', () {
       final change = PortfolioMath.change([_balance(1, 0), _balance(2, 500)])!;
       expect(change.percent, isNull);
+    });
+  });
+
+  group('PortfolioMath.primaryCurrency', () {
+    Account account(String currency, String balance) => Account(
+          id: '$currency$balance',
+          name: 'A',
+          balance: balance,
+          currency: currency,
+          accountType: 'investment',
+        );
+    final accounts = [
+      account('USD', r'$100.00'),
+      account('GBP', '£900.00'),
+      account('USD', r'$200.00'),
+    ];
+
+    test('prefers the family currency when an account is in it', () {
+      expect(
+        PortfolioMath.primaryCurrency(accounts, familyCurrency: 'USD'),
+        'USD',
+      );
+    });
+
+    test('otherwise picks the currency with the largest total', () {
+      expect(PortfolioMath.primaryCurrency(accounts), 'GBP');
+      expect(
+        PortfolioMath.primaryCurrency(accounts, familyCurrency: 'EUR'),
+        'GBP',
+      );
+    });
+
+    test('is null without accounts', () {
+      expect(PortfolioMath.primaryCurrency(const []), isNull);
     });
   });
 }
