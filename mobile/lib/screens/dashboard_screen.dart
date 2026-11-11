@@ -722,27 +722,19 @@ class _AccountGroupRow extends StatelessWidget {
                   AccountTypeIcon(accountType: group.accountType),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text.rich(
-                      TextSpan(children: [
-                        TextSpan(
-                          text: l.dshGroupTitle(
-                            accountGroupLabel(l, group.accountType),
-                            group.accounts.length,
-                          ),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: palette.textPrimary,
-                          ),
-                        ),
-                        if (group.emptyCount > 0)
-                          TextSpan(
-                            text: ' ${l.dshGroupEmpty(group.emptyCount)}',
-                            style: TextStyle(color: palette.textSubdued),
-                          ),
-                      ]),
+                    child: Text(
+                      l.dshGroupTitle(
+                        accountGroupLabel(l, group.accountType),
+                        group.accounts.length,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 15, height: 1.25),
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
+                        color: palette.textPrimary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),

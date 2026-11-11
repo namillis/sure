@@ -283,7 +283,7 @@ void main() {
           .widget<Text>(find.descendant(of: cash, matching: find.byType(Text)).first)
           .textSpan!
           .toPlainText(),
-      'Cash · 3 (1 empty)',
+      'Cash · 3',
     );
     expect(find.descendant(of: cash, matching: find.text(r'$1,500.00')),
         findsOneWidget);
