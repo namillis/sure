@@ -21,6 +21,7 @@ import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/ds_harness.dart' show brightnesses;
+import '../support/test_database.dart';
 
 class _FakeAuth extends ChangeNotifier implements AuthProvider {
   _FakeAuth(this._user);
@@ -279,6 +280,33 @@ void main() {
     expect(find.text('Are you sure you want to sign out?'), findsOneWidget);
     await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
     await tester.pumpAndSettle();
+    expect(auth.logouts, 1);
+  });
+
+  testWidgets('saving a different server signs out', (tester) async {
+    // Saving a new server clears the offline cache.
+    await tester.runAsync(openTestDatabase);
+    addTearDown(() => tester.runAsync(closeTestDatabase));
+    await pump(tester);
+    final row = find.byKey(const ValueKey('settingsServerRow'));
+    await scrollTo(tester, row);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+        find.byType(TextFormField), 'https://other.example.com');
+    final continueButton = find.text('Continue');
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    // The save does real storage I/O; let it run between frames.
+    for (var i = 0; i < 20 && auth.logouts == 0; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await tester.pumpAndSettle();
+
+    expect(ApiConfig.baseUrl, 'https://other.example.com');
     expect(auth.logouts, 1);
   });
 
