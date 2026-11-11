@@ -36,6 +36,7 @@ dependencies:
   upgrader: ^13.5.0
   # Exact pin: 4.13.0 is the newest release that still supports Flutter 3.27.
   webview_flutter: 4.13.0
+  file_picker: 11.0.3
 
 dev_dependencies:
   flutter_test:
