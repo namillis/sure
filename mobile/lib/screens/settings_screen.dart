@@ -671,6 +671,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return SureLargeTitleScaffold(
       title: l.shellSettingsTitle,
+      // Settings only opens from Home's gear, so the back link names Home.
+      leading: Navigator.of(context).canPop()
+          ? SureBackButton(label: l.navHome)
+          : null,
       slivers: [
         SliverList.list(
           children: [

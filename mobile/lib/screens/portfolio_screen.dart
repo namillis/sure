@@ -820,7 +820,8 @@ class _AllocationPanel extends StatelessWidget {
 
     String labelFor(AllocationSlice slice) => switch (slice.kind) {
           AllocationKind.holding => slice.label?.isNotEmpty == true
-              ? slice.label!
+              // "CRYPTO:BTC" -> "BTC", as in the holding rows.
+              ? slice.label!.substring(slice.label!.lastIndexOf(':') + 1)
               : l.accountDetailHoldingFallback,
           AllocationKind.other => l.portfolioAllocationOther,
           AllocationKind.cash => l.portfolioAllocationCash,
@@ -839,6 +840,9 @@ class _AllocationPanel extends StatelessWidget {
               key: const ValueKey('investAllocationBar'),
               height: 6,
               child: Row(
+                // Stretch so each slice fills the bar's 6 px height; a bare
+                // ColoredBox would otherwise size itself to zero.
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (var i = 0; i < slices.length; i++)
                     Expanded(

@@ -80,7 +80,7 @@ AccountDetailService _service(List<Uri> requests) => AccountDetailService(
           final accountId = query['account_id'];
           final holdings = switch (accountId) {
             'inv_1' => [
-                _holding('h1', 'inv_1', 'Brokerage', 'AAPL', r'$1,000.00'),
+                _holding('h1', 'inv_1', 'Brokerage', 'NASDAQ:AAPL', r'$1,000.00'),
                 _holding('h0', 'inv_1', 'Brokerage', 'ZERO', r'$0.00'),
               ],
             'inv_2' => [_holding('h2', 'inv_2', 'Roth IRA', 'VTI', r'$300.00')],
@@ -239,6 +239,16 @@ void main() {
       tester.getSize(find.byKey(const ValueKey('investAllocationBar'))).height,
       6,
     );
+    // Every slice fills the bar's height (a regression drew empty slices).
+    final slices = find.descendant(
+        of: find.byKey(const ValueKey('investAllocationBar')),
+        matching: find.byType(ColoredBox));
+    expect(slices, findsNWidgets(3));
+    for (final e in slices.evaluate()) {
+      expect(tester.getSize(find.byWidget(e.widget)).height, 6);
+    }
+    // The exchange prefix is dropped from the label, as in holding rows.
+    expect(find.textContaining('NASDAQ:'), findsNothing);
     // One slice per security (AAPL, VTI; the $0 holding is left out) and
     // cash: $2,000 - $1,300.
     expect(find.text('AAPL'), findsOneWidget);

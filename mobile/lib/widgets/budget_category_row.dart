@@ -142,14 +142,26 @@ class BudgetCategoryRow extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Flexible(
-                            child: Text.rich(
-                              TextSpan(style: mono, children: amount),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                            ),
-                          ),
+                          // The amount keeps its full width; the name gives
+                          // way first. Only an amount wider than 65% of the
+                          // row shrinks, so "$40.00 / $450.00" never cuts off.
+                          LayoutBuilder(builder: (context, _) {
+                            final rowWidth =
+                                MediaQuery.sizeOf(context).width - 120;
+                            return ConstrainedBox(
+                              constraints:
+                                  BoxConstraints(maxWidth: rowWidth * 0.65),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: Text.rich(
+                                  TextSpan(style: mono, children: amount),
+                                  maxLines: 1,
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                            );
+                          }),
                         ],
                       ),
                     ),
