@@ -4,11 +4,13 @@ import '../l10n/app_localizations.dart';
 import '../models/account.dart';
 import '../screens/trade_form_screen.dart';
 import '../screens/update_balance_screen.dart';
+import '../theme/sure_colors.dart';
+import 'sure_icon.dart';
 import 'sync_now_dialog.dart';
 
 enum _AccountAction { updateBalance, addTrade, syncNow }
 
-/// The account screen's AppBar overflow menu: Update balance, Add trade
+/// The account screen's nav-bar ⋯ menu: Update balance, Add trade
 /// (investment and crypto accounts) and Sync now. Calls [onChanged] after
 /// any of them changed data, so the screen can reload.
 class AccountActionsMenu extends StatelessWidget {
@@ -51,15 +53,18 @@ class AccountActionsMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    Widget leading(String icon) =>
+        SureIcon(icon, size: 20, color: palette.textSecondary);
     return PopupMenuButton<_AccountAction>(
-      icon: const Icon(Icons.more_horiz),
+      icon: SureIcon(SureIcons.ellipsis, size: 22, color: palette.textPrimary),
       tooltip: l.accountActions,
       onSelected: (action) => _select(context, action),
       itemBuilder: (_) => [
         PopupMenuItem(
           value: _AccountAction.updateBalance,
           child: ListTile(
-            leading: const Icon(Icons.account_balance_wallet_outlined),
+            leading: leading(SureIcons.wallet),
             title: Text(l.accountActionsUpdateBalance),
             contentPadding: EdgeInsets.zero,
           ),
@@ -68,7 +73,7 @@ class AccountActionsMenu extends StatelessWidget {
           PopupMenuItem(
             value: _AccountAction.addTrade,
             child: ListTile(
-              leading: const Icon(Icons.swap_vert),
+              leading: leading(SureIcons.arrowLeftRight),
               title: Text(l.accountActionsAddTrade),
               contentPadding: EdgeInsets.zero,
             ),
@@ -76,7 +81,7 @@ class AccountActionsMenu extends StatelessWidget {
         PopupMenuItem(
           value: _AccountAction.syncNow,
           child: ListTile(
-            leading: const Icon(Icons.sync),
+            leading: leading(SureIcons.refresh),
             title: Text(l.accountActionsSyncNow),
             contentPadding: EdgeInsets.zero,
           ),

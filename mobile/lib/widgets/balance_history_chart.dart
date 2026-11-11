@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/account_balance.dart';
+import '../theme/sure_colors.dart';
 
 /// Time windows offered above the balance chart.
 enum AccountChartRange {
@@ -34,8 +35,9 @@ enum AccountChartRange {
       };
 }
 
-/// Line chart of an account's balance over time. Press and drag to inspect a
-/// point; [onSelectionChanged] reports the touched balance (null on release)
+/// Line chart of an account's balance over time: a [color] line over a faint
+/// gradient fill, no axes. Press and drag to inspect a point (a thin vertical
+/// guide and a dot); [onSelectionChanged] reports the touched balance (null on release)
 /// so the surrounding header can show its value and date.
 class BalanceHistoryChart extends StatefulWidget {
   const BalanceHistoryChart({
@@ -111,7 +113,8 @@ class _BalanceHistoryChartState extends State<BalanceHistoryChart> {
           final width = constraints.maxWidth;
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onLongPressStart: (details) => _select(details.localPosition, width),
+            onLongPressStart: (details) =>
+                _select(details.localPosition, width),
             onLongPressMoveUpdate: (details) =>
                 _select(details.localPosition, width),
             onLongPressEnd: (_) => _clear(),
@@ -128,7 +131,8 @@ class _BalanceHistoryChartState extends State<BalanceHistoryChart> {
                     .toList(),
                 color: widget.color,
                 selectedIndex: _selectedIndex,
-                guideColor: Theme.of(context).colorScheme.outlineVariant,
+                guideColor: SureColors.of(context).palette.textSubdued,
+                ringColor: SureColors.of(context).palette.container,
               ),
               child: const SizedBox.expand(),
             ),
@@ -145,12 +149,14 @@ class _BalanceHistoryPainter extends CustomPainter {
     required this.color,
     required this.selectedIndex,
     required this.guideColor,
+    required this.ringColor,
   });
 
   final List<double> values;
   final Color color;
   final int? selectedIndex;
   final Color guideColor;
+  final Color ringColor;
 
   // Vertical breathing room so the line never touches the card edges.
   static const double _inset = 6;
@@ -177,7 +183,9 @@ class _BalanceHistoryPainter extends CustomPainter {
     final line = Path();
     for (var i = 0; i < values.length; i++) {
       final point = pointAt(i);
-      i == 0 ? line.moveTo(point.dx, point.dy) : line.lineTo(point.dx, point.dy);
+      i == 0
+          ? line.moveTo(point.dx, point.dy)
+          : line.lineTo(point.dx, point.dy);
     }
 
     final fill = Path.from(line)
@@ -190,7 +198,7 @@ class _BalanceHistoryPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0)],
+          colors: [color.withValues(alpha: 0.10), color.withValues(alpha: 0)],
         ).createShader(Offset.zero & size),
     );
 
@@ -198,7 +206,7 @@ class _BalanceHistoryPainter extends CustomPainter {
       line,
       Paint()
         ..color = color
-        ..strokeWidth = 2
+        ..strokeWidth = 1.75
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
@@ -211,18 +219,11 @@ class _BalanceHistoryPainter extends CustomPainter {
         Offset(point.dx, 0),
         Offset(point.dx, size.height),
         Paint()
-          ..color = guideColor
+          ..color = guideColor.withValues(alpha: 0.6)
           ..strokeWidth = 1,
       );
-      canvas.drawCircle(point, 5, Paint()..color = color);
-      canvas.drawCircle(
-        point,
-        5,
-        Paint()
-          ..color = guideColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
-      );
+      canvas.drawCircle(point, 5.5, Paint()..color = ringColor);
+      canvas.drawCircle(point, 3.75, Paint()..color = color);
     }
   }
 
@@ -231,6 +232,7 @@ class _BalanceHistoryPainter extends CustomPainter {
     return !listEquals(oldDelegate.values, values) ||
         oldDelegate.color != color ||
         oldDelegate.selectedIndex != selectedIndex ||
-        oldDelegate.guideColor != guideColor;
+        oldDelegate.guideColor != guideColor ||
+        oldDelegate.ringColor != ringColor;
   }
 }

@@ -9,9 +9,11 @@ import '../providers/privacy_provider.dart';
 import '../services/account_detail_service.dart';
 import '../services/preferences_service.dart';
 import '../theme/sure_colors.dart';
+import '../theme/sure_tokens.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
 import '../utils/zero_holdings.dart';
+import 'ds/ds.dart';
 
 /// Every current position of an investment or crypto account, largest first,
 /// with shares, price and unrealized gain where the provider supplied a cost
@@ -22,6 +24,7 @@ class HoldingsList extends StatefulWidget {
     required this.account,
     this.accountDetailService,
     this.onHoldingTap,
+    this.onRefreshed,
   });
 
   final Account account;
@@ -29,6 +32,9 @@ class HoldingsList extends StatefulWidget {
 
   /// Called when a row is tapped; rows are not tappable when null.
   final void Function(AccountHolding holding)? onHoldingTap;
+
+  /// Called when the user pulls to refresh, so the page can reload too.
+  final VoidCallback? onRefreshed;
 
   @override
   State<HoldingsList> createState() => _HoldingsListState();
@@ -91,6 +97,11 @@ class _HoldingsListState extends State<HoldingsList>
     });
   }
 
+  Future<void> _pullRefresh() {
+    widget.onRefreshed?.call();
+    return _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -101,34 +112,40 @@ class _HoldingsListState extends State<HoldingsList>
 
     if (_holdings.isEmpty) {
       return _ListMessage(
-        onRefresh: _load,
-        icon: _failed ? Icons.error_outline : Icons.pie_chart_outline,
+        onRefresh: _pullRefresh,
+        icon: _failed ? SureIcons.circleAlert : SureIcons.chartPie,
         message: _failed ? l.holdingsLoadFailed : l.holdingsEmpty,
         retryLabel: _failed ? l.transactionsListRetry : null,
       );
     }
 
-    final visible =
-        ZeroHoldings.visible(_holdings, showZero: showZeroHoldings);
+    final visible = ZeroHoldings.visible(_holdings, showZero: showZeroHoldings);
     final zeroCount = ZeroHoldings.zeroCount(_holdings);
     final currency = _holdings.first.currency;
     final onHoldingTap = widget.onHoldingTap;
 
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: _pullRefresh,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          for (final holding in visible) ...[
-            HoldingTile(
-              holding: holding,
-              onTap: onHoldingTap == null ? null : () => onHoldingTap(holding),
-            ),
-            const Divider(height: 1),
-          ],
           if (visible.isEmpty)
-            AllZeroHoldingsMessage(currency: currency),
+            SurePanel(child: AllZeroHoldingsMessage(currency: currency))
+          else
+            SurePanel.rows(
+              dividerIndent: HoldingTile.dividerIndent,
+              children: [
+                for (final holding in visible)
+                  HoldingTile(
+                    holding: holding,
+                    crypto: widget.account.accountType == 'crypto',
+                    onTap: onHoldingTap == null
+                        ? null
+                        : () => onHoldingTap(holding),
+                  ),
+              ],
+            ),
           if (zeroCount > 0)
             ZeroHoldingsFooter(
               count: zeroCount,
@@ -152,26 +169,12 @@ class AllZeroHoldingsMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).toString();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
-        children: [
-          Icon(
-            Icons.pie_chart_outline,
-            size: 40,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l.p3apAllHoldingsZero(
-                ZeroHoldings.zeroLabel(currency, locale: locale)),
-            textAlign: TextAlign.center,
-            style: TextStyle(color: colorScheme.onSurfaceVariant),
-          ),
-        ],
-      ),
+    return SureEmptyState(
+      icon: SureIcons.chartPie,
+      title: l.p3apAllHoldingsZero(
+          ZeroHoldings.zeroLabel(currency, locale: locale)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
     );
   }
 }
@@ -194,11 +197,11 @@ class ZeroHoldingsFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final palette = SureColors.of(context).palette;
     final locale = Localizations.localeOf(context).toString();
     final zero = ZeroHoldings.zeroLabel(currency, locale: locale);
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.fromLTRB(14, 4, 0, 0),
       child: Row(
         children: [
           Expanded(
@@ -206,15 +209,19 @@ class ZeroHoldingsFooter extends StatelessWidget {
               shown
                   ? l.p3apZeroHoldingsShown(count, zero)
                   : l.p3apZeroHoldingsHidden(count, zero),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 13, color: palette.textSubdued),
             ),
           ),
           TextButton(
             key: const ValueKey('zeroHoldingsToggle'),
             onPressed: onToggle,
-            child: Text(shown ? l.p3apHide : l.p3apShow),
+            style: TextButton.styleFrom(foregroundColor: palette.link),
+            child: Text(
+              shown ? l.p3apHide : l.p3apShow,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),
@@ -242,25 +249,35 @@ mixin ZeroHoldingsPreference<T extends StatefulWidget> on State<T> {
   }
 }
 
-/// One position: ticker and name, shares at price, market value and
-/// unrealized gain. [accountName] prefixes the subtitle when positions from
-/// several accounts share a list.
+/// One position, as a quiet panel row: a tinted circle with the ticker's
+/// first letter (a coin glyph with [crypto]), the ticker, "781.46 sh · $102.00",
+/// and on the right the market value over the unrealized gain %. The security
+/// name is read out with the ticker. [accountName] prefixes the subtitle when
+/// positions from several accounts share a list.
 class HoldingTile extends StatelessWidget {
   const HoldingTile({
     super.key,
     required this.holding,
     this.accountName,
     this.onTap,
+    this.crypto = false,
   });
 
   final AccountHolding holding;
   final String? accountName;
   final VoidCallback? onTap;
 
+  /// Shows a coin glyph instead of the ticker's letter (crypto accounts).
+  final bool crypto;
+
+  static const double avatarSize = 32;
+
+  /// Divider indent that lines up with the row's text.
+  static const double dividerIndent = 14 + avatarSize + 12;
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
     final locale = Localizations.localeOf(context).toString();
     final hidden = context.watch<PrivacyProvider>().hidden;
@@ -277,83 +294,147 @@ class HoldingTile extends StatelessWidget {
     final gain = InvestmentMath.gainFor(holding);
     final gainText = gain == null
         ? l.holdingNoCostBasis
-        : '${MoneyMasker.mask(InvestmentMath.formatMoney(gain.amount, currency: holding.currency, locale: locale, signed: true), hidden: hidden)}'
-            ' (${InvestmentMath.formatPercent(gain.percent, locale: locale)})';
+        : InvestmentMath.formatPercent(gain.percent, locale: locale);
     final gainColor = gain == null
-        ? theme.colorScheme.onSurfaceVariant
+        ? palette.textSubdued
         : gain.isLoss
             ? palette.destructive
             : palette.success;
 
-    final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (showName)
-                  Text(
-                    name!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+    final subtitle = [
+      if (accountName?.isNotEmpty == true) accountName!,
+      l.dspSharesAtPrice(
+        InvestmentMath.formatQuantity(holding.quantity, locale: locale),
+        holding.price,
+      ),
+    ].join(' · ');
+
+    final row = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        child: Row(
+          children: [
+            _HoldingAvatar(title: title, crypto: crypto),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Semantics(
+                label: showName ? '$title, $name' : null,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.25,
+                        fontWeight: SureTokens.weightMedium,
+                        color: palette.textPrimary,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if (accountName?.isNotEmpty == true)
-                  Text(
-                    accountName!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.25,
+                        color: palette.textSecondary,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                const SizedBox(height: 2),
-                Text(
-                  l.holdingSharesAtPrice(
-                    InvestmentMath.formatQuantity(holding.quantity,
-                        locale: locale),
-                    holding.price,
-                  ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                MoneyMasker.mask(holding.amount, hidden: hidden),
-                style: theme.textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w600),
+            const SizedBox(width: 12),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.45,
               ),
-              const SizedBox(height: 2),
-              Text(
-                gainText,
-                style: theme.textTheme.bodySmall?.copyWith(color: gainColor),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerEnd,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    MoneyText(
+                      MoneyMasker.mask(holding.amount, hidden: hidden),
+                      trend: MoneyTrend.neutral,
+                      color: palette.textPrimary,
+                      maxLines: 1,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: SureTokens.weightMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    MoneyText(
+                      gainText,
+                      trend: gain == null
+                          ? MoneyTrend.neutral
+                          : gain.isLoss
+                              ? MoneyTrend.outflow
+                              : MoneyTrend.inflow,
+                      color: gainColor,
+                      maxLines: 1,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
 
-    if (onTap == null) return row;
-    return InkWell(onTap: onTap, child: row);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(onTap: onTap, child: row),
+    );
+  }
+}
+
+class _HoldingAvatar extends StatelessWidget {
+  const _HoldingAvatar({required this.title, required this.crypto});
+
+  final String title;
+  final bool crypto;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    final tint = crypto ? palette.warning : palette.link;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final letter = title.isEmpty ? '?' : title.characters.first.toUpperCase();
+    return ExcludeSemantics(
+      child: Container(
+        width: HoldingTile.avatarSize,
+        height: HoldingTile.avatarSize,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: tint.withValues(alpha: dark ? 0.18 : 0.14),
+        ),
+        child: crypto
+            ? SureIcon(SureIcons.bitcoin, size: 16, color: tint)
+            : Text(
+                letter,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: tint,
+                ),
+              ),
+      ),
+    );
   }
 }
 
@@ -367,13 +448,12 @@ class _ListMessage extends StatelessWidget {
   });
 
   final Future<void> Function() onRefresh;
-  final IconData icon;
+  final String icon;
   final String message;
   final String? retryLabel;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: CustomScrollView(
@@ -382,24 +462,11 @@ class _ListMessage extends StatelessWidget {
           SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icon,
-                    size: 48,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    message,
-                    style: TextStyle(color: colorScheme.onSurfaceVariant),
-                  ),
-                  if (retryLabel != null) ...[
-                    const SizedBox(height: 12),
-                    TextButton(onPressed: onRefresh, child: Text(retryLabel!)),
-                  ],
-                ],
+              child: SureEmptyState(
+                icon: icon,
+                title: message,
+                secondaryLabel: retryLabel,
+                onSecondary: retryLabel == null ? null : onRefresh,
               ),
             ),
           ),

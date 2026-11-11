@@ -171,7 +171,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    final appBarBottom = tester.getBottomLeft(find.byType(AppBar)).dy;
+    final appBarBottom = tester.getBottomLeft(find.byKey(const ValueKey('accountNavBar'))).dy;
     final headerTop = tester.getTopLeft(find.byType(AccountDetailHeader)).dy;
     expect(headerTop, greaterThanOrEqualTo(appBarBottom));
     expect(find.byKey(const ValueKey('accountSectionSwitcher')), findsNothing);
@@ -212,7 +212,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final switcher = find.byKey(const ValueKey('accountSectionSwitcher'));
-    final appBarBottom = tester.getBottomLeft(find.byType(AppBar)).dy;
+    final appBarBottom = tester.getBottomLeft(find.byKey(const ValueKey('accountNavBar'))).dy;
     final startTop = tester.getTopLeft(switcher).dy;
     expect(startTop, greaterThan(appBarBottom + 100));
 

@@ -240,20 +240,20 @@ void main() {
         (value) => result = value,
       );
 
-      await tester.tap(find.byKey(const ValueKey('setPriceSave')));
+      await tester.tap(find.text(l.accountActionsSave));
       await tester.pumpAndSettle();
       expect(find.text(l.p3apPriceRequired), findsOneWidget);
 
       await tester.enterText(
           find.byKey(const ValueKey('setPriceAmount')), '-3');
-      await tester.tap(find.byKey(const ValueKey('setPriceSave')));
+      await tester.tap(find.text(l.accountActionsSave));
       await tester.pumpAndSettle();
       expect(find.text(l.p3apPriceInvalid), findsOneWidget);
       expect(sent, isNull);
 
       await tester.enterText(
           find.byKey(const ValueKey('setPriceAmount')), '1,234.5678');
-      await tester.tap(find.byKey(const ValueKey('setPriceSave')));
+      await tester.tap(find.text(l.accountActionsSave));
       await tester.pumpAndSettle();
 
       final now = DateTime.now();
@@ -281,7 +281,7 @@ void main() {
         (_) {},
       );
       await tester.enterText(find.byKey(const ValueKey('setPriceAmount')), '5');
-      await tester.tap(find.byKey(const ValueKey('setPriceSave')));
+      await tester.tap(find.text(l.accountActionsSave));
       await tester.pumpAndSettle();
       expect(find.text(l.p3apPriceSelfHostedOnly), findsOneWidget);
       expect(find.byType(SetPriceSheet), findsOneWidget);
@@ -301,7 +301,7 @@ void main() {
         (_) {},
       );
       await tester.enterText(find.byKey(const ValueKey('setPriceAmount')), '5');
-      await tester.tap(find.byKey(const ValueKey('setPriceSave')));
+      await tester.tap(find.text(l.accountActionsSave));
       await tester.pumpAndSettle();
       expect(
         find.text('Prices were not imported: prices can only be imported for '
