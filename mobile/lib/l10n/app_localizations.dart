@@ -5719,6 +5719,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t categorize the transaction.'**
   String get dsaCategorizeFailed;
+
+  /// Account page subtitle part: the account was updated under a minute ago. Follows the account type, e.g. 'Brokerage · synced just now'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced just now'**
+  String get dspSyncedJustNow;
+
+  /// Account page subtitle part, e.g. 'Brokerage · synced 5m ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced {count}m ago'**
+  String dspSyncedMinutesAgo(int count);
+
+  /// Account page subtitle part, e.g. 'Brokerage · synced 9h ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced {count}h ago'**
+  String dspSyncedHoursAgo(int count);
+
+  /// Account page subtitle part, e.g. 'Brokerage · synced 3d ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced {count}d ago'**
+  String dspSyncedDaysAgo(int count);
+
+  /// Holding row subtitle: share count (abbreviated 'sh') and current price, e.g. '781.46 sh · $102.00'.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} sh · {price}'**
+  String dspSharesAtPrice(String quantity, String price);
+
+  /// Link under the account page's no-matches state that clears the category filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filter'**
+  String get dspClearFilter;
+
+  /// Accessibility label of the account page's nav-bar button that enters multi-select.
+  ///
+  /// In en, this message translates to:
+  /// **'Select transactions'**
+  String get dspSelect;
+
+  /// Accessibility label of the account page's nav-bar button that leaves multi-select.
+  ///
+  /// In en, this message translates to:
+  /// **'Done selecting'**
+  String get dspDoneSelecting;
+
+  /// Accessibility label of the account page's nav-bar button that deletes the selected transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get dspDeleteSelected;
+
+  /// Tooltip of the account page's add-transaction button.
+  ///
+  /// In en, this message translates to:
+  /// **'New transaction'**
+  String get dspNewTransaction;
+
+  /// Category row value on the transaction sheet when the transaction is split into parts.
+  ///
+  /// In en, this message translates to:
+  /// **'Split ({count})'**
+  String dstSplitValue(int count);
+
+  /// Placeholder of the notes field on the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get dstAddNote;
+
+  /// Accessibility label of the + button that adds tags on the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get dstAddTag;
+
+  /// Row on the transaction sheet that sets the transaction up as recurring (opens the web app).
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get dstRecurring;
+
+  /// Value of the Recurring row on the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get dstRecurringSetUp;
+
+  /// Row on the transaction sheet that opens the transaction in the web app.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on the web'**
+  String get dstOpenOnWeb;
+
+  /// Destructive button at the bottom of the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transaction'**
+  String get dstDeleteTransaction;
+
+  /// Accessibility label of the transaction sheet's hero amount, which opens the amount editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit amount'**
+  String get dstEditAmount;
+
+  /// Hint of the search field in the category picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Search categories'**
+  String get dstSearchCategories;
+
+  /// Category picker title when the search matches nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories match'**
+  String get dstNoCategoryMatches;
+
+  /// Category picker body when the search matches nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search.'**
+  String get dstNoCategoryMatchesBody;
+
+  /// Category picker title when the family has no categories.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get dstNoCategories;
+
+  /// Small badge next to the Home net worth label when the balance sheet could not be refreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Outdated'**
+  String get dshOutdated;
+
+  /// Home nav-bar button label that turns privacy mode off.
+  ///
+  /// In en, this message translates to:
+  /// **'Show amounts'**
+  String get dshShowAmounts;
+
+  /// Home nav-bar button label that turns privacy mode on.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide amounts'**
+  String get dshHideAmounts;
+
+  /// One-line Home row comparing this month's spending with normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending {percent} above normal'**
+  String dshSpendingAbove(String percent);
+
+  /// One-line Home row comparing this month's spending with normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending {percent} below normal'**
+  String dshSpendingBelow(String percent);
+
+  /// One-line Home row when this month's spending is within half a percent of normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending about normal'**
+  String get dshSpendingAboutNormal;
+
+  /// Home section header above the latest transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get dshRecent;
+
+  /// Link on the Home Recent header that opens the Activity tab.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get dshSeeAll;
+
+  /// Home section header above the account groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get dshAccounts;
+
+  /// Screen reader label of the + on the Home Accounts header.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get dshAddAccount;
+
+  /// Home account group row title: account type and how many accounts it has.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} · {count}'**
+  String dshGroupTitle(String type, int count);
+
+  /// After a Home account group title: how many of its accounts have a zero balance.
+  ///
+  /// In en, this message translates to:
+  /// **'({count} empty)'**
+  String dshGroupEmpty(int count);
+
+  /// Row at the bottom of an account group list that hides the zero-balance accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 empty account} other{{count} empty accounts}}'**
+  String dshEmptyAccounts(int count);
+
+  /// Link that reveals hidden zero-balance accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get dshShow;
+
+  /// Link that hides zero-balance accounts again.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get dshHide;
+
+  /// Account group screen when the type no longer has any accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts of this type'**
+  String get dshGroupNoAccounts;
+
+  /// Account group name for bank (depository) accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get dshTypeDepository;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit cards'**
+  String get dshTypeCreditCard;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Investments'**
+  String get dshTypeInvestment;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get dshTypeCrypto;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Property'**
+  String get dshTypeProperty;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicles'**
+  String get dshTypeVehicle;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Other assets'**
+  String get dshTypeOtherAsset;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get dshTypeLoan;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Other liabilities'**
+  String get dshTypeOtherLiability;
+
+  /// Home first-run empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a bank on the web, or add a manual account like a house or car.'**
+  String get dshEmptyBody;
+
+  /// Home first-run primary button; opens bank connections on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect on the web'**
+  String get dshConnectOnWeb;
+
+  /// Home first-run link; opens the web's new account flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a manual account'**
+  String get dshAddManualAccount;
+
+  /// Home offline banner; age is a short duration like 2h.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · showing data from {age} ago'**
+  String dshOfflineShowing(String age);
+
+  /// Home offline banner when the saved data is less than a minute old.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · showing data from just now'**
+  String get dshOfflineShowingJustNow;
+
+  /// Short duration in minutes, e.g. 5m.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String dshAgoMinutes(int count);
+
+  /// Short duration in hours, e.g. 9h.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String dshAgoHours(int count);
+
+  /// Short duration in days, e.g. 3d.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String dshAgoDays(int count);
+
+  /// Home sync pill when the last sync finished under a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get dshAgoNow;
+
+  /// Home sync pill when the family has never synced.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get dshSyncShort;
+
+  /// Home sync pill when the last sync failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get dshSyncFailedShort;
+
+  /// Swipe action on an account row that opens the new transaction form.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get dshAddTransaction;
 }
 
 class _AppLocalizationsDelegate

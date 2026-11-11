@@ -210,7 +210,10 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TransactionsListScreen(account: account),
+        builder: (context) => TransactionsListScreen(
+          account: account,
+          backLabel: AppLocalizations.of(context).shellNavInvest,
+        ),
       ),
     );
   }

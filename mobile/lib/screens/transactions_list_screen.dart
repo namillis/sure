@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'transaction_sheet.dart';
 import 'package:provider/provider.dart';
 import '../models/account.dart';
 import '../models/account_holding.dart';
@@ -8,7 +9,6 @@ import '../models/offline_transaction.dart';
 import '../providers/auth_provider.dart';
 import '../providers/categories_provider.dart';
 import '../providers/transactions_provider.dart';
-import '../screens/transaction_edit_screen.dart';
 import '../screens/transaction_form_screen.dart';
 import '../screens/trade_form_screen.dart';
 import '../widgets/account_actions_menu.dart';
@@ -336,12 +336,8 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
   }
 
   Future<void> _editTransaction(OfflineTransaction transaction) async {
-    final updated = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TransactionEditScreen(transaction: transaction),
-      ),
-    );
+    final updated =
+        await showTransactionSheet(context, transaction: transaction);
 
     if (updated == true && mounted) {
       await _loadTransactions();

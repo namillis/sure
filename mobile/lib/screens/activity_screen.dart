@@ -22,7 +22,7 @@ import '../widgets/activity_option_sheet.dart';
 import '../widgets/budget_progress_bar.dart' show parseCategoryColor;
 import '../widgets/ds/ds.dart';
 import '../widgets/sure_button.dart';
-import 'transaction_edit_screen.dart';
+import 'transaction_sheet.dart';
 import 'transaction_form_screen.dart';
 
 /// The Activity tab: every transaction across accounts, newest first, with
@@ -385,15 +385,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
   // ---- Row actions ---------------------------------------------------------
 
   Future<void> _openEdit(ActivityTransaction row) async {
-    final updated = await Navigator.push<bool>(
+    final updated = await showTransactionSheet(
       context,
-      MaterialPageRoute(
-        builder: (context) => TransactionEditScreen(
-          transaction: OfflineTransaction.fromTransaction(
-            row.transaction,
-            localId: row.id ?? '',
-          ),
-        ),
+      transaction: OfflineTransaction.fromTransaction(
+        row.transaction,
+        localId: row.id ?? '',
       ),
     );
     if (updated == true && mounted) await _load(reset: true);

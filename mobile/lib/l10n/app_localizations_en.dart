@@ -3353,4 +3353,216 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dsaCategorizeFailed => 'Couldn\'t categorize the transaction.';
+
+  @override
+  String get dspSyncedJustNow => 'synced just now';
+
+  @override
+  String dspSyncedMinutesAgo(int count) {
+    return 'synced ${count}m ago';
+  }
+
+  @override
+  String dspSyncedHoursAgo(int count) {
+    return 'synced ${count}h ago';
+  }
+
+  @override
+  String dspSyncedDaysAgo(int count) {
+    return 'synced ${count}d ago';
+  }
+
+  @override
+  String dspSharesAtPrice(String quantity, String price) {
+    return '$quantity sh · $price';
+  }
+
+  @override
+  String get dspClearFilter => 'Clear filter';
+
+  @override
+  String get dspSelect => 'Select transactions';
+
+  @override
+  String get dspDoneSelecting => 'Done selecting';
+
+  @override
+  String get dspDeleteSelected => 'Delete selected';
+
+  @override
+  String get dspNewTransaction => 'New transaction';
+
+  @override
+  String dstSplitValue(int count) {
+    return 'Split ($count)';
+  }
+
+  @override
+  String get dstAddNote => 'Add a note';
+
+  @override
+  String get dstAddTag => 'Add tag';
+
+  @override
+  String get dstRecurring => 'Recurring';
+
+  @override
+  String get dstRecurringSetUp => 'Set up';
+
+  @override
+  String get dstOpenOnWeb => 'Open on the web';
+
+  @override
+  String get dstDeleteTransaction => 'Delete transaction';
+
+  @override
+  String get dstEditAmount => 'Edit amount';
+
+  @override
+  String get dstSearchCategories => 'Search categories';
+
+  @override
+  String get dstNoCategoryMatches => 'No categories match';
+
+  @override
+  String get dstNoCategoryMatchesBody => 'Try a different search.';
+
+  @override
+  String get dstNoCategories => 'No categories yet';
+
+  @override
+  String get dshOutdated => 'Outdated';
+
+  @override
+  String get dshShowAmounts => 'Show amounts';
+
+  @override
+  String get dshHideAmounts => 'Hide amounts';
+
+  @override
+  String dshSpendingAbove(String percent) {
+    return 'Spending $percent above normal';
+  }
+
+  @override
+  String dshSpendingBelow(String percent) {
+    return 'Spending $percent below normal';
+  }
+
+  @override
+  String get dshSpendingAboutNormal => 'Spending about normal';
+
+  @override
+  String get dshRecent => 'Recent';
+
+  @override
+  String get dshSeeAll => 'See all';
+
+  @override
+  String get dshAccounts => 'Accounts';
+
+  @override
+  String get dshAddAccount => 'Add account';
+
+  @override
+  String dshGroupTitle(String type, int count) {
+    return '$type · $count';
+  }
+
+  @override
+  String dshGroupEmpty(int count) {
+    return '($count empty)';
+  }
+
+  @override
+  String dshEmptyAccounts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count empty accounts',
+      one: '1 empty account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dshShow => 'Show';
+
+  @override
+  String get dshHide => 'Hide';
+
+  @override
+  String get dshGroupNoAccounts => 'No accounts of this type';
+
+  @override
+  String get dshTypeDepository => 'Cash';
+
+  @override
+  String get dshTypeCreditCard => 'Credit cards';
+
+  @override
+  String get dshTypeInvestment => 'Investments';
+
+  @override
+  String get dshTypeCrypto => 'Crypto';
+
+  @override
+  String get dshTypeProperty => 'Property';
+
+  @override
+  String get dshTypeVehicle => 'Vehicles';
+
+  @override
+  String get dshTypeOtherAsset => 'Other assets';
+
+  @override
+  String get dshTypeLoan => 'Loans';
+
+  @override
+  String get dshTypeOtherLiability => 'Other liabilities';
+
+  @override
+  String get dshEmptyBody =>
+      'Connect a bank on the web, or add a manual account like a house or car.';
+
+  @override
+  String get dshConnectOnWeb => 'Connect on the web';
+
+  @override
+  String get dshAddManualAccount => 'Add a manual account';
+
+  @override
+  String dshOfflineShowing(String age) {
+    return 'Offline · showing data from $age ago';
+  }
+
+  @override
+  String get dshOfflineShowingJustNow => 'Offline · showing data from just now';
+
+  @override
+  String dshAgoMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String dshAgoHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String dshAgoDays(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String get dshAgoNow => 'now';
+
+  @override
+  String get dshSyncShort => 'Sync';
+
+  @override
+  String get dshSyncFailedShort => 'Failed';
+
+  @override
+  String get dshAddTransaction => 'Add';
 }

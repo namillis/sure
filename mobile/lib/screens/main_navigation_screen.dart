@@ -2,18 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
-import '../providers/privacy_provider.dart';
 import '../widgets/ds/sure_tab_bar.dart';
 import '../widgets/sure_icon.dart';
-import '../widgets/sure_logo.dart';
-import '../widgets/sync_status_chip.dart';
 import 'app_tabs.dart';
 import 'chat_list_screen.dart';
 import 'dashboard_screen.dart';
 import 'intro_screen.dart';
 import 'invest_screen.dart';
 import 'plan_screen.dart';
-import 'settings_screen.dart';
 import '../l10n/app_localizations.dart';
 
 /// The bottom tabs of the main shell.
@@ -53,7 +49,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (override != null) return override(context, tab);
     switch (tab) {
       case ShellTab.home:
-        return DashboardScreen(key: _dashboardKey);
+        return DashboardScreen(
+          key: _dashboardKey,
+          onOpenActivity: () {
+            final tabs = _tabs(
+                context.read<AuthProvider>().isIntroLayout);
+            final i = tabs.indexOf(ShellTab.activity);
+            if (i >= 0) setState(() => _currentIndex = i);
+          },
+        );
       case ShellTab.intro:
         return IntroScreen(onStartChat: onStartChat);
       case ShellTab.activity:
@@ -109,91 +113,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         _dashboardKey.currentState?.reloadPreferences();
       }
     }
-  }
-
-  Future<void> _openSettings() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-    );
-    // Settings can change dashboard preferences (e.g. group by type).
-    _dashboardKey.currentState?.reloadPreferences();
-  }
-
-  PreferredSizeWidget _buildTopBar(AppLocalizations l) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      toolbarHeight: 60,
-      elevation: 0,
-      titleSpacing: 0,
-      centerTitle: false,
-      actionsPadding: EdgeInsets.zero,
-      title: Container(
-        width: 60,
-        height: 60,
-        alignment: Alignment.topLeft,
-        child: const Padding(
-          padding: EdgeInsets.only(top: 12, left: 12),
-          child: SureLogo(),
-        ),
-      ),
-      actions: [
-        // Last sync time; tapping it syncs now and then reloads Home.
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Center(
-            child: SyncStatusChip(
-              onSynced: () => _dashboardKey.currentState?.reloadData(),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Center(
-            child: Tooltip(
-              message: 'Toggle privacy',
-              child: InkWell(
-                onTap: () => context.read<PrivacyProvider>().toggle(),
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Center(
-                    child: SureIcon(
-                      context.watch<PrivacyProvider>().hidden
-                          ? SureIcons.eyeOff
-                          : SureIcons.eye,
-                      size: 22,
-                      semanticLabel: 'Toggle privacy',
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Center(
-            child: Tooltip(
-              message: l.shellSettingsTitle,
-              child: InkWell(
-                onTap: _openSettings,
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Center(
-                    child: SureIcon(
-                      SureIcons.settings,
-                      size: 22,
-                      semanticLabel: l.shellSettingsTitle,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   Future<bool> _showEnableAiPrompt() async {
@@ -255,11 +174,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         void startChat() =>
             _handleDestinationSelected(chatIndex, authProvider, tabs);
 
-        // The logo bar (privacy toggle, settings) belongs to Home. Every
-        // other tab draws its own titled app bar.
-        final onHome = tabs[_currentIndex] == ShellTab.home;
+        // Every tab draws its own header (Home's large title carries the
+        // sync pill, privacy toggle and settings).
         return Scaffold(
-          appBar: onHome ? _buildTopBar(l) : null,
           body: IndexedStack(
             index: _currentIndex,
             children: [

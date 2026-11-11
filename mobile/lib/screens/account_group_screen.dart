@@ -144,7 +144,11 @@ class _AccountGroupScreenState extends State<AccountGroupScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TransactionsListScreen(account: account),
+        builder: (context) => TransactionsListScreen(
+          account: account,
+          backLabel:
+              accountGroupLabel(AppLocalizations.of(context), widget.accountType),
+        ),
       ),
     );
     if (mounted) await _reload();

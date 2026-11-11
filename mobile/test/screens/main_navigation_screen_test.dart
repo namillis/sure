@@ -43,7 +43,9 @@ void main() {
           find.descendant(of: bar, matching: find.text(label)), findsOneWidget);
     }
     expect(find.text('body:home'), findsOneWidget);
-    expect(find.byTooltip('Settings'), findsOneWidget);
+    // The shell draws no top bar of its own: Home's large-title header
+    // carries Settings (covered by the dashboard tests).
+    expect(find.byTooltip('Settings'), findsNothing);
     // Tabs are built lazily.
     expect(find.text('body:plan', skipOffstage: false), findsNothing);
 
@@ -51,7 +53,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('body:plan'), findsOneWidget);
     expect(tester.widget<SureTabBar>(bar).currentIndex, 2);
-    // The logo bar with Settings belongs to Home; other tabs bring their own.
+    // No tab gets a shell-drawn top bar.
     expect(find.byTooltip('Settings'), findsNothing);
   });
 }

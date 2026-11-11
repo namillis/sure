@@ -38,7 +38,7 @@ import 'account_group_screen.dart';
 import 'connections_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
-import 'transaction_edit_screen.dart';
+import 'transaction_sheet.dart';
 
 /// Home: a large "Home" title with the sync pill, privacy toggle and
 /// settings; the net worth hero with its trend line and range chips; the top
@@ -398,15 +398,11 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _openTransaction(ActivityTransaction row) async {
-    final updated = await Navigator.push<bool>(
+    final updated = await showTransactionSheet(
       context,
-      MaterialPageRoute(
-        builder: (context) => TransactionEditScreen(
-          transaction: OfflineTransaction.fromTransaction(
-            row.transaction,
-            localId: row.id ?? '',
-          ),
-        ),
+      transaction: OfflineTransaction.fromTransaction(
+        row.transaction,
+        localId: row.id ?? '',
       ),
     );
     if (updated == true && mounted) await reloadData();
