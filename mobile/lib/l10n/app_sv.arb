@@ -786,5 +786,11 @@
   "manageExportStatusFailed": "Misslyckades",
   "manageExportDownload": "Ladda ned",
   "manageExportDownloadFailed": "Det gick inte att ladda ned exporten.",
-  "manageExportStillPreparing": "Förbereds fortfarande. Dra nedåt för att kontrollera igen."
+  "manageExportStillPreparing": "Förbereds fortfarande. Dra nedåt för att kontrollera igen.",
+
+  "p3ocUpdatedJustNow": "Uppdaterad nyss",
+  "p3ocUpdatedMinutesAgo": "{count, plural, one{Uppdaterad för {count} minut sedan} other{Uppdaterad för {count} minuter sedan}}",
+  "p3ocUpdatedHoursAgo": "{count, plural, one{Uppdaterad för {count} timme sedan} other{Uppdaterad för {count} timmar sedan}}",
+  "p3ocUpdatedDaysAgo": "{count, plural, one{Uppdaterad för {count} dag sedan} other{Uppdaterad för {count} dagar sedan}}",
+  "p3ocOfflineMayBeOutdated": "Du är offline. Uppgifterna som visas kan vara inaktuella."
 }

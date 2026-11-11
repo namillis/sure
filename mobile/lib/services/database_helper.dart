@@ -11,6 +11,7 @@ class DatabaseHelper {
   static Database? _database;
   static final Map<String, Map<String, dynamic>> _memoryTransactions = {};
   static final Map<String, Map<String, dynamic>> _memoryAccounts = {};
+  static final Map<String, Map<String, dynamic>> _memoryCache = {};
   static bool _webStorageLogged = false;
   final LogService _log = LogService.instance;
 
@@ -65,17 +66,33 @@ class DatabaseHelper {
     }
   }
 
+  /// Current schema version. Bump together with a step in [_upgradeDB].
+  static const int schemaVersion = 4;
+
+  /// Opens (creating or migrating) the app database at [path]. Exposed so a
+  /// test can migrate a database file built with an older schema.
+  @visibleForTesting
+  static Future<Database> openAt(String path) {
+    return openDatabase(
+      path,
+      version: schemaVersion,
+      onCreate: instance._createDB,
+      onUpgrade: instance._upgradeDB,
+    );
+  }
+
+  /// Points the shared instance at [db] (e.g. an in-memory ffi database).
+  @visibleForTesting
+  static void setDatabaseForTesting(Database? db) {
+    _database = db;
+  }
+
   Future<Database> _initDB(String filePath) async {
     try {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, filePath);
 
-      return await openDatabase(
-        path,
-        version: 3,
-        onCreate: _createDB,
-        onUpgrade: _upgradeDB,
-      );
+      return await openAt(path);
     } catch (e, stackTrace) {
       _log.error(
         'DatabaseHelper',
@@ -158,6 +175,8 @@ class DatabaseHelper {
         CREATE INDEX idx_transactions_server_id
         ON transactions(server_id)
       ''');
+
+      await _createResponseCache(db);
     } catch (e, stackTrace) {
       _log.error(
         'DatabaseHelper',
@@ -213,6 +232,23 @@ class DatabaseHelper {
             "ALTER TABLE transactions ADD COLUMN tag_names TEXT DEFAULT '[]'");
       }
     }
+    if (oldVersion < 4) {
+      await _createResponseCache(db);
+    }
+  }
+
+  /// Last-good API responses (accounts, balance sheet, budgets), one row per
+  /// server + user scope and cache key. Payload is the JSON the app saved.
+  Future<void> _createResponseCache(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS response_cache (
+        scope TEXT NOT NULL,
+        cache_key TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        saved_at TEXT NOT NULL,
+        PRIMARY KEY (scope, cache_key)
+      )
+    ''');
   }
 
   // Transaction CRUD operations
@@ -532,17 +568,87 @@ class DatabaseHelper {
     await db.delete('accounts');
   }
 
+  // Response cache (last-good API responses, see _createResponseCache)
+  static String _memoryCacheKey(String scope, String key) => '$scope\u0000$key';
+
+  Future<Map<String, dynamic>?> getCacheEntry(String scope, String key) async {
+    if (_useInMemoryStore) {
+      _ensureWebStoreReady();
+      final row = _memoryCache[_memoryCacheKey(scope, key)];
+      return row != null ? Map<String, dynamic>.from(row) : null;
+    }
+    final db = await database;
+    final results = await db.query(
+      'response_cache',
+      where: 'scope = ? AND cache_key = ?',
+      whereArgs: [scope, key],
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<void> putCacheEntry(
+    String scope,
+    String key,
+    String payload,
+    DateTime savedAt,
+  ) async {
+    final row = {
+      'scope': scope,
+      'cache_key': key,
+      'payload': payload,
+      'saved_at': savedAt.toUtc().toIso8601String(),
+    };
+    if (_useInMemoryStore) {
+      _ensureWebStoreReady();
+      _memoryCache[_memoryCacheKey(scope, key)] = row;
+      return;
+    }
+    final db = await database;
+    await db.insert(
+      'response_cache',
+      row,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> deleteCacheEntry(String scope, String key) async {
+    if (_useInMemoryStore) {
+      _ensureWebStoreReady();
+      _memoryCache.remove(_memoryCacheKey(scope, key));
+      return;
+    }
+    final db = await database;
+    await db.delete(
+      'response_cache',
+      where: 'scope = ? AND cache_key = ?',
+      whereArgs: [scope, key],
+    );
+  }
+
+  Future<void> clearCacheEntries() async {
+    if (_useInMemoryStore) {
+      _ensureWebStoreReady();
+      _memoryCache.clear();
+      return;
+    }
+    final db = await database;
+    await db.delete('response_cache');
+  }
+
   // Utility methods
   Future<void> clearAllData() async {
     if (_useInMemoryStore) {
       _ensureWebStoreReady();
       _memoryTransactions.clear();
       _memoryAccounts.clear();
+      _memoryCache.clear();
       return;
     }
     final db = await database;
     await db.delete('transactions');
     await db.delete('accounts');
+    await db.delete('response_cache');
   }
 
   Future<void> close() async {
@@ -550,6 +656,7 @@ class DatabaseHelper {
       _ensureWebStoreReady();
       _memoryTransactions.clear();
       _memoryAccounts.clear();
+      _memoryCache.clear();
       return;
     }
     if (_database != null) {

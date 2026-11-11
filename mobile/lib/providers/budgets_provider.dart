@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/budget.dart';
 import '../services/budgets_service.dart';
 import '../services/log_service.dart';
+import '../services/offline_cache_codecs.dart';
+import '../services/offline_cache_store.dart';
 
 /// Why a month could not be shown.
 enum BudgetsLoadError { offline, unauthorized, failed }
@@ -15,21 +19,36 @@ enum BudgetsLoadError { offline, unauthorized, failed }
 /// budget), the budget's show endpoint (totals) and one show request per
 /// budget category (actual / remaining). Months already loaded in this session
 /// are kept in memory, so flipping back is instant and still works offline.
+///
+/// Each loaded month is also saved to [OfflineCacheStore] for this server +
+/// user. A month not in memory is first read from there and shown at once,
+/// then refreshed when online; offline it stays on screen.
 class BudgetsProvider with ChangeNotifier {
   BudgetsProvider({
     BudgetsService? service,
     DateTime Function()? clock,
     bool Function()? isOffline,
+    OfflineCacheStore? cache,
   })  : _service = service ?? BudgetsService(),
         _clock = clock ?? DateTime.now,
-        _isOffline = isOffline ?? (() => false) {
+        _isOffline = isOffline ?? (() => false),
+        _cacheOverride = cache {
     _month = _firstOfMonth(_clock());
   }
 
   final BudgetsService _service;
   final DateTime Function() _clock;
   final bool Function() _isOffline;
+  final OfflineCacheStore? _cacheOverride;
   final LogService _log = LogService.instance;
+
+  OfflineCacheStore get _store => _cacheOverride ?? OfflineCacheStore.instance;
+  Future<String?>? _scopeFuture;
+  Future<String?> _cacheScope() => _scopeFuture ??= _store.currentScope();
+
+  /// Months in [_cache] that came from disk and haven't been refreshed yet.
+  final Set<String> _fromDisk = {};
+  bool _triedCachedPeriod = false;
 
   /// Concurrent per-category requests while assembling a month.
   static const int _categoryConcurrency = 6;
@@ -200,6 +219,9 @@ class BudgetsProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
       await _resolveCurrentPeriod(accessToken);
+    } else if (!_currentPeriodResolved && !_triedCachedPeriod) {
+      _triedCachedPeriod = true;
+      await _applyCachedCurrentPeriod();
     }
     final key = _monthKey(_month);
     final month = _month;
@@ -207,6 +229,16 @@ class BudgetsProvider with ChangeNotifier {
     // Resolving the current period above can move [_month]; a budget list
     // captured for another month must not be reused for this one.
     if (knownBudgetsMonthKey != key) knownBudgets = null;
+
+    if (!_cache.containsKey(key)) {
+      final saved = await _readMonth(key);
+      if (_isDisposed) return;
+      if (saved != null && !_cache.containsKey(key)) {
+        _cache[key] = saved;
+        _fromDisk.add(key);
+      }
+      if (generation != _generation) return;
+    }
 
     if (_isOffline()) {
       _showingCachedWhileOffline = _cache.containsKey(key);
@@ -216,7 +248,7 @@ class BudgetsProvider with ChangeNotifier {
       return;
     }
 
-    if (!forceRefresh && _cache.containsKey(key)) {
+    if (!forceRefresh && _cache.containsKey(key) && !_fromDisk.contains(key)) {
       // A superseded request for another month can't clear this any more.
       _isLoading = false;
       _showingCachedWhileOffline = false;
@@ -241,10 +273,12 @@ class BudgetsProvider with ChangeNotifier {
         // Superseded (the user moved to another month). The data is complete
         // for its own month, so keep it unless a newer load already did; the
         // UI state belongs to the latest load.
-        _cache.putIfAbsent(key, () => data);
+        if (!_cache.containsKey(key) || _fromDisk.contains(key)) {
+          _storeMonth(key, data);
+        }
         return;
       }
-      _cache[key] = data;
+      _storeMonth(key, data);
       _log.info(
         'BudgetsProvider',
         'Loaded ${data.budgets.length} budget(s), '
@@ -306,9 +340,77 @@ class BudgetsProvider with ChangeNotifier {
       if (current != null) {
         _currentPeriodMonth = _firstOfMonth(current.startDate);
         if (_month == initialMonth) _month = _currentPeriodMonth;
+        final scope = await _cacheScope();
+        if (scope != null) {
+          await _store.write(
+            scope,
+            OfflineCacheStore.budgetsCurrentPeriodKey,
+            {'month': _monthKey(_currentPeriodMonth)},
+          );
+        }
       }
     } catch (e) {
       _log.error('BudgetsProvider', 'Could not resolve current period: $e');
+    }
+  }
+
+  /// Offline before the current period resolved: open on the period saved by
+  /// an earlier online load, so a custom month start still lands right.
+  Future<void> _applyCachedCurrentPeriod() async {
+    final scope = await _cacheScope();
+    if (scope == null) return;
+    final entry =
+        await _store.read(scope, OfflineCacheStore.budgetsCurrentPeriodKey);
+    final data = entry?.data;
+    final saved = data is Map ? _parseMonthKey(data['month']) : null;
+    if (saved == null) return;
+    final initialMonth = _firstOfMonth(_clock());
+    _currentPeriodMonth = saved;
+    if (_month == initialMonth) _month = saved;
+  }
+
+  /// Keeps [data] in memory and saves it for the next launch.
+  void _storeMonth(String key, _MonthData data) {
+    _cache[key] = data;
+    _fromDisk.remove(key);
+    unawaited(_writeMonth(key, data));
+  }
+
+  Future<void> _writeMonth(String key, _MonthData data) async {
+    final scope = await _cacheScope();
+    if (scope == null) return;
+    await _store.write(scope, OfflineCacheStore.budgetsMonthKey(key), {
+      'budgets': data.budgets.map(OfflineCacheCodecs.budget).toList(),
+      'selected':
+          data.selected == null ? null : OfflineCacheCodecs.budget(data.selected!),
+      'categories':
+          data.categories.map(OfflineCacheCodecs.budgetCategory).toList(),
+    });
+  }
+
+  Future<_MonthData?> _readMonth(String key) async {
+    final scope = await _cacheScope();
+    if (scope == null) return null;
+    final entry =
+        await _store.read(scope, OfflineCacheStore.budgetsMonthKey(key));
+    final data = entry?.data;
+    if (data is! Map) return null;
+    try {
+      Map<String, dynamic> map(Object? o) => (o as Map).cast<String, dynamic>();
+      final selected = data['selected'];
+      return _MonthData(
+        budgets: [
+          for (final b in data['budgets'] as List) Budget.fromJson(map(b)),
+        ],
+        selected: selected == null ? null : Budget.fromJson(map(selected)),
+        categories: [
+          for (final c in data['categories'] as List)
+            BudgetCategory.fromJson(map(c)),
+        ],
+      );
+    } catch (e) {
+      _log.warning('BudgetsProvider', 'Ignoring unreadable cached month $key');
+      return null;
     }
   }
 
@@ -466,6 +568,12 @@ class BudgetsProvider with ChangeNotifier {
 
   static String _monthKey(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}';
+
+  static DateTime? _parseMonthKey(Object? value) {
+    final match = RegExp(r'^(\d{4})-(\d{2})$').firstMatch('${value ?? ''}');
+    if (match == null) return null;
+    return DateTime(int.parse(match[1]!), int.parse(match[2]!));
+  }
 }
 
 class _MonthData {

@@ -2739,4 +2739,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get manageExportStillPreparing =>
       'Still preparing. Pull down to check again.';
+
+  @override
+  String get p3ocUpdatedJustNow => 'Updated just now';
+
+  @override
+  String p3ocUpdatedMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Updated $count minutes ago',
+      one: 'Updated $count minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3ocUpdatedHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Updated $count hours ago',
+      one: 'Updated $count hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3ocUpdatedDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Updated $count days ago',
+      one: 'Updated $count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3ocOfflineMayBeOutdated =>
+      'You\'re offline. Data shown may be out of date.';
 }

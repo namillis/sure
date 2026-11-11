@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import '../services/device_service.dart';
 import '../services/api_config.dart';
 import '../services/log_service.dart';
+import '../services/offline_cache_store.dart';
 import '../services/telemetry_service.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -553,6 +554,8 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    // Cached balances and lists must not outlive the session.
+    await OfflineCacheStore.instance.clearAll();
     await _authService.logout();
     _tokens = null;
     _user = null;
