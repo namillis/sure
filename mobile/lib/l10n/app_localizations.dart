@@ -6091,6 +6091,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Currency'**
   String get ds2iCurrency;
+
+  /// After a budget category's spending when it has no limit, e.g. '$155 no limit'.
+  ///
+  /// In en, this message translates to:
+  /// **'no limit'**
+  String get ds2pNoLimit;
+
+  /// Under a budget category row when spending exceeds its limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Over by {amount}'**
+  String ds2pOverBy(String amount);
+
+  /// After the Budget hero amount, e.g. '$2,140.00 left'.
+  ///
+  /// In en, this message translates to:
+  /// **'left'**
+  String get ds2pLeft;
+
+  /// After the Budget hero amount when the month is over budget, e.g. '$120.00 over'.
+  ///
+  /// In en, this message translates to:
+  /// **'over'**
+  String get ds2pOver;
+
+  /// Budget hero subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{spent} spent of {budgeted}'**
+  String ds2pSpentOf(String spent, String budgeted);
+
+  /// Days left in the current budget period.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day left} other{{count} days left}}'**
+  String ds2pDaysLeft(int count);
+
+  /// Budget empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets are set up on the web. They show here once they exist.'**
+  String get ds2pNoBudgetBody;
+
+  /// Budget empty state button that opens the web budget page.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up on the web'**
+  String get ds2pSetUpOnWeb;
+
+  /// Link next to the Categories header that opens the web budget page.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit on web'**
+  String get ds2pEditOnWeb;
+
+  /// Recurring summary line of monthly totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly out {outflow} · in {inflow}'**
+  String ds2pMonthlySummary(String outflow, String inflow);
+
+  /// Swipe action that makes a paused recurring item active again.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get ds2pResume;
+
+  /// Settings profile row sub line after the server host; opens the web profile page.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile on web'**
+  String get ds2sProfileOnWeb;
+
+  /// Settings Data row that opens a sheet with Import CSV and Upload statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Import · Upload statement'**
+  String get ds2sImportUpload;
+
+  /// Row in the settings import sheet that opens the CSV import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import CSV'**
+  String get ds2sImportCsv;
+
+  /// Settings Data row that opens a chooser for categories, tags and merchants.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories, tags, merchants'**
+  String get ds2sMetadata;
+
+  /// Theme segment that follows the system appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get ds2sThemeAuto;
+
+  /// Settings switch label for the app lock on devices with Face ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID lock'**
+  String get ds2sFaceIdLock;
+
+  /// Settings switch label for the app lock on devices with Touch ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch ID lock'**
+  String get ds2sTouchIdLock;
+
+  /// Settings switch label for the app lock when the biometric type is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric lock'**
+  String get ds2sBiometricLock;
+
+  /// Settings Security row that opens the web security page.
+  ///
+  /// In en, this message translates to:
+  /// **'Password and passkeys'**
+  String get ds2sPasswordPasskeys;
+
+  /// Settings App row showing the app version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get ds2sVersion;
+
+  /// Settings App row that checks the store for a newer version.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get ds2sCheckForUpdates;
+
+  /// Settings App row that opens the log viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug logs'**
+  String get ds2sDebugLogs;
+
+  /// Centered destructive button at the bottom of Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get ds2sSignOut;
+
+  /// Quiet link under Sign out that opens the account actions sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear local data · Reset · Delete account'**
+  String get ds2sAccountActionsLink;
+
+  /// Title of the sheet with clear data, reset and delete account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account actions'**
+  String get ds2sAccountActions;
+
+  /// Account actions row that removes cached data from the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear local data'**
+  String get ds2sClearLocalData;
+
+  /// Account actions row that resets the account on the server.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset account'**
+  String get ds2sResetAccount;
+
+  /// Account actions row that deletes the account on the server.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get ds2sDeleteAccount;
 }
 
 class _AppLocalizationsDelegate

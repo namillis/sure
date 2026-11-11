@@ -3575,4 +3575,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds2iCurrency => 'Currency';
+
+  @override
+  String get ds2pNoLimit => 'no limit';
+
+  @override
+  String ds2pOverBy(String amount) {
+    return 'Over by $amount';
+  }
+
+  @override
+  String get ds2pLeft => 'left';
+
+  @override
+  String get ds2pOver => 'over';
+
+  @override
+  String ds2pSpentOf(String spent, String budgeted) {
+    return '$spent spent of $budgeted';
+  }
+
+  @override
+  String ds2pDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ds2pNoBudgetBody =>
+      'Budgets are set up on the web. They show here once they exist.';
+
+  @override
+  String get ds2pSetUpOnWeb => 'Set up on the web';
+
+  @override
+  String get ds2pEditOnWeb => 'Edit on web';
+
+  @override
+  String ds2pMonthlySummary(String outflow, String inflow) {
+    return 'Monthly out $outflow · in $inflow';
+  }
+
+  @override
+  String get ds2pResume => 'Resume';
+
+  @override
+  String get ds2sProfileOnWeb => 'Profile on web';
+
+  @override
+  String get ds2sImportUpload => 'Import · Upload statement';
+
+  @override
+  String get ds2sImportCsv => 'Import CSV';
+
+  @override
+  String get ds2sMetadata => 'Categories, tags, merchants';
+
+  @override
+  String get ds2sThemeAuto => 'Auto';
+
+  @override
+  String get ds2sFaceIdLock => 'Face ID lock';
+
+  @override
+  String get ds2sTouchIdLock => 'Touch ID lock';
+
+  @override
+  String get ds2sBiometricLock => 'Biometric lock';
+
+  @override
+  String get ds2sPasswordPasskeys => 'Password and passkeys';
+
+  @override
+  String get ds2sVersion => 'Version';
+
+  @override
+  String get ds2sCheckForUpdates => 'Check for updates';
+
+  @override
+  String get ds2sDebugLogs => 'Debug logs';
+
+  @override
+  String get ds2sSignOut => 'Sign out';
+
+  @override
+  String get ds2sAccountActionsLink =>
+      'Clear local data · Reset · Delete account';
+
+  @override
+  String get ds2sAccountActions => 'Account actions';
+
+  @override
+  String get ds2sClearLocalData => 'Clear local data';
+
+  @override
+  String get ds2sResetAccount => 'Reset account';
+
+  @override
+  String get ds2sDeleteAccount => 'Delete account';
 }

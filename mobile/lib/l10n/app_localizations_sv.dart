@@ -3609,4 +3609,107 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds2iCurrency => 'Valuta';
+
+  @override
+  String get ds2pNoLimit => 'ingen gräns';
+
+  @override
+  String ds2pOverBy(String amount) {
+    return '$amount över';
+  }
+
+  @override
+  String get ds2pLeft => 'kvar';
+
+  @override
+  String get ds2pOver => 'över';
+
+  @override
+  String ds2pSpentOf(String spent, String budgeted) {
+    return '$spent av $budgeted använt';
+  }
+
+  @override
+  String ds2pDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dagar kvar',
+      one: '1 dag kvar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ds2pNoBudgetBody =>
+      'Budgetar skapas på webben. De visas här när de finns.';
+
+  @override
+  String get ds2pSetUpOnWeb => 'Skapa på webben';
+
+  @override
+  String get ds2pEditOnWeb => 'Redigera på webben';
+
+  @override
+  String ds2pMonthlySummary(String outflow, String inflow) {
+    return 'Per månad ut $outflow · in $inflow';
+  }
+
+  @override
+  String get ds2pResume => 'Återuppta';
+
+  @override
+  String get ds2sProfileOnWeb => 'Profil på webben';
+
+  @override
+  String get ds2sImportUpload => 'Importera · Ladda upp kontoutdrag';
+
+  @override
+  String get ds2sImportCsv => 'Importera CSV';
+
+  @override
+  String get ds2sMetadata => 'Kategorier, taggar, handlare';
+
+  @override
+  String get ds2sThemeAuto => 'Auto';
+
+  @override
+  String get ds2sFaceIdLock => 'Face ID-lås';
+
+  @override
+  String get ds2sTouchIdLock => 'Touch ID-lås';
+
+  @override
+  String get ds2sBiometricLock => 'Biometriskt lås';
+
+  @override
+  String get ds2sPasswordPasskeys => 'Lösenord och passkeys';
+
+  @override
+  String get ds2sVersion => 'Version';
+
+  @override
+  String get ds2sCheckForUpdates => 'Sök efter uppdateringar';
+
+  @override
+  String get ds2sDebugLogs => 'Felsökningsloggar';
+
+  @override
+  String get ds2sSignOut => 'Logga ut';
+
+  @override
+  String get ds2sAccountActionsLink =>
+      'Rensa lokal data · Återställ · Radera konto';
+
+  @override
+  String get ds2sAccountActions => 'Kontoåtgärder';
+
+  @override
+  String get ds2sClearLocalData => 'Rensa lokal data';
+
+  @override
+  String get ds2sResetAccount => 'Återställ användarkonto';
+
+  @override
+  String get ds2sDeleteAccount => 'Radera användarkonto';
 }
