@@ -3192,4 +3192,92 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get p3ocOfflineMayBeOutdated =>
       'You\'re offline. Data shown may be out of date.';
+
+  @override
+  String get p3rpTitle => 'Reports';
+
+  @override
+  String get p3rpHomeSubtitle => 'Net worth, cash flow and spending over time';
+
+  @override
+  String get p3rpPeriodMonth => 'Month';
+
+  @override
+  String get p3rpPeriodThreeMonths => '3M';
+
+  @override
+  String get p3rpPeriodYearToDate => 'YTD';
+
+  @override
+  String get p3rpPeriodYear => '1Y';
+
+  @override
+  String get p3rpNetWorth => 'Net worth';
+
+  @override
+  String p3rpNetWorthChange(String amount, String date) {
+    return '$amount since $date';
+  }
+
+  @override
+  String p3rpNetWorthOtherCurrency(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Also: $amount across $count accounts',
+      one: 'Also: $amount in 1 account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3rpNetWorthChartLabel => 'Net worth over the selected period';
+
+  @override
+  String get p3rpNetWorthNoHistory => 'No balance history for this period.';
+
+  @override
+  String get p3rpNetWorthFailed => 'Couldn\'t load net worth history.';
+
+  @override
+  String get p3rpCashFlow => 'Cash flow';
+
+  @override
+  String get p3rpIn => 'In';
+
+  @override
+  String get p3rpOut => 'Out';
+
+  @override
+  String get p3rpSaved => 'Saved';
+
+  @override
+  String p3rpSavedShare(String percent) {
+    return '$percent of In';
+  }
+
+  @override
+  String get p3rpCashFlowFailed => 'Couldn\'t load cash flow.';
+
+  @override
+  String get p3rpSpending => 'Spending by category';
+
+  @override
+  String get p3rpNoSpending => 'No spending in this period.';
+
+  @override
+  String p3rpShowAll(int count) {
+    return 'Show all ($count)';
+  }
+
+  @override
+  String get p3rpShowLess => 'Show less';
+
+  @override
+  String p3rpAboveNormal(String percent) {
+    return '$percent above normal';
+  }
+
+  @override
+  String get p3rpEmpty => 'No transactions in this period.';
 }

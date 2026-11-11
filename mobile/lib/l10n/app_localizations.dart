@@ -5443,6 +5443,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'re offline. Data shown may be out of date.'**
   String get p3ocOfflineMayBeOutdated;
+
+  /// Title of the Reports screen and of its Home entry card.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get p3rpTitle;
+
+  /// Subtitle of the Reports card on Home.
+  ///
+  /// In en, this message translates to:
+  /// **'Net worth, cash flow and spending over time'**
+  String get p3rpHomeSubtitle;
+
+  /// Reports period chip: the family's current budget month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get p3rpPeriodMonth;
+
+  /// Reports period chip: the last 3 months (90 days).
+  ///
+  /// In en, this message translates to:
+  /// **'3M'**
+  String get p3rpPeriodThreeMonths;
+
+  /// Reports period chip: year to date.
+  ///
+  /// In en, this message translates to:
+  /// **'YTD'**
+  String get p3rpPeriodYearToDate;
+
+  /// Reports period chip: the last 12 months (365 days).
+  ///
+  /// In en, this message translates to:
+  /// **'1Y'**
+  String get p3rpPeriodYear;
+
+  /// Header of the net worth section on the Reports screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Net worth'**
+  String get p3rpNetWorth;
+
+  /// Net worth change over the selected period, e.g. '+$1,200.00 since Oct 1'.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} since {date}'**
+  String p3rpNetWorthChange(String amount, String date);
+
+  /// Under the net worth chart: accounts in another currency, which are not part of the line, e.g. 'Also: £12,340.00 across 2 accounts'.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Also: {amount} in 1 account} other{Also: {amount} across {count} accounts}}'**
+  String p3rpNetWorthOtherCurrency(String amount, int count);
+
+  /// Screen reader label for the net worth line chart.
+  ///
+  /// In en, this message translates to:
+  /// **'Net worth over the selected period'**
+  String get p3rpNetWorthChartLabel;
+
+  /// Net worth section message when no account in the main currency has balances.
+  ///
+  /// In en, this message translates to:
+  /// **'No balance history for this period.'**
+  String get p3rpNetWorthNoHistory;
+
+  /// Net worth section error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load net worth history.'**
+  String get p3rpNetWorthFailed;
+
+  /// Header of the cash flow section on the Reports screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash flow'**
+  String get p3rpCashFlow;
+
+  /// Cash flow section: money in (income) over the period.
+  ///
+  /// In en, this message translates to:
+  /// **'In'**
+  String get p3rpIn;
+
+  /// Cash flow section: money out (spending) over the period.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get p3rpOut;
+
+  /// Cash flow section: In minus Out over the period.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get p3rpSaved;
+
+  /// Under the saved amount: saved as a share of money in, e.g. '18.2% of In'.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} of In'**
+  String p3rpSavedShare(String percent);
+
+  /// Cash flow and spending sections error message on the Reports screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load cash flow.'**
+  String get p3rpCashFlowFailed;
+
+  /// Header of the spending by category section on the Reports screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending by category'**
+  String get p3rpSpending;
+
+  /// Spending section message when the period has income but no expenses.
+  ///
+  /// In en, this message translates to:
+  /// **'No spending in this period.'**
+  String get p3rpNoSpending;
+
+  /// Toggle under the top spending categories that shows every category.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all ({count})'**
+  String p3rpShowAll(int count);
+
+  /// Toggle that collapses the spending categories back to the top ones.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get p3rpShowLess;
+
+  /// Screen reader text for a category's above-normal badge, e.g. '+32% above normal'.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} above normal'**
+  String p3rpAboveNormal(String percent);
+
+  /// Reports screen message when the selected period has no transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions in this period.'**
+  String get p3rpEmpty;
 }
 
 class _AppLocalizationsDelegate

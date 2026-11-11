@@ -3219,4 +3219,95 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get p3ocOfflineMayBeOutdated =>
       'Du är offline. Uppgifterna som visas kan vara inaktuella.';
+
+  @override
+  String get p3rpTitle => 'Rapporter';
+
+  @override
+  String get p3rpHomeSubtitle =>
+      'Nettoförmögenhet, kassaflöde och utgifter över tid';
+
+  @override
+  String get p3rpPeriodMonth => 'Månad';
+
+  @override
+  String get p3rpPeriodThreeMonths => '3 mån';
+
+  @override
+  String get p3rpPeriodYearToDate => 'Hittills i år';
+
+  @override
+  String get p3rpPeriodYear => '1 år';
+
+  @override
+  String get p3rpNetWorth => 'Nettoförmögenhet';
+
+  @override
+  String p3rpNetWorthChange(String amount, String date) {
+    return '$amount sedan $date';
+  }
+
+  @override
+  String p3rpNetWorthOtherCurrency(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Dessutom: $amount på $count konton',
+      one: 'Dessutom: $amount på 1 konto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3rpNetWorthChartLabel => 'Nettoförmögenhet under vald period';
+
+  @override
+  String get p3rpNetWorthNoHistory =>
+      'Ingen saldohistorik för den här perioden.';
+
+  @override
+  String get p3rpNetWorthFailed =>
+      'Det gick inte att läsa in historiken för nettoförmögenheten.';
+
+  @override
+  String get p3rpCashFlow => 'Kassaflöde';
+
+  @override
+  String get p3rpIn => 'In';
+
+  @override
+  String get p3rpOut => 'Ut';
+
+  @override
+  String get p3rpSaved => 'Sparat';
+
+  @override
+  String p3rpSavedShare(String percent) {
+    return '$percent av In';
+  }
+
+  @override
+  String get p3rpCashFlowFailed => 'Det gick inte att läsa in kassaflödet.';
+
+  @override
+  String get p3rpSpending => 'Utgifter per kategori';
+
+  @override
+  String get p3rpNoSpending => 'Inga utgifter under den här perioden.';
+
+  @override
+  String p3rpShowAll(int count) {
+    return 'Visa alla ($count)';
+  }
+
+  @override
+  String get p3rpShowLess => 'Visa färre';
+
+  @override
+  String p3rpAboveNormal(String percent) {
+    return '$percent över det normala';
+  }
+
+  @override
+  String get p3rpEmpty => 'Inga transaktioner under den här perioden.';
 }

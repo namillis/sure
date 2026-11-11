@@ -6,7 +6,6 @@ import '../theme/sure_tokens.dart';
 import '../widgets/open_on_web_action.dart';
 import '../widgets/sure_list_group.dart';
 import 'calendar_screen.dart';
-import 'cash_flow_screen.dart';
 import 'categories_screen.dart';
 import 'connections_screen.dart';
 import 'export_screen.dart';
@@ -106,8 +105,6 @@ class SettingsLinkGroups extends StatelessWidget {
           children: [
             native(Icons.calendar_month, l.moreCalendar,
                 l.moreCalendarSubtitle, (_) => const CalendarScreen()),
-            native(Icons.insights, l.moreCashFlow, l.moreCashFlowSubtitle,
-                (_) => const CashFlowScreen()),
             native(
                 Icons.receipt_long,
                 l.moreRecentTransactions,
