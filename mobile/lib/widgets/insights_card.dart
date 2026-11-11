@@ -22,6 +22,7 @@ class InsightsCard extends StatefulWidget {
     this.service,
     this.accessTokenLoader,
     this.margin,
+    this.inGroup = false,
   });
 
   /// Injected for tests; otherwise the card owns one.
@@ -30,6 +31,11 @@ class InsightsCard extends StatefulWidget {
   /// Defaults to [AuthProvider.getValidAccessToken].
   final Future<String?> Function()? accessTokenLoader;
   final EdgeInsetsGeometry? margin;
+
+  /// Renders just the row with a hairline under it (no panel), for a parent
+  /// [SurePanel] that groups several one-line rows. Nothing at all renders
+  /// when there is no insight, so the hairline never dangles.
+  final bool inGroup;
 
   @override
   State<InsightsCard> createState() => _InsightsCardState();
@@ -84,34 +90,36 @@ class _InsightsCardState extends State<InsightsCard> {
     final palette = SureColors.of(context).palette;
     final top = _insights.first;
 
-    return SurePanel.rows(
-      margin: widget.margin,
-      children: [
-        Semantics(
-          hint: l.insightsTitle,
-          child: SureListRow(
-            leading: ExcludeSemantics(
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: palette.warning.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: SureIcon(
-                  SureIcons.lightbulb,
-                  size: 15,
-                  color: palette.warning,
-                ),
-              ),
+    final row = Semantics(
+      hint: l.insightsTitle,
+      child: SureListRow(
+        leading: ExcludeSemantics(
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: palette.warning.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
             ),
-            title: top.title,
-            showChevron: true,
-            onTap: _openAll,
+            alignment: Alignment.center,
+            child: SureIcon(
+              SureIcons.lightbulb,
+              size: 15,
+              color: palette.warning,
+            ),
           ),
         ),
-      ],
+        title: top.title,
+        showChevron: true,
+        onTap: _openAll,
+      ),
     );
+    if (widget.inGroup) {
+      return Column(mainAxisSize: MainAxisSize.min, children: [
+        row,
+        const SureHairline(indent: SurePanel.iconRowDividerIndent),
+      ]);
+    }
+    return SurePanel.rows(margin: widget.margin, children: [row]);
   }
 }

@@ -569,37 +569,40 @@ class DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
+      // Insight, spending and Reports share one grouped card. The first two
+      // hide themselves (and their divider) when they have nothing to show;
+      // Reports is always last, so no divider is ever left dangling.
       SliverToBoxAdapter(
-        child: InsightsCard(
-          key: ValueKey('insights-$_homeRefreshCount'),
-          service: widget.insightsService,
-          accessTokenLoader: widget.accessTokenLoader,
+        child: SurePanel(
+          key: const ValueKey('homeLinksPanel'),
           margin: rowMargin,
-        ),
-      ),
-      SliverToBoxAdapter(
-        child: SpendingVsNormalCard(
-          key: ValueKey('spending-$_homeRefreshCount'),
-          service: widget.spendingService,
-          accessTokenLoader: widget.accessTokenLoader,
-          margin: rowMargin,
-        ),
-      ),
-      SliverToBoxAdapter(
-        child: SurePanel.rows(
-          key: const ValueKey('homeReportsRow'),
-          margin: rowMargin,
-          children: [
-            SureListRow(
-              leading: const _NeutralIcon(SureIcons.chartLine),
-              title: l.p3rpTitle,
-              showChevron: true,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ReportsScreen()),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InsightsCard(
+                key: ValueKey('insights-$_homeRefreshCount'),
+                service: widget.insightsService,
+                accessTokenLoader: widget.accessTokenLoader,
+                inGroup: true,
               ),
-            ),
-          ],
+              SpendingVsNormalCard(
+                key: ValueKey('spending-$_homeRefreshCount'),
+                service: widget.spendingService,
+                accessTokenLoader: widget.accessTokenLoader,
+                inGroup: true,
+              ),
+              SureListRow(
+                key: const ValueKey('homeReportsRow'),
+                leading: const _NeutralIcon(SureIcons.chartLine),
+                title: l.p3rpTitle,
+                showChevron: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReportsScreen()),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       if (recent != null && recent.isNotEmpty) ...[

@@ -24,6 +24,7 @@ class SpendingVsNormalCard extends StatefulWidget {
     this.accessTokenLoader,
     this.onOpen,
     this.margin,
+    this.inGroup = false,
   });
 
   /// Injected for tests; otherwise the card owns one.
@@ -35,6 +36,11 @@ class SpendingVsNormalCard extends StatefulWidget {
   /// Replaces opening [ReportsScreen] (tests).
   final VoidCallback? onOpen;
   final EdgeInsetsGeometry? margin;
+
+  /// Renders just the row with a hairline under it (no panel), for a parent
+  /// [SurePanel] that groups several one-line rows. Nothing at all renders
+  /// when there is nothing to compare, so the hairline never dangles.
+  final bool inGroup;
 
   /// Ratios closer to zero than this read as "about normal".
   static const double aboutNormal = 0.005;
@@ -105,35 +111,37 @@ class _SpendingVsNormalCardState extends State<SpendingVsNormalCard> {
     }
 
     final tint = above ? palette.warning : palette.textSecondary;
-    return SurePanel.rows(
-      margin: widget.margin,
-      children: [
-        SureListRow(
-          leading: ExcludeSemantics(
-            child: Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: above
-                    ? palette.warning.withValues(alpha: 0.15)
-                    : palette.surfaceInset,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: SureIcon(
-                ratio != null && ratio < 0
-                    ? SureIcons.trendingDown
-                    : SureIcons.trendingUp,
-                size: 15,
-                color: tint,
-              ),
-            ),
+    final row = SureListRow(
+      leading: ExcludeSemantics(
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: above
+                ? palette.warning.withValues(alpha: 0.15)
+                : palette.surfaceInset,
+            shape: BoxShape.circle,
           ),
-          title: title,
-          showChevron: true,
-          onTap: _open,
+          alignment: Alignment.center,
+          child: SureIcon(
+            ratio != null && ratio < 0
+                ? SureIcons.trendingDown
+                : SureIcons.trendingUp,
+            size: 15,
+            color: tint,
+          ),
         ),
-      ],
+      ),
+      title: title,
+      showChevron: true,
+      onTap: _open,
     );
+    if (widget.inGroup) {
+      return Column(mainAxisSize: MainAxisSize.min, children: [
+        row,
+        const SureHairline(indent: SurePanel.iconRowDividerIndent),
+      ]);
+    }
+    return SurePanel.rows(margin: widget.margin, children: [row]);
   }
 }

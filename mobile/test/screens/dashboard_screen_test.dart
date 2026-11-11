@@ -266,6 +266,15 @@ void main() {
     expect(find.text('Dining is up 40%'), findsOneWidget);
     expect(find.text('Spending 20% above normal'), findsOneWidget);
     expect(find.text('Reports'), findsOneWidget);
+    // The insight, spending and Reports rows share one grouped card with a
+    // divider after each of the first two.
+    final links = find.byKey(const ValueKey('homeLinksPanel'));
+    expect(find.descendant(of: links, matching: find.byType(SureListRow)),
+        findsNWidgets(3));
+    expect(find.descendant(of: links, matching: find.byType(SureHairline)),
+        findsNWidgets(2));
+    expect(find.descendant(of: links, matching: find.byType(SurePanel)),
+        findsNothing);
 
     expect(find.text('Recent'), findsOneWidget);
     expect(transactionRequests.single.queryParameters['per_page'], '3');
