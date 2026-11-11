@@ -2151,7 +2151,7 @@
   "@p3roInsightsLoadFailed": {"description": "Error when the insights list can't be loaded."},
   "p3roInsightsDismissHint": "Swipe to dismiss",
   "@p3roInsightsDismissHint": {"description": "Small hint under the insights list explaining the swipe gesture."},
-  "p3roConnectionsManageOnWeb": "Add or manage connections on the web",
+  "p3roConnectionsManageOnWeb": "Manage connections on the web",
   "@p3roConnectionsManageOnWeb": {"description": "Row at the top of the connections screen that opens the web providers page."},
   "p3roConnectionsEmpty": "No connections yet",
   "@p3roConnectionsEmpty": {"description": "Title shown when the family has no bank or broker connections."},

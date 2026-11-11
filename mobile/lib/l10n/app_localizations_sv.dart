@@ -2789,8 +2789,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get p3roInsightsDismissHint => 'Svep för att avfärda';
 
   @override
-  String get p3roConnectionsManageOnWeb =>
-      'Lägg till eller hantera kopplingar på webben';
+  String get p3roConnectionsManageOnWeb => 'Hantera kopplingar på webben';
 
   @override
   String get p3roConnectionsEmpty => 'Inga kopplingar än';

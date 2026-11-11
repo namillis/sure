@@ -794,7 +794,7 @@
   "p3roInsightsUnavailableBody": "Insikter är en förhandsfunktion. Aktivera förhandsfunktioner i dina inställningar på webben för att se dem här.",
   "p3roInsightsLoadFailed": "Det gick inte att läsa in insikter.",
   "p3roInsightsDismissHint": "Svep för att avfärda",
-  "p3roConnectionsManageOnWeb": "Lägg till eller hantera kopplingar på webben",
+  "p3roConnectionsManageOnWeb": "Hantera kopplingar på webben",
   "p3roConnectionsEmpty": "Inga kopplingar än",
   "p3roConnectionsEmptyBody": "Koppla en bank eller mäklare på webben för att synka konton automatiskt.",
   "p3roConnectionsLoadFailed": "Det gick inte att läsa in kopplingar.",

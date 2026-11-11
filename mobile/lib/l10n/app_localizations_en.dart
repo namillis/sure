@@ -2764,8 +2764,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get p3roInsightsDismissHint => 'Swipe to dismiss';
 
   @override
-  String get p3roConnectionsManageOnWeb =>
-      'Add or manage connections on the web';
+  String get p3roConnectionsManageOnWeb => 'Manage connections on the web';
 
   @override
   String get p3roConnectionsEmpty => 'No connections yet';

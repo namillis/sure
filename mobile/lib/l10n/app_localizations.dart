@@ -4835,7 +4835,7 @@ abstract class AppLocalizations {
   /// Row at the top of the connections screen that opens the web providers page.
   ///
   /// In en, this message translates to:
-  /// **'Add or manage connections on the web'**
+  /// **'Manage connections on the web'**
   String get p3roConnectionsManageOnWeb;
 
   /// Title shown when the family has no bank or broker connections.

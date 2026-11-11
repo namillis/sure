@@ -695,6 +695,7 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
                                   Row(
                                     children: [
                                       Flexible(
+                                        flex: 3,
                                         child: Text(
                                           transaction.name,
                                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -705,8 +706,11 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
                                       ),
                                       if (transaction.categoryName != null) ...[
                                         const SizedBox(width: 8),
+                                        // A shrinkable share of the row, so a long
+                                        // "Parent > Child" name ellipsizes instead
+                                        // of overflowing or hiding the name.
                                         Flexible(
-                                          flex: 0,
+                                          flex: 2,
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                             decoration: BoxDecoration(

@@ -49,7 +49,7 @@ void main() {
           200)),
     );
 
-    expect(find.text('Add or manage connections on the web'), findsOneWidget);
+    expect(find.text('Manage connections on the web'), findsOneWidget);
     expect(find.text('Healthy Bank'), findsOneWidget);
     expect(find.text('Connected'), findsOneWidget);
     expect(find.text('Synced 2h ago'), findsOneWidget);
@@ -68,7 +68,7 @@ void main() {
     await pump(tester,
         MockClient((_) async => http.Response('{"data":[]}', 200)));
     expect(find.text('No connections yet'), findsOneWidget);
-    expect(find.text('Add or manage connections on the web'), findsOneWidget);
+    expect(find.text('Manage connections on the web'), findsOneWidget);
   });
 
   testWidgets('error state retries', (tester) async {
