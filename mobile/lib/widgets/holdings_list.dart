@@ -282,7 +282,15 @@ class HoldingTile extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final hidden = context.watch<PrivacyProvider>().hidden;
 
-    final ticker = holding.ticker?.trim();
+    final rawTicker = holding.ticker?.trim();
+    // The server prefixes some tickers with their exchange ("CRYPTO:BTC");
+    // the row shows the symbol alone, and a coin for crypto securities.
+    final isCryptoTicker =
+        rawTicker?.toUpperCase().startsWith('CRYPTO:') == true;
+    final ticker = rawTicker != null && rawTicker.contains(':')
+        ? rawTicker.substring(rawTicker.lastIndexOf(':') + 1)
+        : rawTicker;
+    final showCoin = crypto || isCryptoTicker;
     final name = holding.securityName?.trim();
     final title = ticker?.isNotEmpty == true
         ? ticker!
@@ -315,7 +323,7 @@ class HoldingTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         child: Row(
           children: [
-            _HoldingAvatar(title: title, crypto: crypto),
+            _HoldingAvatar(title: title, crypto: showCoin),
             const SizedBox(width: 12),
             Expanded(
               child: Semantics(

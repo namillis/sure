@@ -415,6 +415,30 @@ void main() {
     expect(find.text('V'), findsNothing);
   });
 
+  testWidgets('an exchange-prefixed ticker shows the bare symbol and a coin',
+      (tester) async {
+    _phone(tester);
+    final holding = AccountHolding.fromJson({
+      'id': 'h2',
+      'date': '2026-11-10',
+      'qty': '781.46',
+      'price': r'$102.00',
+      'amount': r'$79,708.92',
+      'currency': 'USD',
+      'security': {'id': 'sec_2', 'ticker': 'CRYPTO:BTC', 'name': 'Bitcoin'},
+    });
+    await tester.pumpWidget(_app(
+      Scaffold(body: HoldingTile(holding: holding)),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('BTC'), findsOneWidget);
+    expect(find.text('CRYPTO:BTC'), findsNothing);
+    // A coin glyph, not the letter "C" from the exchange prefix.
+    expect(find.text('C'), findsNothing);
+    expect(find.text('B'), findsNothing);
+  });
+
   testWidgets('activity groups trades under day headers', (tester) async {
     _phone(tester);
     final service = AccountDetailService(
