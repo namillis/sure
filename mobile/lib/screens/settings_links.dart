@@ -7,12 +7,18 @@ import '../widgets/open_on_web_action.dart';
 import '../widgets/sure_list_group.dart';
 import 'calendar_screen.dart';
 import 'cash_flow_screen.dart';
+import 'categories_screen.dart';
+import 'export_screen.dart';
+import 'import_screen.dart';
+import 'merchants_screen.dart';
 import 'recent_transactions_screen.dart';
+import 'statement_upload_screen.dart';
+import 'tags_screen.dart';
 
 /// The Data, Tools and You sections at the top of the settings screen.
 ///
-/// Data and You rows open the matching web page in the in-app web view and
-/// carry a globe icon saying so; Tools rows open native screens.
+/// Rows with a globe icon open the web page in the in-app web view
+/// (Connections, Rules and the You section); the rest are native screens.
 class SettingsLinkGroups extends StatelessWidget {
   const SettingsLinkGroups({super.key});
 
@@ -37,6 +43,18 @@ class SettingsLinkGroups extends StatelessWidget {
             semanticLabel: l.shellOpensOnWeb,
           ),
           onTap: () => openWebFallback(context, title: title, path: path),
+        );
+
+    // A native screen with no subtitle, sitting among web rows.
+    SureListRow screen(IconData icon, String title, WidgetBuilder builder) =>
+        SureListRow(
+          leading: _iconBadge(context, icon),
+          title: title,
+          showChevron: true,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: builder),
+          ),
         );
 
     SureListRow native(
@@ -64,13 +82,19 @@ class SettingsLinkGroups extends StatelessWidget {
           margin: _groupMargin,
           children: [
             web(Icons.link, l.shellConnections, '/settings/providers'),
-            web(Icons.upload_file_outlined, l.shellImport, '/imports'),
-            web(Icons.category_outlined, l.shellCategories, '/categories'),
-            web(Icons.sell_outlined, l.shellTags, '/tags'),
-            web(Icons.storefront_outlined, l.shellMerchants,
-                '/family_merchants'),
+            screen(Icons.upload_file_outlined, l.shellImport,
+                (_) => const ImportScreen()),
+            screen(Icons.description_outlined, l.dataInStatementTitle,
+                (_) => const StatementUploadScreen()),
+            screen(Icons.category_outlined, l.shellCategories,
+                (_) => const CategoriesScreen()),
+            screen(Icons.sell_outlined, l.shellTags,
+                (_) => const TagsScreen()),
+            screen(Icons.storefront_outlined, l.shellMerchants,
+                (_) => const MerchantsScreen()),
             web(Icons.rule, l.shellRules, '/rules'),
-            web(Icons.download_outlined, l.shellExport, '/family_exports'),
+            screen(Icons.download_outlined, l.shellExport,
+                (_) => const ExportScreen()),
           ],
         ),
         SureListGroup(
