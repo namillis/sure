@@ -13,3 +13,13 @@ String updatedAgoLabel(
   if (age.inDays < 1) return l.p3ocUpdatedHoursAgo(age.inHours);
   return l.p3ocUpdatedDaysAgo(age.inDays);
 }
+
+/// A short age like "5m", "9h" or "3d" for [at] before [now]; null under a
+/// minute (and for a time in the future), so callers can say "just now".
+String? compactAgeLabel(AppLocalizations l, DateTime at, DateTime now) {
+  final age = now.difference(at);
+  if (age.inMinutes < 1) return null;
+  if (age.inHours < 1) return l.dshAgoMinutes(age.inMinutes);
+  if (age.inDays < 1) return l.dshAgoHours(age.inHours);
+  return l.dshAgoDays(age.inDays);
+}

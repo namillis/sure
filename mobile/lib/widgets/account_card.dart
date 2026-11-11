@@ -1,14 +1,130 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../l10n/app_localizations.dart';
 import '../models/account.dart';
 import '../providers/privacy_provider.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_tokens.dart';
+import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
+import 'ds/sure_swipe_actions.dart';
 import 'money_text.dart';
-import 'sure_card.dart';
 import 'sure_icon.dart';
 
+/// Account types in the order Home lists their groups: assets, then
+/// liabilities (the web's balance sheet order). Unknown types go last.
+const List<String> accountTypeOrder = [
+  'depository',
+  'investment',
+  'crypto',
+  'property',
+  'vehicle',
+  'other_asset',
+  'credit_card',
+  'loan',
+  'other_liability',
+];
+
+/// Lucide icon for an account type.
+String accountTypeIconName(String accountType) {
+  switch (accountType) {
+    case 'depository':
+      return SureIcons.landmark;
+    case 'credit_card':
+      return SureIcons.creditCard;
+    case 'investment':
+      return SureIcons.trendingUp;
+    case 'loan':
+      return SureIcons.receipt;
+    case 'property':
+      return SureIcons.house;
+    case 'vehicle':
+      return SureIcons.car;
+    case 'crypto':
+      return SureIcons.bitcoin;
+    case 'other_asset':
+      return SureIcons.shapes;
+    case 'other_liability':
+      return SureIcons.handCoins;
+    default:
+      return SureIcons.wallet;
+  }
+}
+
+/// Plural group name for an account type ("Cash", "Credit cards").
+String accountGroupLabel(AppLocalizations l, String accountType) {
+  switch (accountType) {
+    case 'depository':
+      return l.dshTypeDepository;
+    case 'credit_card':
+      return l.dshTypeCreditCard;
+    case 'investment':
+      return l.dshTypeInvestment;
+    case 'crypto':
+      return l.dshTypeCrypto;
+    case 'property':
+      return l.dshTypeProperty;
+    case 'vehicle':
+      return l.dshTypeVehicle;
+    case 'other_asset':
+      return l.dshTypeOtherAsset;
+    case 'loan':
+      return l.dshTypeLoan;
+    case 'other_liability':
+      return l.dshTypeOtherLiability;
+    default:
+      return accountType;
+  }
+}
+
+/// The account's balance in major units of its own currency: the server's
+/// formatted balance parsed back (as the Home investments total did), else
+/// its minor units.
+double accountBalanceValue(Account account) {
+  final parsed = InvestmentMath.parse(account.balance);
+  if (parsed != null) return parsed;
+  final cents = account.balanceCents;
+  if (cents == null) return 0;
+  return InvestmentMath.fromMinorUnits(cents, currency: account.currency);
+}
+
+/// Whether the account has a zero balance (collapsed as "empty").
+bool isEmptyAccount(Account account) => accountBalanceValue(account) == 0;
+
+/// The account type badge: a 28 px neutral inset circle with the type's
+/// Lucide glyph in `textSecondary`.
+class AccountTypeIcon extends StatelessWidget {
+  const AccountTypeIcon({super.key, required this.accountType});
+
+  final String accountType;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    return ExcludeSemantics(
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: palette.surfaceInset,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: SureIcon(
+          accountTypeIconName(accountType),
+          size: 15,
+          color: palette.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+/// One account as a row for a SurePanel: type icon, name, optional
+/// institution, and the balance in mono (liabilities as a negative amount in
+/// `destructive`). Tap opens the account; swiping left reveals "Add"
+/// ([onSwipe], the quick new-transaction shortcut).
 class AccountCard extends StatelessWidget {
   final Account account;
   final VoidCallback? onTap;
@@ -21,156 +137,106 @@ class AccountCard extends StatelessWidget {
     this.onSwipe,
   });
 
-  String _getAccountIconName() {
-    switch (account.accountType) {
-      case 'depository':
-        return SureIcons.landmark;
-      case 'credit_card':
-        return SureIcons.creditCard;
-      case 'investment':
-        return SureIcons.trendingUp;
-      case 'loan':
-        return SureIcons.receipt;
-      case 'property':
-        return SureIcons.house;
-      case 'vehicle':
-        return SureIcons.car;
-      case 'crypto':
-        return SureIcons.bitcoin;
-      case 'other_asset':
-        return SureIcons.shapes;
-      case 'other_liability':
-        return SureIcons.handCoins;
-      default:
-        return SureIcons.wallet;
-    }
-  }
-
-  Color _getAccountColor(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    if (account.isAsset) {
-      return SureColors.of(context).palette.success;
-    } else if (account.isLiability) {
-      return SureColors.of(context).palette.destructive;
-    }
-    return colorScheme.primary;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final accountColor = _getAccountColor(context);
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
     final hideAmounts = context.watch<PrivacyProvider>().hidden;
+    final locale = Localizations.localeOf(context).toString();
 
-    final cardContent = SureCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      onTap: onTap,
-      child: Row(
-        children: [
-          // Account icon
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: accountColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: SureIcon(
-              _getAccountIconName(),
-              color: accountColor,
-              size: SureIconSize.lg,
-            ),
-          ),
-          const SizedBox(width: 16),
+    final value = accountBalanceValue(account);
+    final signed = account.isLiability ? -value : value;
+    final balance = InvestmentMath.formatMoney(
+      signed,
+      currency: account.currency,
+      locale: locale,
+    );
+    final institution = account.institutionName?.trim();
 
-          // Account info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  account.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: SureTokens.weightMedium,
+    Widget row = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        child: Row(
+          children: [
+            AccountTypeIcon(accountType: account.accountType),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    account.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.25,
+                      fontWeight: SureTokens.weightMedium,
+                      color: palette.textPrimary,
+                    ),
                   ),
+                  if (institution != null && institution.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      institution,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.25,
+                        color: palette.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.5,
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerEnd,
+                child: MoneyText(
+                  MoneyMasker.mask(balance, hidden: hideAmounts),
+                  trend: account.isLiability
+                      ? MoneyTrend.outflow
+                      : MoneyTrend.inflow,
+                  color: account.isLiability
+                      ? palette.destructive
+                      : palette.textPrimary,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  account.displayAccountType,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Balance
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                MoneyMasker.mask(account.balance, hidden: hideAmounts),
-                style: SureMoney.tabular(
-                  Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: const TextStyle(
+                    fontSize: 15,
                     fontWeight: SureTokens.weightMedium,
-                    color: account.isLiability
-                        ? SureColors.of(context).palette.destructive
-                        : null,
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                account.currency,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
 
-    // If onSwipe is provided, wrap with Dismissible
-    if (onSwipe != null) {
-      return Dismissible(
-        key: Key('account_${account.id}'),
-        direction: DismissDirection.endToStart,
-        confirmDismiss: (direction) async {
-          // Don't actually dismiss, just trigger the swipe action
-          onSwipe?.call();
-          return false; // Don't remove the item
-        },
-        background: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(SureTokens.radiusLg),
-          ),
-          // Tapping a card opens the account; swiping is the quick-add shortcut.
-          child: const Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add_circle_outline, color: Colors.white, size: 28),
-              SizedBox(height: 4),
-              Text(
-                'Add',
-                style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-        child: cardContent,
-      );
-    }
+    row = Material(
+      color: palette.container,
+      child: InkWell(onTap: onTap, child: row),
+    );
 
-    return cardContent;
+    if (onSwipe == null) return row;
+    return SureSwipeActions(
+      actions: [
+        SureSwipeAction(
+          label: l.dshAddTransaction,
+          color: palette.info,
+          onPressed: onSwipe!,
+        ),
+      ],
+      child: row,
+    );
   }
 }

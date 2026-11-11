@@ -5659,6 +5659,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get dsFailed;
+
+  /// Small badge next to the Home net worth label when the balance sheet could not be refreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Outdated'**
+  String get dshOutdated;
+
+  /// Home nav-bar button label that turns privacy mode off.
+  ///
+  /// In en, this message translates to:
+  /// **'Show amounts'**
+  String get dshShowAmounts;
+
+  /// Home nav-bar button label that turns privacy mode on.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide amounts'**
+  String get dshHideAmounts;
+
+  /// One-line Home row comparing this month's spending with normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending {percent} above normal'**
+  String dshSpendingAbove(String percent);
+
+  /// One-line Home row comparing this month's spending with normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending {percent} below normal'**
+  String dshSpendingBelow(String percent);
+
+  /// One-line Home row when this month's spending is within half a percent of normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending about normal'**
+  String get dshSpendingAboutNormal;
+
+  /// Home section header above the latest transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get dshRecent;
+
+  /// Link on the Home Recent header that opens the Activity tab.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get dshSeeAll;
+
+  /// Home section header above the account groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get dshAccounts;
+
+  /// Screen reader label of the + on the Home Accounts header.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get dshAddAccount;
+
+  /// Home account group row title: account type and how many accounts it has.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} · {count}'**
+  String dshGroupTitle(String type, int count);
+
+  /// After a Home account group title: how many of its accounts have a zero balance.
+  ///
+  /// In en, this message translates to:
+  /// **'({count} empty)'**
+  String dshGroupEmpty(int count);
+
+  /// Row at the bottom of an account group list that hides the zero-balance accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 empty account} other{{count} empty accounts}}'**
+  String dshEmptyAccounts(int count);
+
+  /// Link that reveals hidden zero-balance accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get dshShow;
+
+  /// Link that hides zero-balance accounts again.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get dshHide;
+
+  /// Account group screen when the type no longer has any accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts of this type'**
+  String get dshGroupNoAccounts;
+
+  /// Account group name for bank (depository) accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get dshTypeDepository;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit cards'**
+  String get dshTypeCreditCard;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Investments'**
+  String get dshTypeInvestment;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get dshTypeCrypto;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Property'**
+  String get dshTypeProperty;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicles'**
+  String get dshTypeVehicle;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Other assets'**
+  String get dshTypeOtherAsset;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get dshTypeLoan;
+
+  /// Account group name.
+  ///
+  /// In en, this message translates to:
+  /// **'Other liabilities'**
+  String get dshTypeOtherLiability;
+
+  /// Home first-run empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a bank on the web, or add a manual account like a house or car.'**
+  String get dshEmptyBody;
+
+  /// Home first-run primary button; opens bank connections on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect on the web'**
+  String get dshConnectOnWeb;
+
+  /// Home first-run link; opens the web's new account flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a manual account'**
+  String get dshAddManualAccount;
+
+  /// Home offline banner; age is a short duration like 2h.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · showing data from {age} ago'**
+  String dshOfflineShowing(String age);
+
+  /// Home offline banner when the saved data is less than a minute old.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · showing data from just now'**
+  String get dshOfflineShowingJustNow;
+
+  /// Short duration in minutes, e.g. 5m.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String dshAgoMinutes(int count);
+
+  /// Short duration in hours, e.g. 9h.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String dshAgoHours(int count);
+
+  /// Short duration in days, e.g. 3d.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String dshAgoDays(int count);
+
+  /// Home sync pill when the last sync finished under a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get dshAgoNow;
+
+  /// Home sync pill when the family has never synced.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get dshSyncShort;
+
+  /// Home sync pill when the last sync failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get dshSyncFailedShort;
+
+  /// Swipe action on an account row that opens the new transaction form.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get dshAddTransaction;
 }
 
 class _AppLocalizationsDelegate

@@ -1,59 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sure_mobile/models/account.dart';
-import 'package:sure_mobile/providers/privacy_provider.dart';
-import 'package:sure_mobile/services/preferences_service.dart';
-import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/theme/sure_tokens.dart';
 import 'package:sure_mobile/widgets/account_card.dart';
+import 'package:sure_mobile/widgets/money_text.dart';
+
+import '../support/ds_harness.dart';
+import '../support/home_fixtures.dart';
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-    PreferencesService.resetForTest();
-  });
+  for (final brightness in brightnesses) {
+    final tokens =
+        brightness == Brightness.dark ? SureTokens.dark : SureTokens.light;
 
-  Account account(String classification) => Account(
-        id: '1',
-        name: 'Test account',
-        balance: 'USD 100.00',
-        currency: 'USD',
-        accountType:
-            classification == 'liability' ? 'credit_card' : 'depository',
-        classification: classification,
-      );
-
-  Future<void> pump(WidgetTester tester, Account a) async {
-    await tester.pumpWidget(
-      ChangeNotifierProvider<PrivacyProvider>(
-        create: (_) => PrivacyProvider(),
-        child: MaterialApp(
-          theme: SureTheme.light,
-          home: Scaffold(body: AccountCard(account: a)),
+    testWidgets('liability balance is negative in destructive '
+        '(${brightness.name})', (tester) async {
+      await pumpDs(
+        tester,
+        AccountCard(
+          account: homeAccount('1',
+              name: 'Sapphire',
+              type: 'credit_card',
+              classification: 'liability',
+              balance: r'$100.00'),
         ),
-      ),
-    );
-    // PrivacyProvider is fail-closed: it starts masked and reveals once the
-    // (mock-empty -> privacy off) preference load completes. Pump a few frames
-    // so the real balance is shown before asserting on it.
-    for (var i = 0; i < 8; i++) {
-      await tester.pump(const Duration(milliseconds: 10));
-    }
+        brightness: brightness,
+      );
+      final balance = tester.widget<MoneyText>(find.byType(MoneyText));
+      expect(balance.text, r'-$100.00');
+      expect(balance.color, tokens.destructive);
+    });
+
+    testWidgets('asset balance is textPrimary with no currency code '
+        '(${brightness.name})', (tester) async {
+      await pumpDs(
+        tester,
+        AccountCard(
+          account: homeAccount('1',
+              name: 'Checking', balance: r'$100.00', institution: 'Chase'),
+        ),
+        brightness: brightness,
+      );
+      final balance = tester.widget<MoneyText>(find.byType(MoneyText));
+      expect(balance.text, r'$100.00');
+      expect(balance.color, tokens.textPrimary);
+      expect(find.text('Chase'), findsOneWidget);
+      expect(find.text('USD'), findsNothing);
+    });
   }
 
-  testWidgets('liability balance uses the destructive design-system token',
+  testWidgets('falls back to minor units and masks in privacy mode',
       (tester) async {
-    await pump(tester, account('liability'));
-    final balance = tester.widget<Text>(find.text('USD 100.00'));
-    expect(balance.style?.color, SureTokens.light.destructive);
+    await pumpDs(
+      tester,
+      AccountCard(
+        account: homeAccount('1', balance: '', cents: 12345),
+      ),
+      privacyHidden: true,
+    );
+    expect(tester.widget<MoneyText>(find.byType(MoneyText)).text, r'$••••');
   });
 
-  testWidgets('asset balance keeps default (non-destructive) color',
-      (tester) async {
-    await pump(tester, account('asset'));
-    final balance = tester.widget<Text>(find.text('USD 100.00'));
-    expect(balance.style?.color, isNot(SureTokens.light.destructive));
+  testWidgets('swiping left reveals Add, which calls onSwipe', (tester) async {
+    var swiped = 0;
+    await pumpDs(
+      tester,
+      AccountCard(
+        account: homeAccount('1', name: 'Checking', balance: r'$1.00'),
+        onSwipe: () => swiped++,
+      ),
+    );
+    await tester.drag(find.text('Checking'), const Offset(-200, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add'));
+    await tester.pumpAndSettle();
+    expect(swiped, 1);
+  });
+
+  testWidgets('a long name ellipsizes at 320 px', (tester) async {
+    await pumpDs(
+      tester,
+      AccountCard(
+        account: homeAccount('1',
+            name: 'A very long account name that will never fit on one line',
+            institution: 'An institution with an equally long name',
+            balance: r'$1,234,567.89'),
+      ),
+      width: 320,
+    );
+    expect(tester.takeException(), isNull);
   });
 }

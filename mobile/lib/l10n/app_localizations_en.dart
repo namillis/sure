@@ -3316,4 +3316,140 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dsFailed => 'Failed';
+
+  @override
+  String get dshOutdated => 'Outdated';
+
+  @override
+  String get dshShowAmounts => 'Show amounts';
+
+  @override
+  String get dshHideAmounts => 'Hide amounts';
+
+  @override
+  String dshSpendingAbove(String percent) {
+    return 'Spending $percent above normal';
+  }
+
+  @override
+  String dshSpendingBelow(String percent) {
+    return 'Spending $percent below normal';
+  }
+
+  @override
+  String get dshSpendingAboutNormal => 'Spending about normal';
+
+  @override
+  String get dshRecent => 'Recent';
+
+  @override
+  String get dshSeeAll => 'See all';
+
+  @override
+  String get dshAccounts => 'Accounts';
+
+  @override
+  String get dshAddAccount => 'Add account';
+
+  @override
+  String dshGroupTitle(String type, int count) {
+    return '$type · $count';
+  }
+
+  @override
+  String dshGroupEmpty(int count) {
+    return '($count empty)';
+  }
+
+  @override
+  String dshEmptyAccounts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count empty accounts',
+      one: '1 empty account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dshShow => 'Show';
+
+  @override
+  String get dshHide => 'Hide';
+
+  @override
+  String get dshGroupNoAccounts => 'No accounts of this type';
+
+  @override
+  String get dshTypeDepository => 'Cash';
+
+  @override
+  String get dshTypeCreditCard => 'Credit cards';
+
+  @override
+  String get dshTypeInvestment => 'Investments';
+
+  @override
+  String get dshTypeCrypto => 'Crypto';
+
+  @override
+  String get dshTypeProperty => 'Property';
+
+  @override
+  String get dshTypeVehicle => 'Vehicles';
+
+  @override
+  String get dshTypeOtherAsset => 'Other assets';
+
+  @override
+  String get dshTypeLoan => 'Loans';
+
+  @override
+  String get dshTypeOtherLiability => 'Other liabilities';
+
+  @override
+  String get dshEmptyBody =>
+      'Connect a bank on the web, or add a manual account like a house or car.';
+
+  @override
+  String get dshConnectOnWeb => 'Connect on the web';
+
+  @override
+  String get dshAddManualAccount => 'Add a manual account';
+
+  @override
+  String dshOfflineShowing(String age) {
+    return 'Offline · showing data from $age ago';
+  }
+
+  @override
+  String get dshOfflineShowingJustNow => 'Offline · showing data from just now';
+
+  @override
+  String dshAgoMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String dshAgoHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String dshAgoDays(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String get dshAgoNow => 'now';
+
+  @override
+  String get dshSyncShort => 'Sync';
+
+  @override
+  String get dshSyncFailedShort => 'Failed';
+
+  @override
+  String get dshAddTransaction => 'Add';
 }

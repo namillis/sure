@@ -3312,10 +3312,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get p3rpEmpty => 'Inga transaktioner under den här perioden.';
 
   @override
-  String get dsToday => 'Idag';
+  String get dsToday => 'I dag';
 
   @override
-  String get dsYesterday => 'Igår';
+  String get dsYesterday => 'I går';
 
   @override
   String get dsCancel => 'Avbryt';
@@ -3346,4 +3346,141 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dsFailed => 'Misslyckades';
+
+  @override
+  String get dshOutdated => 'Inaktuell';
+
+  @override
+  String get dshShowAmounts => 'Visa belopp';
+
+  @override
+  String get dshHideAmounts => 'Dölj belopp';
+
+  @override
+  String dshSpendingAbove(String percent) {
+    return 'Utgifter $percent över det normala';
+  }
+
+  @override
+  String dshSpendingBelow(String percent) {
+    return 'Utgifter $percent under det normala';
+  }
+
+  @override
+  String get dshSpendingAboutNormal => 'Utgifter ungefär som vanligt';
+
+  @override
+  String get dshRecent => 'Senaste';
+
+  @override
+  String get dshSeeAll => 'Visa alla';
+
+  @override
+  String get dshAccounts => 'Konton';
+
+  @override
+  String get dshAddAccount => 'Lägg till konto';
+
+  @override
+  String dshGroupTitle(String type, int count) {
+    return '$type · $count';
+  }
+
+  @override
+  String dshGroupEmpty(int count) {
+    return '($count tomma)';
+  }
+
+  @override
+  String dshEmptyAccounts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tomma konton',
+      one: '1 tomt konto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dshShow => 'Visa';
+
+  @override
+  String get dshHide => 'Dölj';
+
+  @override
+  String get dshGroupNoAccounts => 'Inga konton av den här typen';
+
+  @override
+  String get dshTypeDepository => 'Kontanter';
+
+  @override
+  String get dshTypeCreditCard => 'Kreditkort';
+
+  @override
+  String get dshTypeInvestment => 'Investeringar';
+
+  @override
+  String get dshTypeCrypto => 'Krypto';
+
+  @override
+  String get dshTypeProperty => 'Fastigheter';
+
+  @override
+  String get dshTypeVehicle => 'Fordon';
+
+  @override
+  String get dshTypeOtherAsset => 'Övriga tillgångar';
+
+  @override
+  String get dshTypeLoan => 'Lån';
+
+  @override
+  String get dshTypeOtherLiability => 'Övriga skulder';
+
+  @override
+  String get dshEmptyBody =>
+      'Anslut en bank på webben, eller lägg till ett manuellt konto som ett hus eller en bil.';
+
+  @override
+  String get dshConnectOnWeb => 'Anslut på webben';
+
+  @override
+  String get dshAddManualAccount => 'Lägg till ett manuellt konto';
+
+  @override
+  String dshOfflineShowing(String age) {
+    return 'Offline · visar data från för $age sedan';
+  }
+
+  @override
+  String get dshOfflineShowingJustNow =>
+      'Offline · visar data från alldeles nyss';
+
+  @override
+  String dshAgoMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String dshAgoHours(int count) {
+    return '$count h';
+  }
+
+  @override
+  String dshAgoDays(int count) {
+    return '$count d';
+  }
+
+  @override
+  String get dshAgoNow => 'nu';
+
+  @override
+  String get dshSyncShort => 'Synka';
+
+  @override
+  String get dshSyncFailedShort => 'Misslyckades';
+
+  @override
+  String get dshAddTransaction => 'Lägg till';
 }

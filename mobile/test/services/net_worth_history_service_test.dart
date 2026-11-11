@@ -182,4 +182,43 @@ void main() {
     expect(result['success'], true);
     expect((result['history'] as NetWorthHistory).points, isEmpty);
   });
+
+  test('a null start loads full history from the earliest balance row',
+      () async {
+    final requested = <Uri>[];
+    final service = NetWorthHistoryService(
+      accountDetailService: AccountDetailService(
+        client: MockClient((request) async {
+          requested.add(request.url);
+          final id = request.url.queryParameters['account_id'];
+          return http.Response(
+            id == 'cash'
+                ? _balances([
+                    ['2026-10-02', 2000],
+                  ])
+                : _balances([
+                    ['2026-09-30', 500],
+                  ]),
+            200,
+          );
+        }),
+      ),
+    );
+
+    final result = await service.load(
+      accessToken: 'token',
+      accounts: [_account('cash'), _account('savings')],
+      mainCurrency: 'USD',
+      start: null,
+      end: end,
+    );
+
+    expect(result['success'], true);
+    expect(requested.every((u) => !u.queryParameters.containsKey('start_date')),
+        isTrue);
+    final points = (result['history'] as NetWorthHistory).points;
+    expect(points.first.date, DateTime(2026, 9, 30));
+    expect(points.last.date, end);
+    expect(points.first.cents, 2500);
+  });
 }

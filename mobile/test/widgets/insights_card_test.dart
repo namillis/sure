@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sure_mobile/screens/insights_screen.dart';
 import 'package:sure_mobile/services/insights_service.dart';
+import 'package:sure_mobile/widgets/ds/sure_panel.dart';
 import 'package:sure_mobile/widgets/insights_card.dart';
-import 'package:sure_mobile/widgets/sure_card.dart';
+import 'package:sure_mobile/widgets/sure_list_group.dart';
 
 import '../support/l10n_harness.dart';
 
@@ -30,66 +30,7 @@ void main() {
         ),
       );
 
-  testWidgets('shows the top three, expands, and dismisses', (tester) async {
-    final patched = <String>[];
-    await pump(
-      tester,
-      MockClient((request) async {
-        if (request.method == 'PATCH') {
-          patched.add(request.url.path);
-          return http.Response('', 204);
-        }
-        return http.Response(
-          jsonEncode({
-            'insights': [
-              insight('i1', 'Dining is up', priority: 'high'),
-              insight('i2', 'Rent posted'),
-              insight('i3', 'Subscription renewed'),
-              insight('i4', 'Fourth insight'),
-            ],
-          }),
-          200,
-        );
-      }),
-    );
-
-    expect(find.text('Insights'), findsOneWidget);
-    expect(find.text('Dining is up'), findsOneWidget);
-    expect(find.text('High priority'), findsOneWidget);
-    expect(find.text('Subscription renewed'), findsOneWidget);
-    expect(find.text('Fourth insight'), findsNothing);
-    expect(find.text('Body of Dining is up'), findsNothing);
-
-    await tester.tap(find.text('Dining is up'));
-    await tester.pumpAndSettle();
-    expect(find.text('Body of Dining is up'), findsOneWidget);
-
-    await tester.tap(find.text('Dismiss'));
-    await tester.pumpAndSettle();
-    expect(patched, ['/api/v1/insights/i1/acknowledge']);
-    expect(find.text('Dining is up'), findsNothing);
-    expect(find.text('Fourth insight'), findsOneWidget);
-  });
-
-  for (final status in [403, 404, 500, 401]) {
-    testWidgets('renders nothing on $status', (tester) async {
-      await pump(
-        tester,
-        MockClient((_) async => http.Response(
-            '{"error":"feature_disabled"}', status)),
-      );
-      expect(find.byType(SureCard), findsNothing);
-      expect(find.text('Insights'), findsNothing);
-    });
-  }
-
-  testWidgets('renders nothing with no insights', (tester) async {
-    await pump(tester,
-        MockClient((_) async => http.Response('{"insights":[]}', 200)));
-    expect(find.byType(SureCard), findsNothing);
-  });
-
-  testWidgets('See all shows only with more than maxItems and opens the list',
+  testWidgets('one row with the top insight; tapping opens the list',
       (tester) async {
     var gets = 0;
     await pump(
@@ -99,7 +40,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'insights': [
-              for (var i = 1; i <= 4; i++) insight('i$i', 'Insight $i'),
+              insight('i1', 'Dining is up', priority: 'high'),
+              insight('i2', 'Rent posted'),
             ],
           }),
           200,
@@ -107,37 +49,45 @@ void main() {
       }),
     );
 
-    expect(find.text('Insight 4'), findsNothing);
-    await tester.tap(find.text('See all'));
+    expect(find.byType(SurePanel), findsOneWidget);
+    expect(find.byType(SureListRow), findsOneWidget);
+    expect(find.text('Dining is up'), findsOneWidget);
+    expect(find.text('Rent posted'), findsNothing);
+
+    await tester.tap(find.text('Dining is up'));
     await tester.pumpAndSettle();
     expect(find.byType(InsightsScreen), findsOneWidget);
-    expect(find.text('Insight 4'), findsOneWidget);
+    expect(find.text('Rent posted'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(gets, 3, reason: 'card, screen, and card reload on return');
+    expect(gets, 3, reason: 'row, screen, and row reload on return');
   });
 
-  testWidgets('no See all with maxItems or fewer', (tester) async {
+  for (final status in [403, 404, 500, 401]) {
+    testWidgets('renders nothing on $status', (tester) async {
+      await pump(
+        tester,
+        MockClient((_) async => http.Response(
+            '{"error":"feature_disabled"}', status)),
+      );
+      expect(find.byType(SurePanel), findsNothing);
+    });
+  }
+
+  testWidgets('renders nothing with no insights', (tester) async {
+    await pump(tester,
+        MockClient((_) async => http.Response('{"insights":[]}', 200)));
+    expect(find.byType(SurePanel), findsNothing);
+  });
+
+  testWidgets('the row is at least 44pt tall', (tester) async {
     await pump(
       tester,
       MockClient((_) async => http.Response(
           jsonEncode({'insights': [insight('i1', 'Only one')]}), 200)),
     );
-    expect(find.text('Only one'), findsOneWidget);
-    expect(find.text('See all'), findsNothing);
-  });
-
-  testWidgets('dismiss button is at least 44pt tall', (tester) async {
-    await pump(
-      tester,
-      MockClient((_) async => http.Response(
-          jsonEncode({'insights': [insight('i1', 'Only one')]}), 200)),
-    );
-    await tester.tap(find.text('Only one'));
-    await tester.pumpAndSettle();
-    final box = tester.getSize(find.ancestor(
-        of: find.text('Dismiss'), matching: find.byType(ConstrainedBox)).first);
-    expect(box.height, greaterThanOrEqualTo(44));
+    expect(tester.getSize(find.byType(SureListRow)).height,
+        greaterThanOrEqualTo(44));
   });
 }

@@ -1,36 +1,85 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/account.dart';
-import '../providers/auth_provider.dart';
+
+import '../l10n/app_localizations.dart';
+import '../models/activity_filters.dart';
+import '../models/activity_transaction.dart';
+import '../models/family_sync.dart';
+import '../models/offline_transaction.dart';
 import '../providers/accounts_provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/privacy_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../services/connectivity_service.dart';
+import '../services/family_sync_service.dart';
+import '../services/insights_service.dart';
 import '../services/log_service.dart';
-import '../services/preferences_service.dart';
+import '../services/net_worth_history_service.dart';
+import '../services/spending_vs_normal_service.dart';
+import '../services/transaction_search_service.dart';
+import '../theme/sure_colors.dart';
+import '../utils/investment_math.dart';
+import '../utils/money_masker.dart';
+import '../utils/net_worth_history.dart';
 import '../utils/updated_ago.dart';
 import '../widgets/account_card.dart';
+import '../widgets/balance_history_chart.dart' show AccountChartRange;
 import '../widgets/connectivity_banner.dart';
-import '../widgets/net_worth_card.dart';
-import '../widgets/currency_filter.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_icon.dart';
-import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../theme/sure_tokens.dart';
-import '../theme/sure_typography.dart';
-import 'portfolio_screen.dart';
-import 'reports_screen.dart';
-import 'transaction_form_screen.dart';
-import 'transactions_list_screen.dart';
-import '../l10n/app_localizations.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/insights_card.dart';
-import '../widgets/investments_summary_card.dart';
+import '../widgets/net_worth_card.dart';
+import '../widgets/open_on_web_action.dart';
 import '../widgets/spending_vs_normal_card.dart';
-import '../widgets/sure_card.dart';
+import '../widgets/sync_now_dialog.dart';
+import '../widgets/sync_status_chip.dart';
+import 'account_group_screen.dart';
+import 'connections_screen.dart';
+import 'reports_screen.dart';
+import 'settings_screen.dart';
+import 'transaction_edit_screen.dart';
 
+/// Home: a large "Home" title with the sync pill, privacy toggle and
+/// settings; the net worth hero with its trend line and range chips; the top
+/// insight, spending vs normal and Reports rows; the three latest
+/// transactions; and the accounts grouped by type.
+///
+/// Accounts and the balance sheet are cache first ([AccountsProvider]); the
+/// trend line is the Reports net worth history for the selected range, loaded
+/// when online.
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({
+    super.key,
+    this.onOpenActivity,
+    this.accessTokenLoader,
+    this.netWorthService,
+    this.searchService,
+    this.insightsService,
+    this.spendingService,
+    this.syncService,
+    this.clock,
+  });
+
+  /// "See all" on Recent: switches the shell to the Activity tab. The link
+  /// is hidden when null.
+  final VoidCallback? onOpenActivity;
+
+  /// Defaults to [AuthProvider.getValidAccessToken].
+  final Future<String?> Function()? accessTokenLoader;
+
+  /// Injected for tests; otherwise the screen owns them.
+  final NetWorthHistoryService? netWorthService;
+  final TransactionSearchService? searchService;
+  final InsightsService? insightsService;
+  final SpendingVsNormalService? spendingService;
+  final FamilySyncService? syncService;
+
+  /// Source of "now"; injectable for tests.
+  final DateTime Function()? clock;
+
+  /// Transactions shown under Recent.
+  static const int recentCount = 3;
 
   @override
   DashboardScreenState createState() => DashboardScreenState();
@@ -38,31 +87,39 @@ class DashboardScreen extends StatefulWidget {
 
 class DashboardScreenState extends State<DashboardScreen> {
   final LogService _log = LogService.instance;
+  late final NetWorthHistoryService _netWorth =
+      widget.netWorthService ?? NetWorthHistoryService();
+  late final TransactionSearchService _search =
+      widget.searchService ?? TransactionSearchService();
+
   bool _showSyncSuccess = false;
   int _previousPendingCount = 0;
   Timer? _syncSuccessTimer;
   TransactionsProvider? _transactionsProvider;
 
-  // Filter state
-  AccountFilter _accountFilter = AccountFilter.all;
-  Set<String> _selectedCurrencies = {};
+  /// Bumped on refresh; keys the self-loading rows so they reload.
+  int _homeRefreshCount = 0;
 
-  // Group by type state
-  bool _groupByType = false;
-  final Set<String> _collapsedGroups = {};
+  AccountChartRange _range = AccountChartRange.quarter;
+
+  /// Loaded histories by range, cleared on refresh.
+  final Map<AccountChartRange, NetWorthHistory> _histories = {};
+  String _historyCurrency = '';
+  bool _historyLoading = false;
+  int _historyGeneration = 0;
+
+  List<ActivityTransaction>? _recent;
+  bool _signedOut = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAccounts();
-    _loadPreferences();
-
-    // Listen for sync completion to show success indicator
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _transactionsProvider = Provider.of<TransactionsProvider>(context, listen: false);
+      _transactionsProvider = _maybeRead<TransactionsProvider>();
       _previousPendingCount = _transactionsProvider?.pendingCount ?? 0;
       _transactionsProvider?.addListener(_onTransactionsChanged);
+      _loadAll();
     });
   }
 
@@ -70,169 +127,201 @@ class DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _syncSuccessTimer?.cancel();
     _transactionsProvider?.removeListener(_onTransactionsChanged);
+    if (widget.netWorthService == null) _netWorth.close();
     super.dispose();
+  }
+
+  T? _maybeRead<T>() {
+    try {
+      return Provider.of<T>(context, listen: false);
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
+  DateTime _now() => (widget.clock ?? DateTime.now)();
+
+  bool get _offline =>
+      _maybeRead<ConnectivityService>()?.isOffline ?? false;
+
+  Future<String?> _token() {
+    final loader = widget.accessTokenLoader;
+    if (loader != null) return loader();
+    return context.read<AuthProvider>().getValidAccessToken();
+  }
+
+  Future<void> _signOut() async {
+    if (_signedOut) return;
+    _signedOut = true;
+    await _maybeRead<AuthProvider>()?.logout();
   }
 
   void _onTransactionsChanged() {
     final transactionsProvider = _transactionsProvider;
-    if (transactionsProvider == null || !mounted) {
-      return;
-    }
-
+    if (transactionsProvider == null || !mounted) return;
     final currentPendingCount = transactionsProvider.pendingCount;
-
-    // Show sync success when pending count decreased (local transactions uploaded)
-    if (_previousPendingCount > 0 && currentPendingCount < _previousPendingCount) {
+    // Pending count went down: local transactions were uploaded.
+    if (_previousPendingCount > 0 &&
+        currentPendingCount < _previousPendingCount) {
       _showSyncSuccessIndicator();
     }
-
     _previousPendingCount = currentPendingCount;
   }
 
   void _showSyncSuccessIndicator() {
     _syncSuccessTimer?.cancel();
-
-    setState(() {
-      _showSyncSuccess = true;
-    });
-
+    setState(() => _showSyncSuccess = true);
     _syncSuccessTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _showSyncSuccess = false;
-        });
-      }
+      if (mounted) setState(() => _showSyncSuccess = false);
     });
+  }
+
+  Future<void> _loadAll() async {
+    await Future.wait([
+      _loadAccounts().then((_) => _loadHistory()),
+      _loadRecent(),
+    ]);
   }
 
   Future<void> _loadAccounts() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final accountsProvider = Provider.of<AccountsProvider>(context, listen: false);
-    
-    final accessToken = await authProvider.getValidAccessToken();
+    final accountsProvider = context.read<AccountsProvider>();
+    final accessToken = await _token();
+    if (!mounted) return;
     if (accessToken == null) {
-      // Token is invalid, redirect to login
-      await authProvider.logout();
+      // Token is invalid: back to sign in.
+      await _signOut();
       return;
     }
-
     await accountsProvider.fetchAccounts(accessToken: accessToken);
-    
-    // Check if unauthorized
-    if (accountsProvider.errorMessage == 'unauthorized') {
-      await authProvider.logout();
+    if (accountsProvider.errorMessage == 'unauthorized') await _signOut();
+  }
+
+  /// The family currency, else the most common account currency.
+  static String _mainCurrency(AccountsProvider provider) {
+    final known = provider.familyCurrency;
+    if (known != null && known.isNotEmpty) return known;
+    final counts = <String, int>{};
+    for (final a in provider.accounts) {
+      counts[a.currency] = (counts[a.currency] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return '';
+    return counts.entries.reduce((a, b) => b.value > a.value ? b : a).key;
+  }
+
+  Future<void> _loadHistory() async {
+    final range = _range;
+    if (!mounted || _histories.containsKey(range) || _offline) return;
+    final provider = context.read<AccountsProvider>();
+    final accounts = provider.accounts;
+    if (accounts.isEmpty) return;
+    final generation = ++_historyGeneration;
+    setState(() => _historyLoading = true);
+
+    final token = await _token();
+    if (!mounted || generation != _historyGeneration) return;
+    if (token == null) {
+      setState(() => _historyLoading = false);
+      return;
+    }
+    final currency = _mainCurrency(provider);
+    final now = _now();
+    final result = await _netWorth.load(
+      accessToken: token,
+      accounts: accounts,
+      mainCurrency: currency,
+      start: range.startDate(now),
+      end: DateTime(now.year, now.month, now.day),
+    );
+    if (!mounted || generation != _historyGeneration) return;
+    setState(() {
+      _historyLoading = false;
+      if (result['success'] == true) {
+        _histories[range] = result['history'] as NetWorthHistory;
+        _historyCurrency = currency;
+      }
+    });
+    if (result['error'] == 'unauthorized') await _signOut();
+  }
+
+  Future<void> _loadRecent() async {
+    final token = await _token();
+    if (!mounted || token == null) return;
+    final result = await _search.search(
+      accessToken: token,
+      filters: const ActivityFilters(datePreset: ActivityDatePreset.all),
+      perPage: DashboardScreen.recentCount,
+      now: _now(),
+    );
+    if (!mounted) return;
+    if (result['success'] == true) {
+      setState(() => _recent = (result['transactions'] as List<dynamic>)
+          .cast<ActivityTransaction>()
+          .take(DashboardScreen.recentCount)
+          .toList());
+    } else if (result['error'] == 'unauthorized') {
+      await _signOut();
     }
   }
 
-  Future<void> _loadPreferences() async {
-    final groupByType = await PreferencesService.instance.getGroupByType();
-    if (mounted) {
-      setState(() {
-        _groupByType = groupByType;
-      });
-    }
+  void _selectRange(AccountChartRange range) {
+    setState(() => _range = range);
+    _loadHistory();
   }
 
-  void reloadPreferences() {
-    _loadPreferences();
-  }
+  /// Kept for the shell, which calls it when Home is shown or settings close.
+  /// Home has no preferences of its own to reload any more.
+  void reloadPreferences() {}
 
-  /// Reloads accounts and the Home cards, e.g. after a sync finishes.
+  /// Reloads accounts, history, Recent and the Home rows, e.g. after a sync.
   Future<void> reloadData() async {
-    setState(() => _homeRefreshCount += 1);
-    await _loadAccounts();
+    setState(() {
+      _homeRefreshCount += 1;
+      _histories.clear();
+      _historyGeneration++;
+      _historyLoading = false;
+    });
+    await _loadAll();
   }
-
-  // Bumped on pull to refresh; keys the self-loading Home cards so they reload.
-  int _homeRefreshCount = 0;
 
   Future<void> _handleRefresh() async {
-    setState(() => _homeRefreshCount += 1);
-    await _performManualSync();
+    setState(() {
+      _homeRefreshCount += 1;
+      _histories.clear();
+      _historyGeneration++;
+      _historyLoading = false;
+    });
+    await Future.wait([
+      _performManualSync().then((_) => _loadHistory()),
+      _loadRecent(),
+    ]);
   }
 
   Future<void> _performManualSync() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final transactionsProvider = Provider.of<TransactionsProvider>(context, listen: false);
+    final transactionsProvider = _maybeRead<TransactionsProvider>();
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
+    final messenger = ScaffoldMessenger.of(context);
 
-    final accessToken = await authProvider.getValidAccessToken();
+    final accessToken = await _token();
+    if (!mounted) return;
     if (accessToken == null) {
-      await authProvider.logout();
+      await _signOut();
+      return;
+    }
+    if (transactionsProvider == null) {
+      await _loadAccounts();
       return;
     }
 
-    // Show syncing indicator
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(child: Text(l.dashboardSyncing)),
-            ],
-          ),
-          duration: const Duration(seconds: 30),
-        ),
-      );
-    }
-
-    try {
-      // Perform full sync: upload pending, download from server, sync accounts
-      await transactionsProvider.syncTransactions(accessToken: accessToken);
-
-      // Reload accounts to show updated balances
-      await _loadAccounts();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        if (transactionsProvider.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  SureIcon(SureIcons.circleAlert, color: palette.textInverse),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      l.dashboardSyncFailed,
-                      style: TextStyle(color: palette.textInverse),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: palette.destructive,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        } else {
-          _showSyncSuccessIndicator();
-        }
-      }
-    } catch (e) {
-      _log.error('DashboardScreen', 'Error in _performManualSync: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
+    void showError(String text) => messenger.showSnackBar(
           SnackBar(
             content: Row(
               children: [
                 SureIcon(SureIcons.circleAlert, color: palette.textInverse),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    l.dashboardSyncError,
-                    style: TextStyle(color: palette.textInverse),
-                  ),
+                  child: Text(text,
+                      style: TextStyle(color: palette.textInverse)),
                 ),
               ],
             ),
@@ -240,667 +329,595 @@ class DashboardScreenState extends State<DashboardScreen> {
             duration: const Duration(seconds: 3),
           ),
         );
-      }
-    }
-  }
 
-  String _formatAmount(String currency, double amount) {
-    final symbol = _getCurrencySymbol(currency);
-    final isSmallAmount = amount.abs() < 1 && amount != 0;
-    final formattedAmount = amount.toStringAsFixed(isSmallAmount ? 4 : 0);
-
-    // Split into integer and decimal parts
-    final parts = formattedAmount.split('.');
-    final integerPart = parts[0].replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-
-    final finalAmount = parts.length > 1 ? '$integerPart.${parts[1]}' : integerPart;
-    return '$symbol$finalAmount $currency';
-  }
-
-  Set<String> _getAllCurrencies(AccountsProvider accountsProvider) {
-    final currencies = <String>{};
-    for (var account in accountsProvider.accounts) {
-      currencies.add(account.currency);
-    }
-    return currencies;
-  }
-
-  List<Account> _getFilteredAccounts(AccountsProvider accountsProvider) {
-    var accounts = accountsProvider.accounts.toList();
-
-    // Filter by account type
-    switch (_accountFilter) {
-      case AccountFilter.assets:
-        accounts = accounts.where((a) => a.isAsset).toList();
-        break;
-      case AccountFilter.liabilities:
-        accounts = accounts.where((a) => a.isLiability).toList();
-        break;
-      case AccountFilter.all:
-        // Show all accounts (assets and liabilities)
-        accounts = accounts.where((a) => a.isAsset || a.isLiability).toList();
-        break;
-    }
-
-    // Filter by currency if any selected
-    if (_selectedCurrencies.isNotEmpty) {
-      accounts = accounts.where((a) => _selectedCurrencies.contains(a.currency)).toList();
-    }
-
-    return accounts;
-  }
-
-  String _getCurrencySymbol(String currency) {
-    switch (currency.toUpperCase()) {
-      case 'USD':
-        return '\$';
-      case 'TWD':
-        return '\$';
-      case 'BTC':
-        return '₿';
-      case 'ETH':
-        return 'Ξ';
-      case 'EUR':
-        return '€';
-      case 'GBP':
-        return '£';
-      case 'JPY':
-        return '¥';
-      case 'CNY':
-        return '¥';
-      default:
-        return ' ';
-    }
-  }
-
-  Future<void> _handleAccountTap(Account account) async {
-    final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => TransactionFormScreen(account: account),
-    );
-
-    // Refresh accounts if transaction was created successfully
-    if (result == true && mounted) {
-      // Show loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
+    messenger.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(palette.textInverse),
               ),
-              const SizedBox(width: 12),
-              Expanded(child: Text(l.dashboardRefreshing)),
-            ],
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      // Small delay to ensure smooth UI transition
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // Refresh the accounts
-      await _loadAccounts();
-
-      // Hide loading snackbar and show success
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                SureIcon(SureIcons.circleCheck, color: palette.textInverse),
-                const SizedBox(width: 12),
-                Text(
-                  l.dashboardAccountsUpdated,
-                  style: TextStyle(color: palette.textInverse),
-                ),
-              ],
             ),
-            backgroundColor: palette.success,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+            const SizedBox(width: 12),
+            Expanded(child: Text(l.dashboardSyncing)),
+          ],
+        ),
+        duration: const Duration(seconds: 30),
+      ),
+    );
+
+    try {
+      // Full sync: upload pending, download from server, then accounts.
+      await transactionsProvider.syncTransactions(accessToken: accessToken);
+      await _loadAccounts();
+      if (!mounted) return;
+      messenger.clearSnackBars();
+      if (transactionsProvider.error != null) {
+        showError(l.dashboardSyncFailed);
+      } else {
+        _showSyncSuccessIndicator();
       }
+    } catch (e) {
+      _log.error('DashboardScreen', 'Error in _performManualSync: $e');
+      if (!mounted) return;
+      messenger.clearSnackBars();
+      showError(l.dashboardSyncError);
     }
   }
 
   /// "Updated <time> ago" while the accounts shown came from the offline
   /// cache (before the refresh lands, or when it can't) or the device is
   /// offline; null once fresh data is on screen.
-  String? _updatedLabel(
-    BuildContext context,
-    AccountsProvider accountsProvider,
-  ) {
+  String? _updatedLabel(AccountsProvider accountsProvider, bool offline) {
     final updatedAt = accountsProvider.lastUpdatedAt;
     if (updatedAt == null) return null;
-    final offline = context.watch<ConnectivityService>().isOffline;
     if (!offline && !accountsProvider.isShowingCachedData) return null;
-    return updatedAgoLabel(
-      AppLocalizations.of(context),
-      updatedAt,
-      DateTime.now(),
+    return updatedAgoLabel(AppLocalizations.of(context), updatedAt, _now());
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
     );
   }
 
-  List<Account> _investmentAccounts(AccountsProvider accountsProvider) =>
-      accountsProvider.accounts
-          .where((account) =>
-              account.accountType == 'investment' ||
-              account.accountType == 'crypto')
-          .toList();
-
-  Future<void> _openPortfolio(
-    AccountsProvider accountsProvider,
-    String currency,
-  ) async {
+  Future<void> _openGroup(String accountType) async {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PortfolioScreen(
-          accounts: _investmentAccounts(accountsProvider),
-          initialCurrency: currency,
+        builder: (_) => AccountGroupScreen(
+          accountType: accountType,
+          onReload: _loadAccounts,
         ),
       ),
     );
   }
 
-  /// Home entry to the Reports screen, styled like the cards above it.
-  Widget _buildReportsCard(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final palette = SureColors.of(context).palette;
-    return SureCard(
-      key: const ValueKey('homeReportsCard'),
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ReportsScreen()),
-      ),
-      child: Semantics(
-        button: true,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l.p3rpTitle,
-                    style: theme.textTheme.labelLarge
-                        ?.copyWith(color: palette.textSecondary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(l.p3rpHomeSubtitle, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: palette.textSecondary),
-          ],
+  Future<void> _openTransaction(ActivityTransaction row) async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionEditScreen(
+          transaction: OfflineTransaction.fromTransaction(
+            row.transaction,
+            localId: row.id ?? '',
+          ),
         ),
       ),
     );
+    if (updated == true && mounted) await reloadData();
   }
 
-  Future<void> _handleAccountSwipe(Account account) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TransactionsListScreen(account: account),
-      ),
-    );
-
-    // Refresh accounts when returning from transaction list
-    if (mounted) {
-      await _loadAccounts();
-    }
-  }
+  void _openWeb(String title, String path) =>
+      openWebFallback(context, title: title, path: path);
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
+    final hidden = context.watch<PrivacyProvider>().hidden;
+    final accountsProvider = context.watch<AccountsProvider>();
+    ConnectivityService? connectivity;
+    try {
+      connectivity = context.watch<ConnectivityService>();
+    } on ProviderNotFoundException {
+      connectivity = null;
+    }
+    final offline = connectivity?.isOffline ?? false;
 
-    return Scaffold(
-      body: Column(
-        children: [
-          const ConnectivityBanner(),
-          if (_showSyncSuccess)
-            AnimatedOpacity(
-              opacity: _showSyncSuccess ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: SureSpacing.xl, vertical: SureSpacing.sm),
-                color: palette.success.withValues(alpha: 0.1),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SureIcon(
-                      SureIcons.cloudCheck,
-                      color: palette.success,
-                      size: 18,
-                    ),
-                    const SizedBox(width: SureSpacing.md),
-                    Text(
-                      l.dashboardSynced,
-                      style: TextStyle(
-                          color: palette.success, fontSize: SureTypography.sm),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          Expanded(
-            child: Consumer2<AuthProvider, AccountsProvider>(
-              builder: (context, authProvider, accountsProvider, _) {
-                // Spinner only when there is nothing to show yet: cached
-                // accounts stay on screen while a refresh runs.
-                if (accountsProvider.accounts.isEmpty &&
-                    (accountsProvider.isInitializing ||
-                        accountsProvider.isLoading)) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-          // Show error state
-          if (accountsProvider.errorMessage != null && 
-              accountsProvider.errorMessage != 'unauthorized') {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SureIcon(
-                      SureIcons.circleAlert,
-                      size: 64,
-                      color: palette.destructive,
-                    ),
-                    const SizedBox(height: SureSpacing.xl),
-                    Text(
-                      l.dashboardErrorLoadingAccounts,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: SureSpacing.md),
-                    Text(
-                      accountsProvider.errorMessage!,
-                      style: TextStyle(color: palette.textSecondary),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: SureSpacing.xxxl),
-                    SureButton(
-                      label: l.commonTryAgain,
-                      onPressed: _handleRefresh,
-                      leading: const SureIcon(SureIcons.refresh, size: 18),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // Show empty state
-          if (accountsProvider.accounts.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SureIcon(
-                      SureIcons.wallet,
-                      size: 64,
-                      color: palette.textSubdued,
-                    ),
-                    const SizedBox(height: SureSpacing.xl),
-                    Text(
-                      l.dashboardNoAccounts,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: SureSpacing.md),
-                    Text(
-                      l.dashboardNoAccountsSubtitle,
-                      style: TextStyle(color: palette.textSecondary),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: SureSpacing.xxxl),
-                    SureButton(
-                      label: l.commonRefresh,
-                      onPressed: _handleRefresh,
-                      leading: const SureIcon(SureIcons.refresh, size: 18),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // Show accounts list
-          return RefreshIndicator(
-            onRefresh: _handleRefresh,
-            child: CustomScrollView(
-              slivers: [
-                // Net Worth Card with Asset/Liability filter
-                SliverToBoxAdapter(
-                  child: NetWorthCard(
-                    assetTotalsByCurrency: accountsProvider.assetTotalsByCurrency,
-                    liabilityTotalsByCurrency: accountsProvider.liabilityTotalsByCurrency,
-                    currentFilter: _accountFilter,
-                    onFilterChanged: (filter) {
-                      setState(() {
-                        _accountFilter = filter;
-                      });
-                    },
-                    formatAmount: _formatAmount,
-                    netWorthFormatted: accountsProvider.netWorthFormatted,
-                    isStale: accountsProvider.isBalanceSheetStale,
-                    updatedLabel: _updatedLabel(context, accountsProvider),
-                  ),
-                ),
-
-                // Insights and spending vs normal hide themselves when the
-                // server has nothing (or the preview feature is off).
-                SliverToBoxAdapter(
-                  // Two keeps the card compact so accounts stay near the top.
-                  child: InsightsCard(
-                    key: ValueKey('insights-$_homeRefreshCount'),
-                    maxItems: 2,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: SpendingVsNormalCard(
-                    key: ValueKey('spending-$_homeRefreshCount'),
-                  ),
-                ),
-                SliverToBoxAdapter(child: _buildReportsCard(context)),
-
-                // Investments entry point, when there is anything to show
-                if (_investmentAccounts(accountsProvider).isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: InvestmentsSummaryCard(
-                      accounts: _investmentAccounts(accountsProvider),
-                      familyCurrency: accountsProvider.familyCurrency,
-                      onTap: (currency) => _openPortfolio(
-                        accountsProvider,
-                        currency,
-                      ),
-                    ),
-                  ),
-
-                // Currency filter
-                SliverToBoxAdapter(
-                  child: CurrencyFilter(
-                    availableCurrencies: _getAllCurrencies(accountsProvider),
-                    selectedCurrencies: _selectedCurrencies,
-                    onSelectionChanged: (currencies) {
-                      setState(() {
-                        _selectedCurrencies = currencies;
-                      });
-                    },
-                  ),
-                ),
-
-                // Spacing
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 8),
-                ),
-
-                // Filtered accounts section
-                ..._buildFilteredAccountsSection(accountsProvider),
-
-                // Bottom padding
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 24),
-                ),
-              ],
-            ),
-          );
-              },
-            ),
-          ),
-        ],
+    final actions = <Widget>[
+      _SyncPill(
+        service: widget.syncService,
+        accessTokenLoader: _token,
+        onUnauthorized: _signOut,
+        onSynced: reloadData,
+        clock: _now,
       ),
-    );
-  }
+      SureNavIconButton(
+        icon: hidden ? SureIcons.eyeOff : SureIcons.eye,
+        semanticLabel: hidden ? l.dshShowAmounts : l.dshHideAmounts,
+        onPressed: () => context.read<PrivacyProvider>().toggle(),
+      ),
+      SureNavIconButton(
+        icon: SureIcons.settings,
+        semanticLabel: l.shellSettingsTitle,
+        onPressed: _openSettings,
+      ),
+      const SizedBox(width: 4),
+    ];
 
-  List<Widget> _buildFilteredAccountsSection(AccountsProvider accountsProvider) {
-    final filteredAccounts = _getFilteredAccounts(accountsProvider);
-    final l = AppLocalizations.of(context);
-
-    final palette = SureColors.of(context).palette;
-
-    if (filteredAccounts.isEmpty) {
-      return [
+    final List<Widget> body;
+    if (accountsProvider.accounts.isEmpty &&
+        (accountsProvider.isInitializing || accountsProvider.isLoading)) {
+      // Spinner only when there is nothing to show yet: cached accounts stay
+      // on screen while a refresh runs.
+      body = const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ];
+    } else if (accountsProvider.errorMessage != null &&
+        accountsProvider.errorMessage != 'unauthorized' &&
+        accountsProvider.accounts.isEmpty) {
+      body = [
         SliverToBoxAdapter(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(SureSpacing.huge),
-              child: Column(
-                children: [
-                  SureIcon(
-                    SureIcons.wallet,
-                    size: 48,
-                    color: palette.textSubdued,
-                  ),
-                  const SizedBox(height: SureSpacing.xl),
-                  Text(
-                    l.dashboardFilterEmpty,
-                    style: TextStyle(
-                      color: palette.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+          child: ConnectivityBanner(
+            updatedAt: accountsProvider.lastUpdatedAt,
+            clock: _now,
+            margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SurePanel(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SureEmptyState(
+              icon: SureIcons.circleAlert,
+              title: l.dashboardErrorLoadingAccounts,
+              body: accountsProvider.errorMessage,
+              primaryLabel: l.commonTryAgain,
+              onPrimary: _handleRefresh,
             ),
           ),
         ),
       ];
+    } else if (accountsProvider.accounts.isEmpty) {
+      body = [
+        SliverToBoxAdapter(
+          child: SurePanel(
+            key: const ValueKey('homeFirstRun'),
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SureEmptyState(
+              icon: SureIcons.wallet,
+              title: l.dashboardNoAccounts,
+              body: l.dshEmptyBody,
+              primaryLabel: l.dshConnectOnWeb,
+              onPrimary: () =>
+                  _openWeb(l.shellConnections, ConnectionsScreen.webPath),
+              secondaryLabel: l.dshAddManualAccount,
+              onSecondary: () =>
+                  _openWeb(l.dshAddAccount, _newAccountPath),
+            ),
+          ),
+        ),
+      ];
+    } else {
+      body = _content(l, accountsProvider, offline, hidden);
     }
 
-    // Sort accounts: by type, then currency, then balance
-    filteredAccounts.sort((a, b) {
-      if (a.isAsset && !b.isAsset) return -1;
-      if (!a.isAsset && b.isAsset) return 1;
-      int typeComparison = a.accountType.compareTo(b.accountType);
-      if (typeComparison != 0) return typeComparison;
-      int currencyComparison = a.currency.compareTo(b.currency);
-      if (currencyComparison != 0) return currencyComparison;
-      return b.balanceAsDouble.compareTo(a.balanceAsDouble);
-    });
-
-    if (_groupByType) {
-      return _buildGroupedAccountsList(filteredAccounts);
-    }
-
-    return _buildFlatAccountsList(filteredAccounts);
+    return SureLargeTitleScaffold(
+      title: l.navHome,
+      actions: actions,
+      automaticallyImplyLeading: false,
+      onRefresh: _handleRefresh,
+      slivers: body,
+    );
   }
 
-  List<Widget> _buildFlatAccountsList(List<Account> accounts) {
+  /// The web's new account flow (choose a type, or connect a provider).
+  static const _newAccountPath = '/accounts/new';
+
+  List<Widget> _content(
+    AppLocalizations l,
+    AccountsProvider accountsProvider,
+    bool offline,
+    bool hidden,
+  ) {
+    final palette = SureColors.of(context).palette;
+    const rowMargin = EdgeInsets.fromLTRB(16, 0, 16, 8);
+    final history = _histories[_range];
+    final recent = _recent;
+    final groups = AccountGroup.build(
+      accountsProvider.accounts,
+      mainCurrency: _mainCurrency(accountsProvider),
+    );
+
     return [
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final account = accounts[index];
-              return AccountCard(
-                account: account,
-                onTap: () => _handleAccountSwipe(account),
-                onSwipe: () => _handleAccountTap(account),
-              );
-            },
-            childCount: accounts.length,
+      SliverToBoxAdapter(
+        child: ConnectivityBanner(
+          updatedAt: accountsProvider.lastUpdatedAt,
+          clock: _now,
+          margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        ),
+      ),
+      if (_showSyncSuccess)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                SureIcon(SureIcons.cloudCheck, color: palette.success, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  l.dashboardSynced,
+                  style: TextStyle(color: palette.success, fontSize: 13),
+                ),
+              ],
+            ),
           ),
+        ),
+      SliverToBoxAdapter(
+        child: NetWorthCard(
+          netWorthFormatted: accountsProvider.netWorthFormatted,
+          isStale: accountsProvider.isBalanceSheetStale,
+          updatedLabel: _updatedLabel(accountsProvider, offline),
+          history: history,
+          historyCurrency: _historyCurrency,
+          historyLoading: history == null && _historyLoading,
+          range: _range,
+          // The history needs the network; offline the chips would do nothing.
+          onRangeChanged: offline ? null : _selectRange,
+        ),
+      ),
+      const SliverToBoxAdapter(child: SizedBox(height: 16)),
+      SliverToBoxAdapter(
+        child: InsightsCard(
+          key: ValueKey('insights-$_homeRefreshCount'),
+          service: widget.insightsService,
+          accessTokenLoader: widget.accessTokenLoader,
+          margin: rowMargin,
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: SpendingVsNormalCard(
+          key: ValueKey('spending-$_homeRefreshCount'),
+          service: widget.spendingService,
+          accessTokenLoader: widget.accessTokenLoader,
+          margin: rowMargin,
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: SurePanel.rows(
+          key: const ValueKey('homeReportsRow'),
+          margin: rowMargin,
+          children: [
+            SureListRow(
+              leading: const _NeutralIcon(SureIcons.chartLine),
+              title: l.p3rpTitle,
+              showChevron: true,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReportsScreen()),
+              ),
+            ),
+          ],
+        ),
+      ),
+      if (recent != null && recent.isNotEmpty) ...[
+        SliverToBoxAdapter(
+          child: SureSectionHeader(
+            label: l.dshRecent,
+            actionLabel: widget.onOpenActivity == null ? null : l.dshSeeAll,
+            onAction: widget.onOpenActivity,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SurePanel.rows(
+            key: const ValueKey('homeRecent'),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            dividerIndent: SurePanel.iconRowDividerIndent,
+            children: [
+              for (final row in recent)
+                SureTransactionRow.activity(
+                  row,
+                  hideAmount: hidden,
+                  onTap: () => _openTransaction(row),
+                ),
+            ],
+          ),
+        ),
+      ],
+      SliverToBoxAdapter(
+        child: SureSectionHeader(
+          label: l.dshAccounts,
+          actionIcon: SureIcons.plus,
+          actionSemanticLabel: l.dshAddAccount,
+          onAction: () => _openWeb(l.dshAddAccount, _newAccountPath),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: SurePanel.rows(
+          key: const ValueKey('homeAccounts'),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          dividerIndent: SurePanel.iconRowDividerIndent,
+          children: [
+            for (final group in groups)
+              _AccountGroupRow(
+                group: group,
+                hidden: hidden,
+                onTap: () => _openGroup(group.accountType),
+              ),
+          ],
         ),
       ),
     ];
   }
-
-  List<Widget> _buildGroupedAccountsList(List<Account> accounts) {
-    // Group accounts by accountType
-    final groups = <String, List<Account>>{};
-    for (final account in accounts) {
-      groups.putIfAbsent(account.accountType, () => []).add(account);
-    }
-
-    final slivers = <Widget>[];
-    for (final entry in groups.entries) {
-      final accountType = entry.key;
-      final groupAccounts = entry.value;
-      final isCollapsed = _collapsedGroups.contains(accountType);
-
-      // Use first account to get display name and icon
-      final displayName = groupAccounts.first.displayAccountType;
-
-      slivers.add(
-        SliverToBoxAdapter(
-          child: _CollapsibleTypeHeader(
-            title: displayName,
-            count: groupAccounts.length,
-            accountType: accountType,
-            isCollapsed: isCollapsed,
-            onToggle: () {
-              setState(() {
-                if (isCollapsed) {
-                  _collapsedGroups.remove(accountType);
-                } else {
-                  _collapsedGroups.add(accountType);
-                }
-              });
-            },
-          ),
-        ),
-      );
-
-      if (!isCollapsed) {
-        slivers.add(
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final account = groupAccounts[index];
-                  return AccountCard(
-                    account: account,
-                    onTap: () => _handleAccountSwipe(account),
-                    onSwipe: () => _handleAccountTap(account),
-                  );
-                },
-                childCount: groupAccounts.length,
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    return slivers;
-  }
 }
 
-class _CollapsibleTypeHeader extends StatelessWidget {
-  final String title;
-  final int count;
-  final String accountType;
-  final bool isCollapsed;
-  final VoidCallback onToggle;
+/// A 28 px neutral inset circle with a Lucide glyph, for Home's plain rows.
+class _NeutralIcon extends StatelessWidget {
+  const _NeutralIcon(this.icon);
 
-  const _CollapsibleTypeHeader({
-    required this.title,
-    required this.count,
-    required this.accountType,
-    required this.isCollapsed,
-    required this.onToggle,
-  });
-
-  String _getTypeIconName() {
-    switch (accountType) {
-      case 'depository':
-        return SureIcons.landmark;
-      case 'credit_card':
-        return SureIcons.creditCard;
-      case 'investment':
-        return SureIcons.trendingUp;
-      case 'loan':
-        return SureIcons.receipt;
-      case 'property':
-        return SureIcons.house;
-      case 'vehicle':
-        return SureIcons.car;
-      case 'crypto':
-        return SureIcons.bitcoin;
-      case 'other_asset':
-        return SureIcons.shapes;
-      case 'other_liability':
-        return SureIcons.handCoins;
-      default:
-        return SureIcons.wallet;
-    }
-  }
+  final String icon;
 
   @override
   Widget build(BuildContext context) {
     final palette = SureColors.of(context).palette;
-
-    return InkWell(
-      onTap: onToggle,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-            SureSpacing.xl, SureSpacing.xl, SureSpacing.xl, SureSpacing.md),
-        child: Row(
-          children: [
-            SureIcon(
-              _getTypeIconName(),
-              size: 18,
-              color: palette.textSubdued,
-            ),
-            const SizedBox(width: SureSpacing.lg),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: SureTokens.weightMedium,
-                  ),
-            ),
-            const SizedBox(width: SureSpacing.md),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
-              decoration: BoxDecoration(
-                color: palette.surfaceInset,
-                borderRadius: BorderRadius.circular(SureTokens.radiusLg),
-              ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  color: palette.textSecondary,
-                  fontWeight: SureTokens.weightMedium,
-                  fontSize: SureTypography.xs,
-                ),
-              ),
-            ),
-            const Spacer(),
-            SureIcon(
-              isCollapsed ? SureIcons.chevronDown : SureIcons.chevronUp,
-              size: SureIconSize.md,
-              color: palette.textSubdued,
-            ),
-          ],
+    return ExcludeSemantics(
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: palette.surfaceInset,
+          shape: BoxShape.circle,
         ),
+        alignment: Alignment.center,
+        child: SureIcon(icon, size: 15, color: palette.textSecondary),
+      ),
+    );
+  }
+}
+
+/// "Cash · 3 (1 empty)" with the group's total in the main currency and any
+/// other currencies under it ("+ £28,708.00"), then a chevron.
+class _AccountGroupRow extends StatelessWidget {
+  const _AccountGroupRow({
+    required this.group,
+    required this.hidden,
+    required this.onTap,
+  });
+
+  final AccountGroup group;
+  final bool hidden;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final locale = Localizations.localeOf(context).toString();
+    String money(double value, String currency) => MoneyMasker.mask(
+          InvestmentMath.formatMoney(value, currency: currency, locale: locale),
+          hidden: hidden,
+        );
+
+    final total = group.primaryTotal;
+    final negative = total < 0;
+    final others = group.otherCurrencies;
+    final width = MediaQuery.sizeOf(context).width;
+
+    return Semantics(
+      button: true,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: ValueKey('group-${group.accountType}'),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 9, 10, 9),
+              child: Row(
+                children: [
+                  AccountTypeIcon(accountType: group.accountType),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(children: [
+                        TextSpan(
+                          text: l.dshGroupTitle(
+                            accountGroupLabel(l, group.accountType),
+                            group.accounts.length,
+                          ),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: palette.textPrimary,
+                          ),
+                        ),
+                        if (group.emptyCount > 0)
+                          TextSpan(
+                            text: ' ${l.dshGroupEmpty(group.emptyCount)}',
+                            style: TextStyle(color: palette.textSubdued),
+                          ),
+                      ]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 15, height: 1.25),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: width * 0.45),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          MoneyText(
+                            money(total, group.primaryCurrency),
+                            trend: negative
+                                ? MoneyTrend.outflow
+                                : MoneyTrend.inflow,
+                            color: negative
+                                ? palette.destructive
+                                : palette.textPrimary,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          for (final currency in others)
+                            MoneyText(
+                              '+ ${money(group.totals[currency]!, currency)}',
+                              trend: MoneyTrend.neutral,
+                              color: palette.textSubdued,
+                              maxLines: 1,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  SureIcon(
+                    SureIcons.chevronRight,
+                    size: 18,
+                    color: palette.textSubdued,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The compact sync pill in Home's nav bar: "⟳ 9h" for the newest sync
+/// (`GET /api/v1/syncs/latest`), a spinner while one runs, "Failed" after a
+/// failure. Tapping runs "Sync now" and calls [onSynced] when it completes.
+/// Renders nothing until the first status arrives.
+///
+/// shortcut: duplicates [SyncStatusChip]'s load/poll logic with a shorter
+/// label; fold into SyncStatusChip (a `compact` flag) when the shared set is
+/// next touched.
+class _SyncPill extends StatefulWidget {
+  const _SyncPill({
+    required this.accessTokenLoader,
+    required this.onUnauthorized,
+    required this.onSynced,
+    required this.clock,
+    this.service,
+  });
+
+  final FamilySyncService? service;
+  final Future<String?> Function() accessTokenLoader;
+  final Future<void> Function() onUnauthorized;
+  final VoidCallback onSynced;
+  final DateTime Function() clock;
+
+  static const pollInterval = Duration(seconds: 5);
+
+  @override
+  State<_SyncPill> createState() => _SyncPillState();
+}
+
+class _SyncPillState extends State<_SyncPill> {
+  late final FamilySyncService _service =
+      widget.service ?? FamilySyncService();
+  FamilySync? _sync;
+  bool _loaded = false;
+  Timer? _poll;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    if (widget.service == null) _service.close();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    _poll?.cancel();
+    final token = await widget.accessTokenLoader();
+    if (!mounted || token == null) return;
+    final result = await _service.getSync(accessToken: token);
+    if (!mounted) return;
+    if (result['error'] == 'unauthorized') {
+      await widget.onUnauthorized();
+      return;
+    }
+    if (result['success'] != true) return;
+    setState(() {
+      _loaded = true;
+      _sync = result['sync'] as FamilySync?;
+    });
+    if (_sync?.inProgress == true) {
+      _poll = Timer(_SyncPill.pollInterval, _load);
+    }
+  }
+
+  Future<void> _syncNow() async {
+    final completed = await showSyncNowDialog(context, service: widget.service);
+    if (!mounted) return;
+    if (completed) widget.onSynced();
+    _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final sync = _sync;
+    final running = sync?.inProgress == true;
+
+    final Widget icon;
+    final String label;
+    if (running) {
+      icon = SizedBox(
+        width: 12,
+        height: 12,
+        child: CircularProgressIndicator(
+          strokeWidth: 1.5,
+          color: palette.textSecondary,
+        ),
+      );
+      label = l.accountActionsSyncing;
+    } else if (sync != null && sync.failed) {
+      icon = SureIcon(SureIcons.circleAlert,
+          size: 14, color: palette.destructive);
+      label = l.dshSyncFailedShort;
+    } else {
+      icon = SureIcon(SureIcons.refresh, size: 14, color: palette.textSecondary);
+      final at = sync?.completedAt ?? sync?.createdAt;
+      label = sync == null
+          ? l.dshSyncShort
+          : at == null
+              ? l.dshAgoNow
+              : compactAgeLabel(l, at, widget.clock()) ?? l.dshAgoNow;
+    }
+
+    return Semantics(
+      label: SyncStatusChip.labelFor(l, sync, now: widget.clock()),
+      hint: l.accountActionsSyncChipHint,
+      excludeSemantics: true,
+      child: SureChip(
+        label: label,
+        leading: icon,
+        onSelected: running ? null : (_) => _syncNow(),
       ),
     );
   }

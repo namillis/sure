@@ -28,11 +28,14 @@ class NetWorthHistoryService {
   ///
   /// Accounts outside [mainCurrency] are not fetched; their current balances
   /// are totaled per currency instead.
+  ///
+  /// A null [start] loads each account's full history, and the period starts
+  /// on the earliest balance row found (or [end] when there is none).
   Future<Map<String, dynamic>> load({
     required String accessToken,
     required List<Account> accounts,
     required String mainCurrency,
-    required DateTime start,
+    required DateTime? start,
     required DateTime end,
   }) async {
     final relevant =
@@ -67,6 +70,17 @@ class NetWorthHistoryService {
     ]);
     if (error != null) return {'success': false, 'error': error};
 
+    var periodStart = start;
+    if (periodStart == null) {
+      for (final rows in balances.values) {
+        for (final row in rows) {
+          if (periodStart == null || row.date.isBefore(periodStart)) {
+            periodStart = row.date;
+          }
+        }
+      }
+    }
+
     return {
       'success': true,
       'history': NetWorthHistory.build(
@@ -81,7 +95,7 @@ class NetWorthHistoryService {
             ),
         ],
         mainCurrency: mainCurrency,
-        start: start,
+        start: periodStart ?? end,
         end: end,
       ),
     };
