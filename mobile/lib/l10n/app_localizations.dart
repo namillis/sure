@@ -3871,6 +3871,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No tags'**
   String get txnDetailNoTags;
+
+  /// Start of the categories, tags, merchants and export block. Generic label for managing data.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manage;
+
+  /// Hint of the search field on the categories, tags and merchants screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get manageSearch;
+
+  /// Tooltip of the button that clears the search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get manageClearSearch;
+
+  /// Shown when a search finds nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches “{query}”.'**
+  String manageNoMatches(String query);
+
+  /// Label of the name field in the create and edit forms.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get manageNameLabel;
+
+  /// Validation error when the name field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name.'**
+  String get manageNameRequired;
+
+  /// Heading of the color swatch picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get manageColor;
+
+  /// Screen reader label of one color swatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Color {number}'**
+  String manageColorOption(int number);
+
+  /// Swatch that lets the server pick a color.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get manageColorAutomatic;
+
+  /// Button that opens the web page where an item can be edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit on the web'**
+  String get manageEditOnWeb;
+
+  /// Generic error after a failed create, save or delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get manageActionFailed;
+
+  /// Title of the categories screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get manageCategoriesTitle;
+
+  /// Title of the empty state on the categories screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get manageCategoriesEmpty;
+
+  /// Body of the empty state on the categories screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one with +. Categories sort your spending and income.'**
+  String get manageCategoriesEmptyBody;
+
+  /// Error when the category list can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load categories.'**
+  String get manageCategoriesLoadFailed;
+
+  /// Tooltip of the + button on the categories screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Add category'**
+  String get manageCategoryAdd;
+
+  /// Title of the create category form.
+  ///
+  /// In en, this message translates to:
+  /// **'New category'**
+  String get manageCategoryNew;
+
+  /// Label of the optional parent picker in the create category form.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent category'**
+  String get manageCategoryParent;
+
+  /// Parent picker option for a top-level category.
+  ///
+  /// In en, this message translates to:
+  /// **'None (top level)'**
+  String get manageCategoryNoParent;
+
+  /// Note in the create category form explaining the icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Sure picks an icon that fits the name. You can change it on the web.'**
+  String get manageCategoryIconHint;
+
+  /// Snackbar after a category was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Category “{name}” added'**
+  String manageCategoryCreated(String name);
+
+  /// Subcategory count in the category info sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No subcategories} =1{1 subcategory} other{{count} subcategories}}'**
+  String manageCategorySubcategories(int count);
+
+  /// Category info sheet: the parent of a subcategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Subcategory of {parent}'**
+  String manageCategoryInParent(String parent);
+
+  /// Category info sheet: explains that editing happens on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename, recolor, change the icon of, merge or delete categories on the web.'**
+  String get manageCategoryInfoBody;
+
+  /// Title of the tags screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get manageTagsTitle;
+
+  /// Title of the empty state on the tags screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get manageTagsEmpty;
+
+  /// Body of the empty state on the tags screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags group transactions across categories, like a trip or a project.'**
+  String get manageTagsEmptyBody;
+
+  /// Error when the tag list can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load tags.'**
+  String get manageTagsLoadFailed;
+
+  /// Tooltip of the + button on the tags screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get manageTagAdd;
+
+  /// Title of the create tag form.
+  ///
+  /// In en, this message translates to:
+  /// **'New tag'**
+  String get manageTagNew;
+
+  /// Title of the edit tag form.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit tag'**
+  String get manageTagEdit;
+
+  /// Snackbar after a tag was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag “{name}” added'**
+  String manageTagCreated(String name);
+
+  /// Snackbar after a tag was renamed or recolored.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag saved'**
+  String get manageTagSaved;
+
+  /// Snackbar after a tag was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag deleted'**
+  String get manageTagDeleted;
+
+  /// Button in the edit tag form that deletes the tag.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete tag'**
+  String get manageTagDelete;
+
+  /// Title of the delete tag confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String manageTagDeleteTitle(String name);
+
+  /// Body of the delete tag confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'The tag is removed from every transaction that has it. This can\'t be undone.'**
+  String get manageTagDeleteBody;
+
+  /// Title of the merchants screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchants'**
+  String get manageMerchantsTitle;
+
+  /// Title of the empty state on the merchants screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No merchants yet'**
+  String get manageMerchantsEmpty;
+
+  /// Body of the empty state on the merchants screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchants you add, and the ones your bank connections find, show up here.'**
+  String get manageMerchantsEmptyBody;
+
+  /// Error when the merchant list can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load merchants.'**
+  String get manageMerchantsLoadFailed;
+
+  /// Tooltip of the + button on the merchants screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Add merchant'**
+  String get manageMerchantAdd;
+
+  /// Title of the create merchant form.
+  ///
+  /// In en, this message translates to:
+  /// **'New merchant'**
+  String get manageMerchantNew;
+
+  /// Label of the website field in the create merchant form.
+  ///
+  /// In en, this message translates to:
+  /// **'Website (optional)'**
+  String get manageMerchantWebsite;
+
+  /// Validation error for the merchant website field.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a web address like example.com.'**
+  String get manageMerchantWebsiteInvalid;
+
+  /// Snackbar after a merchant was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant “{name}” added'**
+  String manageMerchantCreated(String name);
+
+  /// Snackbar when a merchant with that name already exists.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” already exists'**
+  String manageMerchantExists(String name);
+
+  /// Subtitle of a merchant the family created.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by you'**
+  String get manageMerchantFamily;
+
+  /// Subtitle of a merchant that came from a bank connection.
+  ///
+  /// In en, this message translates to:
+  /// **'From a bank connection'**
+  String get manageMerchantProvider;
+
+  /// Merchant info sheet: explains that editing happens on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename, recolor, set the website or logo of, merge or delete merchants on the web.'**
+  String get manageMerchantInfoBody;
+
+  /// Title of the data export screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data'**
+  String get manageExportTitle;
+
+  /// Explains what a data export contains.
+  ///
+  /// In en, this message translates to:
+  /// **'An export is a ZIP file with your accounts, transactions, trades, categories, merchants and rules as CSV files, plus all of it in one all.ndjson file. Attachments are listed but their files aren\'t included.'**
+  String get manageExportIntro;
+
+  /// Button that starts a new data export.
+  ///
+  /// In en, this message translates to:
+  /// **'Create export'**
+  String get manageExportCreate;
+
+  /// Snackbar after an export was started.
+  ///
+  /// In en, this message translates to:
+  /// **'Export started. It can take a few minutes.'**
+  String get manageExportStarted;
+
+  /// Heading of the list of past exports.
+  ///
+  /// In en, this message translates to:
+  /// **'Exports'**
+  String get manageExportHistory;
+
+  /// Shown when there are no exports.
+  ///
+  /// In en, this message translates to:
+  /// **'No exports yet. Create one to get a copy of your data.'**
+  String get manageExportEmpty;
+
+  /// Error when the export list can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load exports.'**
+  String get manageExportLoadFailed;
+
+  /// Shown when a non-admin opens the export screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a family admin can export data.'**
+  String get manageExportAdminOnly;
+
+  /// Status of an export that hasn't started.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get manageExportStatusPending;
+
+  /// Status of an export being built.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing'**
+  String get manageExportStatusProcessing;
+
+  /// Status of a finished export.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get manageExportStatusCompleted;
+
+  /// Status of an export that failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get manageExportStatusFailed;
+
+  /// Button that downloads a finished export and opens the share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get manageExportDownload;
+
+  /// Snackbar when downloading an export failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t download the export.'**
+  String get manageExportDownloadFailed;
+
+  /// Shown when the app stopped checking an export that is taking long.
+  ///
+  /// In en, this message translates to:
+  /// **'Still preparing. Pull down to check again.'**
+  String get manageExportStillPreparing;
 }
 
 class _AppLocalizationsDelegate
