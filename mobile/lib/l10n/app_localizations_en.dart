@@ -2739,4 +2739,70 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get manageExportStillPreparing =>
       'Still preparing. Pull down to check again.';
+
+  @override
+  String p3apZeroHoldingsHidden(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count holdings worth $amount hidden',
+      one: '1 holding worth $amount hidden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3apZeroHoldingsShown(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count holdings worth $amount shown',
+      one: '1 holding worth $amount shown',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3apShow => 'Show';
+
+  @override
+  String get p3apHide => 'Hide';
+
+  @override
+  String p3apAllHoldingsZero(String amount) {
+    return 'Every holding is worth $amount';
+  }
+
+  @override
+  String get p3apSetPriceTitle => 'Set price';
+
+  @override
+  String get p3apSetPriceIntro =>
+      'Saves a closing price for a security no price provider tracks. Values update after the account syncs.';
+
+  @override
+  String p3apCurrentPrice(String price) {
+    return 'Current price: $price';
+  }
+
+  @override
+  String get p3apPriceLabel => 'Price per share';
+
+  @override
+  String get p3apPriceRequired => 'Enter a price';
+
+  @override
+  String get p3apPriceInvalid => 'Enter a price greater than 0';
+
+  @override
+  String get p3apPriceSaved =>
+      'Price saved. Values update after the account syncs.';
+
+  @override
+  String get p3apPriceSelfHostedOnly =>
+      'Prices can only be set on a self-hosted server, because they are shared by everyone on the server.';
+
+  @override
+  String get p3apPriceNotAllowed =>
+      'This security can\'t be priced from your accounts. You need a trade in it, or to hold it in a linked account you can edit.';
 }

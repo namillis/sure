@@ -2764,4 +2764,70 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get manageExportStillPreparing =>
       'Förbereds fortfarande. Dra nedåt för att kontrollera igen.';
+
+  @override
+  String p3apZeroHoldingsHidden(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count innehav värda $amount dolda',
+      one: '1 innehav värt $amount dolt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3apZeroHoldingsShown(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count innehav värda $amount visas',
+      one: '1 innehav värt $amount visas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3apShow => 'Visa';
+
+  @override
+  String get p3apHide => 'Dölj';
+
+  @override
+  String p3apAllHoldingsZero(String amount) {
+    return 'Alla innehav är värda $amount';
+  }
+
+  @override
+  String get p3apSetPriceTitle => 'Ange kurs';
+
+  @override
+  String get p3apSetPriceIntro =>
+      'Sparar en stängningskurs för ett värdepapper som ingen kursleverantör följer. Värdena uppdateras när kontot har synkats.';
+
+  @override
+  String p3apCurrentPrice(String price) {
+    return 'Nuvarande kurs: $price';
+  }
+
+  @override
+  String get p3apPriceLabel => 'Kurs per andel';
+
+  @override
+  String get p3apPriceRequired => 'Ange en kurs';
+
+  @override
+  String get p3apPriceInvalid => 'Ange en kurs större än 0';
+
+  @override
+  String get p3apPriceSaved =>
+      'Kursen har sparats. Värdena uppdateras när kontot har synkats.';
+
+  @override
+  String get p3apPriceSelfHostedOnly =>
+      'Kurser kan bara anges på en egen server, eftersom de delas av alla på servern.';
+
+  @override
+  String get p3apPriceNotAllowed =>
+      'Det här värdepapperet kan inte prissättas från dina konton. Du behöver en affär i det, eller ha det i ett kopplat konto som du kan redigera.';
 }

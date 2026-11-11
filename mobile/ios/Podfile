@@ -1,6 +1,11 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '15.0'
 
+# file_picker: the app only picks documents (FileType.custom), so leave out the
+# media picker and its DKImagePickerController/PhotoGallery dependency. Read by
+# file_picker's podspec; FileType.image/video/media would then return an error.
+Pod::PICKER_MEDIA = false
+
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 

@@ -4789,6 +4789,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still preparing. Pull down to check again.'**
   String get manageExportStillPreparing;
+
+  /// Footer of a holdings list when holdings with zero market value are hidden. amount is zero in the list's currency, e.g. $0.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 holding worth {amount} hidden} other{{count} holdings worth {amount} hidden}}'**
+  String p3apZeroHoldingsHidden(int count, String amount);
+
+  /// Footer of a holdings list when holdings with zero market value are shown.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 holding worth {amount} shown} other{{count} holdings worth {amount} shown}}'**
+  String p3apZeroHoldingsShown(int count, String amount);
+
+  /// Footer button that shows hidden zero-value holdings.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get p3apShow;
+
+  /// Footer button that hides zero-value holdings.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get p3apHide;
+
+  /// Shown in place of the holdings when all of them are worth zero and hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Every holding is worth {amount}'**
+  String p3apAllHoldingsZero(String amount);
+
+  /// Title of the sheet that records a manual closing price for a holding's security.
+  ///
+  /// In en, this message translates to:
+  /// **'Set price'**
+  String get p3apSetPriceTitle;
+
+  /// Explanation at the top of the Set price sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves a closing price for a security no price provider tracks. Values update after the account syncs.'**
+  String get p3apSetPriceIntro;
+
+  /// Current price of the holding in the Set price sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Current price: {price}'**
+  String p3apCurrentPrice(String price);
+
+  /// Label of the price field in the Set price sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per share'**
+  String get p3apPriceLabel;
+
+  /// Validation error when the price field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a price'**
+  String get p3apPriceRequired;
+
+  /// Validation error when the price is not a positive number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a price greater than 0'**
+  String get p3apPriceInvalid;
+
+  /// Snackbar after a manual price was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Price saved. Values update after the account syncs.'**
+  String get p3apPriceSaved;
+
+  /// Error when the server refuses manual prices because it is not self-hosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices can only be set on a self-hosted server, because they are shared by everyone on the server.'**
+  String get p3apPriceSelfHostedOnly;
+
+  /// Error when the server finds no account of the user that may price this security.
+  ///
+  /// In en, this message translates to:
+  /// **'This security can\'t be priced from your accounts. You need a trade in it, or to hold it in a linked account you can edit.'**
+  String get p3apPriceNotAllowed;
 }
 
 class _AppLocalizationsDelegate

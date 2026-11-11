@@ -14,6 +14,7 @@ import '../theme/sure_colors.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
 import '../utils/portfolio_math.dart';
+import '../utils/zero_holdings.dart';
 import '../widgets/balance_history_chart.dart';
 import '../widgets/holdings_list.dart';
 import '../widgets/sure_segmented_control.dart';
@@ -44,7 +45,8 @@ class PortfolioScreen extends StatefulWidget {
   State<PortfolioScreen> createState() => _PortfolioScreenState();
 }
 
-class _PortfolioScreenState extends State<PortfolioScreen> {
+class _PortfolioScreenState extends State<PortfolioScreen>
+    with ZeroHoldingsPreference<PortfolioScreen> {
   late final AccountDetailService _service =
       widget.accountDetailService ?? AccountDetailService();
   late String _currency = widget.initialCurrency;
@@ -286,8 +288,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               _SectionHeading(l.accountTabHoldings),
               if (_holdings.isEmpty)
                 _Message(icon: Icons.pie_chart_outline, text: l.holdingsEmpty)
-              else
-                for (final holding in _holdings)
+              else ...[
+                for (final holding in ZeroHoldings.visible(_holdings,
+                    showZero: showZeroHoldings))
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
@@ -302,6 +305,20 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                       ],
                     ),
                   ),
+                if (!showZeroHoldings &&
+                    ZeroHoldings.zeroCount(_holdings) == _holdings.length)
+                  AllZeroHoldingsMessage(currency: _currency),
+                if (ZeroHoldings.zeroCount(_holdings) > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ZeroHoldingsFooter(
+                      count: ZeroHoldings.zeroCount(_holdings),
+                      currency: _currency,
+                      shown: showZeroHoldings,
+                      onToggle: toggleShowZeroHoldings,
+                    ),
+                  ),
+              ],
               if (_trades.isNotEmpty) ...[
                 _SectionHeading(l.portfolioRecentActivity),
                 for (final trade in _trades)

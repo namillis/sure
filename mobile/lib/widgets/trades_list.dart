@@ -34,7 +34,6 @@ class TradesList extends StatefulWidget {
 class _TradesListState extends State<TradesList> {
   late final AccountDetailService _service =
       widget.accountDetailService ?? AccountDetailService();
-  final ScrollController _scrollController = ScrollController();
   final List<AccountTrade> _trades = [];
   int _nextPage = 1;
   bool _hasMore = true;
@@ -44,20 +43,24 @@ class _TradesListState extends State<TradesList> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_maybeLoadMore);
     _refresh();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     if (widget.accountDetailService == null) _service.close();
     super.dispose();
   }
 
-  void _maybeLoadMore() {
-    final position = _scrollController.position;
-    if (position.pixels > position.maxScrollExtent - 300) _loadPage();
+  // Driven by scroll notifications rather than an own ScrollController, so
+  // the list can take its controller from an enclosing NestedScrollView.
+  bool _maybeLoadMore(ScrollUpdateNotification notification) {
+    final metrics = notification.metrics;
+    if (notification.depth == 0 &&
+        metrics.pixels > metrics.maxScrollExtent - 300) {
+      _loadPage();
+    }
+    return false;
   }
 
   Future<void> _refresh() async {
@@ -158,37 +161,39 @@ class _TradesListState extends State<TradesList> {
     final showFooter = _hasMore || _failed;
     return RefreshIndicator(
       onRefresh: _refresh,
-      child: ListView.separated(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-        itemCount: _trades.length + (showFooter ? 1 : 0),
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          if (index == _trades.length) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: _failed
-                    ? TextButton(
-                        onPressed: _loadPage,
-                        child: Text(l.transactionsListRetry),
-                      )
-                    : const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-              ),
+      child: NotificationListener<ScrollUpdateNotification>(
+        onNotification: _maybeLoadMore,
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          itemCount: _trades.length + (showFooter ? 1 : 0),
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            if (index == _trades.length) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: _failed
+                      ? TextButton(
+                          onPressed: _loadPage,
+                          child: Text(l.transactionsListRetry),
+                        )
+                      : const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                ),
+              );
+            }
+            final trade = _trades[index];
+            final onTap = widget.onTradeTap;
+            return TradeTile(
+              trade: trade,
+              onTap: onTap == null ? null : () => onTap(trade),
             );
-          }
-          final trade = _trades[index];
-          final onTap = widget.onTradeTap;
-          return TradeTile(
-            trade: trade,
-            onTap: onTap == null ? null : () => onTap(trade),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -291,8 +296,8 @@ class TradeTile extends StatelessWidget {
             // the activity label already says which way it went.
             MoneyMasker.mask(trade.amount.replaceFirst('-', ''),
                 hidden: hidden),
-            style:
-                theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),

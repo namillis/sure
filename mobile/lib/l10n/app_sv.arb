@@ -786,5 +786,19 @@
   "manageExportStatusFailed": "Misslyckades",
   "manageExportDownload": "Ladda ned",
   "manageExportDownloadFailed": "Det gick inte att ladda ned exporten.",
-  "manageExportStillPreparing": "Förbereds fortfarande. Dra nedåt för att kontrollera igen."
+  "manageExportStillPreparing": "Förbereds fortfarande. Dra nedåt för att kontrollera igen.",
+  "p3apZeroHoldingsHidden": "{count, plural, =1{1 innehav värt {amount} dolt} other{{count} innehav värda {amount} dolda}}",
+  "p3apZeroHoldingsShown": "{count, plural, =1{1 innehav värt {amount} visas} other{{count} innehav värda {amount} visas}}",
+  "p3apShow": "Visa",
+  "p3apHide": "Dölj",
+  "p3apAllHoldingsZero": "Alla innehav är värda {amount}",
+  "p3apSetPriceTitle": "Ange kurs",
+  "p3apSetPriceIntro": "Sparar en stängningskurs för ett värdepapper som ingen kursleverantör följer. Värdena uppdateras när kontot har synkats.",
+  "p3apCurrentPrice": "Nuvarande kurs: {price}",
+  "p3apPriceLabel": "Kurs per andel",
+  "p3apPriceRequired": "Ange en kurs",
+  "p3apPriceInvalid": "Ange en kurs större än 0",
+  "p3apPriceSaved": "Kursen har sparats. Värdena uppdateras när kontot har synkats.",
+  "p3apPriceSelfHostedOnly": "Kurser kan bara anges på en egen server, eftersom de delas av alla på servern.",
+  "p3apPriceNotAllowed": "Det här värdepapperet kan inte prissättas från dina konton. Du behöver en affär i det, eller ha det i ett kopplat konto som du kan redigera."
 }
