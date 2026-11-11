@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/insight.dart';
 import '../providers/auth_provider.dart';
+import '../screens/insights_screen.dart';
 import '../services/insights_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
@@ -14,6 +15,7 @@ import 'sure_card.dart';
 /// Tap one to read it and dismiss it. Renders nothing while loading, when
 /// there are none, or when the endpoint fails or is disabled (insights are a
 /// web preview feature, so 403 is normal). Give it a new key to reload.
+/// With more than [maxItems] insights, "See all" opens [InsightsScreen].
 class InsightsCard extends StatefulWidget {
   const InsightsCard({
     super.key,
@@ -86,6 +88,16 @@ class _InsightsCardState extends State<InsightsCard> {
     }
   }
 
+  Future<void> _openAll() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => InsightsScreen(
+        service: _service,
+        accessTokenLoader: widget.accessTokenLoader,
+      ),
+    ));
+    if (mounted) await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final shown = _insights.take(widget.maxItems).toList();
@@ -105,9 +117,17 @@ class _InsightsCardState extends State<InsightsCard> {
             children: [
               Icon(Icons.lightbulb_outline, size: 18, color: palette.textSecondary),
               const SizedBox(width: SureSpacing.sm),
-              Text(l.insightsTitle,
-                  style: theme.textTheme.labelLarge
-                      ?.copyWith(color: palette.textSecondary)),
+              Expanded(
+                child: Text(l.insightsTitle,
+                    style: theme.textTheme.labelLarge
+                        ?.copyWith(color: palette.textSecondary)),
+              ),
+              if (_insights.length > widget.maxItems)
+                TextButton(
+                  style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+                  onPressed: _openAll,
+                  child: Text(l.p3roInsightsSeeAll),
+                ),
             ],
           ),
           for (final insight in shown)

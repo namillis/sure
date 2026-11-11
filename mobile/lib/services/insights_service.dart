@@ -41,7 +41,7 @@ class InsightsService {
               .toList(),
         };
       }
-      return _failure(response.statusCode);
+      return _failure(response.statusCode, 'Failed to load insights');
     } catch (e) {
       _log('getInsights', e);
       return {'success': false, 'error': 'Unable to load insights.'};
@@ -63,19 +63,19 @@ class InsightsService {
       if (response.statusCode == 204 || response.statusCode == 200) {
         return {'success': true};
       }
-      return _failure(response.statusCode);
+      return _failure(response.statusCode, 'Failed to dismiss insight');
     } catch (e) {
       _log('acknowledge', e);
       return {'success': false, 'error': 'Unable to dismiss insight.'};
     }
   }
 
-  Map<String, dynamic> _failure(int statusCode) {
+  Map<String, dynamic> _failure(int statusCode, String fallback) {
     if (statusCode == 401) return {'success': false, 'error': 'unauthorized'};
     if (statusCode == 403 || statusCode == 404) {
       return {'success': false, 'error': 'unavailable'};
     }
-    return {'success': false, 'error': 'Failed to load insights'};
+    return {'success': false, 'error': fallback};
   }
 
   void _log(String operation, Object error) {

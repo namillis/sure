@@ -63,6 +63,13 @@ void main() {
           {'success': true});
     });
 
+    test('acknowledge failures name the dismiss, not the load', () async {
+      final service = InsightsService(
+          client: MockClient((_) async => http.Response('{}', 500)));
+      expect(await service.acknowledge(accessToken: 't', id: 'i1'),
+          {'success': false, 'error': 'Failed to dismiss insight'});
+    });
+
     test('acknowledge returns unauthorized on 401', () async {
       final service = InsightsService(
           client: MockClient((_) async => http.Response('{}', 401)));

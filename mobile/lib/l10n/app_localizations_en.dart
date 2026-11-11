@@ -2739,4 +2739,352 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get manageExportStillPreparing =>
       'Still preparing. Pull down to check again.';
+
+  @override
+  String get p3roInsightsSeeAll => 'See all';
+
+  @override
+  String get p3roInsightsEmpty => 'No insights right now';
+
+  @override
+  String get p3roInsightsEmptyBody =>
+      'New insights about your spending show up here.';
+
+  @override
+  String get p3roInsightsUnavailable => 'Insights aren\'t turned on';
+
+  @override
+  String get p3roInsightsUnavailableBody =>
+      'Insights are a preview feature. Turn on preview features in your settings on the web to see them here.';
+
+  @override
+  String get p3roInsightsLoadFailed => 'Couldn\'t load insights.';
+
+  @override
+  String get p3roInsightsDismissHint => 'Swipe to dismiss';
+
+  @override
+  String get p3roConnectionsManageOnWeb =>
+      'Add or manage connections on the web';
+
+  @override
+  String get p3roConnectionsEmpty => 'No connections yet';
+
+  @override
+  String get p3roConnectionsEmptyBody =>
+      'Connect a bank or broker on the web to sync accounts automatically.';
+
+  @override
+  String get p3roConnectionsLoadFailed => 'Couldn\'t load connections.';
+
+  @override
+  String get p3roConnectionStatusConnected => 'Connected';
+
+  @override
+  String get p3roConnectionStatusSyncing => 'Syncing';
+
+  @override
+  String get p3roConnectionStatusNeedsAttention => 'Needs attention';
+
+  @override
+  String get p3roConnectionStatusDeleting => 'Being removed';
+
+  @override
+  String get p3roConnectionReconnect => 'The bank needs you to sign in again.';
+
+  @override
+  String p3roConnectionAccounts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count accounts',
+      one: '$count account',
+      zero: 'No accounts',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3roConnectionAccountsNeedSetup(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count accounts need setup',
+      one: '$count account needs setup',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3roConnectionPendingSetup => 'Accounts are waiting to be set up.';
+
+  @override
+  String get p3roConnectionFixOnWeb => 'Fix on the web';
+
+  @override
+  String get p3roRulesManageOnWeb => 'Create or reorder rules on the web';
+
+  @override
+  String get p3roRulesEmpty => 'No rules yet';
+
+  @override
+  String get p3roRulesEmptyBody =>
+      'Rules categorize, tag and rename transactions automatically. Create them on the web.';
+
+  @override
+  String get p3roRulesLoadFailed => 'Couldn\'t load rules.';
+
+  @override
+  String get p3roRuleActive => 'Active';
+
+  @override
+  String get p3roRuleInactive => 'Inactive';
+
+  @override
+  String get p3roRuleResourceTransaction => 'Transactions';
+
+  @override
+  String get p3roRuleTitle => 'Rule';
+
+  @override
+  String get p3roRuleLoadFailed => 'Couldn\'t load this rule.';
+
+  @override
+  String get p3roRuleNotFound => 'This rule no longer exists.';
+
+  @override
+  String get p3roRuleConditions => 'Conditions';
+
+  @override
+  String get p3roRuleActions => 'Actions';
+
+  @override
+  String get p3roRuleRecentRuns => 'Recent runs';
+
+  @override
+  String get p3roRuleNoRuns => 'This rule hasn\'t run yet.';
+
+  @override
+  String get p3roRuleRunsLoadFailed => 'Couldn\'t load recent runs.';
+
+  @override
+  String p3roRuleEffectiveFrom(String date) {
+    return 'Applies to transactions from $date';
+  }
+
+  @override
+  String get p3roRuleAllTransactions => 'All transactions';
+
+  @override
+  String p3roRuleIf(String condition) {
+    return 'If $condition';
+  }
+
+  @override
+  String get p3roRuleMatchAll => 'All of these match';
+
+  @override
+  String get p3roRuleMatchAny => 'Any of these match';
+
+  @override
+  String p3roRuleQuoted(String value) {
+    return '“$value”';
+  }
+
+  @override
+  String get p3roRuleFieldName => 'Name';
+
+  @override
+  String get p3roRuleFieldAmount => 'Amount';
+
+  @override
+  String get p3roRuleFieldMerchant => 'Merchant';
+
+  @override
+  String get p3roRuleFieldCategory => 'Category';
+
+  @override
+  String get p3roRuleFieldTag => 'Tag';
+
+  @override
+  String get p3roRuleFieldAccount => 'Account';
+
+  @override
+  String get p3roRuleFieldType => 'Type';
+
+  @override
+  String get p3roRuleFieldDetails => 'Details';
+
+  @override
+  String get p3roRuleFieldNotes => 'Notes';
+
+  @override
+  String p3roRuleOpContains(String field, String value) {
+    return '$field contains $value';
+  }
+
+  @override
+  String p3roRuleOpNotContains(String field, String value) {
+    return '$field doesn\'t contain $value';
+  }
+
+  @override
+  String p3roRuleOpStartsWith(String field, String value) {
+    return '$field starts with $value';
+  }
+
+  @override
+  String p3roRuleOpEndsWith(String field, String value) {
+    return '$field ends with $value';
+  }
+
+  @override
+  String p3roRuleOpRegex(String field, String value) {
+    return '$field matches the pattern $value';
+  }
+
+  @override
+  String p3roRuleOpEquals(String field, String value) {
+    return '$field is $value';
+  }
+
+  @override
+  String p3roRuleOpNotEquals(String field, String value) {
+    return '$field is not $value';
+  }
+
+  @override
+  String p3roRuleOpEmpty(String field) {
+    return '$field is empty';
+  }
+
+  @override
+  String p3roRuleOpNotEmpty(String field) {
+    return '$field is not empty';
+  }
+
+  @override
+  String p3roRuleOpGreater(String field, String value) {
+    return '$field is more than $value';
+  }
+
+  @override
+  String p3roRuleOpAtLeast(String field, String value) {
+    return '$field is at least $value';
+  }
+
+  @override
+  String p3roRuleOpLess(String field, String value) {
+    return '$field is less than $value';
+  }
+
+  @override
+  String p3roRuleOpAtMost(String field, String value) {
+    return '$field is at most $value';
+  }
+
+  @override
+  String get p3roRuleTypeIncome => 'income';
+
+  @override
+  String get p3roRuleTypeExpense => 'expense';
+
+  @override
+  String get p3roRuleTypeTransfer => 'transfer';
+
+  @override
+  String get p3roRuleSomeCategory => 'a category';
+
+  @override
+  String get p3roRuleSomeTag => 'a tag';
+
+  @override
+  String get p3roRuleSomeMerchant => 'a merchant';
+
+  @override
+  String get p3roRuleSomeAccount => 'an account';
+
+  @override
+  String p3roRuleActionSetCategory(String value) {
+    return 'Set category to $value';
+  }
+
+  @override
+  String p3roRuleActionAddTag(String value) {
+    return 'Add tag $value';
+  }
+
+  @override
+  String p3roRuleActionSetMerchant(String value) {
+    return 'Set merchant to $value';
+  }
+
+  @override
+  String p3roRuleActionRename(String value) {
+    return 'Rename to $value';
+  }
+
+  @override
+  String p3roRuleActionTransfer(String value) {
+    return 'Mark as a transfer or payment to $value';
+  }
+
+  @override
+  String p3roRuleActionActivityLabel(String value) {
+    return 'Set investment activity to $value';
+  }
+
+  @override
+  String get p3roRuleActionExclude => 'Exclude from budgets and reports';
+
+  @override
+  String get p3roRuleActionAutoCategorize => 'Categorize with AI';
+
+  @override
+  String get p3roRuleActionAutoMerchants => 'Detect merchants with AI';
+
+  @override
+  String get p3roRuleActionClassifier =>
+      'Categorize with the classifier (no AI)';
+
+  @override
+  String get p3roRuleActionFillMerchants =>
+      'Fill missing merchants from similar transactions';
+
+  @override
+  String get p3roRuleActionEmail => 'Send an email notification';
+
+  @override
+  String get p3roRuleActionSplit => 'Split the transaction';
+
+  @override
+  String get p3roRuleRunSuccess => 'Succeeded';
+
+  @override
+  String get p3roRuleRunFailed => 'Failed';
+
+  @override
+  String get p3roRuleRunPending => 'Running';
+
+  @override
+  String get p3roRuleRunManual => 'Run by hand';
+
+  @override
+  String get p3roRuleRunScheduled => 'Automatic';
+
+  @override
+  String p3roRuleRunCounts(int modified, int processed) {
+    return '$modified of $processed transactions changed';
+  }
+
+  @override
+  String p3roRuleRunQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transactions queued',
+      one: '$count transaction queued',
+    );
+    return '$_temp0';
+  }
 }

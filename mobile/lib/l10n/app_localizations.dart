@@ -4789,6 +4789,546 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still preparing. Pull down to check again.'**
   String get manageExportStillPreparing;
+
+  /// Button on the home insights card that opens the full insights list.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get p3roInsightsSeeAll;
+
+  /// Title shown when there are no insights.
+  ///
+  /// In en, this message translates to:
+  /// **'No insights right now'**
+  String get p3roInsightsEmpty;
+
+  /// Body shown when there are no insights.
+  ///
+  /// In en, this message translates to:
+  /// **'New insights about your spending show up here.'**
+  String get p3roInsightsEmptyBody;
+
+  /// Title shown when the server has insights disabled for this user.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights aren\'t turned on'**
+  String get p3roInsightsUnavailable;
+
+  /// Body shown when insights are disabled for this user.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights are a preview feature. Turn on preview features in your settings on the web to see them here.'**
+  String get p3roInsightsUnavailableBody;
+
+  /// Error when the insights list can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load insights.'**
+  String get p3roInsightsLoadFailed;
+
+  /// Small hint under the insights list explaining the swipe gesture.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to dismiss'**
+  String get p3roInsightsDismissHint;
+
+  /// Row at the top of the connections screen that opens the web providers page.
+  ///
+  /// In en, this message translates to:
+  /// **'Add or manage connections on the web'**
+  String get p3roConnectionsManageOnWeb;
+
+  /// Title shown when the family has no bank or broker connections.
+  ///
+  /// In en, this message translates to:
+  /// **'No connections yet'**
+  String get p3roConnectionsEmpty;
+
+  /// Body shown when there are no connections.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a bank or broker on the web to sync accounts automatically.'**
+  String get p3roConnectionsEmptyBody;
+
+  /// Error when the connections list can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load connections.'**
+  String get p3roConnectionsLoadFailed;
+
+  /// Status of a working connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get p3roConnectionStatusConnected;
+
+  /// Status of a connection that is syncing now.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing'**
+  String get p3roConnectionStatusSyncing;
+
+  /// Status of a connection that needs action on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get p3roConnectionStatusNeedsAttention;
+
+  /// Status of a connection scheduled for deletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Being removed'**
+  String get p3roConnectionStatusDeleting;
+
+  /// Explains that a connection's login must be renewed.
+  ///
+  /// In en, this message translates to:
+  /// **'The bank needs you to sign in again.'**
+  String get p3roConnectionReconnect;
+
+  /// Number of accounts in a connection.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No accounts} one{{count} account} other{{count} accounts}}'**
+  String p3roConnectionAccounts(int count);
+
+  /// Number of accounts in a connection that are not linked yet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} account needs setup} other{{count} accounts need setup}}'**
+  String p3roConnectionAccountsNeedSetup(int count);
+
+  /// Shown when a connection has accounts waiting for setup.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts are waiting to be set up.'**
+  String get p3roConnectionPendingSetup;
+
+  /// Button on a connection that needs attention; opens the web providers page.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix on the web'**
+  String get p3roConnectionFixOnWeb;
+
+  /// Row at the top of the rules screen that opens the web rules page.
+  ///
+  /// In en, this message translates to:
+  /// **'Create or reorder rules on the web'**
+  String get p3roRulesManageOnWeb;
+
+  /// Title shown when there are no rules.
+  ///
+  /// In en, this message translates to:
+  /// **'No rules yet'**
+  String get p3roRulesEmpty;
+
+  /// Body shown when there are no rules.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules categorize, tag and rename transactions automatically. Create them on the web.'**
+  String get p3roRulesEmptyBody;
+
+  /// Error when the rules list can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load rules.'**
+  String get p3roRulesLoadFailed;
+
+  /// A rule that runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get p3roRuleActive;
+
+  /// A rule that is turned off.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get p3roRuleInactive;
+
+  /// What a rule applies to.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get p3roRuleResourceTransaction;
+
+  /// App bar title of the rule detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule'**
+  String get p3roRuleTitle;
+
+  /// Error when one rule can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this rule.'**
+  String get p3roRuleLoadFailed;
+
+  /// Shown when the rule was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This rule no longer exists.'**
+  String get p3roRuleNotFound;
+
+  /// Heading of the rule's conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions'**
+  String get p3roRuleConditions;
+
+  /// Heading of the rule's actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get p3roRuleActions;
+
+  /// Heading of the rule's latest runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent runs'**
+  String get p3roRuleRecentRuns;
+
+  /// Shown when the rule has no runs.
+  ///
+  /// In en, this message translates to:
+  /// **'This rule hasn\'t run yet.'**
+  String get p3roRuleNoRuns;
+
+  /// Error when the rule's runs can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load recent runs.'**
+  String get p3roRuleRunsLoadFailed;
+
+  /// The date from which a rule applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to transactions from {date}'**
+  String p3roRuleEffectiveFrom(String date);
+
+  /// Summary of a rule with no conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'All transactions'**
+  String get p3roRuleAllTransactions;
+
+  /// Generated title of a rule without a name, e.g. 'If Name contains “Coffee”'.
+  ///
+  /// In en, this message translates to:
+  /// **'If {condition}'**
+  String p3roRuleIf(String condition);
+
+  /// Heading of a group of conditions that must all match.
+  ///
+  /// In en, this message translates to:
+  /// **'All of these match'**
+  String get p3roRuleMatchAll;
+
+  /// Heading of a group of conditions where one is enough.
+  ///
+  /// In en, this message translates to:
+  /// **'Any of these match'**
+  String get p3roRuleMatchAny;
+
+  /// Quotes a text value in a rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'“{value}”'**
+  String p3roRuleQuoted(String value);
+
+  /// Rule condition field: transaction name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get p3roRuleFieldName;
+
+  /// Rule condition field: transaction amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get p3roRuleFieldAmount;
+
+  /// Rule condition field: merchant.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant'**
+  String get p3roRuleFieldMerchant;
+
+  /// Rule condition field: category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get p3roRuleFieldCategory;
+
+  /// Rule condition field: tag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get p3roRuleFieldTag;
+
+  /// Rule condition field: account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get p3roRuleFieldAccount;
+
+  /// Rule condition field: income, expense or transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get p3roRuleFieldType;
+
+  /// Rule condition field: bank-provided transaction details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get p3roRuleFieldDetails;
+
+  /// Rule condition field: transaction notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get p3roRuleFieldNotes;
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} contains {value}'**
+  String p3roRuleOpContains(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} doesn\'t contain {value}'**
+  String p3roRuleOpNotContains(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} starts with {value}'**
+  String p3roRuleOpStartsWith(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} ends with {value}'**
+  String p3roRuleOpEndsWith(String field, String value);
+
+  /// Rule condition with a regular expression.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} matches the pattern {value}'**
+  String p3roRuleOpRegex(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is {value}'**
+  String p3roRuleOpEquals(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is not {value}'**
+  String p3roRuleOpNotEquals(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is empty'**
+  String p3roRuleOpEmpty(String field);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is not empty'**
+  String p3roRuleOpNotEmpty(String field);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is more than {value}'**
+  String p3roRuleOpGreater(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is at least {value}'**
+  String p3roRuleOpAtLeast(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is less than {value}'**
+  String p3roRuleOpLess(String field, String value);
+
+  /// Rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'{field} is at most {value}'**
+  String p3roRuleOpAtMost(String field, String value);
+
+  /// Transaction type value in a rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'income'**
+  String get p3roRuleTypeIncome;
+
+  /// Transaction type value in a rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'expense'**
+  String get p3roRuleTypeExpense;
+
+  /// Transaction type value in a rule condition.
+  ///
+  /// In en, this message translates to:
+  /// **'transfer'**
+  String get p3roRuleTypeTransfer;
+
+  /// Placeholder when a rule's category isn't known to the app.
+  ///
+  /// In en, this message translates to:
+  /// **'a category'**
+  String get p3roRuleSomeCategory;
+
+  /// Placeholder when a rule's tag isn't known to the app.
+  ///
+  /// In en, this message translates to:
+  /// **'a tag'**
+  String get p3roRuleSomeTag;
+
+  /// Placeholder when a rule's merchant isn't known to the app.
+  ///
+  /// In en, this message translates to:
+  /// **'a merchant'**
+  String get p3roRuleSomeMerchant;
+
+  /// Placeholder when a rule's account isn't known to the app.
+  ///
+  /// In en, this message translates to:
+  /// **'an account'**
+  String get p3roRuleSomeAccount;
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Set category to {value}'**
+  String p3roRuleActionSetCategory(String value);
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag {value}'**
+  String p3roRuleActionAddTag(String value);
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Set merchant to {value}'**
+  String p3roRuleActionSetMerchant(String value);
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename to {value}'**
+  String p3roRuleActionRename(String value);
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as a transfer or payment to {value}'**
+  String p3roRuleActionTransfer(String value);
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Set investment activity to {value}'**
+  String p3roRuleActionActivityLabel(String value);
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude from budgets and reports'**
+  String get p3roRuleActionExclude;
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorize with AI'**
+  String get p3roRuleActionAutoCategorize;
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect merchants with AI'**
+  String get p3roRuleActionAutoMerchants;
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorize with the classifier (no AI)'**
+  String get p3roRuleActionClassifier;
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill missing merchants from similar transactions'**
+  String get p3roRuleActionFillMerchants;
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Send an email notification'**
+  String get p3roRuleActionEmail;
+
+  /// Rule action.
+  ///
+  /// In en, this message translates to:
+  /// **'Split the transaction'**
+  String get p3roRuleActionSplit;
+
+  /// Status of a finished rule run.
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get p3roRuleRunSuccess;
+
+  /// Status of a rule run that failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get p3roRuleRunFailed;
+
+  /// Status of a rule run still in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get p3roRuleRunPending;
+
+  /// A rule run someone started.
+  ///
+  /// In en, this message translates to:
+  /// **'Run by hand'**
+  String get p3roRuleRunManual;
+
+  /// A rule run started by a sync or import.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get p3roRuleRunScheduled;
+
+  /// Counts of a rule run.
+  ///
+  /// In en, this message translates to:
+  /// **'{modified} of {processed} transactions changed'**
+  String p3roRuleRunCounts(int modified, int processed);
+
+  /// Transactions waiting in a running rule run.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} transaction queued} other{{count} transactions queued}}'**
+  String p3roRuleRunQueued(int count);
 }
 
 class _AppLocalizationsDelegate

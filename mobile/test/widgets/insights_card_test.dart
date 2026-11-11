@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:sure_mobile/screens/insights_screen.dart';
 import 'package:sure_mobile/services/insights_service.dart';
 import 'package:sure_mobile/widgets/insights_card.dart';
 import 'package:sure_mobile/widgets/sure_card.dart';
@@ -86,6 +87,45 @@ void main() {
     await pump(tester,
         MockClient((_) async => http.Response('{"insights":[]}', 200)));
     expect(find.byType(SureCard), findsNothing);
+  });
+
+  testWidgets('See all shows only with more than maxItems and opens the list',
+      (tester) async {
+    var gets = 0;
+    await pump(
+      tester,
+      MockClient((request) async {
+        gets++;
+        return http.Response(
+          jsonEncode({
+            'insights': [
+              for (var i = 1; i <= 4; i++) insight('i$i', 'Insight $i'),
+            ],
+          }),
+          200,
+        );
+      }),
+    );
+
+    expect(find.text('Insight 4'), findsNothing);
+    await tester.tap(find.text('See all'));
+    await tester.pumpAndSettle();
+    expect(find.byType(InsightsScreen), findsOneWidget);
+    expect(find.text('Insight 4'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(gets, 3, reason: 'card, screen, and card reload on return');
+  });
+
+  testWidgets('no See all with maxItems or fewer', (tester) async {
+    await pump(
+      tester,
+      MockClient((_) async => http.Response(
+          jsonEncode({'insights': [insight('i1', 'Only one')]}), 200)),
+    );
+    expect(find.text('Only one'), findsOneWidget);
+    expect(find.text('See all'), findsNothing);
   });
 
   testWidgets('dismiss button is at least 44pt tall', (tester) async {

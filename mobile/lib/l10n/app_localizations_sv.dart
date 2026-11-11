@@ -2764,4 +2764,354 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get manageExportStillPreparing =>
       'Förbereds fortfarande. Dra nedåt för att kontrollera igen.';
+
+  @override
+  String get p3roInsightsSeeAll => 'Visa alla';
+
+  @override
+  String get p3roInsightsEmpty => 'Inga insikter just nu';
+
+  @override
+  String get p3roInsightsEmptyBody =>
+      'Nya insikter om dina utgifter visas här.';
+
+  @override
+  String get p3roInsightsUnavailable => 'Insikter är inte aktiverade';
+
+  @override
+  String get p3roInsightsUnavailableBody =>
+      'Insikter är en förhandsfunktion. Aktivera förhandsfunktioner i dina inställningar på webben för att se dem här.';
+
+  @override
+  String get p3roInsightsLoadFailed => 'Det gick inte att läsa in insikter.';
+
+  @override
+  String get p3roInsightsDismissHint => 'Svep för att avfärda';
+
+  @override
+  String get p3roConnectionsManageOnWeb =>
+      'Lägg till eller hantera kopplingar på webben';
+
+  @override
+  String get p3roConnectionsEmpty => 'Inga kopplingar än';
+
+  @override
+  String get p3roConnectionsEmptyBody =>
+      'Koppla en bank eller mäklare på webben för att synka konton automatiskt.';
+
+  @override
+  String get p3roConnectionsLoadFailed =>
+      'Det gick inte att läsa in kopplingar.';
+
+  @override
+  String get p3roConnectionStatusConnected => 'Ansluten';
+
+  @override
+  String get p3roConnectionStatusSyncing => 'Synkar';
+
+  @override
+  String get p3roConnectionStatusNeedsAttention => 'Behöver åtgärdas';
+
+  @override
+  String get p3roConnectionStatusDeleting => 'Tas bort';
+
+  @override
+  String get p3roConnectionReconnect => 'Banken behöver att du loggar in igen.';
+
+  @override
+  String p3roConnectionAccounts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count konton',
+      one: '$count konto',
+      zero: 'Inga konton',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3roConnectionAccountsNeedSetup(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count konton behöver konfigureras',
+      one: '$count konto behöver konfigureras',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3roConnectionPendingSetup => 'Konton väntar på att konfigureras.';
+
+  @override
+  String get p3roConnectionFixOnWeb => 'Åtgärda på webben';
+
+  @override
+  String get p3roRulesManageOnWeb => 'Skapa eller ordna om regler på webben';
+
+  @override
+  String get p3roRulesEmpty => 'Inga regler än';
+
+  @override
+  String get p3roRulesEmptyBody =>
+      'Regler kategoriserar, taggar och byter namn på transaktioner automatiskt. Skapa dem på webben.';
+
+  @override
+  String get p3roRulesLoadFailed => 'Det gick inte att läsa in regler.';
+
+  @override
+  String get p3roRuleActive => 'Aktiv';
+
+  @override
+  String get p3roRuleInactive => 'Inaktiv';
+
+  @override
+  String get p3roRuleResourceTransaction => 'Transaktioner';
+
+  @override
+  String get p3roRuleTitle => 'Regel';
+
+  @override
+  String get p3roRuleLoadFailed => 'Det gick inte att läsa in regeln.';
+
+  @override
+  String get p3roRuleNotFound => 'Den här regeln finns inte längre.';
+
+  @override
+  String get p3roRuleConditions => 'Villkor';
+
+  @override
+  String get p3roRuleActions => 'Åtgärder';
+
+  @override
+  String get p3roRuleRecentRuns => 'Senaste körningar';
+
+  @override
+  String get p3roRuleNoRuns => 'Regeln har inte körts än.';
+
+  @override
+  String get p3roRuleRunsLoadFailed =>
+      'Det gick inte att läsa in senaste körningar.';
+
+  @override
+  String p3roRuleEffectiveFrom(String date) {
+    return 'Gäller transaktioner från $date';
+  }
+
+  @override
+  String get p3roRuleAllTransactions => 'Alla transaktioner';
+
+  @override
+  String p3roRuleIf(String condition) {
+    return 'Om $condition';
+  }
+
+  @override
+  String get p3roRuleMatchAll => 'Alla dessa stämmer';
+
+  @override
+  String get p3roRuleMatchAny => 'Något av dessa stämmer';
+
+  @override
+  String p3roRuleQuoted(String value) {
+    return '”$value”';
+  }
+
+  @override
+  String get p3roRuleFieldName => 'Namn';
+
+  @override
+  String get p3roRuleFieldAmount => 'Belopp';
+
+  @override
+  String get p3roRuleFieldMerchant => 'Handlare';
+
+  @override
+  String get p3roRuleFieldCategory => 'Kategori';
+
+  @override
+  String get p3roRuleFieldTag => 'Tagg';
+
+  @override
+  String get p3roRuleFieldAccount => 'Konto';
+
+  @override
+  String get p3roRuleFieldType => 'Typ';
+
+  @override
+  String get p3roRuleFieldDetails => 'Detaljer';
+
+  @override
+  String get p3roRuleFieldNotes => 'Anteckningar';
+
+  @override
+  String p3roRuleOpContains(String field, String value) {
+    return '$field innehåller $value';
+  }
+
+  @override
+  String p3roRuleOpNotContains(String field, String value) {
+    return '$field innehåller inte $value';
+  }
+
+  @override
+  String p3roRuleOpStartsWith(String field, String value) {
+    return '$field börjar med $value';
+  }
+
+  @override
+  String p3roRuleOpEndsWith(String field, String value) {
+    return '$field slutar med $value';
+  }
+
+  @override
+  String p3roRuleOpRegex(String field, String value) {
+    return '$field matchar mönstret $value';
+  }
+
+  @override
+  String p3roRuleOpEquals(String field, String value) {
+    return '$field är $value';
+  }
+
+  @override
+  String p3roRuleOpNotEquals(String field, String value) {
+    return '$field är inte $value';
+  }
+
+  @override
+  String p3roRuleOpEmpty(String field) {
+    return '$field är tomt';
+  }
+
+  @override
+  String p3roRuleOpNotEmpty(String field) {
+    return '$field är inte tomt';
+  }
+
+  @override
+  String p3roRuleOpGreater(String field, String value) {
+    return '$field är mer än $value';
+  }
+
+  @override
+  String p3roRuleOpAtLeast(String field, String value) {
+    return '$field är minst $value';
+  }
+
+  @override
+  String p3roRuleOpLess(String field, String value) {
+    return '$field är mindre än $value';
+  }
+
+  @override
+  String p3roRuleOpAtMost(String field, String value) {
+    return '$field är högst $value';
+  }
+
+  @override
+  String get p3roRuleTypeIncome => 'inkomst';
+
+  @override
+  String get p3roRuleTypeExpense => 'utgift';
+
+  @override
+  String get p3roRuleTypeTransfer => 'överföring';
+
+  @override
+  String get p3roRuleSomeCategory => 'en kategori';
+
+  @override
+  String get p3roRuleSomeTag => 'en tagg';
+
+  @override
+  String get p3roRuleSomeMerchant => 'en handlare';
+
+  @override
+  String get p3roRuleSomeAccount => 'ett konto';
+
+  @override
+  String p3roRuleActionSetCategory(String value) {
+    return 'Sätt kategori till $value';
+  }
+
+  @override
+  String p3roRuleActionAddTag(String value) {
+    return 'Lägg till taggen $value';
+  }
+
+  @override
+  String p3roRuleActionSetMerchant(String value) {
+    return 'Sätt handlare till $value';
+  }
+
+  @override
+  String p3roRuleActionRename(String value) {
+    return 'Byt namn till $value';
+  }
+
+  @override
+  String p3roRuleActionTransfer(String value) {
+    return 'Markera som överföring eller betalning till $value';
+  }
+
+  @override
+  String p3roRuleActionActivityLabel(String value) {
+    return 'Sätt investeringsaktivitet till $value';
+  }
+
+  @override
+  String get p3roRuleActionExclude => 'Exkludera från budgetar och rapporter';
+
+  @override
+  String get p3roRuleActionAutoCategorize => 'Kategorisera med AI';
+
+  @override
+  String get p3roRuleActionAutoMerchants => 'Identifiera handlare med AI';
+
+  @override
+  String get p3roRuleActionClassifier =>
+      'Kategorisera med klassificeraren (utan AI)';
+
+  @override
+  String get p3roRuleActionFillMerchants =>
+      'Fyll i saknade handlare från liknande transaktioner';
+
+  @override
+  String get p3roRuleActionEmail => 'Skicka ett e-postmeddelande';
+
+  @override
+  String get p3roRuleActionSplit => 'Dela upp transaktionen';
+
+  @override
+  String get p3roRuleRunSuccess => 'Lyckades';
+
+  @override
+  String get p3roRuleRunFailed => 'Misslyckades';
+
+  @override
+  String get p3roRuleRunPending => 'Körs';
+
+  @override
+  String get p3roRuleRunManual => 'Körd manuellt';
+
+  @override
+  String get p3roRuleRunScheduled => 'Automatisk';
+
+  @override
+  String p3roRuleRunCounts(int modified, int processed) {
+    return '$modified av $processed transaktioner ändrades';
+  }
+
+  @override
+  String p3roRuleRunQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transaktioner i kö',
+      one: '$count transaktion i kö',
+    );
+    return '$_temp0';
+  }
 }
