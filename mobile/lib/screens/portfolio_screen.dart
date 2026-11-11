@@ -77,9 +77,6 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   int _positionsGeneration = 0;
   int _historyGeneration = 0;
 
-  final ScrollController _outerController = ScrollController();
-  bool _titleCollapsed = false;
-
   List<String> get _currencies =>
       widget.accounts.map((account) => account.currency).toSet().toList()
         ..sort();
@@ -91,7 +88,6 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   @override
   void initState() {
     super.initState();
-    _outerController.addListener(_onOuterScroll);
     // _loadHistory reads Localizations, which isn't available in initState.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _reload();
@@ -100,18 +96,8 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
   @override
   void dispose() {
-    _outerController.dispose();
     if (widget.accountDetailService == null) _service.close();
     super.dispose();
-  }
-
-  void _onOuterScroll() {
-    // The small nav-bar title shows once most of the large title is gone.
-    final collapsed = _outerController.hasClients &&
-        _outerController.offset > _LargeTitle.height * 0.7;
-    if (collapsed != _titleCollapsed) {
-      setState(() => _titleCollapsed = collapsed);
-    }
   }
 
   Future<void> _reload() => Future.wait([_loadPositions(), _loadHistory()]);
@@ -304,84 +290,58 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
     return Scaffold(
       backgroundColor: palette.surface,
-      body: Column(
-        children: [
-          _NavBar(
-            key: const ValueKey('investNavBar'),
-            title: l.shellNavInvest,
-            showTitle: _titleCollapsed,
-            leading: canPop ? const SureBackButton() : null,
-            trailing: currencies.length > 1
-                ? _CurrencyControl(
-                    currencies: currencies,
-                    selected: _currency,
-                    onChanged: _selectCurrency,
-                  )
-                : null,
-          ),
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: NestedScrollView(
-                controller: _outerController,
-                // The header scrolls away; the switcher at the top of the
-                // body then stays pinned under the nav bar.
-                headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                  SliverToBoxAdapter(
-                    child: _LargeTitle(
-                      title: l.shellNavInvest,
-                      subtitle: l.portfolioAccountCount(accounts.length),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: _Summary(
-                      accounts: accounts,
-                      currency: _currency,
-                      holdings: _holdings,
-                      history: _history,
-                      selected: _selected,
-                      range: _range,
-                      loading: _loadingHistory,
-                      onRangeChanged: _selectRange,
-                      onSelectionChanged: (balance) =>
-                          setState(() => _selected = balance),
-                    ),
-                  ),
-                ],
-                body: Column(
-                  children: [
-                    Container(
-                      key: const ValueKey('investSectionSwitcher'),
-                      color: palette.surface,
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                      child: SureSegmentedControl<PortfolioSection>(
-                        selected: _section,
-                        onChanged: (section) =>
-                            setState(() => _section = section),
-                        segments: [
-                          SureSegment(
-                            value: PortfolioSection.allocation,
-                            label: l.portfolioAllocation,
-                          ),
-                          SureSegment(
-                            value: PortfolioSection.holdings,
-                            label: l.accountTabHoldings,
-                          ),
-                          SureSegment(
-                            value: PortfolioSection.activity,
-                            label: l.accountTabActivity,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(child: _buildSection(l, accounts)),
-                  ],
-                ),
-              ),
+      // The header scrolls away; the switcher then stays pinned under the
+      // nav bar.
+      body: SureCollapsingHeader(
+        navBarKey: const ValueKey('investNavBar'),
+        title: l.shellNavInvest,
+        subtitle: l.portfolioAccountCount(accounts.length),
+        subtitleKey: const ValueKey('investSubtitle'),
+        leading: canPop ? const SureBackButton() : null,
+        actions: [
+          if (currencies.length > 1)
+            _CurrencyControl(
+              currencies: currencies,
+              selected: _currency,
+              onChanged: _selectCurrency,
+            ),
+        ],
+        headerSlivers: [
+          SliverToBoxAdapter(
+            child: _Summary(
+              accounts: accounts,
+              currency: _currency,
+              holdings: _holdings,
+              history: _history,
+              selected: _selected,
+              range: _range,
+              loading: _loadingHistory,
+              onRangeChanged: _selectRange,
+              onSelectionChanged: (balance) =>
+                  setState(() => _selected = balance),
             ),
           ),
         ],
+        pinnedKey: const ValueKey('investSectionSwitcher'),
+        pinned: SureSegmentedControl<PortfolioSection>(
+          selected: _section,
+          onChanged: (section) => setState(() => _section = section),
+          segments: [
+            SureSegment(
+              value: PortfolioSection.allocation,
+              label: l.portfolioAllocation,
+            ),
+            SureSegment(
+              value: PortfolioSection.holdings,
+              label: l.accountTabHoldings,
+            ),
+            SureSegment(
+              value: PortfolioSection.activity,
+              label: l.accountTabActivity,
+            ),
+          ],
+        ),
+        body: _buildSection(l, accounts),
       ),
     );
   }
@@ -945,125 +905,6 @@ class _CurrencyControl extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// The tab's top bar: optional back link, a small centered title that fades
-/// in once the large title has scrolled away, and the currency control; a
-/// hairline under it when collapsed. It sits outside the NestedScrollView so
-/// the header can scroll under it and the section switcher can pin against
-/// it (the same structure as the account page).
-///
-/// Gap: SureLargeTitleHeader is a pinned sliver, which overlaps the body of a
-/// NestedScrollView, so this screen draws its own bar and large title.
-class _NavBar extends StatelessWidget {
-  const _NavBar({
-    super.key,
-    required this.title,
-    required this.showTitle,
-    this.leading,
-    this.trailing,
-  });
-
-  final String title;
-  final bool showTitle;
-  final Widget? leading;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = SureColors.of(context);
-    final palette = colors.palette;
-    return Container(
-      padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
-      decoration: BoxDecoration(
-        color: palette.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: showTitle ? colors.hairline : const Color(0x00000000),
-          ),
-        ),
-      ),
-      child: SizedBox(
-        height: SureLargeTitleHeader.barHeight,
-        child: NavigationToolbar(
-          leading: leading,
-          middle: Semantics(
-            excludeSemantics: !showTitle,
-            header: showTitle,
-            child: AnimatedOpacity(
-              opacity: showTitle ? 1 : 0,
-              duration: const Duration(milliseconds: 150),
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: palette.textPrimary,
-                ),
-              ),
-            ),
-          ),
-          trailing: trailing,
-          middleSpacing: 8,
-        ),
-      ),
-    );
-  }
-}
-
-/// "Invest" as an iOS large title over the account count.
-class _LargeTitle extends StatelessWidget {
-  const _LargeTitle({required this.title, required this.subtitle});
-
-  static const double height = SureLargeTitleHeader.largeTitleHeight +
-      SureLargeTitleHeader.subtitleHeight;
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(
-            header: true,
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textScaler: scaler,
-              style: TextStyle(
-                fontSize: 32,
-                height: 1.2,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.6,
-                color: palette.textPrimary,
-              ),
-            ),
-          ),
-          Text(
-            subtitle,
-            key: const ValueKey('investSubtitle'),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textScaler: scaler,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.3,
-              color: palette.textSecondary,
-            ),
-          ),
-        ],
       ),
     );
   }

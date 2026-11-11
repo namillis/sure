@@ -92,6 +92,7 @@ class SureListRow extends StatelessWidget {
     this.destructive = false,
     this.titleColor,
     this.subtitleMaxLines = 2,
+    this.enabled = true,
   });
 
   final String title;
@@ -122,6 +123,9 @@ class SureListRow extends StatelessWidget {
   /// Overrides the title color (e.g. `link` for "Open on the web").
   final Color? titleColor;
   final int subtitleMaxLines;
+
+  /// When false the row is dimmed to 50%, ignores taps and reads as disabled.
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -206,6 +210,14 @@ class SureListRow extends StatelessWidget {
         ),
       ),
     );
+
+    if (!enabled) {
+      return Semantics(
+        enabled: false,
+        button: onTap != null || onLongPress != null,
+        child: Opacity(opacity: 0.5, child: content),
+      );
+    }
 
     if (onTap != null || onLongPress != null) {
       // MergeSemantics + Semantics(button) restores the button/enabled flags a

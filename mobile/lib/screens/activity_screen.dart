@@ -725,7 +725,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   List<Widget> _headerActions(AppLocalizations l) {
     if (_selectionMode) {
       return [
-        _NavTextButton(
+        SureNavTextButton(
           label: l.commonCancel,
           onPressed: _bulkRunning ? null : _exitSelection,
         ),
@@ -1086,35 +1086,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
           padding: const EdgeInsets.all(16),
           child: content,
         ),
-      ),
-    );
-  }
-}
-
-/// A text action for the large-title nav bar ("Cancel" in selection mode).
-/// shortcut: SureNavIconButton is icon-only; fold this into the shared set
-/// when another screen needs a text nav action.
-class _NavTextButton extends StatelessWidget {
-  const _NavTextButton({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    return TextButton(
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        foregroundColor: palette.link,
-        disabledForegroundColor: palette.textSubdued,
-        minimumSize: const Size(44, 44),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
     );
   }

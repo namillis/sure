@@ -436,10 +436,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     }
 
     return [
-      _WebLinkSectionHeader(
+      SureSectionHeader(
         label: l.budgetsCategoriesTitle,
-        linkLabel: l.ds2pEditOnWeb,
-        onLink: () => _openWeb(budget.startDate),
+        actionLabel: l.ds2pEditOnWeb,
+        actionIcon: SureIcons.arrowUpRight,
+        onAction: () => _openWeb(budget.startDate),
       ),
       if (overCount > 0)
         Padding(
@@ -476,73 +477,3 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   }
 }
 
-/// A [SureSectionHeader]-styled header whose trailing link ends in a small
-/// arrow-up-right, for links that leave the app.
-///
-/// Gap: SureSectionHeader takes an action label or an action icon, not both.
-class _WebLinkSectionHeader extends StatelessWidget {
-  const _WebLinkSectionHeader({
-    required this.label,
-    required this.linkLabel,
-    required this.onLink,
-  });
-
-  final String label;
-  final String linkLabel;
-  final VoidCallback onLink;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Semantics(
-              header: true,
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: SureTokens.weightMedium,
-                  color: palette.textSecondary,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Semantics(
-            button: true,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onLink,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 32),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      linkLabel,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: SureTokens.weightMedium,
-                        color: palette.link,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    SureIcon(SureIcons.arrowUpRight,
-                        size: 13, color: palette.link),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

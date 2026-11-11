@@ -25,7 +25,8 @@ class SureSectionHeader extends StatelessWidget {
   final String? actionLabel;
 
   /// Lucide icon name for a trailing icon action (e.g. [SureIcons.plus]).
-  /// Ignored when [actionLabel] is set.
+  /// With [actionLabel] set too, a small copy of it follows the label (e.g.
+  /// "Open on web ↗" with [SureIcons.arrowUpRight]).
   final String? actionIcon;
 
   /// Screen reader label for an icon action.
@@ -41,17 +42,27 @@ class SureSectionHeader extends StatelessWidget {
     final palette = SureColors.of(context).palette;
     Widget? action;
     if (onAction != null && actionLabel != null) {
+      final text = Text(
+        actionLabel!,
+        maxLines: 1,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: SureTokens.weightMedium,
+          color: palette.link,
+        ),
+      );
       action = _Tap(
         onTap: onAction!,
-        child: Text(
-          actionLabel!,
-          maxLines: 1,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: SureTokens.weightMedium,
-            color: palette.link,
-          ),
-        ),
+        child: actionIcon == null
+            ? text
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  text,
+                  const SizedBox(width: 2),
+                  SureIcon(actionIcon!, size: 13, color: palette.link),
+                ],
+              ),
       );
     } else if (onAction != null && actionIcon != null) {
       action = Semantics(

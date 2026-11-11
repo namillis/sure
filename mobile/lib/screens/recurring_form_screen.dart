@@ -389,21 +389,10 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
               ],
               if (_editing) ...[
                 const SizedBox(height: SureSpacing.xxxl),
-                SurePanel(
-                  onTap: _saving ? null : _delete,
-                  child: SizedBox(
-                    height: 44,
-                    child: Center(
-                      child: Text(
-                        l.commonDelete,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: palette.destructive,
-                        ),
-                      ),
-                    ),
-                  ),
+                SureButtonPanel(
+                  label: l.commonDelete,
+                  destructive: true,
+                  onPressed: _saving ? null : _delete,
                 ),
               ],
             ],

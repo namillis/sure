@@ -11,6 +11,7 @@ export '../sure_list_group.dart';
 export '../sure_segmented_control.dart';
 export 'sure_banner.dart';
 export 'sure_category_icon.dart';
+export 'sure_collapsing_header.dart';
 export 'sure_day_header.dart';
 export 'sure_empty_state.dart';
 export 'sure_large_title.dart';

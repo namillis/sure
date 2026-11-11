@@ -381,3 +381,35 @@ class SureNavIconButton extends StatelessWidget {
     );
   }
 }
+
+/// A nav-bar text action (e.g. "Cancel" or "Done") in the link color, 17 pt
+/// weight 600, with a 44 px hit area. Grays out when [onPressed] is null.
+class SureNavTextButton extends StatelessWidget {
+  const SureNavTextButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: palette.link,
+        disabledForegroundColor: palette.textSubdued,
+        minimumSize: const Size(44, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}

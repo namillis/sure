@@ -123,3 +123,62 @@ class SureHairline extends StatelessWidget {
     );
   }
 }
+
+/// A panel that is one centered button, e.g. "Delete transaction": a 44 px
+/// row with the [label] at 15 pt weight 500, in `destructive` when
+/// [destructive] is set, else `link`. While [busy] it shows a spinner. While
+/// busy or with [onPressed] null it is dimmed to 50% and ignores taps.
+class SureButtonPanel extends StatelessWidget {
+  const SureButtonPanel({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.destructive = false,
+    this.busy = false,
+    this.margin,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool destructive;
+  final bool busy;
+  final EdgeInsetsGeometry? margin;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    final enabled = onPressed != null && !busy;
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+      child: SurePanel(
+        margin: margin,
+        onTap: enabled ? onPressed : null,
+        child: Semantics(
+          button: true,
+          enabled: enabled,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Center(
+              child: busy
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: SureTokens.weightMedium,
+                        color:
+                            destructive ? palette.destructive : palette.link,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

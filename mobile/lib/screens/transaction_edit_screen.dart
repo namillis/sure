@@ -1167,37 +1167,14 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   }
 
   Widget _buildDeletePanel(AppLocalizations l, SureTokenPalette palette) {
-    final enabled = _txn.id != null && !_isSaving && !_isDeleting;
-    return _dim(
-      enabled: enabled,
-      child: SurePanel(
-        onTap: enabled ? _delete : null,
-        child: Semantics(
-          button: true,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: Center(
-              child: _isDeleting
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      l.dstDeleteTransaction,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: SureTokens.weightMedium,
-                        color: palette.destructive,
-                      ),
-                    ),
-            ),
-          ),
-        ),
-      ),
+    return SureButtonPanel(
+      label: l.dstDeleteTransaction,
+      destructive: true,
+      busy: _isDeleting,
+      onPressed: _txn.id != null && !_isSaving ? _delete : null,
     );
   }
+
 
   Widget _dim({required bool enabled, required Widget child}) =>
       Opacity(opacity: enabled ? 1 : 0.5, child: child);

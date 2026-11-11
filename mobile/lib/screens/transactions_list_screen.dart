@@ -97,9 +97,6 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
   // Bumped by pull-to-refresh so the header reloads without being rebuilt.
   int _headerReloads = 0;
 
-  final ScrollController _outerController = ScrollController();
-  bool _titleCollapsed = false;
-
   void _onAccountChanged() {
     setState(() => _refreshTick++);
     _loadTransactions();
@@ -118,24 +115,8 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
   @override
   void initState() {
     super.initState();
-    _outerController.addListener(_onOuterScroll);
     _loadTransactions();
     _loadCategories();
-  }
-
-  @override
-  void dispose() {
-    _outerController.dispose();
-    super.dispose();
-  }
-
-  void _onOuterScroll() {
-    // The small nav-bar title shows once most of the large title is gone.
-    final collapsed = _outerController.hasClients &&
-        _outerController.offset > _LargeTitle.height * 0.7;
-    if (collapsed != _titleCollapsed) {
-      setState(() => _titleCollapsed = collapsed);
-    }
   }
 
   Future<void> _loadCategories() async {
@@ -459,85 +440,58 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
 
     return Scaffold(
       backgroundColor: palette.surface,
-      body: Column(
-        children: [
-          _AccountNavBar(
-            key: const ValueKey('accountNavBar'),
-            title: _account.name,
-            showTitle: _titleCollapsed,
-            leading: canPop ? SureBackButton(label: widget.backLabel) : null,
-            actions: actions,
-          ),
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: NestedScrollView(
-                controller: _outerController,
-                // The header scrolls away with the list. The section switcher
-                // sits at the top of the body, so once the header is gone it
-                // stays pinned under the nav bar while the section list
-                // scrolls below it.
-                headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                  SliverToBoxAdapter(
-                    child: _LargeTitle(
-                      title: _account.name,
-                      subtitle: TransactionsListScreen.subtitleFor(
-                        l,
-                        _account,
-                        now: DateTime.now(),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: AccountDetailHeader(
-                      key: ValueKey('header-$_refreshTick'),
-                      account: widget.account,
-                      reloadToken: _headerReloads,
-                      onAccountLoaded: (account) {
-                        if (mounted) setState(() => _account = account);
-                      },
-                    ),
-                  ),
-                ],
-                body: !_hasInvestmentSections
-                    ? _buildSection(l)
-                    : Column(
-                        children: [
-                          Container(
-                            key: const ValueKey('accountSectionSwitcher'),
-                            color: palette.surface,
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                            child: SureSegmentedControl<_AccountSection>(
-                              selected: _section,
-                              onChanged: (section) => setState(() {
-                                _section = section;
-                                _isSelectionMode = false;
-                                _selectedTransactions.clear();
-                              }),
-                              segments: [
-                                SureSegment(
-                                  value: _AccountSection.holdings,
-                                  label: l.accountTabHoldings,
-                                ),
-                                SureSegment(
-                                  value: _AccountSection.activity,
-                                  label: l.accountTabActivity,
-                                ),
-                                SureSegment(
-                                  value: _AccountSection.transactions,
-                                  label: l.accountTabTransactions,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(child: _buildSection(l)),
-                        ],
-                      ),
-              ),
+      // The header scrolls away with the list. For investment accounts the
+      // section switcher then stays pinned under the nav bar while the
+      // section list scrolls below it.
+      body: SureCollapsingHeader(
+        navBarKey: const ValueKey('accountNavBar'),
+        title: _account.name,
+        subtitle: TransactionsListScreen.subtitleFor(
+          l,
+          _account,
+          now: DateTime.now(),
+        ),
+        subtitleKey: const ValueKey('accountSubtitle'),
+        leading: canPop ? SureBackButton(label: widget.backLabel) : null,
+        actions: actions,
+        headerSlivers: [
+          SliverToBoxAdapter(
+            child: AccountDetailHeader(
+              key: ValueKey('header-$_refreshTick'),
+              account: widget.account,
+              reloadToken: _headerReloads,
+              onAccountLoaded: (account) {
+                if (mounted) setState(() => _account = account);
+              },
             ),
           ),
         ],
+        pinnedKey: const ValueKey('accountSectionSwitcher'),
+        pinned: !_hasInvestmentSections
+            ? null
+            : SureSegmentedControl<_AccountSection>(
+                selected: _section,
+                onChanged: (section) => setState(() {
+                  _section = section;
+                  _isSelectionMode = false;
+                  _selectedTransactions.clear();
+                }),
+                segments: [
+                  SureSegment(
+                    value: _AccountSection.holdings,
+                    label: l.accountTabHoldings,
+                  ),
+                  SureSegment(
+                    value: _AccountSection.activity,
+                    label: l.accountTabActivity,
+                  ),
+                  SureSegment(
+                    value: _AccountSection.transactions,
+                    label: l.accountTabTransactions,
+                  ),
+                ],
+              ),
+        body: _buildSection(l),
       ),
       floatingActionButton: _section == _AccountSection.transactions
           ? FloatingActionButton(
@@ -799,123 +753,4 @@ class _Day {
   final String raw;
   final DateTime? date;
   final List<OfflineTransaction> transactions;
-}
-
-/// The page's top bar: back link, a small centered title that fades in once
-/// the large title has scrolled away, and the actions; a hairline under it
-/// when collapsed. It sits outside the NestedScrollView so the header can
-/// scroll under it and the section switcher can pin against it.
-///
-/// Gap: SureLargeTitleHeader is a pinned sliver, which overlaps the body of a
-/// NestedScrollView, so this page draws its own bar and large title.
-class _AccountNavBar extends StatelessWidget {
-  const _AccountNavBar({
-    super.key,
-    required this.title,
-    required this.showTitle,
-    required this.leading,
-    required this.actions,
-  });
-
-  final String title;
-  final bool showTitle;
-  final Widget? leading;
-  final List<Widget> actions;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = SureColors.of(context);
-    final palette = colors.palette;
-    return Container(
-      padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
-      decoration: BoxDecoration(
-        color: palette.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: showTitle ? colors.hairline : const Color(0x00000000),
-          ),
-        ),
-      ),
-      child: SizedBox(
-        height: SureLargeTitleHeader.barHeight,
-        child: NavigationToolbar(
-          leading: leading,
-          middle: Semantics(
-            excludeSemantics: !showTitle,
-            header: showTitle,
-            child: AnimatedOpacity(
-              opacity: showTitle ? 1 : 0,
-              duration: const Duration(milliseconds: 150),
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: palette.textPrimary,
-                ),
-              ),
-            ),
-          ),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: actions),
-          middleSpacing: 8,
-        ),
-      ),
-    );
-  }
-}
-
-/// The account name as an iOS large title (the same type as
-/// SureLargeTitleHeader) over its subtitle.
-class _LargeTitle extends StatelessWidget {
-  const _LargeTitle({required this.title, required this.subtitle});
-
-  static const double height = SureLargeTitleHeader.largeTitleHeight +
-      SureLargeTitleHeader.subtitleHeight;
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(
-            header: true,
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textScaler: scaler,
-              style: TextStyle(
-                fontSize: 32,
-                height: 1.2,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.6,
-                color: palette.textPrimary,
-              ),
-            ),
-          ),
-          Text(
-            subtitle,
-            key: const ValueKey('accountSubtitle'),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textScaler: scaler,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.3,
-              color: palette.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

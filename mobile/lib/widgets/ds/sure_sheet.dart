@@ -68,6 +68,7 @@ class SureSheet extends StatelessWidget {
     this.cancelLabel,
     this.onCancel,
     this.scrollable = true,
+    this.actionKey,
   });
 
   final Widget child;
@@ -76,6 +77,9 @@ class SureSheet extends StatelessWidget {
   /// Right-hand action label. Defaults to the localized "Save".
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// Key on the right-hand action button, for tests.
+  final Key? actionKey;
   final bool actionEnabled;
   final bool busy;
   final bool showCancel;
@@ -165,6 +169,7 @@ class SureSheet extends StatelessWidget {
                                     ),
                                   )
                                 : TextButton(
+                                    key: actionKey,
                                     onPressed: actionEnabled ? onAction : null,
                                     style: TextButton.styleFrom(
                                       foregroundColor: palette.link,

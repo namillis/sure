@@ -40,28 +40,6 @@ class _PlanScreenState extends State<PlanScreen> {
   // Segments are built on first visit, then kept alive, so a segment's
   // network load only starts when the user opens it.
   final Set<PlanSection> _visited = {PlanSection.budget};
-  final ScrollController _outerController = ScrollController();
-  bool _titleCollapsed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _outerController.addListener(_onOuterScroll);
-  }
-
-  @override
-  void dispose() {
-    _outerController.dispose();
-    super.dispose();
-  }
-
-  void _onOuterScroll() {
-    final collapsed = _outerController.hasClients &&
-        _outerController.offset > SureLargeTitleHeader.largeTitleHeight * 0.7;
-    if (collapsed != _titleCollapsed) {
-      setState(() => _titleCollapsed = collapsed);
-    }
-  }
 
   Widget _body(BuildContext context, PlanSection section) {
     final l = AppLocalizations.of(context);
@@ -94,35 +72,12 @@ class _PlanScreenState extends State<PlanScreen> {
     // Own Scaffold: segments such as Recurring show SnackBars.
     return Scaffold(
       backgroundColor: palette.surface,
-      body: Column(
-        children: [
-          _PlanNavBar(title: l.shellNavPlan, showTitle: _titleCollapsed),
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: NestedScrollView(
-                controller: _outerController,
-                headerSliverBuilder: (context, _) => [
-                  SliverToBoxAdapter(child: _LargeTitle(l.shellNavPlan)),
-                ],
-                body: Column(
-                  children: [
-                    Container(
-                      key: const ValueKey('planSectionSwitcher'),
-                      color: palette.surface,
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                      child: _switcher(l),
-                    ),
-                    Expanded(
-                      child: Builder(builder: _sections),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+      body: SureCollapsingHeader(
+        title: l.shellNavPlan,
+        pinned: _switcher(l),
+        pinnedKey: const ValueKey('planSectionSwitcher'),
+        pinnedPadding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        body: Builder(builder: _sections),
       ),
     );
   }
@@ -167,92 +122,6 @@ class _PlanScreenState extends State<PlanScreen> {
           else
             PrimaryScrollController.none(child: _body(context, section)),
       ],
-    );
-  }
-}
-
-/// The tab's top bar: a small centered "Plan" that fades in once the large
-/// title has scrolled away, with a hairline under it then. It sits outside the
-/// NestedScrollView so the segmented control can pin against it.
-///
-/// Gap: SureLargeTitleHeader is a pinned sliver, which overlaps the body of a
-/// NestedScrollView, so this screen draws its own bar and large title (the
-/// same approach as the account page).
-class _PlanNavBar extends StatelessWidget {
-  const _PlanNavBar({required this.title, required this.showTitle});
-
-  final String title;
-  final bool showTitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = SureColors.of(context);
-    final palette = colors.palette;
-    return Container(
-      padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
-      decoration: BoxDecoration(
-        color: palette.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: showTitle ? colors.hairline : const Color(0x00000000),
-          ),
-        ),
-      ),
-      child: SizedBox(
-        height: SureLargeTitleHeader.barHeight,
-        child: Center(
-          child: Semantics(
-            excludeSemantics: !showTitle,
-            header: showTitle,
-            child: AnimatedOpacity(
-              opacity: showTitle ? 1 : 0,
-              duration: const Duration(milliseconds: 150),
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: palette.textPrimary,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// "Plan" as an iOS large title, the same type as SureLargeTitleHeader.
-class _LargeTitle extends StatelessWidget {
-  const _LargeTitle(this.title);
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-      child: Semantics(
-        header: true,
-        child: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textScaler:
-              MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3),
-          style: TextStyle(
-            fontSize: 32,
-            height: 1.2,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.6,
-            color: palette.textPrimary,
-          ),
-        ),
-      ),
     );
   }
 }
