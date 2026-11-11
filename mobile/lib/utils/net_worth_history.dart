@@ -80,8 +80,10 @@ class NetWorthHistory {
   /// Builds the series for [start]..[end] (date parts, inclusive).
   ///
   /// For each main-currency account, the last known balance carries forward
-  /// over days without a row. Before an account's first row in the period it
-  /// contributes nothing (it opened mid-period, or its history starts later).
+  /// over days without a row, and the first row in the period carries back to
+  /// the period start. A late first row is almost always a gap in the synced
+  /// history, not a new account; leaving those days at zero made the line
+  /// jump on the day a big account's history began.
   /// An account with no rows at all contributes [currentCents] on every day.
   /// Balance rows in a currency other than their account's are ignored.
   static NetWorthHistory build({
@@ -137,8 +139,11 @@ class NetWorthHistory {
       for (final row in rows) {
         final day = _day(row.date);
         if (day.isAfter(last)) break;
-        // Rows before the start (if any) seed the opening balance.
-        final index = day.isBefore(first) ? 0 : _dayCount(first, day) - 1;
+        // Rows before the start seed the opening balance, and so does the
+        // first row inside the period (carried back to day one).
+        final index = (previous == null || day.isBefore(first))
+            ? 0
+            : _dayCount(first, day) - 1;
         final value = sign * row.balanceCents!;
         deltas[index] += value - (previous ?? 0);
         previous = value;

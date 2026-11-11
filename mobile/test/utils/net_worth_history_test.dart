@@ -66,12 +66,13 @@ void main() {
     expect(_cents(h), [100, 200, 200, 300, 300]);
   });
 
-  test('an account opening mid-period adds nothing before its first row', () {
+  test('an account whose history starts mid-period carries its first row back',
+      () {
     final h = build([
       _account('a', [_b('2026-10-01', 1000)]),
       _account('b', [_b('2026-10-03', 250), _b('2026-10-04', 400)]),
     ]);
-    expect(_cents(h), [1000, 1000, 1250, 1400, 1400]);
+    expect(_cents(h), [1250, 1250, 1250, 1400, 1400]);
   });
 
   test('liabilities are subtracted', () {
@@ -120,7 +121,7 @@ void main() {
       _account('a', [_b('2026-10-02', 100)]),
       _account('manual', const [], current: 50),
     ]);
-    expect(_cents(h), [50, 150, 150, 150, 150]);
+    expect(_cents(h), [150, 150, 150, 150, 150]);
   });
 
   test('rows after the end are ignored; rows before the start seed day one',
