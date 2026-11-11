@@ -182,7 +182,7 @@ void main() {
         accounts: _accounts,
       ),
     );
-    expect(find.text('Import history'.toUpperCase()), findsOneWidget);
+    expect(find.text('Import history'), findsOneWidget);
     expect(find.text('Transactions'), findsOneWidget);
     expect(find.textContaining('Complete · 2 rows'), findsOneWidget);
 

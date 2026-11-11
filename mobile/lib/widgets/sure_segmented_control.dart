@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
 import '../theme/sure_tokens.dart';
+import '../utils/sure_haptics.dart';
 
 /// One segment of a [SureSegmentedControl].
 class SureSegment<T> {
@@ -46,7 +47,16 @@ class SureSegmentedControl<T> extends StatelessWidget {
 
   final List<SureSegment<T>> segments;
   final T selected;
+
+  /// Called with the tapped segment's value. Not called when the selected
+  /// segment is tapped again. A change plays the selection haptic.
   final ValueChanged<T> onChanged;
+
+  /// The very soft shadow under the selected segment (iOS look), the same in
+  /// light and dark.
+  static const List<BoxShadow> selectedShadow = <BoxShadow>[
+    BoxShadow(color: Color(0x14000000), offset: Offset(0, 1), blurRadius: 3),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -67,11 +77,10 @@ class SureSegmentedControl<T> extends StatelessWidget {
         isLight ? palette.container : palette.containerInsetHover;
 
     return Container(
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: palette.surfaceInset,
-        borderRadius: BorderRadius.circular(SureTokens.radiusLg),
-        border: Border.all(color: palette.borderSecondary),
+        borderRadius: BorderRadius.circular(SureTokens.radiusMd),
       ),
       child: Row(
         children: [
@@ -83,7 +92,11 @@ class SureSegmentedControl<T> extends StatelessWidget {
                 selectedBg: selectedBg,
                 palette: palette,
                 textStyle: theme.textTheme.labelLarge,
-                onTap: () => onChanged(segment.value),
+                onTap: () {
+                  if (segment.value == selected) return;
+                  SureHaptics.selection();
+                  onChanged(segment.value);
+                },
               ),
             ),
         ],
@@ -146,14 +159,14 @@ class _SegmentState<T> extends State<_Segment<T>> {
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOut,
             padding: const EdgeInsets.symmetric(
-              vertical: SureSpacing.md,
+              vertical: SureSpacing.sm,
               horizontal: SureSpacing.md,
             ),
             decoration: BoxDecoration(
               color: selected ? widget.selectedBg : const Color(0x00000000),
-              borderRadius: BorderRadius.circular(SureTokens.radiusMd),
+              borderRadius: BorderRadius.circular(6),
               boxShadow: [
-                if (selected) ...palette.shadowXs,
+                if (selected) ...SureSegmentedControl.selectedShadow,
                 // Non-displacing focus ring so it doesn't shift the layout.
                 if (_focused)
                   BoxShadow(
@@ -180,7 +193,8 @@ class _SegmentState<T> extends State<_Segment<T>> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: widget.textStyle?.copyWith(
+                    style: (widget.textStyle ?? const TextStyle()).copyWith(
+                      fontSize: 13,
                       color: fg,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                     ),

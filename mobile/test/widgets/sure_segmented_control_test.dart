@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/theme/sure_tokens.dart';
@@ -52,6 +53,8 @@ void main() {
               .first)
           .decoration as BoxDecoration;
       expect(track.color, tokens.surfaceInset);
+      expect(track.borderRadius, BorderRadius.circular(SureTokens.radiusMd));
+      expect(track.border, isNull);
 
       // Selected segment fill = brightness-appropriate raised token + shadow.
       final selectedBg = brightness == Brightness.light
@@ -68,7 +71,7 @@ void main() {
           )
           .decoration as BoxDecoration;
       expect(selectedSeg.color, selectedBg);
-      expect(selectedSeg.boxShadow, tokens.shadowXs);
+      expect(selectedSeg.boxShadow, SureSegmentedControl.selectedShadow);
 
       // Unselected segment is flat (transparent, no shadow).
       final unselectedSeg = tester
@@ -106,6 +109,54 @@ void main() {
     await tester.tap(find.text('Income'));
     expect(picked, 'income');
   });
+
+  testWidgets('tapping the selected segment does not report a change',
+      (tester) async {
+    var calls = 0;
+    await pump(tester, control('expense', (_) => calls++));
+    await tester.tap(find.text('Expense'));
+    expect(calls, 0);
+  });
+
+  testWidgets('a change plays the selection haptic', (tester) async {
+    final calls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          calls.add(call.arguments as String);
+        }
+        return null;
+      },
+    );
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null));
+    await pump(tester, control('expense', (_) {}));
+    await tester.tap(find.text('Income'));
+    expect(calls, ['HapticFeedbackType.selectionClick']);
+  });
+
+  for (final brightness in Brightness.values) {
+    testWidgets('long labels ellipsize at 320 px (${brightness.name})',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pump(
+        tester,
+        SureSegmentedControl<String>(
+          selected: 'a',
+          onChanged: (_) {},
+          segments: [
+            for (final v in ['a', 'b', 'c'])
+              SureSegment(value: v, label: 'Transactions $v' * 3),
+          ],
+        ),
+        brightness: brightness,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('each segment is keyboard/switch focusable + activatable',
       (tester) async {

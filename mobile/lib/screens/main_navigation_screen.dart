@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../widgets/ds/sure_tab_bar.dart';
 import '../widgets/sure_icon.dart';
 import '../widgets/sure_logo.dart';
 import '../widgets/sync_status_chip.dart';
@@ -66,41 +67,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
   }
 
-  NavigationDestination _destination(ShellTab tab, AppLocalizations l) {
+  SureTabItem _tabItem(ShellTab tab, AppLocalizations l) {
     switch (tab) {
       case ShellTab.home:
-        return NavigationDestination(
-          icon: const SureIcon(SureIcons.house),
-          label: l.navHome,
-        );
+        return SureTabItem(icon: SureIcons.house, label: l.navHome);
       case ShellTab.intro:
-        return NavigationDestination(
-          icon: const Icon(Icons.auto_awesome_outlined),
-          selectedIcon: const Icon(Icons.auto_awesome),
-          label: l.navIntro,
-        );
+        return SureTabItem(icon: SureIcons.sparkles, label: l.navIntro);
       case ShellTab.activity:
-        return NavigationDestination(
-          icon: const SureIcon(SureIcons.receipt),
-          label: l.shellNavActivity,
-        );
+        return SureTabItem(icon: SureIcons.receipt, label: l.shellNavActivity);
       case ShellTab.plan:
-        return NavigationDestination(
-          icon: const Icon(Icons.pie_chart_outline),
-          selectedIcon: const Icon(Icons.pie_chart),
-          label: l.shellNavPlan,
-        );
+        return SureTabItem(icon: SureIcons.chartPie, label: l.shellNavPlan);
       case ShellTab.invest:
-        return NavigationDestination(
-          icon: const SureIcon(SureIcons.trendingUp),
-          label: l.shellNavInvest,
-        );
+        return SureTabItem(icon: SureIcons.trendingUp, label: l.shellNavInvest);
       case ShellTab.assistant:
-        return NavigationDestination(
-          icon: const Icon(Icons.chat_bubble_outline),
-          selectedIcon: const Icon(Icons.chat_bubble),
-          label: l.navAssistant,
-        );
+        return SureTabItem(
+            icon: SureIcons.messageCircle, label: l.navAssistant);
     }
   }
 
@@ -175,11 +156,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 child: SizedBox(
                   width: 36,
                   height: 36,
-                  child: Icon(
-                    context.watch<PrivacyProvider>().hidden
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    semanticLabel: 'Toggle privacy',
+                  child: Center(
+                    child: SureIcon(
+                      context.watch<PrivacyProvider>().hidden
+                          ? SureIcons.eyeOff
+                          : SureIcons.eye,
+                      size: 22,
+                      semanticLabel: 'Toggle privacy',
+                    ),
                   ),
                 ),
               ),
@@ -196,9 +180,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 child: SizedBox(
                   width: 36,
                   height: 36,
-                  child: Icon(
-                    Icons.settings_outlined,
-                    semanticLabel: l.shellSettingsTitle,
+                  child: Center(
+                    child: SureIcon(
+                      SureIcons.settings,
+                      size: 22,
+                      semanticLabel: l.shellSettingsTitle,
+                    ),
                   ),
                 ),
               ),
@@ -282,12 +269,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     : const SizedBox.shrink(),
             ],
           ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) {
+          // shortcut: the bar is translucent but the body does not extend
+          // behind it yet (extendBody: false), because several tab roots
+          // (Invest, Home) do not pad their scroll views for it. Flip this
+          // once every tab root adds the bottom inset.
+          bottomNavigationBar: SureTabBar(
+            currentIndex: _currentIndex,
+            onSelected: (index) {
               _handleDestinationSelected(index, authProvider, tabs);
             },
-            destinations: [for (final tab in tabs) _destination(tab, l)],
+            items: [for (final tab in tabs) _tabItem(tab, l)],
           ),
         );
       },

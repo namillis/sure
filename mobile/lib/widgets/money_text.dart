@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/sure_colors.dart';
+import '../theme/sure_tokens.dart';
 
 /// Directional meaning of a monetary value, used to pick its semantic color.
 /// This mirrors the app's existing in/out coloring (money in is positive, money
@@ -54,32 +55,35 @@ class SureMoney {
   }
 
   /// A money [TextStyle]: [base] (so callers keep their size) plus the semantic
-  /// color for [trend] and tabular figures for column-aligned digits.
+  /// color for [trend], Geist Mono and tabular figures for column-aligned
+  /// digits.
   static TextStyle style(
     BuildContext context, {
     required MoneyTrend trend,
     TextStyle? base,
   }) {
-    final resolved = base ?? const TextStyle();
+    final resolved = tabular(base);
     return resolved.copyWith(
       color: color(context, trend),
       fontWeight: resolved.fontWeight ?? FontWeight.w600,
-      fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
     );
   }
 
-  /// Apply only money typography (tabular figures) to [base], leaving the color
-  /// untouched. For neutral balances/totals (e.g. net worth) that are not
-  /// directionally colored but should still keep digits column-aligned.
+  /// Apply only money typography (Geist Mono with tabular figures) to [base],
+  /// leaving the color untouched. For neutral balances/totals (e.g. net
+  /// worth) that are not directionally colored but should still keep digits
+  /// column-aligned.
   static TextStyle tabular(TextStyle? base) {
     return (base ?? const TextStyle()).copyWith(
+      fontFamily: SureTokens.fontMono,
+      fontFamilyFallback: const <String>['Menlo', 'monospace'],
       fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
     );
   }
 }
 
-/// Renders a pre-formatted monetary [text] with shared money typography and the
-/// semantic color for [trend].
+/// Renders a pre-formatted monetary [text] in Geist Mono with tabular figures
+/// and the semantic color for [trend] (or an explicit [color]).
 class MoneyText extends StatelessWidget {
   const MoneyText(
     this.text, {
@@ -88,23 +92,35 @@ class MoneyText extends StatelessWidget {
     this.style,
     this.textAlign,
     this.overflow,
+    this.color,
+    this.maxLines,
   });
 
   final String text;
   final MoneyTrend trend;
 
-  /// Base style (size/weight). Color and tabular figures are applied on top.
+  /// Base style (size/weight). Font, color and tabular figures are applied on
+  /// top.
   final TextStyle? style;
   final TextAlign? textAlign;
   final TextOverflow? overflow;
 
+  /// Overrides the [trend] color, for amounts whose color is not their
+  /// direction (e.g. expenses in `textPrimary`, transfers in `textSecondary`).
+  final Color? color;
+  final int? maxLines;
+
   @override
   Widget build(BuildContext context) {
+    final resolved = SureMoney.style(context, trend: trend, base: style);
     return Text(
       text,
       textAlign: textAlign,
       overflow: overflow,
-      style: SureMoney.style(context, trend: trend, base: style),
+      maxLines: maxLines,
+      softWrap: maxLines == 1 ? false : null,
+      style: color == null ? resolved : resolved.copyWith(color: color),
     );
   }
 }
+

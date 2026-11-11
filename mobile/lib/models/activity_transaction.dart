@@ -9,6 +9,7 @@ class ActivityTransaction {
     this.accountName,
     this.accountType,
     this.categoryColor,
+    this.categoryIcon,
     this.isSplitParent = false,
     this.isTransfer = false,
     this.transferAccountName,
@@ -23,6 +24,9 @@ class ActivityTransaction {
 
   /// The category's `#rrggbb` color, when it has a category.
   final String? categoryColor;
+
+  /// The category's Lucide icon name (`category.icon`), when it has one.
+  final String? categoryIcon;
   final bool isSplitParent;
   final bool isTransfer;
 
@@ -45,6 +49,7 @@ class ActivityTransaction {
       accountName: account is Map ? account['name']?.toString() : null,
       accountType: account is Map ? account['account_type']?.toString() : null,
       categoryColor: category is Map ? category['color']?.toString() : null,
+      categoryIcon: category is Map ? category['icon']?.toString() : null,
       isSplitParent: json['split_parent'] == true,
       isTransfer: transfer is Map,
       transferAccountName:
@@ -75,6 +80,7 @@ class ActivityTransaction {
     required String id,
     required String name,
     String? color,
+    String? icon,
   }) {
     final t = transaction;
     return ActivityTransaction(
@@ -104,6 +110,7 @@ class ActivityTransaction {
       accountName: accountName,
       accountType: accountType,
       categoryColor: color,
+      categoryIcon: icon,
       isSplitParent: isSplitParent,
       isTransfer: isTransfer,
       transferAccountName: transferAccountName,

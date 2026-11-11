@@ -142,7 +142,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('Income by category'.toUpperCase()), findsOneWidget);
+    expect(find.text('Income by category'), findsOneWidget);
     expect(find.text('Salary'), findsOneWidget);
     expect(find.text('90.0% of income'), findsOneWidget);
   });

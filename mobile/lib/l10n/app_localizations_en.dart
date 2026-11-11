@@ -3280,4 +3280,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get p3rpEmpty => 'No transactions in this period.';
+
+  @override
+  String get dsToday => 'Today';
+
+  @override
+  String get dsYesterday => 'Yesterday';
+
+  @override
+  String get dsCancel => 'Cancel';
+
+  @override
+  String get dsSave => 'Save';
+
+  @override
+  String get dsDone => 'Done';
+
+  @override
+  String get dsSplit => 'Split';
+
+  @override
+  String get dsTransfer => 'Transfer';
+
+  @override
+  String get dsUncategorized => 'Uncategorized';
+
+  @override
+  String get dsCategorize => 'Categorize';
+
+  @override
+  String get dsDelete => 'Delete';
+
+  @override
+  String get dsPending => 'Pending';
+
+  @override
+  String get dsFailed => 'Failed';
 }

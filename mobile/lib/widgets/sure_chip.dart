@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
+import '../utils/sure_haptics.dart';
+import 'sure_icon.dart';
 
-/// Sure design-system filter chip — a tokenized selectable pill mirroring the web
-/// DS pill: a rounded-full chip that reads as bordered/neutral when unselected
-/// and filled (neutral `buttonPrimary` + inverse label) when selected.
-///
-/// Colors resolve from the active [SureColors] palette, so it's brightness-aware
-/// and stays in lockstep with `sure.tokens.json` (and avoids the Material
-/// `primaryContainer` tint the raw `FilterChip` falls back to).
+/// Sure filter / range chip: a 32 px pill with a 1 px hairline on the panel
+/// color; selected = inverse fill with no outline. A [dropdown] chip ends with
+/// a small chevron. The hit area is at least 44 px tall even though the pill
+/// is 32. Tapping plays the selection haptic.
 ///
 /// ```dart
-/// SureChip(
-///   label: 'USD',
-///   selected: isSelected,
-///   onSelected: (next) => toggle(next),
-/// )
+/// SureChip(label: '3M', selected: range == '3M', onSelected: (_) => pick('3M'))
+/// SureChip(label: 'Category', dropdown: true, onSelected: (_) => openPicker())
 /// ```
 class SureChip extends StatelessWidget {
   const SureChip({
@@ -26,6 +21,7 @@ class SureChip extends StatelessWidget {
     this.onSelected,
     this.leading,
     this.enabled = true,
+    this.dropdown = false,
   });
 
   final String label;
@@ -40,40 +36,51 @@ class SureChip extends StatelessWidget {
 
   final bool enabled;
 
+  /// End with a chevron-down, for chips that open a picker.
+  final bool dropdown;
+
+  static const double pillHeight = 32;
+
   @override
   Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
+    final colors = SureColors.of(context);
+    final palette = colors.palette;
     final interactive = enabled && onSelected != null;
+    final fg = selected ? palette.textInverse : palette.textSecondary;
 
-    // Selected: filled neutral pill with an inverse label. Unselected: a
-    // transparent pill with a hairline border. The border lives on the shape so
-    // Material paints it and clips the ink to the stadium.
+    void handleTap() {
+      SureHaptics.selection();
+      onSelected!(!selected);
+    }
+
     final shape = StadiumBorder(
-      side: selected
-          ? BorderSide.none
-          : BorderSide(color: palette.borderSecondary),
+      side: selected ? BorderSide.none : BorderSide(color: colors.hairline),
     );
 
     final content = ConstrainedBox(
-      // Enforce a comfortable minimum tap target regardless of context
-      // (Material FilterChip parity); the chip still sizes to content otherwise.
-      constraints: const BoxConstraints(minHeight: 44),
+      constraints: const BoxConstraints(minHeight: pillHeight),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: SureSpacing.lg),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (leading != null) ...[leading!, const SizedBox(width: SureSpacing.sm)],
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: selected ? palette.textInverse : palette.textSecondary,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            if (leading != null) ...[leading!, const SizedBox(width: 6)],
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: fg,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
             ),
+            if (dropdown) ...[
+              const SizedBox(width: 4),
+              SureIcon(SureIcons.chevronDown, size: 14, color: fg),
+            ],
           ],
         ),
       ),
@@ -87,14 +94,23 @@ class SureChip extends StatelessWidget {
       selected: selected,
       child: Opacity(
         opacity: enabled ? 1.0 : 0.5,
-        child: Material(
-          color: selected ? palette.buttonPrimary : const Color(0x00000000),
-          shape: shape,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: interactive ? () => onSelected!(!selected) : null,
-            customBorder: shape,
-            child: content,
+        // The outer detector extends the hit area to 44 px above and below
+        // the 32 px pill; taps on the pill itself go to the InkWell.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: interactive ? handleTap : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Material(
+              color: selected ? palette.buttonPrimary : palette.container,
+              shape: shape,
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: interactive ? handleTap : null,
+                customBorder: shape,
+                child: content,
+              ),
+            ),
           ),
         ),
       ),

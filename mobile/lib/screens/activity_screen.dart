@@ -538,6 +538,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 id: categoryId,
                 name: category?.displayName ?? '',
                 color: category?.color,
+                icon: category?.icon,
               );
       });
     }

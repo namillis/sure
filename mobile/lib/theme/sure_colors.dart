@@ -15,6 +15,17 @@ class SureColors extends ThemeExtension<SureColors> {
 
   final SureTokenPalette palette;
 
+  /// The 1px hairline used for panel outlines and row dividers. Light uses
+  /// `borderSecondary`; dark uses the lighter `borderSubdued`, because white at
+  /// 20% reads heavy on the near-black panels while 10% stays subtle but
+  /// clearly visible.
+  Color get hairline => identical(palette, SureTokens.dark)
+      ? palette.borderSubdued
+      : palette.borderSecondary;
+
+  /// Whether [palette] is the dark palette.
+  bool get isDark => identical(palette, SureTokens.dark);
+
   /// The active palette for [context]. Falls back to the palette matching the
   /// active brightness if the extension is missing (e.g. a widget built outside
   /// [SureTheme] in a test), so dark surfaces don't get light-palette colors.

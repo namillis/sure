@@ -73,6 +73,11 @@ flutter:
     - family: Geist Mono
       fonts:
         - asset: assets/fonts/GeistMono-Regular.ttf
+        # Medium/SemiBold: Geist Mono 1.4.01 release (vercel/geist-font), OFL.
+        - asset: assets/fonts/GeistMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/GeistMono-SemiBold.ttf
+          weight: 600
 
 flutter_launcher_icons:
   android: true

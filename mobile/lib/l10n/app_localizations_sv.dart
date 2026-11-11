@@ -3310,4 +3310,40 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get p3rpEmpty => 'Inga transaktioner under den här perioden.';
+
+  @override
+  String get dsToday => 'Idag';
+
+  @override
+  String get dsYesterday => 'Igår';
+
+  @override
+  String get dsCancel => 'Avbryt';
+
+  @override
+  String get dsSave => 'Spara';
+
+  @override
+  String get dsDone => 'Klar';
+
+  @override
+  String get dsSplit => 'Delad';
+
+  @override
+  String get dsTransfer => 'Överföring';
+
+  @override
+  String get dsUncategorized => 'Okategoriserad';
+
+  @override
+  String get dsCategorize => 'Kategorisera';
+
+  @override
+  String get dsDelete => 'Radera';
+
+  @override
+  String get dsPending => 'Väntar';
+
+  @override
+  String get dsFailed => 'Misslyckades';
 }

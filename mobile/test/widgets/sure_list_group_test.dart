@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sure_mobile/theme/sure_colors.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/theme/sure_tokens.dart';
+import 'package:sure_mobile/widgets/ds/sure_panel.dart';
 import 'package:sure_mobile/widgets/sure_icon.dart';
 import 'package:sure_mobile/widgets/sure_list_group.dart';
 
@@ -18,24 +20,13 @@ void main() {
     );
   }
 
-  BoxDecoration groupDecorationOf(WidgetTester tester) => tester
-      .widget<Container>(
-        find
-            .descendant(
-              of: find.byType(SureListGroup),
-              matching: find.byType(Container),
-            )
-            .first,
-      )
-      .decoration as BoxDecoration;
-
   // Brightness-aware by contract — assert the chrome resolves the right palette
   // in both themes so a token regression in either mode is caught.
   for (final (brightness, tokens) in [
     (Brightness.light, SureTokens.light),
     (Brightness.dark, SureTokens.dark),
   ]) {
-    testWidgets('paints the group chrome from tokens (${brightness.name})',
+    testWidgets('paints the group as a flat hairline panel (${brightness.name})',
         (tester) async {
       await pump(
         tester,
@@ -43,20 +34,26 @@ void main() {
         brightness: brightness,
       );
 
-      final deco = groupDecorationOf(tester);
-      expect(deco.color, tokens.container);
-      expect((deco.border as Border).top.color, tokens.borderSecondary);
-      expect(deco.borderRadius, BorderRadius.circular(SureTokens.radiusLg));
-      expect(deco.boxShadow, tokens.shadowXs);
+      expect(find.byType(SurePanel), findsOneWidget);
+      final fill = tester.widget<ColoredBox>(find
+          .descendant(
+              of: find.byType(SurePanel), matching: find.byType(ColoredBox))
+          .first);
+      expect(fill.color, tokens.container);
+      final outline = tester
+          .widget<DecoratedBox>(find
+              .descendant(
+                  of: find.byType(SurePanel),
+                  matching: find.byType(DecoratedBox))
+              .first)
+          .decoration as BoxDecoration;
+      expect((outline.border as Border).top.color, SureColors(tokens).hairline);
+      expect(outline.borderRadius, BorderRadius.circular(SureTokens.radiusLg));
+      expect(outline.boxShadow, isNull);
     });
-  }
 
-  for (final (brightness, tokens) in [
-    (Brightness.light, SureTokens.light),
-    (Brightness.dark, SureTokens.dark),
-  ]) {
     testWidgets(
-        'inserts subdued interior dividers but not at the edges (${brightness.name})',
+        'inserts hairline interior dividers but not at the edges (${brightness.name})',
         (tester) async {
       await pump(
         tester,
@@ -69,14 +66,12 @@ void main() {
       );
 
       // Three rows => exactly two interior dividers.
-      final dividers =
-          tester.widgetList<Divider>(find.byType(Divider)).toList();
-      expect(dividers, hasLength(2));
-      expect(dividers.first.color, tokens.borderSubdued);
+      expect(find.byType(SureHairline), findsNWidgets(2));
     });
   }
 
-  testWidgets('renders an uppercased header above the group', (tester) async {
+  testWidgets('renders a sentence-case header above the group',
+      (tester) async {
     await pump(
       tester,
       const SureListGroup(
@@ -84,8 +79,58 @@ void main() {
         children: [SureListRow(title: 'Calendar')],
       ),
     );
-    expect(find.text('TOOLS'), findsOneWidget);
+    expect(find.text('Tools'), findsOneWidget);
   });
+
+  testWidgets('value and chevron show together', (tester) async {
+    await pump(
+      tester,
+      const SureListGroup(children: [
+        SureListRow(title: 'Category', value: 'Groceries', showChevron: true),
+      ]),
+    );
+    expect(find.text('Groceries'), findsOneWidget);
+    expect(tester.widget<SureIcon>(find.byType(SureIcon)).name,
+        SureIcons.chevronRight);
+  });
+
+  testWidgets('one-line rows are 44 tall, two-line rows at least 52',
+      (tester) async {
+    await pump(
+      tester,
+      const SureListGroup(children: [
+        SureListRow(title: 'One line'),
+        SureListRow(title: 'Two', subtitle: 'lines'),
+      ]),
+    );
+    expect(tester.getSize(find.byType(SureListRow).first).height, 44);
+    expect(tester.getSize(find.byType(SureListRow).last).height,
+        greaterThanOrEqualTo(52));
+  });
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+        'long title, subtitle and value ellipsize at 320 px (${brightness.name})',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pump(
+        tester,
+        SureListGroup(children: [
+          SureListRow(
+            leading: const SizedBox.square(dimension: 28),
+            title: 'A very long title ' * 6,
+            subtitle: 'A very long subtitle ' * 6,
+            value: 'A long value ' * 4,
+            showChevron: true,
+          ),
+        ]),
+        brightness: brightness,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final (brightness, tokens) in [
     (Brightness.light, SureTokens.light),
@@ -185,15 +230,9 @@ void main() {
 
   testWidgets('an empty group builds no chrome', (tester) async {
     await pump(tester, const SureListGroup(children: []));
-    // No decorated container and no dividers — it collapses rather than
-    // painting an empty bordered/shadowed box.
-    expect(
-      find.descendant(
-        of: find.byType(SureListGroup),
-        matching: find.byType(Container),
-      ),
-      findsNothing,
-    );
-    expect(find.byType(Divider), findsNothing);
+    // No panel and no dividers — it collapses rather than painting an empty
+    // bordered box.
+    expect(find.byType(SurePanel), findsNothing);
+    expect(find.byType(SureHairline), findsNothing);
   });
 }

@@ -10,7 +10,12 @@ class SureTheme {
 
   static ThemeData get dark => _build(SureTokens.dark, Brightness.dark);
 
+  /// Top corner radius of bottom sheets.
+  static const double sheetRadius = 16;
+
   static ThemeData _build(SureTokenPalette tokens, Brightness brightness) {
+    final colors = SureColors(tokens);
+    final hairline = colors.hairline;
     final colorScheme = ColorScheme(
       brightness: brightness,
       primary: tokens.link,
@@ -33,9 +38,20 @@ class SureTheme {
       onErrorContainer: tokens.textPrimary,
       surface: tokens.surface,
       onSurface: tokens.textPrimary,
+      onSurfaceVariant: tokens.textSecondary,
+      // Material 3 tints elevated surfaces with `surfaceTint` and picks menu,
+      // dialog and sheet fills from the surfaceContainer ramp. Pin the ramp to
+      // the flat Sure panel color and turn the tint off, so nothing picks up a
+      // colored cast as it gains elevation.
+      surfaceTint: Colors.transparent,
+      surfaceContainerLowest: tokens.container,
+      surfaceContainerLow: tokens.container,
+      surfaceContainer: tokens.container,
+      surfaceContainerHigh: tokens.container,
       surfaceContainerHighest: tokens.containerInset,
       outline: tokens.borderSecondary,
-      outlineVariant: tokens.borderSubdued,
+      outlineVariant: hairline,
+      shadow: tokens.shadow,
     );
 
     final inputBorder = OutlineInputBorder(
@@ -47,12 +63,17 @@ class SureTheme {
       fontFamily: SureTokens.fontSans,
       fontFamilyFallback: SureTokens.fontFallback,
       colorScheme: colorScheme,
+      // Pages sit on `surface`; panels and cards on `container`.
       scaffoldBackgroundColor: tokens.surface,
+      canvasColor: tokens.surface,
+      dividerColor: hairline,
       useMaterial3: true,
-      extensions: <ThemeExtension<dynamic>>[SureColors(tokens)],
+      extensions: <ThemeExtension<dynamic>>[colors],
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
+        // No M3 "scrolled under" color change: the bar stays the page color.
+        scrolledUnderElevation: 0,
         backgroundColor: tokens.surface,
         foregroundColor: tokens.textPrimary,
         surfaceTintColor: Colors.transparent,
@@ -60,11 +81,50 @@ class SureTheme {
       cardTheme: CardThemeData(
         color: tokens.container,
         surfaceTintColor: Colors.transparent,
-        shadowColor: tokens.shadow,
-        elevation: 2,
+        shadowColor: Colors.transparent,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(SureTokens.radiusLg),
+          side: BorderSide(color: hairline),
         ),
+      ),
+      dividerTheme: DividerThemeData(color: hairline, thickness: 1, space: 1),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: tokens.surface,
+        modalBackgroundColor: tokens.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        modalElevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        // Sheets that ask for Material's drag handle get the iOS grabber look.
+        dragHandleColor: tokens.textSubdued.withValues(alpha: 0.5),
+        dragHandleSize: const Size(36, 5),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: tokens.container,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: tokens.container,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SureTokens.radiusLg),
+          side: BorderSide(color: hairline),
+        ),
+      ),
+      // NavigationBar is replaced by SureTabBar in the shell; if one is used
+      // anywhere else it gets no indicator pill and no tint either.
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: tokens.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        indicatorColor: Colors.transparent,
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: inputBorder,
@@ -82,6 +142,7 @@ class SureTheme {
           foregroundColor: tokens.textInverse,
           disabledBackgroundColor: tokens.containerInset,
           disabledForegroundColor: tokens.textSubdued,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(SureTokens.radiusLg),
           ),

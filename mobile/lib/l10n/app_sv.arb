@@ -921,5 +921,17 @@
   "p3rpShowAll": "Visa alla ({count})",
   "p3rpShowLess": "Visa färre",
   "p3rpAboveNormal": "{percent} över det normala",
-  "p3rpEmpty": "Inga transaktioner under den här perioden."
+  "p3rpEmpty": "Inga transaktioner under den här perioden.",
+  "dsToday": "I dag",
+  "dsYesterday": "I går",
+  "dsCancel": "Avbryt",
+  "dsSave": "Spara",
+  "dsDone": "Klar",
+  "dsSplit": "Delad",
+  "dsTransfer": "Överföring",
+  "dsUncategorized": "Okategoriserad",
+  "dsCategorize": "Kategorisera",
+  "dsDelete": "Radera",
+  "dsPending": "Väntar",
+  "dsFailed": "Misslyckades"
 }

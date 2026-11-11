@@ -8,6 +8,7 @@ import 'package:sure_mobile/providers/auth_provider.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/screens/main_navigation_screen.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
+import 'package:sure_mobile/widgets/ds/sure_tab_bar.dart';
 
 void main() {
   setUp(() {
@@ -35,11 +36,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    final bar = find.byType(NavigationBar);
-    expect(
-      find.descendant(of: bar, matching: find.byType(NavigationDestination)),
-      findsNWidgets(5),
-    );
+    final bar = find.byType(SureTabBar);
+    expect(tester.widget<SureTabBar>(bar).items, hasLength(5));
     for (final label in ['Home', 'Activity', 'Plan', 'Invest', 'Assistant']) {
       expect(find.descendant(of: bar, matching: find.text(label)),
           findsOneWidget);
@@ -52,6 +50,7 @@ void main() {
     await tester.tap(find.text('Plan'));
     await tester.pumpAndSettle();
     expect(find.text('body:plan'), findsOneWidget);
+    expect(tester.widget<SureTabBar>(bar).currentIndex, 2);
     // The logo bar with Settings belongs to Home; other tabs bring their own.
     expect(find.byTooltip('Settings'), findsNothing);
   });

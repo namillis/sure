@@ -5587,6 +5587,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions in this period.'**
   String get p3rpEmpty;
+
+  /// Relative date label for today, used in day headers and dates across the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get dsToday;
+
+  /// Relative date label for yesterday, used in day headers and dates across the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get dsYesterday;
+
+  /// Left button in a bottom sheet toolbar that closes the sheet without saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dsCancel;
+
+  /// Right button in a bottom sheet toolbar that saves the form.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get dsSave;
+
+  /// Right button in a picker sheet toolbar that closes the picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get dsDone;
+
+  /// Subtitle in a transaction row for a transaction split into several categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get dsSplit;
+
+  /// Subtitle in a transaction row for a transfer between accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get dsTransfer;
+
+  /// Subtitle in a transaction row when the transaction has no category.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncategorized'**
+  String get dsUncategorized;
+
+  /// Swipe action on a transaction row that opens the category picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorize'**
+  String get dsCategorize;
+
+  /// Swipe action on a transaction row that deletes the transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dsDelete;
+
+  /// Tiny badge on a transaction row that is waiting to sync to the server.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get dsPending;
+
+  /// Tiny badge on a transaction row whose sync to the server failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get dsFailed;
 }
 
 class _AppLocalizationsDelegate

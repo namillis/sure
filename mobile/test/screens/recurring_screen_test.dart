@@ -91,9 +91,9 @@ void main() {
       ]),
     );
 
-    expect(find.text('UPCOMING THIS MONTH'), findsOneWidget);
-    expect(find.text('LATER'), findsOneWidget);
-    expect(find.text('INACTIVE'), findsOneWidget);
+    expect(find.text('Upcoming this month'), findsOneWidget);
+    expect(find.text('Later'), findsOneWidget);
+    expect(find.text('Inactive'), findsOneWidget);
     expect(find.text('Gym Membership'), findsOneWidget);
     expect(find.text('Monthly on day 20 · Next Nov 20 · Checking'),
         findsOneWidget);
