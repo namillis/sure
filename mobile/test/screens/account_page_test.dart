@@ -19,6 +19,8 @@ import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/providers/transactions_provider.dart';
 import 'package:sure_mobile/screens/transactions_list_screen.dart';
 import 'package:sure_mobile/services/account_detail_service.dart';
+import 'package:sure_mobile/services/connectivity_service.dart';
+import 'package:sure_mobile/services/transaction_search_service.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/widgets/account_detail_header.dart';
@@ -39,6 +41,7 @@ class _FakeTransactionsProvider extends TransactionsProvider {
   _FakeTransactionsProvider(this._items);
 
   final List<OfflineTransaction> _items;
+  int fetches = 0;
 
   @override
   List<OfflineTransaction> get offlineTransactions => _items;
@@ -54,7 +57,17 @@ class _FakeTransactionsProvider extends TransactionsProvider {
     required String accessToken,
     String? accountId,
     bool forceSync = false,
-  }) async {}
+  }) async =>
+      fetches++;
+}
+
+class _Connectivity extends ChangeNotifier implements ConnectivityService {
+  @override
+  bool get isOnline => true;
+  @override
+  bool get isOffline => false;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _FakeCategoriesProvider extends CategoriesProvider {
@@ -104,6 +117,7 @@ Widget _app(
   Widget home, {
   List<OfflineTransaction> transactions = const [],
   List<models.Category> categories = const [],
+  _FakeTransactionsProvider? transactionsProvider,
 }) =>
     MultiProvider(
       providers: [
@@ -113,7 +127,11 @@ Widget _app(
           create: (_) => PrivacyProvider(initialHidden: false),
         ),
         ChangeNotifierProvider<TransactionsProvider>(
-          create: (_) => _FakeTransactionsProvider(transactions),
+          create: (_) =>
+              transactionsProvider ?? _FakeTransactionsProvider(transactions),
+        ),
+        ChangeNotifierProvider<ConnectivityService>(
+          create: (_) => _Connectivity(),
         ),
         ChangeNotifierProvider<CategoriesProvider>(
           create: (_) => _FakeCategoriesProvider(categories),
@@ -245,6 +263,63 @@ void main() {
     expect(find.text('2025-11-02'), findsNothing);
     expect(find.byKey(const ValueKey('accountSectionSwitcher')), findsNothing);
     expect(find.byType(FloatingActionButton), findsOneWidget);
+  });
+
+  testWidgets('swipe Categorize picks a category, updates it and reloads',
+      (tester) async {
+    _phone(tester);
+    final patched = <String, Object?>{};
+    final service = TransactionSearchService(
+      client: MockClient((request) async {
+        patched[request.url.path] = jsonDecode(request.body);
+        return http.Response(
+          jsonEncode({
+            'id': '1',
+            'name': 'Txn 1',
+            'date': '2025-11-02',
+            'amount': r'$10.00',
+            'currency': 'USD',
+            'classification': 'expense',
+            'category': {'id': 'cat_food', 'name': 'Food'},
+          }),
+          200,
+        );
+      }),
+    );
+    final provider = _FakeTransactionsProvider([
+      _txn('1', '2025-11-02', r'$10.00'),
+      _txn('2', '2025-11-02', r'$3.00'),
+    ]);
+    await tester.pumpWidget(_app(
+      TransactionsListScreen(
+        account: _account('depository'),
+        searchService: service,
+      ),
+      categories: [
+        models.Category(id: 'cat_food', name: 'Food'),
+        models.Category(id: 'cat_rent', name: 'Rent'),
+      ],
+      transactionsProvider: provider,
+    ));
+    await tester.pumpAndSettle();
+    final fetchesBefore = provider.fetches;
+
+    await tester.drag(find.text('Txn 1'), const Offset(-300, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete'), findsWidgets);
+    await tester.tap(find.text('Categorize').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(SureSheet), findsOneWidget);
+    await tester.tap(find.text('Food').last);
+    await tester.pumpAndSettle();
+
+    expect(patched, {
+      '/api/v1/transactions/1': {
+        'transaction': {'category_id': 'cat_food'},
+      },
+    });
+    expect(find.text('Categorized 1 transaction'), findsOneWidget);
+    expect(provider.fetches, fetchesBefore + 1);
   });
 
   testWidgets('long-press enters multi-select and taps toggle rows',

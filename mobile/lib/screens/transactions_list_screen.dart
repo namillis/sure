@@ -11,13 +11,17 @@ import '../providers/categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../screens/transaction_form_screen.dart';
 import '../screens/trade_form_screen.dart';
+import '../services/connectivity_service.dart';
+import '../services/transaction_search_service.dart';
 import '../widgets/account_actions_menu.dart';
 import '../widgets/account_detail_header.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/holdings_list.dart';
+import '../widgets/metadata_picker_sheet.dart';
 import '../widgets/set_price_sheet.dart';
 import '../widgets/trades_list.dart';
+import '../widgets/transaction_metadata_pickers.dart';
 import '../theme/sure_colors.dart';
 import '../providers/privacy_provider.dart';
 import '../utils/amount_parser.dart';
@@ -40,7 +44,12 @@ class TransactionsListScreen extends StatefulWidget {
     super.key,
     required this.account,
     this.backLabel,
+    this.searchService,
   });
+
+  /// Sends swipe-Categorize updates (the same call Activity uses). Injected
+  /// in tests.
+  final TransactionSearchService? searchService;
 
   /// The large title's subtitle: the subtype (or type), then how long ago the
   /// server last updated the account, e.g. "Brokerage · synced 9h ago".
@@ -84,6 +93,9 @@ class TransactionsListScreen extends StatefulWidget {
 enum _AccountSection { holdings, activity, transactions }
 
 class _TransactionsListScreenState extends State<TransactionsListScreen> {
+  late final TransactionSearchService _searchService =
+      widget.searchService ?? TransactionSearchService();
+  final _pickers = TransactionMetadataPickers();
   bool _isSelectionMode = false;
   final Set<String> _selectedTransactions = {};
   Set<String> _selectedCategoryIds = {};
@@ -394,6 +406,62 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
     return success;
   }
 
+  /// Swipe Categorize: the transaction sheet's category picker, then the
+  /// same category update Activity's swipe sends, then a reload so the row
+  /// shows the new category.
+  Future<void> _categorizeTransaction(OfflineTransaction transaction) async {
+    final id = transaction.id;
+    if (id == null) return;
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final authProvider = context.read<AuthProvider>();
+
+    final picked = await _pickers.pickCategory(
+      context,
+      online: context.read<ConnectivityService>().isOnline,
+      selectedId: transaction.categoryId,
+      extraOptions: [
+        if (transaction.categoryId != null)
+          PickerOption(
+            id: transaction.categoryId!,
+            label: transaction.categoryName ??
+                l.transactionEditCurrentCategory,
+          ),
+      ],
+    );
+    if (picked == null || picked.id == transaction.categoryId || !mounted) {
+      return;
+    }
+
+    final token = await authProvider.getValidAccessToken();
+    if (!mounted) return;
+    if (token == null) {
+      scaffoldMessenger.showSnackBar(SnackBar(
+        content: Text(l.activitySessionExpired),
+        backgroundColor: palette.destructive,
+      ));
+      return;
+    }
+
+    final result = await _searchService.updateCategory(
+      accessToken: token,
+      transactionId: id,
+      categoryId: picked.id,
+    );
+    if (!mounted) return;
+    if (result['error'] == 'unauthorized') {
+      await authProvider.logout();
+      return;
+    }
+    final success = result['success'] == true;
+    scaffoldMessenger.showSnackBar(SnackBar(
+      content: Text(success ? l.activityCategorized(1) : l.dsaCategorizeFailed),
+      backgroundColor: success ? palette.success : palette.destructive,
+    ));
+    if (success) await _loadTransactions();
+  }
+
   void _showAddTransactionForm() {
     showModalBottomSheet(
       context: context,
@@ -699,6 +767,9 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
         onTap: onTap,
         onLongPress:
             _isSelectionMode || id == null ? null : () => _startSelection(id),
+        onCategorize: id == null || hasPendingStatus
+            ? null
+            : () => _categorizeTransaction(transaction),
         onDelete: id == null || hasPendingStatus
             ? null
             : () => _confirmAndDeleteTransaction(transaction),
