@@ -36,6 +36,9 @@ dependencies:
   upgrader: ^13.5.0
   # Exact pin: 4.13.0 is the newest release that still supports Flutter 3.27.
   webview_flutter: 4.13.0
+  # Exact pin: 12.0.2 is the newest release that still supports Flutter 3.27
+  # (13.x needs Flutter 3.38). Used to hand data exports to the share sheet.
+  share_plus: 12.0.2
 
 dev_dependencies:
   flutter_test:
