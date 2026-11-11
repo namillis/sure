@@ -812,8 +812,6 @@
   "p3rpPeriodYearToDate": "Hittills i år",
   "p3rpPeriodYear": "1 år",
   "p3rpNetWorth": "Nettoförmögenhet",
-  "p3rpNetWorthChange": "{amount} sedan {date}",
-  "p3rpNetWorthOtherCurrency": "{count, plural, =1{Dessutom: {amount} på 1 konto} other{Dessutom: {amount} på {count} konton}}",
   "p3rpNetWorthChartLabel": "Nettoförmögenhet under vald period",
   "p3rpNetWorthNoHistory": "Ingen saldohistorik för den här perioden.",
   "p3rpNetWorthFailed": "Det gick inte att läsa in historiken för nettoförmögenheten.",
@@ -828,7 +826,6 @@
   "p3rpShowAll": "Visa alla ({count})",
   "p3rpShowLess": "Visa färre",
   "p3rpAboveNormal": "{percent} över det normala",
-  "p3rpEmpty": "Inga transaktioner under den här perioden.",
   "dsToday": "I dag",
   "dsYesterday": "I går",
   "dsCancel": "Avbryt",
@@ -941,5 +938,8 @@
   "ds2sAccountActions": "Kontoåtgärder",
   "ds2sClearLocalData": "Rensa lokal data",
   "ds2sResetAccount": "Återställ användarkonto",
-  "ds2sDeleteAccount": "Radera användarkonto"
+  "ds2sDeleteAccount": "Radera användarkonto",
+  "ds3rSince": "sedan {date}",
+  "ds3rOtherCurrency": "{count, plural, =1{Även {amount} på 1 konto} other{Även {amount} på {count} konton}}",
+  "ds3rEmptyBody": "Prova en längre period."
 }

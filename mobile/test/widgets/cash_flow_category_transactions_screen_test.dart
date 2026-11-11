@@ -7,17 +7,42 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
+import 'package:sure_mobile/models/account.dart';
 import 'package:sure_mobile/models/cash_flow.dart';
 import 'package:sure_mobile/models/category.dart';
 import 'package:sure_mobile/models/transaction.dart';
+import 'package:sure_mobile/providers/accounts_provider.dart';
+import 'package:sure_mobile/providers/categories_provider.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/screens/cash_flow_category_transactions_screen.dart';
 import 'package:sure_mobile/screens/cash_flow_screen.dart'
     show AccessTokenLoader;
 import 'package:sure_mobile/services/transactions_service.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/fake_categories_service.dart';
+
+class _FakeCategoriesProvider extends CategoriesProvider {
+  _FakeCategoriesProvider(this._items);
+
+  final List<Category> _items;
+
+  @override
+  List<Category> get categories => _items;
+
+  @override
+  Future<void> fetchCategories({required String accessToken}) async {}
+}
+
+class _FakeAccountsProvider extends AccountsProvider {
+  _FakeAccountsProvider(this._items);
+
+  final List<Account> _items;
+
+  @override
+  List<Account> get accounts => _items;
+}
 
 String _page(List<String> names, {required int page, required int pages}) {
   final rows = [
@@ -72,9 +97,21 @@ void main() {
     FakeCategoriesService? categories,
     AccessTokenLoader? loader,
     Future<void> Function(BuildContext context)? onUnauthorized,
+    List<Category> knownCategories = const [],
+    List<Account> accounts = const [],
   }) {
-    return ChangeNotifierProvider<PrivacyProvider>.value(
-      value: PrivacyProvider(initialHidden: false),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<PrivacyProvider>.value(
+          value: PrivacyProvider(initialHidden: false),
+        ),
+        ChangeNotifierProvider<CategoriesProvider>(
+          create: (_) => _FakeCategoriesProvider(knownCategories),
+        ),
+        ChangeNotifierProvider<AccountsProvider>(
+          create: (_) => _FakeAccountsProvider(accounts),
+        ),
+      ],
       child: MaterialApp(
         theme: SureTheme.light,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -333,6 +370,94 @@ void main() {
       )) as Map<String, dynamic>);
       expect(countsInCashFlow(t), isTrue);
       expect(isCashFlowIncome(t), isFalse);
+    });
+  });
+
+  group('layout', () {
+    testWidgets('large title, period subtitle and rows grouped by day',
+        (tester) async {
+      final service = TransactionsService(
+        client: MockClient((_) async => http.Response(
+              _rows([
+                _row('Late A', extra: {'date': '2026-10-09'}),
+                _row('Late B', extra: {'date': '2026-10-09'}),
+                _row('Early', extra: {'date': '2026-10-03'}),
+              ], page: 1, pages: 1),
+              200,
+            )),
+      );
+      await tester.pumpWidget(harness(service));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SureLargeTitleHeader), findsOneWidget);
+      expect(find.text('Groceries'), findsWidgets);
+      final context = tester.element(find.byType(SureLargeTitleHeader));
+      expect(
+        find.text(SureDates.rangeOf(
+            context, DateTime(2026, 10, 1), DateTime(2026, 10, 19))),
+        findsOneWidget,
+      );
+      expect(find.byType(SureDayHeader), findsNWidgets(2));
+      expect(find.byType(SureTransactionRow), findsNWidgets(3));
+      expect(find.byType(SurePanel), findsNWidgets(2));
+      expect(find.textContaining('2026-10'), findsNothing);
+    });
+
+    testWidgets('rows: account name, subcategory icon, report color fallback',
+        (tester) async {
+      final service = TransactionsService(
+        client: MockClient((_) async => http.Response(
+              _rows([
+                _row('Snack', extra: {
+                  'category': {'id': 'cat_snacks', 'name': 'Snacks'},
+                }),
+                _row('Plain'),
+              ], page: 1, pages: 1),
+              200,
+            )),
+      );
+      await tester.pumpWidget(harness(
+        service,
+        knownCategories: [
+          Category(
+              id: 'cat_snacks', name: 'Snacks', color: '#eb5429', icon: 'cookie'),
+        ],
+        accounts: [
+          Account(
+            id: 'a1',
+            name: 'Checking',
+            balance: r'$0',
+            currency: 'USD',
+            classification: 'asset',
+            accountType: 'depository',
+          ),
+        ],
+      ));
+      await tester.pumpAndSettle();
+
+      SureTransactionRow row(String id) => tester.widget<SureTransactionRow>(
+          find.byKey(ValueKey('cashFlowTransaction_$id')));
+      expect(row('Snack').categoryIcon, 'cookie');
+      expect(row('Snack').categoryColor, '#eb5429');
+      expect(row('Plain').categoryIcon, isNull);
+      expect(row('Plain').accountName, 'Checking');
+      expect(find.text('Snacks · Checking'), findsOneWidget);
+      expect(find.text('Groceries · Checking'), findsOneWidget);
+      // Shown the way the report counts it, not flipped by the account.
+      expect(find.text(r'-$1.00'), findsNWidgets(2));
+    });
+
+    testWidgets('empty period shows the empty state', (tester) async {
+      final service = TransactionsService(
+        client: MockClient((_) async =>
+            http.Response(_rows([], page: 1, pages: 1), 200)),
+      );
+      await tester.pumpWidget(harness(service));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SureEmptyState), findsOneWidget);
+      expect(find.text('No transactions in this period'), findsOneWidget);
+      expect(find.text('Try Again'), findsNothing);
     });
   });
 }

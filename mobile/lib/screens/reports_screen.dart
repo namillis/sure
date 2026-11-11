@@ -6,9 +6,11 @@ import '../l10n/app_localizations.dart';
 import '../models/account.dart';
 import '../models/account_balance.dart';
 import '../models/cash_flow.dart';
+import '../models/category.dart';
 import '../models/spending_vs_normal.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/categories_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../services/cash_flow_service.dart';
 import '../services/categories_service.dart';
@@ -17,18 +19,13 @@ import '../services/net_worth_history_service.dart';
 import '../services/spending_vs_normal_service.dart';
 import '../services/transactions_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../theme/sure_tokens.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
 import '../utils/net_worth_history.dart';
 import '../widgets/balance_history_chart.dart';
 import '../widgets/cash_flow_donut_chart.dart';
-import '../widgets/money_text.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
-import '../widgets/sure_chip.dart';
-import '../widgets/sure_icon.dart';
+import '../widgets/ds/ds.dart';
 import 'cash_flow_category_transactions_screen.dart';
 import 'cash_flow_screen.dart' show AccessTokenLoader, CashFlowFormat;
 
@@ -223,6 +220,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       });
       return;
     }
+    // Category rows show their icon; the list is shared and fetched once.
+    _maybeRead<CategoriesProvider>()?.fetchCategories(accessToken: token);
 
     if (_monthStartDay == null) {
       // If settings can't load, calendar months are used and the lookup is
@@ -363,67 +362,86 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final report = _report;
     final empty = _cashStatus == _Status.loaded && report!.isEmpty;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l.p3rpTitle)),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            SureSpacing.xl,
-            SureSpacing.md,
-            SureSpacing.xl,
-            SureSpacing.huge,
-          ),
+    return SureLargeTitleScaffold(
+      title: l.p3rpTitle,
+      // Reports opens from Home's "Reports" row.
+      leading: Navigator.of(context).canPop()
+          ? SureBackButton(label: l.navHome)
+          : null,
+      onRefresh: _load,
+      slivers: [
+        SliverList.list(
           children: [
-            _PeriodPicker(selected: _period, onSelected: _selectPeriod),
-            const SizedBox(height: SureSpacing.xl),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child:
+                  _PeriodPicker(selected: _period, onSelected: _selectPeriod),
+            ),
             _buildNetWorth(context),
-            const SizedBox(height: SureSpacing.xl),
             if (empty)
-              _SectionMessage(
-                key: const ValueKey('reportsEmpty'),
-                icon: SureIcons.receipt,
-                title: l.p3rpEmpty,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                child: SurePanel(
+                  key: const ValueKey('reportsEmpty'),
+                  child: SureEmptyState(
+                    icon: SureIcons.receipt,
+                    title: l.cashFlowTransactionsEmpty,
+                    body: l.ds3rEmptyBody,
+                  ),
+                ),
               )
             else ...[
               _buildCashFlow(context),
-              const SizedBox(height: SureSpacing.xl),
               _buildSpending(context),
             ],
           ],
         ),
-      ),
+      ],
     );
   }
 
   Widget _failure(BuildContext context, String title) {
     final l = AppLocalizations.of(context);
-    return _SectionMessage(
+    return SureEmptyState(
       icon: SureIcons.circleAlert,
       title: title,
-      subtitle: _offline ? l.cashFlowOffline : null,
-      action: SureButton(
-        label: l.commonTryAgain,
-        onPressed: _load,
-        leading: const SureIcon(SureIcons.refresh, size: 18),
-      ),
+      body: _offline ? l.cashFlowOffline : null,
+      secondaryLabel: l.commonTryAgain,
+      onSecondary: _load,
+    );
+  }
+
+  /// A section: its header, then [panel] inset 16 px from the edges.
+  Widget _section({
+    required Key key,
+    required Widget header,
+    required Widget panel,
+  }) {
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        header,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: panel,
+        ),
+      ],
     );
   }
 
   Widget _buildNetWorth(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
     final hidden = context.watch<PrivacyProvider>().hidden;
     final locale = Localizations.localeOf(context).toString();
 
-    Widget body;
+    Widget panel;
     final history = _history;
     if (_netWorthStatus == _Status.loading) {
-      body = const _SectionLoading();
+      panel = const SurePanel(child: _SectionLoading());
     } else if (_netWorthStatus == _Status.failed || history == null) {
-      body = _failure(context, l.p3rpNetWorthFailed);
+      panel = SurePanel(child: _failure(context, l.p3rpNetWorthFailed));
     } else {
       String money(int cents, String currency, {bool signed = false}) =>
           MoneyMasker.mask(
@@ -439,84 +457,109 @@ class _ReportsScreenState extends State<ReportsScreen> {
       final selected = _selectedPoint;
       final current = selected?.cents ?? history.currentCents;
       final change = history.changeCents;
-      final dates = DateFormat.MMMd(locale);
       final rising = (change ?? 0) >= 0;
       final trendColor = rising ? palette.success : palette.destructive;
 
-      body = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (current == null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: SureSpacing.md),
-              child: Text(
+      panel = SurePanel(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (current == null)
+              Text(
                 l.p3rpNetWorthNoHistory,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: palette.textSecondary),
-              ),
-            )
-          else ...[
-            Text(
-              money(current, currency),
-              key: const ValueKey('reportsNetWorthValue'),
-              style: SureMoney.tabular(theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: SureTokens.weightMedium)),
-            ),
-            if (selected != null)
-              Text(
-                DateFormat.yMMMd(locale).format(selected.date),
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: palette.textSecondary),
+                style: TextStyle(fontSize: 13, color: palette.textSecondary),
               )
-            else if (change != null && _historyStart != null)
-              Text(
-                l.p3rpNetWorthChange(
-                  money(change, currency, signed: true),
-                  dates.format(_historyStart!),
-                ),
-                key: const ValueKey('reportsNetWorthChange'),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: trendColor,
-                  fontWeight: SureTokens.weightMedium,
+            else ...[
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: MoneyText(
+                  money(current, currency),
+                  key: const ValueKey('reportsNetWorthValue'),
+                  trend: MoneyTrend.neutral,
+                  color: palette.textPrimary,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    height: 1.2,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
-            if (history.points.length >= 2) ...[
-              const SizedBox(height: SureSpacing.lg),
-              SizedBox(
-                height: 140,
-                child: BalanceHistoryChart(
-                  key: const ValueKey('reportsNetWorthChart'),
-                  balances: _chartBalances(history, currency),
-                  color: trendColor,
-                  semanticLabel: l.p3rpNetWorthChartLabel,
-                  onSelectionChanged: (balance) => setState(() {
-                    _selectedPoint = balance == null
-                        ? null
-                        : NetWorthPoint(balance.date, balance.balanceCents!);
-                  }),
+              if (selected != null)
+                Text(
+                  SureDates.fullOf(context, selected.date),
+                  key: const ValueKey('reportsNetWorthScrubDate'),
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: palette.textSecondary,
+                  ),
+                )
+              else if (change != null && _historyStart != null)
+                Text.rich(
+                  key: const ValueKey('reportsNetWorthChange'),
+                  TextSpan(children: [
+                    TextSpan(
+                      text: money(change, currency, signed: true),
+                      style: SureMoney.tabular(TextStyle(
+                        color: trendColor,
+                        fontWeight: SureTokens.weightMedium,
+                      )),
+                    ),
+                    TextSpan(
+                      text: ' ${l.ds3rSince(SureDates.shortOf(
+                        context,
+                        _historyStart!,
+                        now: _today(),
+                      ))}',
+                      style: TextStyle(color: palette.textSubdued),
+                    ),
+                  ]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, height: 1.4),
                 ),
+              if (history.points.length >= 2) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 140,
+                  child: BalanceHistoryChart(
+                    key: const ValueKey('reportsNetWorthChart'),
+                    balances: _chartBalances(history, currency),
+                    color: trendColor,
+                    semanticLabel: l.p3rpNetWorthChartLabel,
+                    onSelectionChanged: (balance) => setState(() {
+                      _selectedPoint = balance == null
+                          ? null
+                          : NetWorthPoint(balance.date, balance.balanceCents!);
+                    }),
+                  ),
+                ),
+              ],
+            ],
+            for (final other in history.otherCurrencies) ...[
+              const SizedBox(height: 8),
+              Text(
+                l.ds3rOtherCurrency(
+                  money(other.cents, other.currency),
+                  other.accountCount,
+                ),
+                style: TextStyle(fontSize: 13, color: palette.textSecondary),
               ),
             ],
           ],
-          for (final other in history.otherCurrencies) ...[
-            const SizedBox(height: SureSpacing.sm),
-            Text(
-              l.p3rpNetWorthOtherCurrency(
-                money(other.cents, other.currency),
-                other.accountCount,
-              ),
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: palette.textSecondary),
-            ),
-          ],
-        ],
+        ),
       );
     }
 
-    return _Section(
+    return _section(
       key: const ValueKey('reportsNetWorth'),
-      title: l.p3rpNetWorth,
-      child: body,
+      header: SureSectionHeader(label: l.p3rpNetWorth),
+      panel: panel,
     );
   }
 
@@ -542,104 +585,123 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Widget _buildCashFlow(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
     final hidden = context.watch<PrivacyProvider>().hidden;
 
-    Widget body;
+    Widget panel;
+    String? range;
     final report = _report;
     if (_cashStatus == _Status.loading) {
-      body = const _SectionLoading();
+      panel = const SurePanel(child: _SectionLoading());
     } else if (_cashStatus == _Status.failed || report == null) {
-      body = _failure(context, l.p3rpCashFlowFailed);
+      panel = SurePanel(child: _failure(context, l.p3rpCashFlowFailed));
     } else {
       String money(double v) => MoneyMasker.mask(
             CashFlowFormat.money(context, v, report.currency),
             hidden: hidden,
           );
+      Widget amount(String text, MoneyTrend trend, Color color,
+              {FontWeight weight = SureTokens.weightMedium}) =>
+          MoneyText(
+            text,
+            trend: trend,
+            color: color,
+            maxLines: 1,
+            style: TextStyle(fontSize: 15, fontWeight: weight),
+          );
+      range = SureDates.rangeOf(context, report.startDate, report.endDate,
+          now: _today());
       final rate = report.savingsRate;
-      body = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      final saved = report.netSavings;
+      panel = SurePanel.rows(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _Stat(
-                  label: l.p3rpIn,
-                  value: money(report.income),
-                  trend: MoneyTrend.inflow,
-                ),
-              ),
-              const SizedBox(width: SureSpacing.lg),
-              Expanded(
-                child: _Stat(
-                  label: l.p3rpOut,
-                  value: money(report.spending),
-                  trend: MoneyTrend.outflow,
-                ),
-              ),
-              const SizedBox(width: SureSpacing.lg),
-              Expanded(
-                child: _Stat(
-                  key: const ValueKey('reportsSaved'),
-                  label: l.p3rpSaved,
-                  value: money(report.netSavings),
-                  trend: report.netSavings < 0
-                      ? MoneyTrend.outflow
-                      : MoneyTrend.inflow,
-                  footnote: rate == null
-                      ? null
-                      : l.p3rpSavedShare(MoneyMasker.mask(
-                          CashFlowFormat.percent(context, rate),
-                          hidden: hidden,
-                        )),
-                ),
-              ),
-            ],
+          SureListRow(
+            key: const ValueKey('reportsIn'),
+            title: l.p3rpIn,
+            trailing: amount(
+              report.income > 0 ? '+${money(report.income)}' : money(0),
+              MoneyTrend.inflow,
+              report.income > 0 ? palette.success : palette.textPrimary,
+            ),
           ),
-          const SizedBox(height: SureSpacing.sm),
-          Text(
-            '${DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(report.startDate)} – '
-            '${DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(report.endDate)}',
-            style: theme.textTheme.labelSmall
-                ?.copyWith(color: palette.textSubdued),
+          SureListRow(
+            key: const ValueKey('reportsOut'),
+            title: l.p3rpOut,
+            trailing: amount(
+              report.spending > 0 ? '-${money(report.spending)}' : money(0),
+              MoneyTrend.outflow,
+              palette.textPrimary,
+            ),
+          ),
+          SureListRow(
+            key: const ValueKey('reportsSaved'),
+            title: l.p3rpSaved,
+            subtitle: rate == null
+                ? null
+                : l.p3rpSavedShare(MoneyMasker.mask(
+                    CashFlowFormat.percent(context, rate),
+                    hidden: hidden,
+                  )),
+            trailing: amount(
+              money(saved),
+              saved < 0 ? MoneyTrend.outflow : MoneyTrend.inflow,
+              saved < 0 ? palette.destructive : palette.success,
+              weight: FontWeight.w600,
+            ),
           ),
         ],
       );
     }
 
-    return _Section(
+    return _section(
       key: const ValueKey('reportsCashFlow'),
-      title: l.p3rpCashFlow,
-      child: body,
+      header: Row(
+        children: [
+          Expanded(
+            child: SureSectionHeader(
+              label: l.p3rpCashFlow,
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 6),
+            ),
+          ),
+          if (range != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 16, 16, 6),
+              child: Text(
+                range,
+                key: const ValueKey('reportsCashFlowRange'),
+                maxLines: 1,
+                style: TextStyle(fontSize: 13, color: palette.textSubdued),
+              ),
+            ),
+        ],
+      ),
+      panel: panel,
     );
   }
 
   Widget _buildSpending(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
     final hidden = context.watch<PrivacyProvider>().hidden;
     final locale = Localizations.localeOf(context).toString();
 
-    Widget body;
+    Widget message(String text) => SurePanel(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 15, color: palette.textSecondary),
+          ),
+        );
+
+    Widget panel;
     final report = _report;
     if (_cashStatus == _Status.loading) {
-      body = const _SectionLoading();
+      panel = const SurePanel(child: _SectionLoading());
     } else if (_cashStatus == _Status.failed || report == null) {
       // The cash flow section above already offers a retry.
-      body = Text(
-        l.p3rpCashFlowFailed,
-        style: theme.textTheme.bodyMedium
-            ?.copyWith(color: palette.textSecondary),
-      );
+      panel = message(l.p3rpCashFlowFailed);
     } else if (report.expenseCategories.isEmpty) {
-      body = Text(
-        l.p3rpNoSpending,
-        style: theme.textTheme.bodyMedium
-            ?.copyWith(color: palette.textSecondary),
-      );
+      panel = message(l.p3rpNoSpending);
     } else {
       final all = report.expenseCategories;
       final shown = _showAllCategories
@@ -652,19 +714,29 @@ class _ReportsScreenState extends State<ReportsScreen> {
         return ratio == null ? null : '+${percentFormat.format(ratio)}';
       }
 
-      body = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      // The cash flow report has colors but no icons; the shared category
+      // list fills them in once loaded.
+      final known = <String, Category>{
+        for (final c in context.watch<CategoriesProvider?>()?.categories ??
+            const <Category>[])
+          c.id: c,
+      };
+
+      panel = SurePanel.rows(
+        dividerIndent: SurePanel.iconRowDividerIndent,
         children: [
           for (final category in shown)
-            _CategoryBar(
+            _CategoryRow(
               key: ValueKey('reportsCategory_${category.id}'),
               name: category.name,
+              colorHex: category.color ?? known[category.categoryId]?.color,
+              icon: known[category.categoryId]?.icon,
               amount: MoneyMasker.mask(
                 CashFlowFormat.money(context, category.amount, report.currency),
                 hidden: hidden,
               ),
               fraction: largest > 0 ? category.amount / largest : 0,
-              color: CashFlowDonutChart.colorFromHex(
+              barColor: CashFlowDonutChart.colorFromHex(
                   category.color, palette.textSubdued),
               aboveNormal: aboveNormal(category),
               onTap: category.canDrillDown
@@ -672,25 +744,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   : null,
             ),
           if (all.length > ReportsScreen.topCategoryCount)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton(
-                key: const ValueKey('reportsShowAll'),
-                onPressed: () => setState(
-                    () => _showAllCategories = !_showAllCategories),
-                child: Text(_showAllCategories
-                    ? l.p3rpShowLess
-                    : l.p3rpShowAll(all.length)),
-              ),
+            SureListRow(
+              key: const ValueKey('reportsShowAll'),
+              title: _showAllCategories
+                  ? l.p3rpShowLess
+                  : l.p3rpShowAll(all.length),
+              titleColor: palette.link,
+              onTap: () =>
+                  setState(() => _showAllCategories = !_showAllCategories),
             ),
         ],
       );
     }
 
-    return _Section(
+    return _section(
       key: const ValueKey('reportsSpending'),
-      title: l.p3rpSpending,
-      child: body,
+      header: SureSectionHeader(label: l.p3rpSpending),
+      panel: panel,
     );
   }
 }
@@ -705,8 +775,8 @@ class _PeriodPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return Wrap(
-      spacing: SureSpacing.md,
-      runSpacing: SureSpacing.md,
+      spacing: 8,
+      runSpacing: 8,
       children: [
         for (final period in ReportsPeriod.values)
           SureChip(
@@ -720,98 +790,28 @@ class _PeriodPicker extends StatelessWidget {
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({super.key, required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = SureColors.of(context).palette;
-    return SureCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.labelLarge
-                ?.copyWith(color: palette.textSecondary),
-          ),
-          const SizedBox(height: SureSpacing.md),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
 class _SectionLoading extends StatelessWidget {
   const _SectionLoading();
 
   @override
   Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: SureSpacing.huge),
+        padding: EdgeInsets.symmetric(vertical: 40),
         child: Center(child: CircularProgressIndicator()),
       );
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.trend,
-    this.footnote,
-  });
-
-  final String label;
-  final String value;
-  final MoneyTrend trend;
-  final String? footnote;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.labelMedium
-              ?.copyWith(color: palette.textSecondary),
-        ),
-        const SizedBox(height: 2),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: AlignmentDirectional.centerStart,
-          child: MoneyText(
-            value,
-            trend: trend,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: SureTokens.weightMedium),
-          ),
-        ),
-        if (footnote != null)
-          Text(
-            footnote!,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: palette.textSecondary),
-          ),
-      ],
-    );
-  }
-}
-
-class _CategoryBar extends StatelessWidget {
-  const _CategoryBar({
+/// A spending row: the category icon, the name with its above-normal share
+/// (Month only), the mono amount, and under them a 4 px bar in the
+/// category's color, as wide as its share of the largest category.
+class _CategoryRow extends StatelessWidget {
+  const _CategoryRow({
     super.key,
     required this.name,
     required this.amount,
     required this.fraction,
-    required this.color,
+    required this.barColor,
+    this.colorHex,
+    this.icon,
     this.aboveNormal,
     this.onTap,
   });
@@ -819,7 +819,11 @@ class _CategoryBar extends StatelessWidget {
   final String name;
   final String amount;
   final double fraction;
-  final Color color;
+  final Color barColor;
+
+  /// The category's `#rrggbb` color and Lucide icon, for its icon.
+  final String? colorHex;
+  final String? icon;
 
   /// Signed percent above normal, e.g. `+32%`; null when not above normal.
   final String? aboveNormal;
@@ -828,124 +832,103 @@ class _CategoryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(SureTokens.radiusMd),
+    Widget row = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: SureSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium,
+            SureCategoryIcon(name: name, color: colorHex, icon: icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  height: 1.25,
+                                  fontWeight: SureTokens.weightMedium,
+                                  color: palette.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (aboveNormal != null) ...[
+                              const SizedBox(width: 6),
+                              Semantics(
+                                label: l.p3rpAboveNormal(aboveNormal!),
+                                excludeSemantics: true,
+                                child: Text(
+                                  aboveNormal!,
+                                  maxLines: 1,
+                                  style: SureMoney.tabular(TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: SureTokens.weightMedium,
+                                    color: palette.destructive,
+                                  )),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      MoneyText(
+                        amount,
+                        trend: MoneyTrend.neutral,
+                        color: palette.textPrimary,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: SureTokens.weightMedium,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                if (aboveNormal != null) ...[
-                  Semantics(
-                    label: l.p3rpAboveNormal(aboveNormal!),
-                    excludeSemantics: true,
-                    child: Text(
-                      aboveNormal!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: palette.destructive,
-                        fontWeight: SureTokens.weightMedium,
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: FractionallySizedBox(
+                      widthFactor: fraction.clamp(0.0, 1.0),
+                      child: Container(
+                        key: const ValueKey('reportsCategoryBar'),
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: SureSpacing.md),
                 ],
-                Text(
-                  amount,
-                  style: SureMoney.tabular(theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: SureTokens.weightMedium,
-                    color: palette.textPrimary,
-                  )),
-                ),
-                if (onTap != null)
-                  SureIcon(
-                    SureIcons.chevronRight,
-                    size: SureIconSize.sm,
-                    color: palette.textSubdued,
-                  )
-                else
-                  const SizedBox(width: SureIconSize.sm),
-              ],
-            ),
-            const SizedBox(height: SureSpacing.xs),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: SizedBox(
-                height: 6,
-                child: Stack(
-                  children: [
-                    Container(color: palette.surfaceInset),
-                    FractionallySizedBox(
-                      widthFactor: fraction.clamp(0.0, 1.0),
-                      child: Container(color: color),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-}
-
-class _SectionMessage extends StatelessWidget {
-  const _SectionMessage({
-    super.key,
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.action,
-  });
-
-  final String icon;
-  final String title;
-  final String? subtitle;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: SureSpacing.xl),
-      child: Column(
-        children: [
-          SureIcon(icon, size: SureIconSize.xl, color: palette.textSubdued),
-          const SizedBox(height: SureSpacing.md),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleSmall,
+    if (onTap != null) {
+      row = MergeSemantics(
+        child: Semantics(
+          button: true,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(onTap: onTap, child: row),
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: SureSpacing.xs),
-            Text(
-              subtitle!,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: palette.textSecondary),
-            ),
-          ],
-          if (action != null) ...[
-            const SizedBox(height: SureSpacing.lg),
-            action!,
-          ],
-        ],
-      ),
-    );
+        ),
+      );
+    }
+    return row;
   }
 }

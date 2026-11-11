@@ -2912,22 +2912,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get p3rpNetWorth => 'Nettoförmögenhet';
 
   @override
-  String p3rpNetWorthChange(String amount, String date) {
-    return '$amount sedan $date';
-  }
-
-  @override
-  String p3rpNetWorthOtherCurrency(String amount, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Dessutom: $amount på $count konton',
-      one: 'Dessutom: $amount på 1 konto',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get p3rpNetWorthChartLabel => 'Nettoförmögenhet under vald period';
 
   @override
@@ -2976,9 +2960,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String p3rpAboveNormal(String percent) {
     return '$percent över det normala';
   }
-
-  @override
-  String get p3rpEmpty => 'Inga transaktioner under den här perioden.';
 
   @override
   String get dsToday => 'I dag';
@@ -3376,4 +3357,23 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds2sDeleteAccount => 'Radera användarkonto';
+
+  @override
+  String ds3rSince(String date) {
+    return 'sedan $date';
+  }
+
+  @override
+  String ds3rOtherCurrency(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Även $amount på $count konton',
+      one: 'Även $amount på 1 konto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ds3rEmptyBody => 'Prova en längre period.';
 }

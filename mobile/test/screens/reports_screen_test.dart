@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
 import 'package:sure_mobile/models/account.dart';
+import 'package:sure_mobile/models/category.dart';
+import 'package:sure_mobile/providers/categories_provider.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/screens/cash_flow_category_transactions_screen.dart';
 import 'package:sure_mobile/screens/reports_screen.dart';
@@ -17,10 +20,24 @@ import 'package:sure_mobile/services/net_worth_history_service.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/services/spending_vs_normal_service.dart';
 import 'package:sure_mobile/services/transactions_service.dart';
+import 'package:sure_mobile/theme/sure_colors.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/cash_flow_fixture.dart';
 import '../support/fake_categories_service.dart';
+
+class _FakeCategoriesProvider extends CategoriesProvider {
+  _FakeCategoriesProvider(this._items);
+
+  final List<Category> _items;
+
+  @override
+  List<Category> get categories => _items;
+
+  @override
+  Future<void> fetchCategories({required String accessToken}) async {}
+}
 
 Account _account(String id,
         {String currency = 'USD',
@@ -121,6 +138,10 @@ void main() {
     String report = cashFlowSankeyFixture,
     int balancesStatus = 200,
     bool hidden = false,
+    ThemeData? theme,
+    List<Category> categories = const [],
+    Future<void>? cashFlowGate,
+    bool pushed = false,
   }) {
     final cashFlow = CashFlowService(
       client: MockClient((request) async {
@@ -128,6 +149,7 @@ void main() {
           return http.Response('{"month_start_day":1}', 200);
         }
         cashFlowRequests.add(request.url);
+        if (cashFlowGate != null) await cashFlowGate;
         return http.Response(report, 200,
             headers: {'content-type': 'application/json; charset=utf-8'});
       }),
@@ -158,13 +180,7 @@ void main() {
         return http.Response(_spendingVsNormal, 200);
       }),
     );
-    return ChangeNotifierProvider<PrivacyProvider>.value(
-      value: PrivacyProvider(initialHidden: hidden),
-      child: MaterialApp(
-        theme: SureTheme.light,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: ReportsScreen(
+    final screen = ReportsScreen(
           cashFlowService: cashFlow,
           netWorthService: netWorth,
           spendingService: spending,
@@ -179,7 +195,26 @@ void main() {
           clock: () => DateTime(2026, 10, 19),
           accounts: _accounts,
           mainCurrency: 'USD',
+        );
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<PrivacyProvider>.value(
+          value: PrivacyProvider(initialHidden: hidden),
         ),
+        ChangeNotifierProvider<CategoriesProvider>(
+          create: (_) => _FakeCategoriesProvider(categories),
+        ),
+      ],
+      child: MaterialApp(
+        theme: theme ?? SureTheme.light,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        // Pushed over a first route, the way Home opens it.
+        initialRoute: pushed ? '/reports' : '/',
+        routes: {
+          '/': (_) => pushed ? const SizedBox() : screen,
+          '/reports': (_) => screen,
+        },
       ),
     );
   }
@@ -200,7 +235,7 @@ void main() {
     expect(find.text(r'$1,300.00'), findsOneWidget);
     expect(find.text(r'+$500.00 since Oct 1'), findsOneWidget);
     expect(find.byKey(const ValueKey('reportsNetWorthChart')), findsOneWidget);
-    expect(find.text('Also: £12,340.00 in 1 account'), findsOneWidget);
+    expect(find.text('Also £12,340.00 in 1 account'), findsOneWidget);
     expect(balanceRequests.map((u) => u.queryParameters['account_id']).toSet(),
         {'a1', 'l1'});
     expect(balanceRequests.first.queryParameters['start_date'], '2026-10-01');
@@ -209,8 +244,8 @@ void main() {
     expect(cashFlowRequests.single.queryParameters['start_date'], '2026-10-01');
     expect(cashFlowRequests.single.queryParameters['end_date'], '2026-10-19');
     expect(find.text('In'), findsOneWidget);
-    expect(find.text(r'$5,000.00'), findsOneWidget);
-    expect(find.text(r'$1,500.00'), findsOneWidget);
+    expect(find.text(r'+$5,000.00'), findsOneWidget);
+    expect(find.text(r'-$1,500.00'), findsOneWidget);
     expect(find.text(r'$3,500.00'), findsOneWidget);
     expect(find.text('70.0% of In'), findsOneWidget);
 
@@ -251,7 +286,8 @@ void main() {
     await tester.pumpWidget(harness(report: _emptyReport));
     await tester.pumpAndSettle();
 
-    expect(find.text('No transactions in this period.'), findsOneWidget);
+    expect(find.text('No transactions in this period'), findsOneWidget);
+    expect(find.text('Try a longer range.'), findsOneWidget);
     expect(find.byKey(const ValueKey('reportsCashFlow')), findsNothing);
     expect(find.byKey(const ValueKey('reportsSpending')), findsNothing);
     // Net worth does not depend on transactions.
@@ -265,7 +301,7 @@ void main() {
 
     expect(find.text("Couldn't load net worth history."), findsOneWidget);
     expect(find.text('Try Again'), findsOneWidget);
-    expect(find.text(r'$5,000.00'), findsOneWidget);
+    expect(find.text(r'+$5,000.00'), findsOneWidget);
     expect(find.text('Rent'), findsOneWidget);
   });
 
@@ -325,5 +361,162 @@ void main() {
     expect(cashFlowRequests, hasLength(2));
     expect(spendingRequests, hasLength(2));
     expect(balanceRequests.length, balancesBefore * 2);
+  });
+
+  group('layout', () {
+    testWidgets('large title with a back link to Home when pushed',
+        (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(harness(pushed: true));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SureLargeTitleHeader), findsOneWidget);
+      final back = tester.widget<SureBackButton>(find.byType(SureBackButton));
+      expect(back.label, 'Home');
+      expect(find.text('Reports'), findsWidgets);
+    });
+
+    testWidgets('change line: colored amount, then "since" in textSubdued',
+        (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(harness());
+      await tester.pumpAndSettle();
+
+      final palette =
+          SureColors.of(tester.element(find.byType(ReportsScreen))).palette;
+      final text = tester
+          .widget<Text>(find.byKey(const ValueKey('reportsNetWorthChange')));
+      final spans = (text.textSpan! as TextSpan).children!.cast<TextSpan>();
+      expect(spans[0].text, r'+$500.00');
+      expect(spans[0].style!.color, palette.success);
+      expect(spans[1].text, ' since Oct 1');
+      expect(spans[1].style!.color, palette.textSubdued);
+    });
+
+    testWidgets('cash flow: range in the header, In/Out/Saved rows',
+        (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(harness());
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('reportsCashFlowRange')))
+            .data,
+        'Oct 1–19',
+      );
+      final palette =
+          SureColors.of(tester.element(find.byType(ReportsScreen))).palette;
+      MoneyText amountIn(String key) => tester.widget<MoneyText>(find.descendant(
+            of: find.byKey(ValueKey(key)),
+            matching: find.byType(MoneyText),
+          ));
+      expect(amountIn('reportsIn').color, palette.success);
+      expect(amountIn('reportsOut').text, r'-$1,500.00');
+      expect(amountIn('reportsOut').color, palette.textPrimary);
+      expect(amountIn('reportsSaved').text, r'$3,500.00');
+      expect(amountIn('reportsSaved').color, palette.success);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('reportsSaved')),
+          matching: find.text('70.0% of In'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('negative savings read in destructive', (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(harness(report: _manyCategories(2)));
+      await tester.pumpAndSettle();
+
+      final palette =
+          SureColors.of(tester.element(find.byType(ReportsScreen))).palette;
+      final saved = tester.widget<MoneyText>(find.descendant(
+        of: find.byKey(const ValueKey('reportsSaved')),
+        matching: find.byType(MoneyText),
+      ));
+      expect(saved.text, r'-$1,000.00');
+      expect(saved.color, palette.destructive);
+    });
+
+    testWidgets('category rows: icon from the category list, bars by share',
+        (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(harness(categories: [
+        Category(id: 'cat_rent', name: 'Rent', color: '#4da568', icon: 'house'),
+      ]));
+      await tester.pumpAndSettle();
+
+      final rent = find.byKey(const ValueKey('reportsCategory_expense_cat_rent'));
+      final food = find.byKey(const ValueKey('reportsCategory_expense_cat_food'));
+      final rentIcon = tester.widget<SureCategoryIcon>(
+          find.descendant(of: rent, matching: find.byType(SureCategoryIcon)));
+      expect(rentIcon.icon, 'house');
+      expect(rentIcon.color, '#4da568');
+
+      double barWidth(Finder row) => tester
+          .getSize(find.descendant(
+              of: row, matching: find.byKey(const ValueKey('reportsCategoryBar'))))
+          .width;
+      // Food & Drink (400) is 40% of Rent (1,000), the largest.
+      expect(barWidth(food) / barWidth(rent), closeTo(0.4, 0.01));
+      expect(tester.getSize(find.descendant(
+              of: rent, matching: find.byKey(const ValueKey('reportsCategoryBar'))))
+          .height, 4);
+    });
+
+    testWidgets('each section shows its own loading state', (tester) async {
+      useTallSurface(tester);
+      final gate = Completer<void>();
+      await tester.pumpWidget(harness(cashFlowGate: gate.future));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text(r'$1,300.00'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('reportsCashFlow')),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('reportsSpending')),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('Rent'), findsOneWidget);
+    });
+
+    for (final dark in [false, true]) {
+      testWidgets('no overflow at 320 px (${dark ? 'dark' : 'light'})',
+          (tester) async {
+        tester.view.physicalSize = const Size(320, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(harness(
+          report: _manyCategories(11),
+          theme: dark ? SureTheme.dark : SureTheme.light,
+        ));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('Show all (11)'), findsOneWidget);
+        final palette =
+            SureColors.of(tester.element(find.byType(ReportsScreen))).palette;
+        expect(
+          tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+          palette.surface,
+        );
+      });
+    }
   });
 }

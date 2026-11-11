@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/cash_flow.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
+import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
-import '../providers/privacy_provider.dart';
+import '../providers/categories_provider.dart';
 import '../services/categories_service.dart';
 import '../services/transactions_service.dart';
-import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../theme/sure_tokens.dart';
 import '../utils/amount_parser.dart';
-import '../utils/money_masker.dart';
-import '../widgets/money_text.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/sure_button.dart';
-import '../widgets/sure_icon.dart';
-import '../widgets/sure_list_group.dart';
 import 'cash_flow_screen.dart' show AccessTokenLoader;
 
 /// Kinds the income statement leaves out of income and spending
@@ -68,6 +62,9 @@ bool isCashFlowIncome(Transaction transaction) {
 /// children carry the amount) and transfer-like kinds. Loan payments and
 /// investment contributions are shown as outflows whatever their sign, as
 /// the report counts them. Servers without these fields show every row.
+///
+/// Rows are grouped by day under a large title (the category name) with the
+/// period as its subtitle.
 class CashFlowCategoryTransactionsScreen extends StatefulWidget {
   const CashFlowCategoryTransactionsScreen({
     super.key,
@@ -173,6 +170,13 @@ class _CashFlowCategoryTransactionsScreenState
     try {
       final token = await _accessToken();
       if (token != null) {
+        if (mounted) {
+          // Rows show their own category's icon; the list is shared and
+          // fetched once.
+          context
+              .read<CategoriesProvider?>()
+              ?.fetchCategories(accessToken: token);
+        }
         final categoryIds = _categoryIds ?? await _lookUpCategoryIds(token);
         if (categoryIds == null) {
           unauthorized = true;
@@ -270,81 +274,78 @@ class _CashFlowCategoryTransactionsScreenState
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
-    final hidden = context.watch<PrivacyProvider>().hidden;
-    final locale = Localizations.localeOf(context).toString();
-    final dates = DateFormat.yMMMd(locale);
 
-    Widget body;
+    final List<Widget> slivers;
     if (_transactions.isEmpty && _loading) {
-      body = const Center(child: CircularProgressIndicator());
-    } else if (_transactions.isEmpty) {
-      body = ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(SureSpacing.xxxl),
-        children: [
-          const SizedBox(height: SureSpacing.huge),
-          SureIcon(
-            _failed ? SureIcons.circleAlert : SureIcons.receipt,
-            size: SureIconSize.xxl,
-            color: palette.textSubdued,
-          ),
-          const SizedBox(height: SureSpacing.lg),
-          Text(
-            _failed
-                ? l.cashFlowTransactionsLoadFailed
-                : l.cashFlowTransactionsEmpty,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium,
-          ),
-          if (_failed) ...[
-            const SizedBox(height: SureSpacing.xl),
-            Center(
-              child: SureButton(
-                label: l.commonTryAgain,
-                onPressed: _refresh,
-                leading: const SureIcon(SureIcons.refresh, size: 18),
-              ),
-            ),
-          ],
-        ],
-      );
-    } else {
-      body = ListView(
-        controller: _scroll,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          SureSpacing.xl,
-          SureSpacing.md,
-          SureSpacing.xl,
-          SureSpacing.huge,
+      slivers = const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
         ),
-        children: [
-          SureListGroup(
-            header:
-                '${dates.format(widget.range.start)} – ${dates.format(widget.range.end)}',
-            children: [
-              for (final transaction in _transactions)
-                SureListRow(
-                  title: transaction.name,
-                  subtitle: _subtitle(transaction, dates),
-                  trailing: _amount(context, transaction, hidden),
-                ),
-            ],
+      ];
+    } else if (_transactions.isEmpty) {
+      slivers = [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: SureEmptyState(
+              icon: _failed ? SureIcons.circleAlert : SureIcons.receipt,
+              title: _failed
+                  ? l.cashFlowTransactionsLoadFailed
+                  : l.cashFlowTransactionsEmpty,
+              secondaryLabel: _failed ? l.commonTryAgain : null,
+              onSecondary: _failed ? _refresh : null,
+            ),
           ),
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.all(SureSpacing.xl),
+        ),
+      ];
+    } else {
+      final accounts = _accountNames();
+      final categories = <String, Category>{
+        for (final c in context.watch<CategoriesProvider?>()?.categories ??
+            const <Category>[])
+          c.id: c,
+      };
+      final days = _byDay(_transactions);
+      slivers = [
+        SliverList.builder(
+          itemCount: days.length,
+          itemBuilder: (context, index) {
+            final day = days[index];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (day.day != null)
+                  SureDayHeader.forDay(context, day.day!, background: false)
+                else
+                  SureDayHeader(label: day.raw, background: false),
+                SurePanel.rows(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  dividerIndent: SurePanel.iconRowDividerIndent,
+                  children: [
+                    for (final t in day.rows) _row(t, accounts, categories),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+        if (_loading)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             ),
-          if (_failed)
-            Padding(
-              padding: const EdgeInsets.all(SureSpacing.xl),
+          ),
+        if (_failed)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Center(
                 child: SureButton(
                   label: l.commonTryAgain,
                   variant: SureButtonVariant.outline,
+                  size: SureButtonSize.sm,
                   onPressed: () {
                     setState(() => _failed = false);
                     _loadMore();
@@ -352,48 +353,92 @@ class _CashFlowCategoryTransactionsScreenState
                 ),
               ),
             ),
-        ],
-      );
+          ),
+      ];
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.category.name)),
-      body: RefreshIndicator(onRefresh: _refresh, child: body),
+    return SureLargeTitleScaffold(
+      title: widget.category.name,
+      subtitle: SureDates.rangeOf(context, widget.range.start, widget.range.end),
+      controller: _scroll,
+      onRefresh: _refresh,
+      slivers: slivers,
     );
   }
 
-  String _subtitle(Transaction transaction, DateFormat dates) {
-    final date = DateTime.tryParse(transaction.date);
-    final parts = <String>[
-      date == null ? transaction.date : dates.format(date),
-      // Subcategory transactions show which subcategory they belong to.
-      if (transaction.categoryName != null &&
-          transaction.categoryName!.isNotEmpty &&
-          transaction.categoryName != widget.category.name)
-        transaction.categoryName!,
-    ];
-    return parts.join(' · ');
+  /// Account names by id, for the rows' subtitles.
+  Map<String, String> _accountNames() {
+    try {
+      return {
+        for (final account in context.read<AccountsProvider>().accounts)
+          account.id: account.name,
+      };
+    } on ProviderNotFoundException {
+      // Account names are optional context; the rows still render.
+      return const {};
+    }
   }
 
-  Widget _amount(BuildContext context, Transaction transaction, bool hidden) {
-    // The API's `amount` is a formatted string whose sign follows Sure's
-    // ledger convention; present it the way the report classifies it.
-    final isIncome = isCashFlowIncome(transaction);
+  /// Consecutive transactions on the same day, in server order.
+  static List<({DateTime? day, String raw, List<Transaction> rows})> _byDay(
+      List<Transaction> transactions) {
+    final days = <({DateTime? day, String raw, List<Transaction> rows})>[];
+    for (final t in transactions) {
+      if (days.isNotEmpty && days.last.raw == t.date) {
+        days.last.rows.add(t);
+      } else {
+        days.add((day: SureDates.parseDay(t.date), raw: t.date, rows: [t]));
+      }
+    }
+    return days;
+  }
+
+  Widget _row(
+    Transaction transaction,
+    Map<String, String> accounts,
+    Map<String, Category> categories,
+  ) {
+    final category = categories[transaction.categoryId];
+    return SureTransactionRow(
+      key: ValueKey('cashFlowTransaction_${transaction.id}'),
+      transaction: _asReported(transaction),
+      // No account or account type: the row then shows the amount's own
+      // sign, which [_asReported] set the way the report classifies it.
+      accountName: accounts[transaction.accountId],
+      categoryColor: category?.color ?? widget.category.color,
+      categoryIcon: category?.icon,
+    );
+  }
+
+  /// [transaction] with its amount signed the way the report counts it:
+  /// income as a plain magnitude (shown "+" in success), everything else
+  /// with a leading minus. The API's `amount` follows Sure's ledger sign
+  /// convention, which the report overrides for loan payments and
+  /// investment contributions.
+  static Transaction _asReported(Transaction transaction) {
     // AmountParser's display text drops hyphen/en/em/figure dashes, minus
     // signs and accounting parentheses.
-    String magnitude;
+    String amount;
     try {
-      magnitude = AmountParser.parse(transaction.amount).displayText;
+      final magnitude = AmountParser.parse(transaction.amount).displayText;
+      amount = isCashFlowIncome(transaction) ? magnitude : '-$magnitude';
     } on FormatException {
-      magnitude = transaction.amount;
+      amount = transaction.amount;
     }
-    return MoneyText(
-      MoneyMasker.mask('${isIncome ? '+' : '-'}$magnitude', hidden: hidden),
-      trend: isIncome ? MoneyTrend.inflow : MoneyTrend.outflow,
-      style: Theme.of(context)
-          .textTheme
-          .titleSmall
-          ?.copyWith(fontWeight: SureTokens.weightMedium),
+    return Transaction(
+      id: transaction.id,
+      accountId: transaction.accountId,
+      name: transaction.name,
+      date: transaction.date,
+      amount: amount,
+      currency: transaction.currency,
+      nature: transaction.nature,
+      categoryId: transaction.categoryId,
+      categoryName: transaction.categoryName,
+      kind: transaction.kind,
+      excluded: transaction.excluded,
+      splitParent: transaction.splitParent,
+      entryId: transaction.entryId,
     );
   }
 }

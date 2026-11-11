@@ -4928,18 +4928,6 @@ abstract class AppLocalizations {
   /// **'Net worth'**
   String get p3rpNetWorth;
 
-  /// Net worth change over the selected period, e.g. '+$1,200.00 since Oct 1'.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} since {date}'**
-  String p3rpNetWorthChange(String amount, String date);
-
-  /// Under the net worth chart: accounts in another currency, which are not part of the line, e.g. 'Also: £12,340.00 across 2 accounts'.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Also: {amount} in 1 account} other{Also: {amount} across {count} accounts}}'**
-  String p3rpNetWorthOtherCurrency(String amount, int count);
-
   /// Screen reader label for the net worth line chart.
   ///
   /// In en, this message translates to:
@@ -5023,12 +5011,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent} above normal'**
   String p3rpAboveNormal(String percent);
-
-  /// Reports screen message when the selected period has no transactions.
-  ///
-  /// In en, this message translates to:
-  /// **'No transactions in this period.'**
-  String get p3rpEmpty;
 
   /// Relative date label for today, used in day headers and dates across the app.
   ///
@@ -5701,6 +5683,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete account'**
   String get ds2sDeleteAccount;
+
+  /// Reports: after the net worth change amount, e.g. 'since Nov 1'.
+  ///
+  /// In en, this message translates to:
+  /// **'since {date}'**
+  String ds3rSince(String date);
+
+  /// Reports: net worth held in another currency, not included in the total.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Also {amount} in 1 account} other{Also {amount} in {count} accounts}}'**
+  String ds3rOtherCurrency(String amount, int count);
+
+  /// Reports: body of the empty state when the period has no transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a longer range.'**
+  String get ds3rEmptyBody;
 }
 
 class _AppLocalizationsDelegate

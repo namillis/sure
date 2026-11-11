@@ -2103,10 +2103,6 @@
   "@p3rpPeriodYear": {"description": "Reports period chip: the last 12 months (365 days)."},
   "p3rpNetWorth": "Net worth",
   "@p3rpNetWorth": {"description": "Header of the net worth section on the Reports screen."},
-  "p3rpNetWorthChange": "{amount} since {date}",
-  "@p3rpNetWorthChange": {"description": "Net worth change over the selected period, e.g. '+$1,200.00 since Oct 1'.", "placeholders": {"amount": {"type": "String"}, "date": {"type": "String"}}},
-  "p3rpNetWorthOtherCurrency": "{count, plural, =1{Also: {amount} in 1 account} other{Also: {amount} across {count} accounts}}",
-  "@p3rpNetWorthOtherCurrency": {"description": "Under the net worth chart: accounts in another currency, which are not part of the line, e.g. 'Also: £12,340.00 across 2 accounts'.", "placeholders": {"amount": {"type": "String"}, "count": {"type": "int"}}},
   "p3rpNetWorthChartLabel": "Net worth over the selected period",
   "@p3rpNetWorthChartLabel": {"description": "Screen reader label for the net worth line chart."},
   "p3rpNetWorthNoHistory": "No balance history for this period.",
@@ -2135,8 +2131,6 @@
   "@p3rpShowLess": {"description": "Toggle that collapses the spending categories back to the top ones."},
   "p3rpAboveNormal": "{percent} above normal",
   "@p3rpAboveNormal": {"description": "Screen reader text for a category's above-normal badge, e.g. '+32% above normal'.", "placeholders": {"percent": {"type": "String"}}},
-  "p3rpEmpty": "No transactions in this period.",
-  "@p3rpEmpty": {"description": "Reports screen message when the selected period has no transactions."},
   "dsToday": "Today",
   "@dsToday": {"description": "Relative date label for today, used in day headers and dates across the app."},
   "dsYesterday": "Yesterday",
@@ -2361,5 +2355,11 @@
   "ds2sResetAccount": "Reset account",
   "@ds2sResetAccount": {"description": "Account actions row that resets the account on the server."},
   "ds2sDeleteAccount": "Delete account",
-  "@ds2sDeleteAccount": {"description": "Account actions row that deletes the account on the server."}
+  "@ds2sDeleteAccount": {"description": "Account actions row that deletes the account on the server."},
+  "ds3rSince": "since {date}",
+  "@ds3rSince": {"description": "Reports: after the net worth change amount, e.g. 'since Nov 1'.", "placeholders": {"date": {"type": "String"}}},
+  "ds3rOtherCurrency": "{count, plural, =1{Also {amount} in 1 account} other{Also {amount} in {count} accounts}}",
+  "@ds3rOtherCurrency": {"description": "Reports: net worth held in another currency, not included in the total.", "placeholders": {"amount": {"type": "String"}, "count": {"type": "int"}}},
+  "ds3rEmptyBody": "Try a longer range.",
+  "@ds3rEmptyBody": {"description": "Reports: body of the empty state when the period has no transactions."}
 }

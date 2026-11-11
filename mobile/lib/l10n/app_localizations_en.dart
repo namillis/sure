@@ -2886,22 +2886,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get p3rpNetWorth => 'Net worth';
 
   @override
-  String p3rpNetWorthChange(String amount, String date) {
-    return '$amount since $date';
-  }
-
-  @override
-  String p3rpNetWorthOtherCurrency(String amount, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Also: $amount across $count accounts',
-      one: 'Also: $amount in 1 account',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get p3rpNetWorthChartLabel => 'Net worth over the selected period';
 
   @override
@@ -2948,9 +2932,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String p3rpAboveNormal(String percent) {
     return '$percent above normal';
   }
-
-  @override
-  String get p3rpEmpty => 'No transactions in this period.';
 
   @override
   String get dsToday => 'Today';
@@ -3344,4 +3325,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds2sDeleteAccount => 'Delete account';
+
+  @override
+  String ds3rSince(String date) {
+    return 'since $date';
+  }
+
+  @override
+  String ds3rOtherCurrency(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Also $amount in $count accounts',
+      one: 'Also $amount in 1 account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ds3rEmptyBody => 'Try a longer range.';
 }
