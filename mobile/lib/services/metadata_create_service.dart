@@ -26,16 +26,17 @@ class MetadataCreateService {
         'Content-Type': 'application/json',
       };
 
-  /// `POST /api/v1/tags`. The server picks a color.
+  /// `POST /api/v1/tags`. The server picks a color when [color] is null.
   Future<Map<String, dynamic>> createTag({
     required String accessToken,
     required String name,
+    String? color,
   }) async {
     return _postJson(
       'createTag',
       path: '/api/v1/tags',
       body: {
-        'tag': {'name': name.trim()},
+        'tag': {'name': name.trim(), if (color != null) 'color': color},
       },
       resultKey: 'tag',
       parse: (json) => TransactionTag.fromJson(json),
@@ -45,16 +46,22 @@ class MetadataCreateService {
   }
 
   /// `POST /api/v1/categories`. The server suggests an icon; fails when the
-  /// family has locked its categories.
+  /// family has locked its categories. [parentId] makes it a subcategory.
   Future<Map<String, dynamic>> createCategory({
     required String accessToken,
     required String name,
+    String? color,
+    String? parentId,
   }) async {
     return _postJson(
       'createCategory',
       path: '/api/v1/categories',
       body: {
-        'category': {'name': name.trim()},
+        'category': {
+          'name': name.trim(),
+          if (color != null) 'color': color,
+          if (parentId != null) 'parent_id': parentId,
+        },
       },
       resultKey: 'category',
       parse: (json) => Category.fromJson(json),
@@ -66,14 +73,26 @@ class MetadataCreateService {
   /// Creates one family merchant. The API only creates merchants by CSV
   /// import (`POST /api/v1/merchants` with a `file` part), so this uploads a
   /// one-row CSV. When the merchant already exists the import skips it, and
-  /// the existing one is looked up by name instead.
+  /// the existing one is looked up by name instead, and the result carries
+  /// `'existing': true`. [color] (a `#rrggbb` hex) and [websiteUrl] are
+  /// optional columns of the same CSV row.
   Future<Map<String, dynamic>> createMerchant({
     required String accessToken,
     required String name,
+    String? color,
+    String? websiteUrl,
   }) async {
     final trimmed = name.trim();
     final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/merchants');
-    final csv = 'name\n"${trimmed.replaceAll('"', '""')}"\n';
+    String quoted(String value) => '"${value.replaceAll('"', '""')}"';
+    final columns = <String, String>{
+      'name': trimmed,
+      if (color != null && color.trim().isNotEmpty) 'color': color.trim(),
+      if (websiteUrl != null && websiteUrl.trim().isNotEmpty)
+        'website_url': websiteUrl.trim(),
+    };
+    final csv = '${columns.keys.join(',')}\n'
+        '${columns.values.map(quoted).join(',')}\n';
 
     // Built by hand: the server compares the part's Content-Type to an exact
     // list ("text/csv", ...), and MultipartFile can only set a bare type
@@ -143,7 +162,11 @@ class MetadataCreateService {
       for (final json
           in extractJsonObjectList(jsonDecode(response.body), key: 'merchants')) {
         if (json['name']?.toString() == name) {
-          return {'success': true, 'merchant': Merchant.fromJson(json)};
+          return {
+            'success': true,
+            'merchant': Merchant.fromJson(json),
+            'existing': true,
+          };
         }
       }
     }

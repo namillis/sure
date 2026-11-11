@@ -2528,4 +2528,240 @@ class AppLocalizationsSv extends AppLocalizations {
   String dataInStatementAdded(String date) {
     return 'Tillagd $date';
   }
+
+  @override
+  String get manage => 'Hantera';
+
+  @override
+  String get manageSearch => 'Sök';
+
+  @override
+  String get manageClearSearch => 'Rensa sökningen';
+
+  @override
+  String manageNoMatches(String query) {
+    return 'Inget matchar ”$query”.';
+  }
+
+  @override
+  String get manageNameLabel => 'Namn';
+
+  @override
+  String get manageNameRequired => 'Ange ett namn.';
+
+  @override
+  String get manageColor => 'Färg';
+
+  @override
+  String manageColorOption(int number) {
+    return 'Färg $number';
+  }
+
+  @override
+  String get manageColorAutomatic => 'Automatisk';
+
+  @override
+  String get manageEditOnWeb => 'Redigera på webben';
+
+  @override
+  String get manageActionFailed => 'Något gick fel. Försök igen.';
+
+  @override
+  String get manageCategoriesTitle => 'Kategorier';
+
+  @override
+  String get manageCategoriesEmpty => 'Inga kategorier än';
+
+  @override
+  String get manageCategoriesEmptyBody =>
+      'Lägg till en med +. Kategorier sorterar dina utgifter och inkomster.';
+
+  @override
+  String get manageCategoriesLoadFailed =>
+      'Det gick inte att läsa in kategorierna.';
+
+  @override
+  String get manageCategoryAdd => 'Lägg till kategori';
+
+  @override
+  String get manageCategoryNew => 'Ny kategori';
+
+  @override
+  String get manageCategoryParent => 'Överordnad kategori';
+
+  @override
+  String get manageCategoryNoParent => 'Ingen (översta nivån)';
+
+  @override
+  String get manageCategoryIconHint =>
+      'Sure väljer en ikon som passar namnet. Du kan ändra den på webben.';
+
+  @override
+  String manageCategoryCreated(String name) {
+    return 'Kategorin ”$name” lades till';
+  }
+
+  @override
+  String manageCategorySubcategories(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count underkategorier',
+      one: '1 underkategori',
+      zero: 'Inga underkategorier',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String manageCategoryInParent(String parent) {
+    return 'Underkategori till $parent';
+  }
+
+  @override
+  String get manageCategoryInfoBody =>
+      'Byt namn, färg eller ikon på, slå ihop eller ta bort kategorier på webben.';
+
+  @override
+  String get manageTagsTitle => 'Taggar';
+
+  @override
+  String get manageTagsEmpty => 'Inga taggar än';
+
+  @override
+  String get manageTagsEmptyBody =>
+      'Taggar grupperar transaktioner över kategorier, till exempel en resa eller ett projekt.';
+
+  @override
+  String get manageTagsLoadFailed => 'Det gick inte att läsa in taggarna.';
+
+  @override
+  String get manageTagAdd => 'Lägg till tagg';
+
+  @override
+  String get manageTagNew => 'Ny tagg';
+
+  @override
+  String get manageTagEdit => 'Redigera tagg';
+
+  @override
+  String manageTagCreated(String name) {
+    return 'Taggen ”$name” lades till';
+  }
+
+  @override
+  String get manageTagSaved => 'Taggen sparades';
+
+  @override
+  String get manageTagDeleted => 'Taggen togs bort';
+
+  @override
+  String get manageTagDelete => 'Ta bort tagg';
+
+  @override
+  String manageTagDeleteTitle(String name) {
+    return 'Ta bort ”$name”?';
+  }
+
+  @override
+  String get manageTagDeleteBody =>
+      'Taggen tas bort från alla transaktioner som har den. Det går inte att ångra.';
+
+  @override
+  String get manageMerchantsTitle => 'Handlare';
+
+  @override
+  String get manageMerchantsEmpty => 'Inga handlare än';
+
+  @override
+  String get manageMerchantsEmptyBody =>
+      'Handlare du lägger till, och de som dina bankkopplingar hittar, visas här.';
+
+  @override
+  String get manageMerchantsLoadFailed =>
+      'Det gick inte att läsa in handlarna.';
+
+  @override
+  String get manageMerchantAdd => 'Lägg till handlare';
+
+  @override
+  String get manageMerchantNew => 'Ny handlare';
+
+  @override
+  String get manageMerchantWebsite => 'Webbplats (valfritt)';
+
+  @override
+  String get manageMerchantWebsiteInvalid =>
+      'Ange en webbadress som example.com.';
+
+  @override
+  String manageMerchantCreated(String name) {
+    return 'Handlaren ”$name” lades till';
+  }
+
+  @override
+  String manageMerchantExists(String name) {
+    return '”$name” finns redan';
+  }
+
+  @override
+  String get manageMerchantFamily => 'Tillagd av dig';
+
+  @override
+  String get manageMerchantProvider => 'Från en bankkoppling';
+
+  @override
+  String get manageMerchantInfoBody =>
+      'Byt namn, färg, webbplats eller logotyp på, slå ihop eller ta bort handlare på webben.';
+
+  @override
+  String get manageExportTitle => 'Exportera data';
+
+  @override
+  String get manageExportIntro =>
+      'En export är en ZIP-fil med dina konton, transaktioner, affärer, kategorier, handlare och regler som CSV-filer, plus allt i en fil, all.ndjson. Bilagor listas men själva filerna ingår inte.';
+
+  @override
+  String get manageExportCreate => 'Skapa export';
+
+  @override
+  String get manageExportStarted =>
+      'Exporten har startat. Det kan ta några minuter.';
+
+  @override
+  String get manageExportHistory => 'Exporter';
+
+  @override
+  String get manageExportEmpty =>
+      'Inga exporter än. Skapa en för att få en kopia av din data.';
+
+  @override
+  String get manageExportLoadFailed => 'Det gick inte att läsa in exporterna.';
+
+  @override
+  String get manageExportAdminOnly =>
+      'Bara en familjeadministratör kan exportera data.';
+
+  @override
+  String get manageExportStatusPending => 'I kö';
+
+  @override
+  String get manageExportStatusProcessing => 'Förbereds';
+
+  @override
+  String get manageExportStatusCompleted => 'Klar';
+
+  @override
+  String get manageExportStatusFailed => 'Misslyckades';
+
+  @override
+  String get manageExportDownload => 'Ladda ned';
+
+  @override
+  String get manageExportDownloadFailed =>
+      'Det gick inte att ladda ned exporten.';
+
+  @override
+  String get manageExportStillPreparing =>
+      'Förbereds fortfarande. Dra nedåt för att kontrollera igen.';
 }

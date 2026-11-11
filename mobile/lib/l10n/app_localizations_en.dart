@@ -2507,4 +2507,236 @@ class AppLocalizationsEn extends AppLocalizations {
   String dataInStatementAdded(String date) {
     return 'Added $date';
   }
+
+  @override
+  String get manage => 'Manage';
+
+  @override
+  String get manageSearch => 'Search';
+
+  @override
+  String get manageClearSearch => 'Clear search';
+
+  @override
+  String manageNoMatches(String query) {
+    return 'Nothing matches “$query”.';
+  }
+
+  @override
+  String get manageNameLabel => 'Name';
+
+  @override
+  String get manageNameRequired => 'Enter a name.';
+
+  @override
+  String get manageColor => 'Color';
+
+  @override
+  String manageColorOption(int number) {
+    return 'Color $number';
+  }
+
+  @override
+  String get manageColorAutomatic => 'Automatic';
+
+  @override
+  String get manageEditOnWeb => 'Edit on the web';
+
+  @override
+  String get manageActionFailed => 'Something went wrong. Try again.';
+
+  @override
+  String get manageCategoriesTitle => 'Categories';
+
+  @override
+  String get manageCategoriesEmpty => 'No categories yet';
+
+  @override
+  String get manageCategoriesEmptyBody =>
+      'Add one with +. Categories sort your spending and income.';
+
+  @override
+  String get manageCategoriesLoadFailed => 'Couldn\'t load categories.';
+
+  @override
+  String get manageCategoryAdd => 'Add category';
+
+  @override
+  String get manageCategoryNew => 'New category';
+
+  @override
+  String get manageCategoryParent => 'Parent category';
+
+  @override
+  String get manageCategoryNoParent => 'None (top level)';
+
+  @override
+  String get manageCategoryIconHint =>
+      'Sure picks an icon that fits the name. You can change it on the web.';
+
+  @override
+  String manageCategoryCreated(String name) {
+    return 'Category “$name” added';
+  }
+
+  @override
+  String manageCategorySubcategories(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subcategories',
+      one: '1 subcategory',
+      zero: 'No subcategories',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String manageCategoryInParent(String parent) {
+    return 'Subcategory of $parent';
+  }
+
+  @override
+  String get manageCategoryInfoBody =>
+      'Rename, recolor, change the icon of, merge or delete categories on the web.';
+
+  @override
+  String get manageTagsTitle => 'Tags';
+
+  @override
+  String get manageTagsEmpty => 'No tags yet';
+
+  @override
+  String get manageTagsEmptyBody =>
+      'Tags group transactions across categories, like a trip or a project.';
+
+  @override
+  String get manageTagsLoadFailed => 'Couldn\'t load tags.';
+
+  @override
+  String get manageTagAdd => 'Add tag';
+
+  @override
+  String get manageTagNew => 'New tag';
+
+  @override
+  String get manageTagEdit => 'Edit tag';
+
+  @override
+  String manageTagCreated(String name) {
+    return 'Tag “$name” added';
+  }
+
+  @override
+  String get manageTagSaved => 'Tag saved';
+
+  @override
+  String get manageTagDeleted => 'Tag deleted';
+
+  @override
+  String get manageTagDelete => 'Delete tag';
+
+  @override
+  String manageTagDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get manageTagDeleteBody =>
+      'The tag is removed from every transaction that has it. This can\'t be undone.';
+
+  @override
+  String get manageMerchantsTitle => 'Merchants';
+
+  @override
+  String get manageMerchantsEmpty => 'No merchants yet';
+
+  @override
+  String get manageMerchantsEmptyBody =>
+      'Merchants you add, and the ones your bank connections find, show up here.';
+
+  @override
+  String get manageMerchantsLoadFailed => 'Couldn\'t load merchants.';
+
+  @override
+  String get manageMerchantAdd => 'Add merchant';
+
+  @override
+  String get manageMerchantNew => 'New merchant';
+
+  @override
+  String get manageMerchantWebsite => 'Website (optional)';
+
+  @override
+  String get manageMerchantWebsiteInvalid =>
+      'Enter a web address like example.com.';
+
+  @override
+  String manageMerchantCreated(String name) {
+    return 'Merchant “$name” added';
+  }
+
+  @override
+  String manageMerchantExists(String name) {
+    return '“$name” already exists';
+  }
+
+  @override
+  String get manageMerchantFamily => 'Added by you';
+
+  @override
+  String get manageMerchantProvider => 'From a bank connection';
+
+  @override
+  String get manageMerchantInfoBody =>
+      'Rename, recolor, set the website or logo of, merge or delete merchants on the web.';
+
+  @override
+  String get manageExportTitle => 'Export data';
+
+  @override
+  String get manageExportIntro =>
+      'An export is a ZIP file with your accounts, transactions, trades, categories, merchants and rules as CSV files, plus all of it in one all.ndjson file. Attachments are listed but their files aren\'t included.';
+
+  @override
+  String get manageExportCreate => 'Create export';
+
+  @override
+  String get manageExportStarted =>
+      'Export started. It can take a few minutes.';
+
+  @override
+  String get manageExportHistory => 'Exports';
+
+  @override
+  String get manageExportEmpty =>
+      'No exports yet. Create one to get a copy of your data.';
+
+  @override
+  String get manageExportLoadFailed => 'Couldn\'t load exports.';
+
+  @override
+  String get manageExportAdminOnly => 'Only a family admin can export data.';
+
+  @override
+  String get manageExportStatusPending => 'Queued';
+
+  @override
+  String get manageExportStatusProcessing => 'Preparing';
+
+  @override
+  String get manageExportStatusCompleted => 'Ready';
+
+  @override
+  String get manageExportStatusFailed => 'Failed';
+
+  @override
+  String get manageExportDownload => 'Download';
+
+  @override
+  String get manageExportDownloadFailed => 'Couldn\'t download the export.';
+
+  @override
+  String get manageExportStillPreparing =>
+      'Still preparing. Pull down to check again.';
 }
