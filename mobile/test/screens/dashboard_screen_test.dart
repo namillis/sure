@@ -281,8 +281,7 @@ void main() {
     expect(
       tester
           .widget<Text>(find.descendant(of: cash, matching: find.byType(Text)).first)
-          .textSpan!
-          .toPlainText(),
+          .data,
       'Cash · 3',
     );
     expect(find.descendant(of: cash, matching: find.text(r'$1,500.00')),

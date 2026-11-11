@@ -678,7 +678,7 @@ class _NeutralIcon extends StatelessWidget {
   }
 }
 
-/// "Cash · 3 (1 empty)" with the group's total in the main currency and any
+/// "Cash · 3" with the group's total in the main currency and any
 /// other currencies under it ("+ £28,708.00"), then a chevron.
 class _AccountGroupRow extends StatelessWidget {
   const _AccountGroupRow({
