@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import 'sure_text_field.dart';
+import 'ds/ds.dart';
 
 /// One choice in a [MetadataPickerSheet].
 class PickerOption {
@@ -24,7 +23,7 @@ class PickerCreateException implements Exception {
   String toString() => message;
 }
 
-/// A searchable bottom-sheet picker for categories, merchants and tags.
+/// A searchable Sure sheet picker for merchants and tags.
 ///
 /// Single-select pops with the chosen id as soon as a row is tapped;
 /// multi-select toggles rows and pops with the whole set on Done. Either way
@@ -61,10 +60,8 @@ class MetadataPickerSheet extends StatefulWidget {
     String? createUnavailableNote,
     bool loading = false,
   }) {
-    return showModalBottomSheet<Set<String>>(
+    return showSureSheet<Set<String>>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => MetadataPickerSheet(
         title: title,
         options: options,
@@ -114,6 +111,7 @@ class _MetadataPickerSheetState extends State<MetadataPickerSheet> {
       Navigator.of(context).pop({id});
       return;
     }
+    SureHaptics.selection();
     setState(() {
       if (!_selected.remove(id)) _selected.add(id);
     });
@@ -160,136 +158,156 @@ class _MetadataPickerSheetState extends State<MetadataPickerSheet> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
     final filtered = _filtered;
     final showCreate = _canOfferCreate && widget.onCreate != null;
     final showUnavailable = _canOfferCreate &&
         widget.onCreate == null &&
         widget.createUnavailableNote != null;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.8,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    final Widget list;
+    if (widget.loading && _options.isEmpty) {
+      list = const Center(child: CircularProgressIndicator());
+    } else {
+      list = ListView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        children: [
+          if (showCreate)
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                SureSpacing.xl,
-                SureSpacing.lg,
-                SureSpacing.md,
-                SureSpacing.md,
-              ),
-              child: Row(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SurePanel.rows(
                 children: [
-                  Expanded(
-                    child: Text(widget.title, style: theme.textTheme.titleLarge),
+                  PickerCreateRow(
+                    label: l.txnDetailCreateOption(_query.trim()),
+                    creating: _creating,
+                    onTap: _create,
                   ),
-                  if (widget.multiSelect)
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(_selected),
-                      child: Text(l.txnDetailDone),
-                    )
-                  else
-                    IconButton(
-                      tooltip: l.commonClose,
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
                 ],
               ),
             ),
+          if (showUnavailable)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: SureSpacing.xl),
-              child: SureTextField(
-                controller: _searchController,
-                hint: l.txnDetailSearchHint,
-                prefixIcon: const Icon(Icons.search),
-                textInputAction: TextInputAction.search,
-                onChanged: (value) => setState(() {
-                  _query = value;
-                  _createError = null;
-                }),
-                onFieldSubmitted: _onSubmitted,
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+              child: Text(
+                widget.createUnavailableNote!,
+                style: TextStyle(fontSize: 13, color: palette.textSecondary),
               ),
             ),
-            if (_createError != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  SureSpacing.xl,
-                  SureSpacing.md,
-                  SureSpacing.xl,
-                  0,
-                ),
-                child: Text(
-                  _createError!,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: palette.destructive),
-                ),
-              ),
-            const SizedBox(height: SureSpacing.md),
-            Expanded(
-              child: widget.loading && _options.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView(
-                      children: [
-                        if (showCreate)
-                          ListTile(
-                            minTileHeight: 48,
-                            leading: _creating
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.add),
-                            title: Text(l.txnDetailCreateOption(_query.trim())),
-                            onTap: _creating ? null : _create,
-                          ),
-                        if (showUnavailable)
-                          Padding(
-                            padding: const EdgeInsets.all(SureSpacing.xl),
-                            child: Text(
-                              widget.createUnavailableNote!,
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: palette.textSecondary),
-                            ),
-                          ),
-                        if (filtered.isEmpty && !showCreate)
-                          Padding(
-                            padding: const EdgeInsets.all(SureSpacing.xl),
-                            child: Text(
-                              l.txnDetailPickerEmpty,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(color: palette.textSecondary),
-                            ),
-                          ),
-                        for (final option in filtered)
-                          _optionTile(option),
-                      ],
-                    ),
+          if (filtered.isEmpty && !showCreate)
+            SureEmptyState(
+              icon: SureIcons.search,
+              title: l.txnDetailPickerEmpty,
+            )
+          else
+            SurePanel.rows(
+              children: [
+                for (final option in filtered)
+                  PickerOptionRow(
+                    label: option.label,
+                    selected: _selected.contains(option.id),
+                    onTap: () => _toggle(option.id),
+                  ),
+              ],
             ),
-          ],
-        ),
+        ],
+      );
+    }
+
+    return SureSheet(
+      title: widget.title,
+      scrollable: false,
+      actionLabel: l.txnDetailDone,
+      onAction: widget.multiSelect
+          ? () => Navigator.of(context).pop(_selected)
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: SureSearchField(
+              controller: _searchController,
+              hintText: l.txnDetailSearchHint,
+              onChanged: (value) => setState(() {
+                _query = value;
+                _createError = null;
+              }),
+              onSubmitted: _onSubmitted,
+            ),
+          ),
+          if (_createError != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                _createError!,
+                style: TextStyle(fontSize: 13, color: palette.destructive),
+              ),
+            ),
+          Expanded(child: list),
+        ],
       ),
     );
   }
+}
 
-  Widget _optionTile(PickerOption option) {
-    final selected = _selected.contains(option.id);
-    return ListTile(
-      minTileHeight: 48,
-      title: Text(option.label),
+/// A picker row: optional [leading] (a category dot), the label, and a check
+/// mark when [selected].
+class PickerOptionRow extends StatelessWidget {
+  const PickerOptionRow({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.leading,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    return Semantics(
       selected: selected,
-      // The check mark (not just the tint) shows selection.
-      trailing: widget.multiSelect
-          ? Checkbox(value: selected, onChanged: (_) => _toggle(option.id))
-          : (selected ? const Icon(Icons.check) : null),
-      onTap: () => _toggle(option.id),
+      child: SureListRow(
+        title: label,
+        leading: leading,
+        onTap: onTap,
+        trailing: selected
+            ? SureIcon(SureIcons.check, size: 18, color: palette.link)
+            : const SizedBox(width: 18),
+      ),
+    );
+  }
+}
+
+/// The "Create “name”" row at the top of a picker's results.
+class PickerCreateRow extends StatelessWidget {
+  const PickerCreateRow({
+    super.key,
+    required this.label,
+    required this.creating,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool creating;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    return SureListRow(
+      title: label,
+      titleColor: palette.link,
+      leading: SizedBox.square(
+        dimension: 18,
+        child: creating
+            ? const CircularProgressIndicator(strokeWidth: 2)
+            : SureIcon(SureIcons.plus, size: 18, color: palette.link),
+      ),
+      onTap: creating ? null : onTap,
     );
   }
 }

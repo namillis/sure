@@ -35,6 +35,11 @@ class Transaction {
   /// field.
   final bool? splitParent;
 
+  /// The entry id behind this transaction. Web routes for one transaction
+  /// (`/transactions/:id`) take it rather than [id]. Null when the server
+  /// predates the field or the row came from the local cache.
+  final String? entryId;
+
   Transaction({
     this.id,
     required this.accountId,
@@ -57,6 +62,7 @@ class Transaction {
     this.kind,
     this.excluded,
     this.splitParent,
+    this.entryId,
   })  : tagIds = List.unmodifiable(tagIds),
         tagNames = List.unmodifiable(tagNames),
         categoryProvided =
@@ -169,6 +175,7 @@ class Transaction {
       excluded: json['excluded'] is bool ? json['excluded'] as bool : null,
       splitParent:
           json['split_parent'] is bool ? json['split_parent'] as bool : null,
+      entryId: _nonEmptyString(json['entry_id']),
     );
   }
 

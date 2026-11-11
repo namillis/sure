@@ -16,9 +16,9 @@ import '../theme/sure_tokens.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
 import '../utils/split_math.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/metadata_picker_sheet.dart';
 import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
 import '../widgets/sure_text_field.dart';
 import '../widgets/transaction_metadata_pickers.dart';
 
@@ -102,7 +102,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
   }
 
   String _locale() =>
-      Localizations.maybeLocaleOf(context)?.toString() ?? Intl.getCurrentLocale();
+      Localizations.maybeLocaleOf(context)?.toString() ??
+      Intl.getCurrentLocale();
 
   @override
   void didChangeDependencies() {
@@ -122,7 +123,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
         _SplitRow(
           name: child.name,
           amount: SplitMath.toEditText(
-            SplitMath.toTypedUnits(serverUnits, parentServerUnits: _parentUnits),
+            SplitMath.toTypedUnits(serverUnits,
+                parentServerUnits: _parentUnits),
             locale: _locale(),
           ),
           categoryId: child.categoryId,
@@ -223,7 +225,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
   Future<String?> _token() async {
     final token = await context.read<AuthProvider>().getValidAccessToken();
     if (token == null && mounted) {
-      setState(() => _error = AppLocalizations.of(context).transactionEditSessionExpired);
+      setState(() =>
+          _error = AppLocalizations.of(context).transactionEditSessionExpired);
     }
     return token;
   }
@@ -351,7 +354,7 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
     if (check.balanced) {
       status = Row(
         children: [
-          Icon(Icons.check_circle, color: palette.success, size: 20),
+          SureIcon(SureIcons.circleCheck, color: palette.success, size: 20),
           const SizedBox(width: SureSpacing.md),
           Expanded(child: Text(l.txnDetailSplitBalanced)),
         ],
@@ -361,8 +364,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
       final amount = _money(check.remainingUnits.abs(), hidden: hidden);
       status = Row(
         children: [
-          Icon(
-            over ? Icons.error_outline : Icons.pending_outlined,
+          SureIcon(
+            over ? SureIcons.circleAlert : SureIcons.clock,
             color: over ? palette.destructive : palette.warning,
             size: 20,
           ),
@@ -379,12 +382,14 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
     }
 
     return Scaffold(
+      backgroundColor: palette.surface,
       appBar: AppBar(title: Text(l.txnDetailSplitTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(SureSpacing.xl),
           children: [
-            SureCard(
+            SurePanel(
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -432,7 +437,7 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: enabled ? _addRow : null,
-                icon: const Icon(Icons.add),
+                icon: SureIcon(SureIcons.plus, size: 18, color: palette.link),
                 label: Text(l.txnDetailSplitAddRow),
               ),
             ),
@@ -491,7 +496,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
     final isLast = index == _rows.length - 1;
     final categoryLabel = _categoryLabel(row, categories);
 
-    return SureCard(
+    return SurePanel(
+      padding: const EdgeInsets.fromLTRB(14, 4, 4, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -505,7 +511,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
               ),
               IconButton(
                 tooltip: l.txnDetailSplitRemoveRow,
-                icon: const Icon(Icons.delete_outline),
+                icon: SureIcon(SureIcons.trash,
+                    size: 18, color: palette.textSecondary),
                 onPressed: enabled && _rows.length > 1
                     ? () => _removeRow(index)
                     : null,
@@ -534,7 +541,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
                 isLast ? TextInputAction.done : TextInputAction.next,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validator: (value) {
-              final units = SplitMath.parseTyped(value ?? '', locale: _locale());
+              final units =
+                  SplitMath.parseTyped(value ?? '', locale: _locale());
               return units == null || units == 0
                   ? l.txnDetailSplitInvalidAmount
                   : null;
@@ -542,7 +550,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
             onChanged: (_) => setState(() {}),
             suffixIcon: IconButton(
               tooltip: l.txnDetailSplitUseRemaining,
-              icon: const Icon(Icons.vertical_align_bottom),
+              icon: SureIcon(SureIcons.arrowDown,
+                  size: 18, color: palette.textSecondary),
               onPressed: enabled ? () => _fillRemaining(index) : null,
             ),
           ),
@@ -557,7 +566,8 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Row(
                   children: [
-                    Icon(Icons.category_outlined, color: palette.textSecondary),
+                    SureIcon(SureIcons.shapes,
+                        size: 20, color: palette.textSecondary),
                     const SizedBox(width: SureSpacing.lg),
                     Expanded(
                       child: Text(
@@ -569,7 +579,9 @@ class _TransactionSplitScreenState extends State<TransactionSplitScreen> {
                         ),
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: palette.textSubdued),
+                    SureIcon(SureIcons.chevronRight,
+                        size: 18, color: palette.textSubdued),
+                    const SizedBox(width: 10),
                   ],
                 ),
               ),
