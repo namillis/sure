@@ -3312,10 +3312,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get p3rpEmpty => 'Inga transaktioner under den här perioden.';
 
   @override
-  String get dsToday => 'Idag';
+  String get dsToday => 'I dag';
 
   @override
-  String get dsYesterday => 'Igår';
+  String get dsYesterday => 'I går';
 
   @override
   String get dsCancel => 'Avbryt';
@@ -3346,4 +3346,42 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dsFailed => 'Misslyckades';
+
+  @override
+  String get dspSyncedJustNow => 'synkat nyss';
+
+  @override
+  String dspSyncedMinutesAgo(int count) {
+    return 'synkat för $count min sedan';
+  }
+
+  @override
+  String dspSyncedHoursAgo(int count) {
+    return 'synkat för $count h sedan';
+  }
+
+  @override
+  String dspSyncedDaysAgo(int count) {
+    return 'synkat för $count d sedan';
+  }
+
+  @override
+  String dspSharesAtPrice(String quantity, String price) {
+    return '$quantity st · $price';
+  }
+
+  @override
+  String get dspClearFilter => 'Rensa filter';
+
+  @override
+  String get dspSelect => 'Markera transaktioner';
+
+  @override
+  String get dspDoneSelecting => 'Klar med markering';
+
+  @override
+  String get dspDeleteSelected => 'Radera markerade';
+
+  @override
+  String get dspNewTransaction => 'Ny transaktion';
 }

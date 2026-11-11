@@ -3316,4 +3316,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dsFailed => 'Failed';
+
+  @override
+  String get dspSyncedJustNow => 'synced just now';
+
+  @override
+  String dspSyncedMinutesAgo(int count) {
+    return 'synced ${count}m ago';
+  }
+
+  @override
+  String dspSyncedHoursAgo(int count) {
+    return 'synced ${count}h ago';
+  }
+
+  @override
+  String dspSyncedDaysAgo(int count) {
+    return 'synced ${count}d ago';
+  }
+
+  @override
+  String dspSharesAtPrice(String quantity, String price) {
+    return '$quantity sh · $price';
+  }
+
+  @override
+  String get dspClearFilter => 'Clear filter';
+
+  @override
+  String get dspSelect => 'Select transactions';
+
+  @override
+  String get dspDoneSelecting => 'Done selecting';
+
+  @override
+  String get dspDeleteSelected => 'Delete selected';
+
+  @override
+  String get dspNewTransaction => 'New transaction';
 }

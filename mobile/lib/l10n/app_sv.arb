@@ -933,5 +933,15 @@
   "dsCategorize": "Kategorisera",
   "dsDelete": "Radera",
   "dsPending": "Väntar",
-  "dsFailed": "Misslyckades"
+  "dsFailed": "Misslyckades",
+  "dspSyncedJustNow": "synkat nyss",
+  "dspSyncedMinutesAgo": "synkat för {count} min sedan",
+  "dspSyncedHoursAgo": "synkat för {count} h sedan",
+  "dspSyncedDaysAgo": "synkat för {count} d sedan",
+  "dspSharesAtPrice": "{quantity} st · {price}",
+  "dspClearFilter": "Rensa filter",
+  "dspSelect": "Markera transaktioner",
+  "dspDoneSelecting": "Klar med markering",
+  "dspDeleteSelected": "Radera markerade",
+  "dspNewTransaction": "Ny transaktion"
 }

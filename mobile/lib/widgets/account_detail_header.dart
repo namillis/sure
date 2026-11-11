@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 import '../models/account.dart';
 import '../models/account_balance.dart';
 import '../providers/auth_provider.dart';
@@ -8,10 +8,13 @@ import '../providers/privacy_provider.dart';
 import '../services/account_detail_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/sure_colors.dart';
+import '../theme/sure_tokens.dart';
+import '../utils/sure_dates.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
 import '../utils/portfolio_math.dart';
 import 'balance_history_chart.dart';
+import 'money_text.dart';
 import 'sure_segmented_control.dart';
 
 class AccountDetailHeader extends StatefulWidget {
@@ -22,7 +25,16 @@ class AccountDetailHeader extends StatefulWidget {
     super.key,
     required this.account,
     this.accountDetailService,
+    this.onAccountLoaded,
+    this.reloadToken,
   });
+
+  /// Called with the account as the server returned it, after each load.
+  final ValueChanged<Account>? onAccountLoaded;
+
+  /// Changing this value reloads the account and its balance history (e.g.
+  /// from the page's pull-to-refresh).
+  final Object? reloadToken;
 
   @override
   State<AccountDetailHeader> createState() => _AccountDetailHeaderState();
@@ -120,10 +132,20 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
         }
         _isLoading = false;
       });
+      if (accountResult['success'] == true &&
+          accountResult['account'] is Account) {
+        widget.onAccountLoaded?.call(_account);
+      }
     } finally {
       _activeDetailLoads -= 1;
       _closeOwnedAccountDetailServiceIfIdle();
     }
+  }
+
+  @override
+  void didUpdateWidget(covariant AccountDetailHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.reloadToken != oldWidget.reloadToken) _loadDetails();
   }
 
   void _selectRange(AccountChartRange range) {
@@ -152,8 +174,6 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final palette = SureColors.of(context).palette;
     final locale = Localizations.localeOf(context).toString();
     final hideAmounts = context.watch<PrivacyProvider>().hidden;
@@ -167,11 +187,19 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
     final selected = _selectedBalance;
     final headlineAmount = selected?.balance ?? _account.balance;
 
-    String? subline;
-    Color? sublineColor;
+    // While scrubbing, the line under the hero shows the touched day instead
+    // of the range's change.
+    Widget? subline;
+    String? semanticLabel;
     if (selected != null) {
-      subline = DateFormat.yMMMd(locale).format(selected.date);
-      sublineColor = colorScheme.onSurfaceVariant;
+      semanticLabel = SureDates.full(selected.date, locale: locale);
+      subline = Text(
+        semanticLabel,
+        key: const ValueKey('accountHeaderScrubDate'),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 13, color: palette.textSecondary),
+      );
     } else if (change != null) {
       final currency = _balances.last.currency;
       final changeText = MoneyMasker.mask(
@@ -184,183 +212,133 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
         hidden: hideAmounts,
       );
       final percent = change.percent;
-      subline = percent == null
-          ? l.accountChartChangeOnlyLabel(changeText)
-          : l.accountChartChangeLabel(
-              changeText,
-              InvestmentMath.formatPercent(percent, locale: locale),
-            );
-      sublineColor = trendColor;
+      final changeLine = percent == null
+          ? changeText
+          : '$changeText (${InvestmentMath.formatPercent(percent, locale: locale)})';
+      semanticLabel = '$changeLine ${_range.label(l)}';
+      subline = Row(
+        key: const ValueKey('accountHeaderChange'),
+        children: [
+          Flexible(
+            child: MoneyText(
+              changeLine,
+              trend: trendIsGood ? MoneyTrend.inflow : MoneyTrend.outflow,
+              color: trendColor,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            _range.label(l),
+            style: TextStyle(
+              fontSize: 13,
+              fontFamily: SureTokens.fontMono,
+              color: palette.textSubdued,
+            ),
+          ),
+        ],
+      );
     }
 
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _account.displayAccountType,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        MoneyMasker.mask(headlineAmount, hidden: hideAmounts),
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: _account.isLiability && selected == null
-                              ? palette.destructive
-                              : null,
-                        ),
-                      ),
-                      if (subline != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subline,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: sublineColor),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (_isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                else
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: l.accountDetailRefreshTooltip,
-                    onPressed: _loadDetails,
-                  ),
-              ],
-            ),
-            if (_account.institutionName != null ||
-                _account.subtype != null ||
-                _account.cashBalance != null ||
-                _account.status != null) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (_account.institutionName != null)
-                    _DetailChip(
-                      label: _account.institutionName!,
-                      icon: Icons.account_balance,
-                    ),
-                  if (_account.subtype != null)
-                    _DetailChip(
-                      label: _account.subtype!,
-                      icon: Icons.category_outlined,
-                    ),
-                  if (_account.cashBalance != null)
-                    _DetailChip(
-                      label: l.accountDetailCashChip(
-                        MoneyMasker.mask(_account.cashBalance!,
-                            hidden: hideAmounts),
-                      ),
-                      icon: Icons.payments_outlined,
-                    ),
-                  if (_account.status != null)
-                    _DetailChip(
-                      label: _account.status!,
-                      icon: Icons.sync,
-                    ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 96,
-              child: _balances.where((b) => b.balanceCents != null).length >= 2
-                  ? BalanceHistoryChart(
-                      balances: _balances,
-                      color: trendColor,
-                      semanticLabel: subline,
-                      onSelectionChanged: (balance) =>
-                          setState(() => _selectedBalance = balance),
-                    )
-                  : Center(
-                      child: Text(
-                        _isLoading ? '' : l.accountChartNoHistory,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-            ),
-            const SizedBox(height: 12),
-            SureSegmentedControl<AccountChartRange>(
-              selected: _range,
-              onChanged: _selectRange,
-              segments: [
-                for (final range in AccountChartRange.values)
-                  SureSegment(value: range, label: range.label(l)),
-              ],
-            ),
-            if (_detailsUnavailable) ...[
-              const SizedBox(height: 8),
-              Text(
-                l.accountDetailUnavailable,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.error,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
+    final hasChart = _balances.where((b) => b.balanceCents != null).length >= 2;
 
-class _DetailChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _DetailChip({
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+          Row(
+            children: [
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: MoneyText(
+                    MoneyMasker.mask(headlineAmount, hidden: hideAmounts),
+                    key: const ValueKey('accountHeaderBalance'),
+                    trend: MoneyTrend.neutral,
+                    color: _account.isLiability && selected == null
+                        ? palette.destructive
+                        : palette.textPrimary,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      height: 1.2,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
                 ),
+              ),
+              if (_isLoading) ...[
+                const SizedBox(width: 10),
+                const SizedBox.square(
+                  dimension: 14,
+                  child: CircularProgressIndicator(strokeWidth: 1.5),
+                ),
+              ],
+            ],
           ),
+          // Fixed height so scrubbing (date) and the change line swap without
+          // the chart jumping.
+          SizedBox(
+            height: 20,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: subline ?? const SizedBox.shrink(),
+            ),
+          ),
+          if (_account.cashBalance != null)
+            MoneyText(
+              l.accountDetailCashChip(
+                MoneyMasker.mask(_account.cashBalance!, hidden: hideAmounts),
+              ),
+              trend: MoneyTrend.neutral,
+              color: palette.textSecondary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+            ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 120,
+            child: hasChart
+                ? BalanceHistoryChart(
+                    balances: _balances,
+                    color: trendColor,
+                    semanticLabel: semanticLabel,
+                    onSelectionChanged: (balance) =>
+                        setState(() => _selectedBalance = balance),
+                  )
+                : Center(
+                    child: Text(
+                      _isLoading ? '' : l.accountChartNoHistory,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: palette.textSubdued,
+                      ),
+                    ),
+                  ),
+          ),
+          const SizedBox(height: 12),
+          SureSegmentedControl<AccountChartRange>(
+            selected: _range,
+            onChanged: _selectRange,
+            segments: [
+              for (final range in AccountChartRange.values)
+                SureSegment(value: range, label: range.label(l)),
+            ],
+          ),
+          if (_detailsUnavailable) ...[
+            const SizedBox(height: 8),
+            Text(
+              l.accountDetailUnavailable,
+              style: TextStyle(fontSize: 13, color: palette.destructive),
+            ),
+          ],
         ],
       ),
     );

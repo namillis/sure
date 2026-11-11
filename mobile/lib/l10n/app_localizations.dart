@@ -5659,6 +5659,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get dsFailed;
+
+  /// Account page subtitle part: the account was updated under a minute ago. Follows the account type, e.g. 'Brokerage · synced just now'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced just now'**
+  String get dspSyncedJustNow;
+
+  /// Account page subtitle part, e.g. 'Brokerage · synced 5m ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced {count}m ago'**
+  String dspSyncedMinutesAgo(int count);
+
+  /// Account page subtitle part, e.g. 'Brokerage · synced 9h ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced {count}h ago'**
+  String dspSyncedHoursAgo(int count);
+
+  /// Account page subtitle part, e.g. 'Brokerage · synced 3d ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'synced {count}d ago'**
+  String dspSyncedDaysAgo(int count);
+
+  /// Holding row subtitle: share count (abbreviated 'sh') and current price, e.g. '781.46 sh · $102.00'.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} sh · {price}'**
+  String dspSharesAtPrice(String quantity, String price);
+
+  /// Link under the account page's no-matches state that clears the category filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filter'**
+  String get dspClearFilter;
+
+  /// Accessibility label of the account page's nav-bar button that enters multi-select.
+  ///
+  /// In en, this message translates to:
+  /// **'Select transactions'**
+  String get dspSelect;
+
+  /// Accessibility label of the account page's nav-bar button that leaves multi-select.
+  ///
+  /// In en, this message translates to:
+  /// **'Done selecting'**
+  String get dspDoneSelecting;
+
+  /// Accessibility label of the account page's nav-bar button that deletes the selected transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get dspDeleteSelected;
+
+  /// Tooltip of the account page's add-transaction button.
+  ///
+  /// In en, this message translates to:
+  /// **'New transaction'**
+  String get dspNewTransaction;
 }
 
 class _AppLocalizationsDelegate

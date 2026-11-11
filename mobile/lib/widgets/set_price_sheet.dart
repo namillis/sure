@@ -7,10 +7,11 @@ import '../models/account_holding.dart';
 import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../services/security_prices_service.dart';
+import '../theme/sure_colors.dart';
 import '../utils/amount_parser.dart';
 import '../utils/money_masker.dart';
+import 'ds/ds.dart';
 import 'form_error_text.dart';
-import 'sure_button.dart';
 import 'sure_text_field.dart';
 
 /// Opens [SetPriceSheet] for [holding]. Resolves to true once the server
@@ -22,11 +23,8 @@ Future<bool> showSetPriceSheet(
   SecurityPricesService? service,
 }) async {
   if (holding.securityId == null) return false;
-  final saved = await showModalBottomSheet<bool>(
+  final saved = await showSureSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    useSafeArea: true,
     builder: (_) => SetPriceSheet(holding: holding, service: service),
   );
   return saved == true;
@@ -59,7 +57,7 @@ class _SetPriceSheetState extends State<SetPriceSheet> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _dateController.text = DateFormat.yMMMd(_locale).format(_date);
+    _dateController.text = SureDates.full(_date, locale: _locale);
   }
 
   @override
@@ -93,7 +91,7 @@ class _SetPriceSheetState extends State<SetPriceSheet> {
     if (picked == null || !mounted) return;
     setState(() {
       _date = picked;
-      _dateController.text = DateFormat.yMMMd(_locale).format(picked);
+      _dateController.text = SureDates.full(picked, locale: _locale);
     });
   }
 
@@ -147,7 +145,7 @@ class _SetPriceSheetState extends State<SetPriceSheet> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final palette = SureColors.of(context).palette;
     final hidden = context.watch<PrivacyProvider>().hidden;
     final holding = widget.holding;
     final title = [holding.ticker, holding.securityName]
@@ -156,73 +154,77 @@ class _SetPriceSheetState extends State<SetPriceSheet> {
         .where((part) => part.isNotEmpty)
         .join(' · ');
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+    return SureSheet(
+      title: l.p3apSetPriceTitle,
+      actionLabel: l.accountActionsSave,
+      onAction: _submit,
+      busy: _submitting,
       child: Form(
         key: _formKey,
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-          children: [
-            Text(l.p3apSetPriceTitle, style: theme.textTheme.titleLarge),
-            if (title.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(title, style: theme.textTheme.titleSmall),
-            ],
-            const SizedBox(height: 4),
-            Text(
-              l.p3apCurrentPrice(
-                  MoneyMasker.mask(holding.price, hidden: hidden)),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (title.isNotEmpty) ...[
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: palette.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+              MoneyText(
+                l.p3apCurrentPrice(
+                    MoneyMasker.mask(holding.price, hidden: hidden)),
+                trend: MoneyTrend.neutral,
+                color: palette.textSecondary,
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l.p3apSetPriceIntro,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              const SizedBox(height: 8),
+              Text(
+                l.p3apSetPriceIntro,
+                style: TextStyle(fontSize: 13, color: palette.textSecondary),
               ),
-            ),
-            const SizedBox(height: 16),
-            SureTextField(
-              key: const ValueKey('setPriceAmount'),
-              controller: _priceController,
-              label: l.p3apPriceLabel,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              suffixIcon: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Text(holding.currency),
-              ),
-              validator: _validatePrice,
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            SureTextField(
-              key: const ValueKey('setPriceDate'),
-              controller: _dateController,
-              label: l.accountActionsDate,
-              readOnly: true,
-              prefixIcon: const Icon(Icons.calendar_today),
-              onTap: _pickDate,
-            ),
-            if (_error != null) ...[
               const SizedBox(height: 16),
-              FormErrorText(_error!),
+              SureTextField(
+                key: const ValueKey('setPriceAmount'),
+                controller: _priceController,
+                label: l.p3apPriceLabel,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                suffixIcon: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Text(holding.currency),
+                ),
+                validator: _validatePrice,
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              SureTextField(
+                key: const ValueKey('setPriceDate'),
+                controller: _dateController,
+                label: l.accountActionsDate,
+                readOnly: true,
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: SureIcon(SureIcons.calendar,
+                      size: 18, color: palette.textSecondary),
+                ),
+                onTap: _pickDate,
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                FormErrorText(_error!),
+              ],
             ],
-            const SizedBox(height: 24),
-            SureButton(
-              key: const ValueKey('setPriceSave'),
-              label: l.accountActionsSave,
-              onPressed: _submitting ? null : _submit,
-              loading: _submitting,
-              fullWidth: true,
-              size: SureButtonSize.lg,
-            ),
-          ],
+          ),
         ),
       ),
     );
