@@ -6,7 +6,11 @@ import '../services/api_config.dart';
 import '../services/custom_proxy_headers_service.dart';
 import '../services/log_service.dart';
 import '../services/offline_cache_store.dart';
+import '../theme/sure_colors.dart';
+import '../theme/sure_tokens.dart';
 import '../widgets/custom_proxy_headers_editor.dart';
+import '../widgets/ds/ds.dart';
+import '../widgets/sure_button.dart';
 import '../l10n/app_localizations.dart';
 
 class BackendConfigScreen extends StatefulWidget {
@@ -211,243 +215,302 @@ class _BackendConfigScreenState extends State<BackendConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
+    final palette = SureColors.of(context).palette;
+    final canPop = ModalRoute.of(context)?.canPop ?? false;
 
     return Scaffold(
+      backgroundColor: palette.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 48),
-                // Logo/Title
-                Icon(
-                  Icons.settings_outlined,
-                  size: 80,
-                  color: colorScheme.primary,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l.backendConfigTitle,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l.backendConfigSubtitle,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 48),
-
-                // Info box
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (canPop)
+              const Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SureBackButton(),
+              ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                child: Form(
+                  key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline, color: colorScheme.primary),
-                          const SizedBox(width: 12),
-                          Text(
-                            l.backendConfigExampleUrlsLabel,
-                            style: TextStyle(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.bold,
+                      SizedBox(height: canPop ? 8 : 48),
+                      Center(
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: palette.surfaceInset,
+                            shape: BoxShape.circle,
+                          ),
+                          child: SureIcon(
+                            SureIcons.settings,
+                            size: 30,
+                            color: palette.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l.backendConfigTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                          color: palette.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.backendConfigSubtitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: palette.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Example URLs
+                      SurePanel(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                SureIcon(SureIcons.info,
+                                    size: 18, color: palette.textSecondary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    l.backendConfigExampleUrlsLabel,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: palette.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'https://demo.sure.am\n'
+                              'https://your-domain.com\n'
+                              'http://localhost:3000',
+                              style: TextStyle(
+                                fontFamily: SureTokens.fontMono,
+                                fontFamilyFallback: const <String>[
+                                  'Menlo',
+                                  'monospace'
+                                ],
+                                fontSize: 13,
+                                height: 1.5,
+                                color: palette.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      if (_errorMessage != null)
+                        _StatusMessage(
+                          key: const ValueKey('backendConfigError'),
+                          message: _errorMessage!,
+                          icon: SureIcons.circleAlert,
+                          color: palette.destructive,
+                          onDismiss: () => setState(() => _errorMessage = null),
+                        ),
+
+                      if (_successMessage != null)
+                        _StatusMessage(
+                          key: const ValueKey('backendConfigSuccess'),
+                          message: _successMessage!,
+                          icon: SureIcons.circleCheck,
+                          color: palette.success,
+                          onDismiss: () =>
+                              setState(() => _successMessage = null),
+                        ),
+
+                      // URL Field
+                      TextFormField(
+                        controller: _urlController,
+                        keyboardType: TextInputType.url,
+                        autocorrect: false,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          labelText: l.backendConfigUrlLabel,
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: SureIcon('globe',
+                                size: 20, color: palette.textSecondary),
+                          ),
+                          hintText: l.backendConfigUrlHint,
+                        ),
+                        validator: (value) => _validateUrl(value, l),
+                        onFieldSubmitted: (_) => _saveAndContinue(),
+                      ),
+                      const SizedBox(height: 16),
+                      SurePanel(
+                        child: Material(
+                          // ExpansionTile's ListTile paints ink on the
+                          // nearest Material; keep it inside the panel.
+                          type: MaterialType.transparency,
+                          child: Theme(
+                            // No ExpansionTile dividers inside the panel.
+                            data: Theme.of(context)
+                                .copyWith(dividerColor: Colors.transparent),
+                            child: ExpansionTile(
+                              tilePadding:
+                                  const EdgeInsets.symmetric(horizontal: 14),
+                              childrenPadding:
+                                  const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                              iconColor: palette.textSubdued,
+                              collapsedIconColor: palette.textSubdued,
+                              title: Text(
+                                l.backendConfigProxyHeadersLabel,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: SureTokens.weightMedium,
+                                  color: palette.textPrimary,
+                                ),
+                              ),
+                              subtitle: Text(
+                                _customHeaders.isEmpty
+                                    ? l.backendConfigProxyHeadersSubtitle
+                                    : l.backendConfigProxyHeadersCount(
+                                        _customHeaders.length),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: palette.textSecondary,
+                                ),
+                              ),
+                              children: [
+                                const SizedBox(height: 8),
+                                if (_hasLoadedConfig)
+                                  CustomProxyHeadersEditor(
+                                    initialHeaders: _customHeaders,
+                                    onChanged: (headers) {
+                                      setState(() => _customHeaders = headers);
+                                    },
+                                  )
+                                else
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  l.backendConfigHeadersHelp,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: palette.textSecondary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      SureButton(
+                        label: _isTesting
+                            ? l.backendConfigTesting
+                            : l.backendConfigTestButton,
+                        variant: SureButtonVariant.outline,
+                        size: SureButtonSize.lg,
+                        fullWidth: true,
+                        loading: _isTesting,
+                        leading: SureIcon('plug',
+                            size: 18, color: palette.textPrimary),
+                        onPressed:
+                            _isTesting || _isLoading ? null : _testConnection,
                       ),
                       const SizedBox(height: 12),
+                      SureButton(
+                        label: l.backendConfigContinueButton,
+                        size: SureButtonSize.lg,
+                        fullWidth: true,
+                        loading: _isLoading,
+                        onPressed:
+                            _isLoading || _isTesting ? null : _saveAndContinue,
+                      ),
+                      const SizedBox(height: 24),
                       Text(
-                        '• https://demo.sure.am\n'
-                        '• https://your-domain.com\n'
-                        '• http://localhost:3000',
+                        l.backendConfigChangeHint,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: colorScheme.onSurface,
-                          fontFamily: 'monospace',
+                          fontSize: 13,
+                          color: palette.textSubdued,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                // Error Message
-                if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: colorScheme.error),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: TextStyle(
-                              color: colorScheme.onErrorContainer,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            setState(() {
-                              _errorMessage = null;
-                            });
-                          },
-                          iconSize: 20,
-                        ),
-                      ],
-                    ),
-                  ),
+/// A dismissible result line under the examples: a ~12% fill of [color]
+/// with an icon, the message and a close button.
+class _StatusMessage extends StatelessWidget {
+  const _StatusMessage({
+    super.key,
+    required this.message,
+    required this.icon,
+    required this.color,
+    required this.onDismiss,
+  });
 
-                // Success Message
-                if (_successMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.check_circle_outline,
-                          color: Colors.green,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _successMessage!,
-                            style: TextStyle(color: Colors.green[800]),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            setState(() {
-                              _successMessage = null;
-                            });
-                          },
-                          iconSize: 20,
-                        ),
-                      ],
-                    ),
-                  ),
+  final String message;
+  final String icon;
+  final Color color;
+  final VoidCallback onDismiss;
 
-                // URL Field
-                TextFormField(
-                  controller: _urlController,
-                  keyboardType: TextInputType.url,
-                  autocorrect: false,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    labelText: l.backendConfigUrlLabel,
-                    prefixIcon: const Icon(Icons.cloud_outlined),
-                    hintText: l.backendConfigUrlHint,
-                  ),
-                  validator: (value) => _validateUrl(value, l),
-                  onFieldSubmitted: (_) => _saveAndContinue(),
-                ),
-                const SizedBox(height: 24),
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.http_outlined),
-                  title: Text(l.backendConfigProxyHeadersLabel),
-                  subtitle: Text(
-                    _customHeaders.isEmpty
-                        ? l.backendConfigProxyHeadersSubtitle
-                        : l.backendConfigProxyHeadersCount(_customHeaders.length),
-                  ),
-                  children: [
-                    const SizedBox(height: 8),
-                    if (_hasLoadedConfig)
-                      CustomProxyHeadersEditor(
-                        initialHeaders: _customHeaders,
-                        onChanged: (headers) {
-                          setState(() => _customHeaders = headers);
-                        },
-                      )
-                    else
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l.backendConfigHeadersHelp,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Test Connection Button
-                OutlinedButton.icon(
-                  onPressed: _isTesting || _isLoading ? null : _testConnection,
-                  icon: _isTesting
-                      ? const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.cable),
-                  label: Text(_isTesting ? l.backendConfigTesting : l.backendConfigTestButton),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Continue Button
-                ElevatedButton(
-                  onPressed: _isLoading || _isTesting ? null : _saveAndContinue,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l.backendConfigContinueButton),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Info text
-                Text(
-                  l.backendConfigChangeHint,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(SureTokens.radiusLg),
+      ),
+      child: Row(
+        children: [
+          SureIcon(icon, size: 18, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                message,
+                style: TextStyle(fontSize: 14, color: palette.textPrimary),
+              ),
             ),
           ),
-        ),
+          IconButton(
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            icon: SureIcon(SureIcons.x, size: 18, color: palette.textSecondary),
+            onPressed: onDismiss,
+          ),
+        ],
       ),
     );
   }
