@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../theme/sure_tokens.dart';
-import 'sure_button.dart';
-import 'sure_text_field.dart';
+import 'ds/ds.dart';
 
 /// One choice in an [ActivityOptionSheet].
 class ActivityOption {
@@ -18,9 +16,9 @@ class ActivityOption {
   final Color? color;
 }
 
-/// A bottom sheet listing [options], used by the Activity tab's category,
-/// account and tag filters (multi-select, returns the chosen ids on Apply) and
-/// by bulk categorize (single-select, returns the tapped id).
+/// A [SureSheet] listing [options], used by the Activity tab's filters
+/// (multi-select: "Done" returns the chosen ids), its date and type pickers
+/// and bulk categorize (single-select: returns the tapped id).
 class ActivityOptionSheet extends StatefulWidget {
   const ActivityOptionSheet({
     super.key,
@@ -32,6 +30,8 @@ class ActivityOptionSheet extends StatefulWidget {
 
   final String title;
   final List<ActivityOption> options;
+
+  /// Checked rows. In single-select it marks the current choice.
   final Set<String> selected;
   final bool multiSelect;
 
@@ -45,10 +45,8 @@ class ActivityOptionSheet extends StatefulWidget {
     required List<ActivityOption> options,
     required Set<String> selected,
   }) {
-    return showModalBottomSheet<Set<String>>(
+    return showSureSheet<Set<String>>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => ActivityOptionSheet(
         title: title,
         options: options,
@@ -58,18 +56,19 @@ class ActivityOptionSheet extends StatefulWidget {
   }
 
   /// Single-select: resolves to the tapped id, or null when dismissed.
+  /// [selected] gets a check mark.
   static Future<String?> pickOne(
     BuildContext context, {
     required String title,
     required List<ActivityOption> options,
+    String? selected,
   }) async {
-    final result = await showModalBottomSheet<Set<String>>(
+    final result = await showSureSheet<Set<String>>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => ActivityOptionSheet(
         title: title,
         options: options,
+        selected: {if (selected != null) selected},
         multiSelect: false,
       ),
     );
@@ -92,138 +91,99 @@ class _ActivityOptionSheetState extends State<ActivityOptionSheet> {
         .toList();
   }
 
+  void _tap(ActivityOption option) {
+    if (!widget.multiSelect) {
+      Navigator.pop(context, {option.id});
+      return;
+    }
+    SureHaptics.selection();
+    setState(() {
+      if (!_selected.remove(option.id)) _selected.add(option.id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    final textTheme = Theme.of(context).textTheme;
     final visible = _visible;
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.8,
-      ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    final Widget body;
+    if (widget.options.isEmpty) {
+      body = SureEmptyState(
+        icon: SureIcons.inbox,
+        title: l.activityFilterNoOptions,
+      );
+    } else {
+      body = ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        children: [
+          SurePanel.rows(
+            dividerIndent: visible.any((o) => o.color != null) ? 42 : 14,
+            children: [for (final option in visible) _row(option, palette)],
+          ),
+          if (widget.multiSelect && _selected.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                SureSpacing.xl,
-                SureSpacing.xl,
-                SureSpacing.xl,
-                SureSpacing.md,
-              ),
-              child: Text(
-                widget.title,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: SureTokens.weightSemibold,
+              padding: const EdgeInsets.only(top: 8),
+              child: Center(
+                child: TextButton(
+                  onPressed: () => setState(_selected.clear),
+                  style: TextButton.styleFrom(foregroundColor: palette.link),
+                  child: Text(l.activityFilterClear),
                 ),
               ),
             ),
-            if (widget.options.length > ActivityOptionSheet.searchThreshold)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SureSpacing.xl,
-                  vertical: SureSpacing.sm,
-                ),
-                child: SureTextField(
-                  hint: l.activityFilterSearchHint,
-                  prefixIcon: const Icon(Icons.search),
-                  onChanged: (value) => setState(() => _query = value),
-                ),
+        ],
+      );
+    }
+
+    return SureSheet(
+      title: widget.title,
+      actionLabel: l.dsDone,
+      onAction: widget.multiSelect
+          ? () => Navigator.pop(context, Set<String>.of(_selected))
+          : null,
+      // A single-select sheet with no action still needs its toolbar.
+      onCancel: () => Navigator.of(context).maybePop(),
+      scrollable: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.options.length > ActivityOptionSheet.searchThreshold)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: SureSearchField(
+                hintText: l.activityFilterSearchHint,
+                onChanged: (value) => setState(() => _query = value),
               ),
-            if (widget.options.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(SureSpacing.xxxl),
-                child: Text(
-                  l.activityFilterNoOptions,
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: palette.textSecondary,
-                  ),
-                ),
-              )
-            else
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: visible.length,
-                  itemBuilder: (context, index) => _tile(visible[index]),
-                ),
-              ),
-            if (widget.multiSelect)
-              Padding(
-                padding: const EdgeInsets.all(SureSpacing.xl),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SureButton(
-                        label: l.activityFilterClear,
-                        onPressed: _selected.isEmpty
-                            ? null
-                            : () => setState(_selected.clear),
-                        variant: SureButtonVariant.outline,
-                        fullWidth: true,
-                      ),
-                    ),
-                    const SizedBox(width: SureSpacing.lg),
-                    Expanded(
-                      child: SureButton(
-                        label: l.activityFilterApply,
-                        onPressed: () =>
-                            Navigator.pop(context, Set<String>.of(_selected)),
-                        fullWidth: true,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              const SizedBox(height: SureSpacing.xl),
-          ],
-        ),
+            ),
+          Flexible(child: body),
+        ],
       ),
     );
   }
 
-  Widget _tile(ActivityOption option) {
-    final dot = option.color == null
-        ? null
-        : Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: option.color,
-              shape: BoxShape.circle,
-            ),
-          );
-
-    if (!widget.multiSelect) {
-      return ListTile(
-        minTileHeight: 48,
-        leading: dot,
-        title: Text(option.label),
-        onTap: () => Navigator.pop(context, {option.id}),
-      );
-    }
-
-    return CheckboxListTile(
-      value: _selected.contains(option.id),
-      controlAffinity: ListTileControlAffinity.trailing,
-      secondary: dot,
-      title: Text(option.label),
-      onChanged: (checked) => setState(() {
-        if (checked == true) {
-          _selected.add(option.id);
-        } else {
-          _selected.remove(option.id);
-        }
-      }),
+  Widget _row(ActivityOption option, SureTokenPalette palette) {
+    final checked = _selected.contains(option.id);
+    final color = option.color;
+    return Semantics(
+      selected: checked,
+      child: SureListRow(
+        title: option.label,
+        leading: color == null
+            ? null
+            : Container(
+                width: SureCategoryIcon.dotSize,
+                height: SureCategoryIcon.dotSize,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+        trailing: checked
+            ? SureIcon(SureIcons.check, size: 18, color: palette.link)
+            : null,
+        onTap: () => _tap(option),
+      ),
     );
   }
 }

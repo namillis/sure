@@ -5659,6 +5659,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get dsFailed;
+
+  /// Activity nav bar button that enters multi-select.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get dsaSelect;
+
+  /// Activity no-results title when a search term is set.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches for \"{query}\"'**
+  String dsaNoMatchesFor(String query);
+
+  /// Activity no-results title when filters but no search term are set.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get dsaNoMatches;
+
+  /// Activity no-results body.
+  ///
+  /// In en, this message translates to:
+  /// **'Try fewer filters or a longer date range.'**
+  String get dsaNoMatchesBody;
+
+  /// Activity empty state when there are no transactions at all.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get dsaEmptyTitle;
+
+  /// Activity empty state body when there are no transactions at all.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one with + or connect an account on the web.'**
+  String get dsaEmptyBody;
+
+  /// Activity empty state body for the default view (this month) with no rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions you add or sync this month show up here.'**
+  String get dsaEmptyMonthBody;
+
+  /// Activity one-line summary under the filters: date range, money in and money out.
+  ///
+  /// In en, this message translates to:
+  /// **'{range} · In {inflow} · Out {outflow}'**
+  String dsaSummary(String range, String inflow, String outflow);
+
+  /// Shown under the Activity summary while not every page is loaded, since the totals cover only loaded rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals for the {loaded} of {total} loaded'**
+  String dsaSummaryPartial(int loaded, int total);
+
+  /// Error after a single-row categorize from the Activity swipe action fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t categorize the transaction.'**
+  String get dsaCategorizeFailed;
 }
 
 class _AppLocalizationsDelegate

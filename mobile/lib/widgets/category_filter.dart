@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/category.dart' as models;
+import 'sure_chip.dart';
 
 class CategoryFilter extends StatelessWidget {
   final List<models.Category> availableCategories;
@@ -21,7 +22,6 @@ class CategoryFilter extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final colorScheme = Theme.of(context).colorScheme;
     final isAllSelected = selectedCategoryIds.isEmpty;
 
     return Container(
@@ -33,27 +33,10 @@ class CategoryFilter extends StatelessWidget {
           // "All" chip
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(l.commonAll),
+            child: SureChip(
+              label: l.commonAll,
               selected: isAllSelected,
-              onSelected: (_) {
-                onSelectionChanged({});
-              },
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              selectedColor: colorScheme.primaryContainer,
-              checkmarkColor: colorScheme.onPrimaryContainer,
-              labelStyle: TextStyle(
-                color: isAllSelected
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurfaceVariant,
-                fontWeight: isAllSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              side: BorderSide(
-                color: isAllSelected
-                    ? colorScheme.primary
-                    : colorScheme.outline.withValues(alpha: 0.3),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onSelected: (_) => onSelectionChanged({}),
             ),
           ),
 
@@ -64,8 +47,8 @@ class CategoryFilter extends StatelessWidget {
 
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(category.displayName),
+              child: SureChip(
+                label: category.displayName,
                 selected: isSelected,
                 onSelected: (_) {
                   final newSelection = Set<String>.from(selectedCategoryIds);
@@ -83,21 +66,6 @@ class CategoryFilter extends StatelessWidget {
                     onSelectionChanged(newSelection);
                   }
                 },
-                backgroundColor: colorScheme.surfaceContainerHighest,
-                selectedColor: colorScheme.primaryContainer,
-                checkmarkColor: colorScheme.onPrimaryContainer,
-                labelStyle: TextStyle(
-                  color: isSelected
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onSurfaceVariant,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-                side: BorderSide(
-                  color: isSelected
-                      ? colorScheme.primary
-                      : colorScheme.outline.withValues(alpha: 0.3),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
             );
           }),

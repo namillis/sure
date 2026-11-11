@@ -3312,10 +3312,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get p3rpEmpty => 'Inga transaktioner under den här perioden.';
 
   @override
-  String get dsToday => 'Idag';
+  String get dsToday => 'I dag';
 
   @override
-  String get dsYesterday => 'Igår';
+  String get dsYesterday => 'I går';
 
   @override
   String get dsCancel => 'Avbryt';
@@ -3346,4 +3346,44 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dsFailed => 'Misslyckades';
+
+  @override
+  String get dsaSelect => 'Välj';
+
+  @override
+  String dsaNoMatchesFor(String query) {
+    return 'Inga träffar för ”$query”';
+  }
+
+  @override
+  String get dsaNoMatches => 'Inga träffar';
+
+  @override
+  String get dsaNoMatchesBody =>
+      'Prova färre filter eller ett längre datumintervall.';
+
+  @override
+  String get dsaEmptyTitle => 'Inga transaktioner än';
+
+  @override
+  String get dsaEmptyBody =>
+      'Lägg till en med + eller koppla ett konto på webben.';
+
+  @override
+  String get dsaEmptyMonthBody =>
+      'Transaktioner du lägger till eller synkar den här månaden visas här.';
+
+  @override
+  String dsaSummary(String range, String inflow, String outflow) {
+    return '$range · In $inflow · Ut $outflow';
+  }
+
+  @override
+  String dsaSummaryPartial(int loaded, int total) {
+    return 'Summor för de $loaded av $total som har laddats';
+  }
+
+  @override
+  String get dsaCategorizeFailed =>
+      'Det gick inte att kategorisera transaktionen.';
 }

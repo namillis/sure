@@ -3316,4 +3316,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dsFailed => 'Failed';
+
+  @override
+  String get dsaSelect => 'Select';
+
+  @override
+  String dsaNoMatchesFor(String query) {
+    return 'No matches for \"$query\"';
+  }
+
+  @override
+  String get dsaNoMatches => 'No matches';
+
+  @override
+  String get dsaNoMatchesBody => 'Try fewer filters or a longer date range.';
+
+  @override
+  String get dsaEmptyTitle => 'No transactions yet';
+
+  @override
+  String get dsaEmptyBody => 'Add one with + or connect an account on the web.';
+
+  @override
+  String get dsaEmptyMonthBody =>
+      'Transactions you add or sync this month show up here.';
+
+  @override
+  String dsaSummary(String range, String inflow, String outflow) {
+    return '$range · In $inflow · Out $outflow';
+  }
+
+  @override
+  String dsaSummaryPartial(int loaded, int total) {
+    return 'Totals for the $loaded of $total loaded';
+  }
+
+  @override
+  String get dsaCategorizeFailed => 'Couldn\'t categorize the transaction.';
 }

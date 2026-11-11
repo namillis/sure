@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -17,23 +16,20 @@ import '../providers/tags_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../services/transaction_search_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../theme/sure_tokens.dart';
+import '../utils/activity_totals.dart';
 import '../utils/money_masker.dart';
-import '../utils/transaction_amount_display.dart';
 import '../widgets/activity_option_sheet.dart';
 import '../widgets/budget_progress_bar.dart' show parseCategoryColor;
-import '../widgets/money_text.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/sure_button.dart';
-import '../widgets/sure_chip.dart';
-import '../widgets/sure_text_field.dart';
 import 'transaction_edit_screen.dart';
 import 'transaction_form_screen.dart';
 
 /// The Activity tab: every transaction across accounts, newest first, with
 /// server-side search (`search` matches name, notes and merchant), date,
-/// category, account, tag and type filters, day headers, infinite scroll and
-/// a long-press multi-select for bulk categorize and delete.
+/// category, account, tag and type filters, a money in/out summary, day
+/// sections, infinite scroll, swipe-to-categorize/delete and a multi-select
+/// (long-press or the nav bar toggle) for bulk categorize and delete.
 ///
 /// A tab root: it has its own [Scaffold] and never shows a back button.
 class ActivityScreen extends StatefulWidget {
@@ -53,6 +49,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
   static const int _perPage = 50;
   static const Duration _searchDebounce = Duration(milliseconds: 350);
 
+  /// Ids for the "All types" choice in the type picker.
+  static const String _allTypesId = 'all';
+
   late final TransactionSearchService _service =
       widget.service ?? TransactionSearchService();
   final TextEditingController _searchController = TextEditingController();
@@ -63,6 +62,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   final List<ActivityTransaction> _rows = [];
   int _page = 0;
   int _totalPages = 1;
+  int _totalCount = 0;
   bool _loading = false;
   bool _failed = false;
 
@@ -171,6 +171,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         _rows.addAll(result['transactions'] as List<ActivityTransaction>);
         _page = nextPage;
         _totalPages = result['totalPages'] as int;
+        _totalCount = (result['totalCount'] as int?) ?? _rows.length;
       } else {
         _failed = true;
         _failedWasReset = reset;
@@ -195,7 +196,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 
   void _onSearchChanged(String value) {
-    setState(() {}); // Show or hide the clear button.
+    // The field's clear button reports ''; apply that at once.
+    if (value.isEmpty) {
+      _clearSearch();
+      return;
+    }
     _debounce?.cancel();
     _debounce = Timer(_searchDebounce, () {
       if (!mounted || value.trim() == _filters.search.trim()) return;
@@ -205,11 +210,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   void _clearSearch() {
     _debounce?.cancel();
-    _searchController.clear();
-    if (_filters.search.isEmpty) {
-      setState(() {});
-      return;
-    }
+    if (_searchController.text.isNotEmpty) _searchController.clear();
+    if (_filters.search.isEmpty) return;
     _applyFilters(_filters.copyWith(search: ''));
   }
 
@@ -238,46 +240,30 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
 
-  String _dateChipLabel(AppLocalizations l, String locale) {
+  String _dateChipLabel(AppLocalizations l) {
     final start = _filters.customStart;
     final end = _filters.customEnd;
     if (_filters.datePreset == ActivityDatePreset.custom &&
         start != null &&
         end != null) {
-      final format = start.year == end.year
-          ? DateFormat.MMMd(locale)
-          : DateFormat.yMMMd(locale);
-      return l.activityDateRange(format.format(start), format.format(end));
+      return SureDates.rangeOf(context, start, end);
     }
     return _presetLabel(l, _filters.datePreset);
   }
 
   Future<void> _pickDate() async {
     final l = AppLocalizations.of(context);
-    final preset = await showModalBottomSheet<ActivityDatePreset>(
-      context: context,
-      useSafeArea: true,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _SheetTitle(l.activityFilterDate),
-            for (final option in ActivityDatePreset.values)
-              ListTile(
-                minTileHeight: 48,
-                title: Text(_presetLabel(l, option)),
-                trailing: option == _filters.datePreset
-                    ? const Icon(Icons.check)
-                    : null,
-                selected: option == _filters.datePreset,
-                onTap: () => Navigator.pop(context, option),
-              ),
-          ],
-        ),
-      ),
+    final id = await ActivityOptionSheet.pickOne(
+      context,
+      title: l.activityFilterDate,
+      options: [
+        for (final option in ActivityDatePreset.values)
+          ActivityOption(id: option.name, label: _presetLabel(l, option)),
+      ],
+      selected: _filters.datePreset.name,
     );
-    if (preset == null || !mounted) return;
+    if (id == null || !mounted) return;
+    final preset = ActivityDatePreset.values.byName(id);
 
     if (preset != ActivityDatePreset.custom) {
       _applyFilters(_filters.copyWith(datePreset: preset));
@@ -378,34 +364,22 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   Future<void> _pickType() async {
     final l = AppLocalizations.of(context);
-    // Wrapped so "All types" (null) is distinguishable from a dismissal.
-    final picked = await showModalBottomSheet<List<ActivityTypeFilter?>>(
-      context: context,
-      useSafeArea: true,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _SheetTitle(l.activityFilterType),
-            for (final option in <ActivityTypeFilter?>[
-              null,
-              ...ActivityTypeFilter.values,
-            ])
-              ListTile(
-                minTileHeight: 48,
-                title: Text(_typeLabel(l, option)),
-                trailing:
-                    option == _filters.type ? const Icon(Icons.check) : null,
-                selected: option == _filters.type,
-                onTap: () => Navigator.pop(context, [option]),
-              ),
-          ],
-        ),
+    final id = await ActivityOptionSheet.pickOne(
+      context,
+      title: l.activityFilterType,
+      options: [
+        ActivityOption(id: _allTypesId, label: _typeLabel(l, null)),
+        for (final option in ActivityTypeFilter.values)
+          ActivityOption(id: option.name, label: _typeLabel(l, option)),
+      ],
+      selected: _filters.type?.name ?? _allTypesId,
+    );
+    if (id == null || !mounted) return;
+    _applyFilters(
+      _filters.copyWith(
+        type: id == _allTypesId ? null : ActivityTypeFilter.values.byName(id),
       ),
     );
-    if (picked == null || !mounted) return;
-    _applyFilters(_filters.copyWith(type: picked.first));
   }
 
   // ---- Row actions ---------------------------------------------------------
@@ -423,6 +397,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ),
     );
     if (updated == true && mounted) await _load(reset: true);
+  }
+
+  void _enterSelection() {
+    setState(() => _selectionMode = true);
   }
 
   void _startSelection(ActivityTransaction row) {
@@ -480,9 +458,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
 
-  Future<void> _categorizeSelected() async {
+  Future<void> _categorizeSelected() => _categorize(_selected.toList());
+
+  /// Categorizes [ids] one by one. From selection mode ([bulk]) it shows
+  /// progress and keeps failed rows selected; a single row from its swipe
+  /// action just reports the result.
+  Future<void> _categorize(List<String> ids, {bool bulk = true}) async {
     final l = AppLocalizations.of(context);
-    final ids = _selected.toList();
     if (ids.isEmpty) return;
 
     final categoryId = await ActivityOptionSheet.pickOne(
@@ -504,11 +486,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
       return;
     }
 
-    setState(() {
-      _bulkAction = _BulkAction.categorize;
-      _bulkDone = 0;
-      _bulkTotal = ids.length;
-    });
+    if (bulk) {
+      setState(() {
+        _bulkAction = _BulkAction.categorize;
+        _bulkDone = 0;
+        _bulkTotal = ids.length;
+      });
+    }
 
     final failed = <String>{};
     for (final id in ids) {
@@ -524,7 +508,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         return;
       }
       setState(() {
-        _bulkDone++;
+        if (bulk) _bulkDone++;
         if (result['success'] != true) {
           failed.add(id);
           return;
@@ -543,26 +527,33 @@ class _ActivityScreenState extends State<ActivityScreen> {
       });
     }
 
-    _finishBulk(failed, ids.length, l.activityCategorized(ids.length));
+    if (bulk) {
+      _finishBulk(failed, ids.length, l.activityCategorized(ids.length));
+    } else if (failed.isEmpty) {
+      _showSnack(l.activityCategorized(ids.length));
+    } else {
+      _showSnack(l.dsaCategorizeFailed, error: true);
+    }
     // Recategorized rows may no longer match a category filter.
     if (failed.length < ids.length && _filters.categoryIds.isNotEmpty) {
       await _load(reset: true);
     }
   }
 
-  Future<void> _deleteSelected() async {
-    final l = AppLocalizations.of(context);
-    final ids = _selected.toList();
-    if (ids.isEmpty) return;
+  Future<bool> _confirmDelete({ActivityTransaction? single}) async {
     final palette = SureColors.of(context).palette;
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         final dl = AppLocalizations.of(context);
         return AlertDialog(
-          title: Text(dl.transactionsListDeleteMultiTitle),
-          content: Text(dl.transactionsListDeleteMultiContent),
+          title: Text(single == null
+              ? dl.transactionsListDeleteMultiTitle
+              : dl.transactionsListDeleteTitle),
+          content: Text(single == null
+              ? dl.transactionsListDeleteMultiContent
+              : dl.transactionsListDeleteSingleContent(
+                  single.transaction.name)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -579,7 +570,41 @@ class _ActivityScreenState extends State<ActivityScreen> {
         );
       },
     );
-    if (confirmed != true || !mounted) return;
+    return confirmed == true;
+  }
+
+  /// Deletes one row from its swipe action, after the usual confirm.
+  Future<void> _deleteOne(ActivityTransaction row) async {
+    final l = AppLocalizations.of(context);
+    final id = row.id;
+    if (id == null) return;
+    if (!await _confirmDelete(single: row) || !mounted) return;
+
+    final transactions = context.read<TransactionsProvider>();
+    final token = await _accessToken();
+    if (!mounted) return;
+    if (token == null) {
+      _showSnack(l.activitySessionExpired, error: true);
+      return;
+    }
+    final ok = await transactions.deleteTransaction(
+      accessToken: token,
+      transactionId: id,
+    );
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _rows.removeWhere((r) => r.id == id));
+      _showSnack(l.transactionsListDeletedSuccess);
+    } else {
+      _showSnack(l.transactionsListDeleteFailed, error: true);
+    }
+  }
+
+  Future<void> _deleteSelected() async {
+    final l = AppLocalizations.of(context);
+    final ids = _selected.toList();
+    if (ids.isEmpty) return;
+    if (!await _confirmDelete() || !mounted) return;
 
     final transactions = context.read<TransactionsProvider>();
     final token = await _accessToken();
@@ -657,21 +682,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   // ---- Build ---------------------------------------------------------------
 
-  String _dayLabel(AppLocalizations l, DateTime? day, String locale) {
-    if (day == null) return l.activityUnknownDate;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final difference = today.difference(day).inDays;
-    if (difference == 0) return l.activityToday;
-    if (difference == 1) return l.activityYesterday;
-    return day.year == today.year
-        ? DateFormat.MMMEd(locale).format(day)
-        : DateFormat.yMMMEd(locale).format(day);
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
 
     return PopScope(
       canPop: !_selectionMode,
@@ -679,95 +693,111 @@ class _ActivityScreenState extends State<ActivityScreen> {
         if (!didPop) _exitSelection();
       },
       child: Scaffold(
-        appBar: _selectionMode
-            ? AppBar(
+        backgroundColor: palette.surface,
+        body: RefreshIndicator(
+          onRefresh: () => _load(reset: true),
+          edgeOffset: MediaQuery.paddingOf(context).top +
+              SureLargeTitleHeader.barHeight,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SureLargeTitleHeader(
+                title: _selectionMode
+                    ? l.activitySelectedCount(_selected.length)
+                    : l.activity,
                 automaticallyImplyLeading: false,
-                title: Text(l.activitySelectedCount(_selected.length)),
-                actions: [
-                  TextButton(
-                    onPressed: _bulkRunning ? null : _exitSelection,
-                    child: Text(l.commonCancel),
-                  ),
-                ],
-              )
-            : AppBar(
-                automaticallyImplyLeading: false,
-                title: Text(l.activity),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: l.activityAdd,
-                    onPressed: _addTransaction,
-                  ),
-                ],
+                actions: _headerActions(l),
               ),
-        body: Column(
-          children: [
-            _buildSearchField(l),
-            _buildFilterRow(l),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => _load(reset: true),
-                child: _buildResults(l),
+              SliverToBoxAdapter(child: _buildControls(l)),
+              ..._buildResults(l),
+              // Keep the last row clear of the tab bar (and the home
+              // indicator) when the shell draws the bar over content.
+              SliverPadding(
+                padding: EdgeInsets.only(
+                  bottom: 24 + MediaQuery.paddingOf(context).bottom,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         bottomNavigationBar: _selectionMode ? _buildSelectionBar(l) : null,
       ),
     );
   }
 
-  Widget _buildSearchField(AppLocalizations l) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        SureSpacing.xl,
-        SureSpacing.md,
-        SureSpacing.xl,
-        SureSpacing.xs,
+  List<Widget> _headerActions(AppLocalizations l) {
+    if (_selectionMode) {
+      return [
+        _NavTextButton(
+          label: l.commonCancel,
+          onPressed: _bulkRunning ? null : _exitSelection,
+        ),
+      ];
+    }
+    return [
+      SureNavIconButton(
+        icon: SureIcons.listChecks,
+        semanticLabel: l.dsaSelect,
+        onPressed: _rows.isEmpty ? null : _enterSelection,
       ),
-      child: SureTextField(
-        controller: _searchController,
-        hint: l.activitySearchHint,
-        prefixIcon: const Icon(Icons.search),
-        textInputAction: TextInputAction.search,
-        onChanged: _onSearchChanged,
-        suffixIcon: _searchController.text.isEmpty
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.clear),
-                tooltip: l.activityClearSearch,
-                onPressed: _clearSearch,
-              ),
+      SureNavIconButton(
+        icon: SureIcons.plus,
+        semanticLabel: l.activityAdd,
+        onPressed: _addTransaction,
       ),
+      const SizedBox(width: 4),
+    ];
+  }
+
+  Widget _buildControls(AppLocalizations l) {
+    final summary = _buildSummary(l);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: SureSearchField(
+            controller: _searchController,
+            hintText: l.activitySearchHint,
+            clearSemanticLabel: l.activityClearSearch,
+            onChanged: _onSearchChanged,
+          ),
+        ),
+        _buildFilterRow(l),
+        if (summary != null) summary,
+      ],
     );
   }
 
   Widget _buildFilterRow(AppLocalizations l) {
-    final locale = Localizations.localeOf(context).toString();
+    final palette = SureColors.of(context).palette;
     String counted(String label, int count) =>
         count == 0 ? label : l.activityFilterCount(label, count);
 
     final chips = <Widget>[
       SureChip(
-        label: _dateChipLabel(l, locale),
-        selected: _filters.datePreset != ActivityDatePreset.thisMonth,
-        leading: const Icon(Icons.calendar_today_outlined, size: 16),
+        label: _dateChipLabel(l),
+        selected: true,
+        dropdown: true,
         onSelected: (_) => _pickDate(),
       ),
       SureChip(
         label: counted(l.activityFilterCategory, _filters.categoryIds.length),
         selected: _filters.categoryIds.isNotEmpty,
+        dropdown: true,
         onSelected: (_) => _pickCategories(),
       ),
       SureChip(
         label: counted(l.activityFilterAccount, _filters.accountIds.length),
         selected: _filters.accountIds.isNotEmpty,
+        dropdown: true,
         onSelected: (_) => _pickAccounts(),
       ),
       SureChip(
         label: counted(l.activityFilterTags, _filters.tagIds.length),
         selected: _filters.tagIds.isNotEmpty,
+        dropdown: true,
         onSelected: (_) => _pickTags(),
       ),
       SureChip(
@@ -775,32 +805,90 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ? l.activityFilterType
             : _typeLabel(l, _filters.type),
         selected: _filters.type != null,
+        dropdown: true,
         onSelected: (_) => _pickType(),
       ),
       if (_filters.hasActiveFilters)
-        TextButton.icon(
+        TextButton(
           onPressed: _clearAll,
-          icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-          label: Text(l.activityClearAll),
+          style: TextButton.styleFrom(foregroundColor: palette.link),
+          child: Text(l.activityClearAll),
         ),
     ];
 
     return SizedBox(
-      height: 60,
+      height: 52,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: SureSpacing.xl,
-          vertical: SureSpacing.md,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         itemCount: chips.length,
-        separatorBuilder: (_, __) => const SizedBox(width: SureSpacing.md),
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (_, index) => Center(child: chips[index]),
       ),
     );
   }
 
-  Widget _buildResults(AppLocalizations l) {
+  /// "Nov 1–11 · In $1,926.88 · Out $8,634.42". The API has no totals for a
+  /// filter, so the sums cover the loaded rows; while more pages remain, a
+  /// second line says how many of the matches that is.
+  Widget? _buildSummary(AppLocalizations l) {
+    if (_rows.isEmpty) return null;
+    final palette = SureColors.of(context).palette;
+    final hidden = context.watch<PrivacyProvider>().hidden;
+    final locale = Localizations.localeOf(context).toString();
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final range = _filters.dateRange(now);
+    final start = range.start;
+    var end = range.end;
+    final String rangeLabel;
+    if (start != null && end != null) {
+      // "This month" on Nov 11 reads "Nov 1–11", not "Nov 1–30".
+      if (end.isAfter(today) && !today.isBefore(start)) end = today;
+      rangeLabel = SureDates.rangeOf(context, start, end);
+    } else {
+      rangeLabel = _presetLabel(l, _filters.datePreset);
+    }
+
+    final totals = ActivityTotals.of(_rows);
+    String money(double value) => MoneyMasker.mask(
+          ActivityTotals.format(value, totals?.currency, locale: locale),
+          hidden: hidden,
+        );
+    // Mixed currencies have no meaningful sum: show the range alone.
+    final line = totals == null || totals.currency == null
+        ? rangeLabel
+        : l.dsaSummary(rangeLabel, money(totals.inflow), money(totals.outflow));
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          MoneyText(
+            line,
+            trend: MoneyTrend.neutral,
+            color: palette.textSecondary,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12),
+          ),
+          if (_hasMore)
+            Text(
+              l.dsaSummaryPartial(_rows.length, _totalCount),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: palette.textSubdued),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildResults(AppLocalizations l) {
+    if (_rows.isEmpty) return [_buildEmpty(l)];
+
     final locale = Localizations.localeOf(context).toString();
     final hideAmounts = context.watch<PrivacyProvider>().hidden;
     final accounts = {
@@ -808,141 +896,137 @@ class _ActivityScreenState extends State<ActivityScreen> {
     };
 
     final slivers = <Widget>[];
-    if (_rows.isEmpty) {
-      if (_loading) {
-        slivers.add(
-          const SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        );
-      } else if (_failed) {
-        slivers.add(
-          _messageSliver(
-            Icons.error_outline,
-            l.activityLoadFailed,
-            action: SureButton(
-              label: l.commonTryAgain,
-              onPressed: () => _load(reset: true),
-              variant: SureButtonVariant.outline,
-              size: SureButtonSize.sm,
-            ),
-          ),
-        );
-      } else if (_filters.hasActiveFilters) {
-        slivers.add(
-          _messageSliver(
-            Icons.search_off,
-            l.activityEmptyFiltered,
-            action: SureButton(
-              label: l.activityClearFilters,
-              onPressed: _clearAll,
-              variant: SureButtonVariant.outline,
-              size: SureButtonSize.sm,
-            ),
-          ),
-        );
-      } else {
-        slivers.add(
-          _messageSliver(Icons.receipt_long_outlined, l.activityEmpty),
-        );
-      }
-    } else {
-      for (final group in ActivityTransaction.groupByDay(_rows)) {
-        slivers.add(
-          SliverMainAxisGroup(
-            slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _DayHeaderDelegate(
-                  _dayLabel(l, group.day, locale),
-                  SureColors.of(context).palette,
-                ),
-              ),
-              SliverList.builder(
-                itemCount: group.rows.length,
-                itemBuilder: (context, index) {
-                  final row = group.rows[index];
-                  final account = accounts[row.transaction.accountId];
-                  return _ActivityRow(
-                    row: row,
-                    account: account,
-                    hideAmounts: hideAmounts,
-                    selectionMode: _selectionMode,
-                    selected: _selected.contains(row.id),
-                    onTap: () =>
-                        _selectionMode ? _toggleSelected(row) : _openEdit(row),
-                    onLongPress: () => _selectionMode
-                        ? _toggleSelected(row)
-                        : _startSelection(row),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      }
-      if (_hasMore || _failed) {
-        slivers.add(
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(SureSpacing.xl),
-              child: Center(
-                child: _failed
-                    ? SureButton(
-                        label: l.commonTryAgain,
-                        onPressed: () => _load(reset: _failedWasReset),
-                        variant: SureButtonVariant.outline,
-                        size: SureButtonSize.sm,
-                      )
-                    : _loading
-                        ? const CircularProgressIndicator()
-                        : const SizedBox(height: 36),
+    for (final group in ActivityTransaction.groupByDay(_rows)) {
+      final day = group.day;
+      final totals = ActivityTotals.of(group.rows);
+      final total = totals == null || totals.currency == null
+          ? null
+          : MoneyMasker.mask(totals.formatNet(locale: locale),
+              hidden: hideAmounts);
+      slivers.add(
+        SliverMainAxisGroup(
+          slivers: [
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _DayHeaderDelegate(
+                label: day == null
+                    ? l.activityUnknownDate
+                    : SureDates.relativeDayOf(context, day),
+                total: total,
               ),
             ),
-          ),
-        );
-      }
+            SliverToBoxAdapter(
+              child: SurePanel.rows(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                dividerIndent: SurePanel.iconRowDividerIndent,
+                children: [
+                  for (final row in group.rows)
+                    _row(row, accounts[row.transaction.accountId], hideAmounts),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return CustomScrollView(
-      controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: slivers,
+    if (_hasMore || _failed) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: _failed
+                  ? SureButton(
+                      label: l.commonTryAgain,
+                      onPressed: () => _load(reset: _failedWasReset),
+                      variant: SureButtonVariant.outline,
+                      size: SureButtonSize.sm,
+                    )
+                  : _loading
+                      ? const CircularProgressIndicator()
+                      : const SizedBox(height: 36),
+            ),
+          ),
+        ),
+      );
+    }
+    return slivers;
+  }
+
+  Widget _row(ActivityTransaction row, Account? account, bool hideAmounts) {
+    final actionable = row.id != null && !_selectionMode && !_bulkRunning;
+    return SureTransactionRow.activity(
+      row,
+      account: account,
+      hideAmount: hideAmounts,
+      selectionMode: _selectionMode,
+      selected: _selected.contains(row.id),
+      onTap: () => _selectionMode ? _toggleSelected(row) : _openEdit(row),
+      onLongPress: () =>
+          _selectionMode ? _toggleSelected(row) : _startSelection(row),
+      onCategorize:
+          actionable ? () => _categorize([row.id!], bulk: false) : null,
+      onDelete: actionable ? () => _deleteOne(row) : null,
     );
   }
 
-  Widget _messageSliver(IconData icon, String message, {Widget? action}) {
-    final palette = SureColors.of(context).palette;
+  Widget _buildEmpty(AppLocalizations l) {
+    final Widget content;
+    if (_loading) {
+      content = const CircularProgressIndicator();
+    } else if (_failed) {
+      content = SureEmptyState(
+        icon: SureIcons.circleAlert,
+        title: l.activityLoadFailed,
+        primaryLabel: l.commonTryAgain,
+        onPrimary: () => _load(reset: true),
+      );
+    } else if (_hasNonDateFilters ||
+        (_filters.datePreset != ActivityDatePreset.thisMonth &&
+            _filters.datePreset != ActivityDatePreset.all)) {
+      final term = _filters.search.trim();
+      content = SureEmptyState(
+        icon: SureIcons.search,
+        title: term.isEmpty ? l.dsaNoMatches : l.dsaNoMatchesFor(term),
+        body: l.dsaNoMatchesBody,
+        secondaryLabel: l.activityClearFilters,
+        onSecondary: _clearAll,
+      );
+    } else if (_filters.datePreset == ActivityDatePreset.all) {
+      // Nothing filtered and nothing ever: no transactions at all.
+      content = SureEmptyState(
+        icon: SureIcons.receipt,
+        title: l.dsaEmptyTitle,
+        body: l.dsaEmptyBody,
+      );
+    } else {
+      content = SureEmptyState(
+        icon: SureIcons.receipt,
+        title: l.activityEmpty,
+        body: l.dsaEmptyMonthBody,
+      );
+    }
     return SliverFillRemaining(
       hasScrollBody: false,
       child: Padding(
-        padding: const EdgeInsets.all(SureSpacing.xxxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 56, color: palette.textSubdued),
-            const SizedBox(height: SureSpacing.xl),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: palette.textSecondary),
-            ),
-            if (action != null) ...[
-              const SizedBox(height: SureSpacing.xl),
-              action,
-            ],
-          ],
-        ),
+        padding: const EdgeInsets.only(bottom: 48),
+        child: Center(child: content),
       ),
     );
   }
 
+  /// Any filter besides the date range (search included).
+  bool get _hasNonDateFilters =>
+      _filters.search.trim().isNotEmpty ||
+      _filters.categoryIds.isNotEmpty ||
+      _filters.accountIds.isNotEmpty ||
+      _filters.tagIds.isNotEmpty ||
+      _filters.type != null;
+
   Widget _buildSelectionBar(AppLocalizations l) {
-    final palette = SureColors.of(context).palette;
+    final colors = SureColors.of(context);
+    final palette = colors.palette;
     final Widget content;
     if (_bulkRunning) {
       content = Column(
@@ -953,9 +1037,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
             _bulkAction == _BulkAction.categorize
                 ? l.activityCategorizing(_bulkDone, _bulkTotal)
                 : l.activityDeleting(_bulkDone, _bulkTotal),
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: TextStyle(fontSize: 14, color: palette.textPrimary),
           ),
-          const SizedBox(height: SureSpacing.md),
+          const SizedBox(height: 8),
           LinearProgressIndicator(
             value: _bulkTotal == 0 ? null : _bulkDone / _bulkTotal,
           ),
@@ -972,18 +1056,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
             Expanded(
               child: SureButton(
                 label: l.activityCategorize,
-                leading: const Icon(Icons.label_outline, size: 18),
+                leading: const SureIcon(SureIcons.tag, size: 18),
                 onPressed: enabled ? _categorizeSelected : null,
                 variant: SureButtonVariant.outline,
                 size: SureButtonSize.lg,
                 fullWidth: true,
               ),
             ),
-            const SizedBox(width: SureSpacing.lg),
+            const SizedBox(width: 12),
             Expanded(
               child: SureButton(
                 label: l.commonDelete,
-                leading: const Icon(Icons.delete_outline, size: 18),
+                leading: const SureIcon(SureIcons.trash, size: 18),
                 onPressed: enabled ? _deleteSelected : null,
                 variant: SureButtonVariant.destructive,
                 size: SureButtonSize.lg,
@@ -995,13 +1079,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
       );
     }
 
-    return Material(
-      color: palette.container,
-      elevation: 8,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: palette.container,
+        border: Border(top: BorderSide(color: colors.hairline)),
+      ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.all(SureSpacing.xl),
+          padding: const EdgeInsets.all(16),
           child: content,
         ),
       ),
@@ -1009,296 +1095,56 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 }
 
-class _SheetTitle extends StatelessWidget {
-  const _SheetTitle(this.text);
+/// A text action for the large-title nav bar ("Cancel" in selection mode).
+/// shortcut: SureNavIconButton is icon-only; fold this into the shared set
+/// when another screen needs a text nav action.
+class _NavTextButton extends StatelessWidget {
+  const _NavTextButton({required this.label, required this.onPressed});
 
-  final String text;
+  final String label;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        SureSpacing.xl,
-        SureSpacing.xl,
-        SureSpacing.xl,
-        SureSpacing.md,
+    final palette = SureColors.of(context).palette;
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: palette.link,
+        disabledForegroundColor: palette.textSubdued,
+        minimumSize: const Size(44, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
       ),
       child: Text(
-        text,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: SureTokens.weightSemibold,
-            ),
+        label,
+        maxLines: 1,
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
     );
   }
 }
 
 class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _DayHeaderDelegate(this.label, this.palette);
+  _DayHeaderDelegate({required this.label, required this.total});
 
   final String label;
-  final SureTokenPalette palette;
-
-  static const double _height = 36;
+  final String? total;
 
   @override
-  double get minExtent => _height;
+  double get minExtent => SureDayHeader.height;
 
   @override
-  double get maxExtent => _height;
+  double get maxExtent => SureDayHeader.height;
 
   @override
   Widget build(
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) {
-    return Semantics(
-      header: true,
-      child: Container(
-        height: _height,
-        color: palette.surface,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: SureSpacing.xl),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: palette.textSecondary,
-                fontWeight: SureTokens.weightSemibold,
-              ),
-        ),
-      ),
-    );
-  }
+  ) =>
+      SureDayHeader(label: label, total: total);
 
   @override
   bool shouldRebuild(_DayHeaderDelegate oldDelegate) =>
-      label != oldDelegate.label || palette != oldDelegate.palette;
-}
-
-class _ActivityRow extends StatelessWidget {
-  const _ActivityRow({
-    required this.row,
-    required this.account,
-    required this.hideAmounts,
-    required this.selectionMode,
-    required this.selected,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  final ActivityTransaction row;
-
-  /// The row's account from [AccountsProvider], when it is loaded.
-  final Account? account;
-  final bool hideAmounts;
-  final bool selectionMode;
-  final bool selected;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
-    final textTheme = Theme.of(context).textTheme;
-    final transaction = row.transaction;
-
-    final type = row.accountType;
-    final display = TransactionAmountDisplay.of(
-      transaction.amount,
-      isAsset: account?.isAsset ??
-          TransactionAmountDisplay.assetAccountTypes.contains(type),
-      isLiability: account?.isLiability ??
-          TransactionAmountDisplay.liabilityAccountTypes.contains(type),
-    );
-    final color = SureMoney.color(context, display.trend);
-
-    final accountName = row.accountName ?? account?.name;
-    final merchant = transaction.merchantName;
-    final subtitle = [
-      if (accountName != null && accountName.isNotEmpty) accountName,
-      if (merchant != null &&
-          merchant.isNotEmpty &&
-          merchant != transaction.name)
-        merchant,
-      if (row.isTransfer && row.transferAccountName != null)
-        '${l.activityTransfer} · ${row.transferAccountName}',
-    ].join(' · ');
-
-    final categoryName = transaction.categoryName;
-
-    return Material(
-      color: selected ? palette.containerInset : palette.container,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 64),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SureSpacing.xl,
-              vertical: SureSpacing.md,
-            ),
-            child: Row(
-              children: [
-                if (selectionMode)
-                  Padding(
-                    padding: const EdgeInsets.only(right: SureSpacing.md),
-                    child: Checkbox(
-                      value: selected,
-                      onChanged: (_) => onTap(),
-                    ),
-                  )
-                else
-                  Container(
-                    width: 40,
-                    height: 40,
-                    margin: const EdgeInsets.only(right: SureSpacing.lg),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(SureTokens.radiusLg),
-                    ),
-                    child: Icon(display.icon, color: color, size: 20),
-                  ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              transaction.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: textTheme.bodyLarge?.copyWith(
-                                fontWeight: SureTokens.weightMedium,
-                              ),
-                            ),
-                          ),
-                          if (row.isSplitParent)
-                            _FlagIcon(Icons.call_split, l.activitySplit),
-                          if (row.isTransfer)
-                            _FlagIcon(Icons.swap_horiz, l.activityTransfer),
-                        ],
-                      ),
-                      // Category chip and account share one line so a
-                      // row stays two lines tall.
-                      if ((categoryName != null && categoryName.isNotEmpty) ||
-                          subtitle.isNotEmpty) ...[
-                        const SizedBox(height: SureSpacing.xs),
-                        Row(
-                          children: [
-                            if (categoryName != null &&
-                                categoryName.isNotEmpty) ...[
-                              // Up to half the line; long names ellipsize.
-                              Flexible(
-                                child: _CategoryChip(
-                                  name: categoryName,
-                                  color: parseCategoryColor(row.categoryColor),
-                                ),
-                              ),
-                              if (subtitle.isNotEmpty)
-                                const SizedBox(width: SureSpacing.sm),
-                            ],
-                            if (subtitle.isNotEmpty)
-                              Expanded(
-                                child: Text(
-                                  subtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: palette.textSecondary,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: SureSpacing.md),
-                MoneyText(
-                  MoneyMasker.mask(display.text, hidden: hideAmounts),
-                  trend: display.trend,
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: SureTokens.weightMedium,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FlagIcon extends StatelessWidget {
-  const _FlagIcon(this.icon, this.label);
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: SureSpacing.xs),
-      child: Tooltip(
-        message: label,
-        child: Icon(
-          icon,
-          size: 16,
-          color: SureColors.of(context).palette.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.name, this.color});
-
-  final String name;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final dot = color ?? palette.textSubdued;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SureSpacing.md,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: dot.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: SureSpacing.xs),
-          Flexible(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: palette.textPrimary,
-                    fontWeight: SureTokens.weightMedium,
-                  ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+      label != oldDelegate.label || total != oldDelegate.total;
 }
