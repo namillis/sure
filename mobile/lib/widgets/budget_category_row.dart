@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/budget.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../theme/sure_tokens.dart';
 import '../utils/money_masker.dart';
 import 'budget_progress_bar.dart';
-import 'money_text.dart';
+import 'ds/ds.dart';
 
-/// One budget category line: name, spent-of-budget progress bar and what is
-/// left (or how far over). Subcategories render indented under their parent.
+/// One budget category line in the Plan tab's Categories panel: the
+/// category's round icon, its name, "spent / limit" in mono on the right, a
+/// 4 px progress bar under them (success, warning at 90%, destructive when
+/// over) and, when over, an "Over by $90" line. A category without a limit
+/// shows "$155 no limit" and no bar. Rollover and shared-budget info sit on a
+/// small line under it. Subcategories render indented under their parent.
 class BudgetCategoryRow extends StatelessWidget {
   const BudgetCategoryRow({
     super.key,
@@ -25,6 +28,10 @@ class BudgetCategoryRow extends StatelessWidget {
   final VoidCallback? onTap;
   final bool indented;
 
+  /// Start inset of a subcategory row, so its icon lines up under the
+  /// parent's name.
+  static const double indent = 40;
+
   String _money(String? formatted) =>
       MoneyMasker.mask(formatted ?? '--', hidden: hideAmounts);
 
@@ -36,211 +43,156 @@ class BudgetCategoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    final textTheme = Theme.of(context).textTheme;
     final bc = budgetCategory;
-    final color = parseCategoryColor(bc.category.color) ?? palette.textSubdued;
-    final over = bc.hasDerivedAmounts && bc.isOverBudget;
-    final near = bc.hasDerivedAmounts && bc.isNearLimit;
+    final derived = bc.hasDerivedAmounts;
+    final over = derived && bc.isOverBudget;
+    final shared = derived && bc.inheritsParentBudget;
+    final limited = derived && bc.isBudgeted && !bc.inheritsParentBudget;
+    final noLimit = derived && !bc.isBudgeted && !bc.inheritsParentBudget;
 
-    final String trailing;
-    Color trailingColor = palette.textSecondary;
-    if (!bc.hasDerivedAmounts) {
-      trailing = '';
-    } else if (bc.inheritsParentBudget) {
-      trailing = l.budgetsSharedBudget;
-      if (over) trailingColor = palette.destructive;
-    } else if (!bc.isBudgeted) {
-      trailing = l.budgetsNoLimit;
-      if (over) trailingColor = palette.destructive;
-    } else if (over) {
-      trailing = l.budgetsOverBy(_money(_abs(bc.availableToSpend ?? '')));
-      trailingColor = palette.destructive;
+    final mono = SureMoney.tabular(TextStyle(
+      fontSize: 13,
+      fontWeight: SureTokens.weightMedium,
+      color: palette.textPrimary,
+    ));
+    final subdued = mono.copyWith(
+      color: palette.textSubdued,
+      fontWeight: FontWeight.w400,
+    );
+
+    // "$410 / $600", "$155 no limit", or just the spend for a shared line.
+    final List<InlineSpan> amount;
+    if (!derived) {
+      // The index payload has no spending yet: show the limit alone.
+      amount = [TextSpan(text: _money(bc.displayBudgetedSpending), style: subdued)];
+    } else if (limited) {
+      amount = [
+        TextSpan(text: _money(bc.actualSpending)),
+        TextSpan(
+          text: ' / ${_money(bc.displayBudgetedSpending)}',
+          style: subdued,
+        ),
+      ];
+    } else if (noLimit) {
+      amount = [
+        TextSpan(text: _money(bc.actualSpending)),
+        TextSpan(text: ' ${l.ds2pNoLimit}', style: subdued),
+      ];
     } else {
-      trailing = l.budgetsAmountLeft(_money(bc.availableToSpend));
+      amount = [TextSpan(text: _money(bc.actualSpending))];
     }
 
-    final spentLine = bc.hasDerivedAmounts
-        ? (bc.isBudgeted && !bc.inheritsParentBudget
-            ? '${_money(bc.actualSpending)} '
-                '${l.budgetsOfAmount(_money(bc.displayBudgetedSpending))}'
-            : _money(bc.actualSpending))
-        : l.budgetsOfAmount(_money(bc.displayBudgetedSpending));
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsetsDirectional.fromSTEB(
-          indented ? SureSpacing.xl + SureSpacing.huge : SureSpacing.xl,
-          SureSpacing.lg,
-          SureSpacing.xl,
-          SureSpacing.lg,
+    final notes = <Widget>[
+      if (limited && over)
+        _SubLine(
+          l.ds2pOverBy(_money(_abs(bc.availableToSpend ?? ''))),
+          color: palette.destructive,
+          weight: SureTokens.weightMedium,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _CategoryAvatar(
-              name: bc.name,
-              color: color,
-              size: indented ? 28 : 36,
-            ),
-            const SizedBox(width: SureSpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          bc.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodyLarge?.copyWith(
-                            fontWeight: SureTokens.weightMedium,
-                            color: palette.textPrimary,
-                          ),
-                        ),
-                      ),
-                      if (over)
-                        _Badge(
-                          label: l.budgetsOverBudget,
-                          color: palette.destructive,
-                        )
-                      else if (near)
-                        _Badge(
-                          label: l.budgetsNearLimit,
-                          color: palette.warning,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: SureSpacing.sm),
-                  BudgetProgressBar(
-                    fraction: bc.spentFraction,
-                    color: color,
-                    overBudget: over,
-                    nearLimit: near,
-                    hidden: hideAmounts,
-                  ),
-                  const SizedBox(height: SureSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          spentLine,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SureMoney.tabular(
-                            textTheme.bodySmall?.copyWith(
-                              color: palette.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (trailing.isNotEmpty) ...[
-                        const SizedBox(width: SureSpacing.md),
-                        Expanded(
-                          child: Text(
-                            trailing,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.end,
-                            style: SureMoney.tabular(
-                              textTheme.bodySmall?.copyWith(
-                                color: trailingColor,
-                                fontWeight:
-                                    over ? SureTokens.weightMedium : null,
+      if (shared)
+        _SubLine(
+          l.budgetsSharedBudget,
+          color: over ? palette.destructive : palette.textSubdued,
+        ),
+      if (derived && !shared && (bc.rolledOverAmountCents ?? 0) > 0)
+        _SubLine(
+          l.budgetsRolledOver(_money(bc.rolledOverAmount)),
+          color: palette.textSubdued,
+        ),
+    ];
+
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            14 + (indented ? indent : 0),
+            11,
+            14,
+            11,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SureCategoryIcon(
+                name: bc.name,
+                color: bc.category.color,
+                icon: bc.category.lucideIcon,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      height: SureCategoryIcon.rowSize,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              bc.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: SureTokens.weightMedium,
+                                color: palette.textPrimary,
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (bc.hasDerivedAmounts &&
-                      !bc.inheritsParentBudget &&
-                      (bc.rolledOverAmountCents ?? 0) > 0) ...[
-                    const SizedBox(height: SureSpacing.xs),
-                    Text(
-                      l.budgetsRolledOver(_money(bc.rolledOverAmount)),
-                      style: SureMoney.tabular(
-                        textTheme.bodySmall?.copyWith(
-                          color: palette.textSubdued,
-                        ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text.rich(
+                              TextSpan(style: mono, children: amount),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    if (limited || shared) ...[
+                      const SizedBox(height: 6),
+                      BudgetProgressBar(
+                        fraction: bc.spentFraction,
+                        overBudget: over,
+                        nearLimit: bc.isNearLimit,
+                        hidden: hideAmounts,
+                        height: 4,
+                      ),
+                    ],
+                    if (notes.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      ...notes,
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _CategoryAvatar extends StatelessWidget {
-  const _CategoryAvatar({
-    required this.name,
-    required this.color,
-    required this.size,
-  });
+class _SubLine extends StatelessWidget {
+  const _SubLine(this.text, {required this.color, this.weight});
 
-  final String name;
+  final String text;
   final Color color;
-  final double size;
+  final FontWeight? weight;
 
   @override
   Widget build(BuildContext context) {
-    // First user-perceived character, so a name starting with an emoji (a
-    // surrogate pair or a ZWJ sequence) isn't cut in half.
-    final trimmed = name.trim();
-    final initial =
-        trimmed.isEmpty ? '?' : trimmed.characters.first.toUpperCase();
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        initial,
-        style: TextStyle(
-          color: color,
-          fontWeight: SureTokens.weightSemibold,
-          fontSize: size * 0.42,
-        ),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsetsDirectional.only(start: SureSpacing.md),
-      padding: const EdgeInsets.symmetric(
-        horizontal: SureSpacing.sm,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(SureTokens.radiusMd),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: SureTokens.weightMedium,
-            ),
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: SureMoney.tabular(
+        TextStyle(fontSize: 12, color: color, fontWeight: weight),
       ),
     );
   }

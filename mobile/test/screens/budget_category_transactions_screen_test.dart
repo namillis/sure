@@ -83,4 +83,33 @@ void main() {
     expect(pages, ['1', '1', '1']);
     expect(find.text('Row 1'), findsOneWidget);
   });
+
+  testWidgets('shows the category under a large title, grouped by day',
+      (tester) async {
+    final service = TransactionsService(
+      client: MockClient(
+          (_) async => http.Response(_page('Row 1', page: 1, pages: 1), 200)),
+    );
+    await tester.pumpWidget(harness(service));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Food'), findsWidgets);
+    expect(find.text('October 2026'), findsOneWidget);
+    expect(find.textContaining('Oct 3'), findsOneWidget);
+    expect(find.text('Row 1'), findsOneWidget);
+    expect(find.text('Load more'), findsNothing);
+  });
+
+  testWidgets('an empty period shows the empty state', (tester) async {
+    final service = TransactionsService(
+      client: MockClient((_) async => http.Response(
+          '{"transactions":[],"pagination":{"page":1,"per_page":50,'
+          '"total_count":0,"total_pages":1}}',
+          200)),
+    );
+    await tester.pumpWidget(harness(service));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('No transactions'), findsOneWidget);
+  });
 }

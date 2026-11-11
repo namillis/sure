@@ -74,6 +74,9 @@ class BudgetsProvider with ChangeNotifier {
 
   /// First day of the month being shown.
   DateTime get month => _month;
+
+  /// Now, from the injected clock (for "19 days left").
+  DateTime get today => _clock();
   bool get isLoading => _isLoading;
   BudgetsLoadError? get error => _error;
 

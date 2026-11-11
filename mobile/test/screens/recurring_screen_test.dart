@@ -95,19 +95,46 @@ void main() {
     expect(find.text('Later'), findsOneWidget);
     expect(find.text('Inactive'), findsOneWidget);
     expect(find.text('Gym Membership'), findsOneWidget);
-    expect(find.text('Monthly on day 20 · Next Nov 20 · Checking'),
-        findsOneWidget);
+    expect(find.text('Monthly · Nov 20 · Checking'), findsOneWidget);
+    // Salary is due next month, under Later.
+    expect(find.text('Monthly · Dec 25 · Checking'), findsOneWidget);
+    expect(find.text('Monthly · Nov 20 · Checking · Inactive'), findsOneWidget);
     expect(find.text('+\$3,000.00'), findsOneWidget);
-    expect(find.text('Income'), findsOneWidget);
-    expect(find.textContaining('Inactive', findRichText: true), findsWidgets);
-    expect(find.text('Monthly out'), findsOneWidget);
-    expect(find.text(r'$49.99'), findsNWidgets(3)); // two rows + out total
-    expect(find.text(r'$3,000.00'), findsOneWidget); // in total
+    expect(find.text(r'$49.99'), findsNWidgets(2)); // the two gym rows
+    expect(find.text(r'Monthly out $49.99 · in $3,000.00'), findsOneWidget);
+
+    // Inactive rows sit at reduced opacity; active sections do not.
+    final inactive = tester.widget<Opacity>(find
+        .ancestor(
+            of: find.byKey(const ValueKey('recurring-rt_3')),
+            matching: find.byType(Opacity))
+        .first);
+    expect(inactive.opacity, lessThan(1));
+    final active = tester.widget<Opacity>(find
+        .ancestor(
+            of: find.byKey(const ValueKey('recurring-rt_1')),
+            matching: find.byType(Opacity))
+        .first);
+    expect(active.opacity, 1);
+  });
+
+  testWidgets('the + on the first section opens the new-item sheet',
+      (tester) async {
+    await pump(tester, server([recurringJson()]));
+
+    await tester.tap(find.bySemanticsLabel('Add recurring'));
+    await tester.pumpAndSettle();
+    expect(find.text('New recurring'), findsOneWidget);
+    // Sheet chrome: Cancel closes it without saving.
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('New recurring'), findsNothing);
   });
 
   testWidgets('shows the empty state', (tester) async {
     await pump(tester, server([]));
     expect(find.text('No recurring transactions yet'), findsOneWidget);
+    expect(find.text('Add recurring'), findsOneWidget);
   });
 
   testWidgets('shows the error state with retry', (tester) async {
@@ -210,12 +237,32 @@ void main() {
     expect(attrs['notes'], 'Cancel in March');
   });
 
-  testWidgets('pause from the row menu sets status inactive', (tester) async {
+  /// Swipes the row titled [name] left to reveal its actions.
+  Future<void> swipe(WidgetTester tester, String name) async {
+    await tester.drag(find.text(name), const Offset(-300, 0));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('swiping a paused row offers Resume', (tester) async {
+    final writes = <http.Request>[];
+    await pump(tester,
+        server([recurringJson(status: 'inactive')], writes: writes));
+
+    await swipe(tester, 'Gym Membership');
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+
+    expect(jsonDecode(writes.single.body), {
+      'recurring_transaction': {'status': 'active'},
+    });
+  });
+
+  testWidgets('pause from the swipe actions sets status inactive',
+      (tester) async {
     final writes = <http.Request>[];
     await pump(tester, server([recurringJson()], writes: writes));
 
-    await tester.tap(find.byTooltip('More actions for Gym Membership'));
-    await tester.pumpAndSettle();
+    await swipe(tester, 'Gym Membership');
     await tester.tap(find.text('Pause'));
     await tester.pumpAndSettle();
 
@@ -230,8 +277,7 @@ void main() {
     final writes = <http.Request>[];
     await pump(tester, server([recurringJson()], writes: writes));
 
-    await tester.tap(find.byTooltip('More actions for Gym Membership'));
-    await tester.pumpAndSettle();
+    await swipe(tester, 'Gym Membership');
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     expect(find.text('Delete Gym Membership?'), findsOneWidget);
@@ -239,8 +285,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(writes, isEmpty);
 
-    await tester.tap(find.byTooltip('More actions for Gym Membership'));
-    await tester.pumpAndSettle();
+    await swipe(tester, 'Gym Membership');
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     await tester.tap(find.descendant(

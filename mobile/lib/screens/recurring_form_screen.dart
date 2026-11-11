@@ -9,8 +9,7 @@ import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
 import '../utils/amount_parser.dart';
 import '../utils/recurring_grouping.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_segmented_control.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/sure_text_field.dart';
 import 'recurring_screen.dart' show confirmRecurringDelete;
 
@@ -207,15 +206,17 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
     final accountIds = widget.accounts.map((a) => a.id).toSet();
     final accountValue = accountIds.contains(_accountId) ? _accountId : null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_editing ? l.recurringEditTitle : l.recurringNewTitle),
-      ),
-      body: SafeArea(
+    return SureSheet(
+      title: _editing ? l.recurringEditTitle : l.recurringNewTitle,
+      onAction: _save,
+      busy: _saving,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         child: Form(
           key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(SureSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 locked ? l.recurringLockedNote : l.recurringCadenceNote,
@@ -386,22 +387,23 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
                       ?.copyWith(color: palette.destructive),
                 ),
               ],
-              const SizedBox(height: SureSpacing.xxxl),
-              SureButton(
-                label: l.commonSave,
-                fullWidth: true,
-                size: SureButtonSize.lg,
-                loading: _saving,
-                onPressed: _save,
-              ),
               if (_editing) ...[
-                const SizedBox(height: SureSpacing.lg),
-                SureButton(
-                  label: l.commonDelete,
-                  fullWidth: true,
-                  size: SureButtonSize.lg,
-                  variant: SureButtonVariant.destructive,
-                  onPressed: _saving ? null : _delete,
+                const SizedBox(height: SureSpacing.xxxl),
+                SurePanel(
+                  onTap: _saving ? null : _delete,
+                  child: SizedBox(
+                    height: 44,
+                    child: Center(
+                      child: Text(
+                        l.commonDelete,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: palette.destructive,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -456,7 +458,10 @@ class _DateFieldState extends State<_DateField> {
       readOnly: true,
       enabled: widget.onTap != null,
       onTap: widget.onTap,
-      suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
+      suffixIcon: const Padding(
+        padding: EdgeInsets.all(12),
+        child: SureIcon(SureIcons.calendar, size: 18),
+      ),
       validator: widget.validator,
     );
   }
