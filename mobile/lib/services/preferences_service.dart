@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesService {
-  static const _groupByTypeKey = 'dashboard_group_by_type';
+  // 'dashboard_group_by_type' is no longer read: Home always groups accounts
+  // by type. A value stored by an older version is left in place, unused.
   static const _biometricEnabledKey = 'biometric_enabled';
   static const _showCategoryFilterKey = 'dashboard_show_category_filter';
   static const _themeModeKey = 'theme_mode';
@@ -29,16 +30,6 @@ class PreferencesService {
   Future<SharedPreferences> get _preferences async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
-  }
-
-  Future<bool> getGroupByType() async {
-    final prefs = await _preferences;
-    return prefs.getBool(_groupByTypeKey) ?? false;
-  }
-
-  Future<void> setGroupByType(bool value) async {
-    final prefs = await _preferences;
-    await prefs.setBool(_groupByTypeKey, value);
   }
 
   Future<bool> getBiometricEnabled() async {

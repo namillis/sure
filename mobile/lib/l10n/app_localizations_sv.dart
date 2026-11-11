@@ -3599,4 +3599,59 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dshAddTransaction => 'Lägg till';
+
+  @override
+  String get ds2sProfileOnWeb => 'Profil på webben';
+
+  @override
+  String get ds2sImportUpload => 'Importera · Ladda upp kontoutdrag';
+
+  @override
+  String get ds2sImportCsv => 'Importera CSV';
+
+  @override
+  String get ds2sMetadata => 'Kategorier, taggar, handlare';
+
+  @override
+  String get ds2sThemeAuto => 'Auto';
+
+  @override
+  String get ds2sFaceIdLock => 'Face ID-lås';
+
+  @override
+  String get ds2sTouchIdLock => 'Touch ID-lås';
+
+  @override
+  String get ds2sBiometricLock => 'Biometriskt lås';
+
+  @override
+  String get ds2sPasswordPasskeys => 'Lösenord och passkeys';
+
+  @override
+  String get ds2sVersion => 'Version';
+
+  @override
+  String get ds2sCheckForUpdates => 'Sök efter uppdateringar';
+
+  @override
+  String get ds2sDebugLogs => 'Felsökningsloggar';
+
+  @override
+  String get ds2sSignOut => 'Logga ut';
+
+  @override
+  String get ds2sAccountActionsLink =>
+      'Rensa lokal data · Återställ · Radera konto';
+
+  @override
+  String get ds2sAccountActions => 'Kontoåtgärder';
+
+  @override
+  String get ds2sClearLocalData => 'Rensa lokal data';
+
+  @override
+  String get ds2sResetAccount => 'Återställ användarkonto';
+
+  @override
+  String get ds2sDeleteAccount => 'Radera användarkonto';
 }

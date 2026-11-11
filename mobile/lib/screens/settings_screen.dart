@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/user.dart';
 import '../providers/auth_provider.dart';
 import '../providers/categories_provider.dart';
 import '../providers/merchants_provider.dart';
@@ -14,6 +17,11 @@ import '../services/log_service.dart';
 import '../services/biometric_service.dart';
 import '../services/preferences_service.dart';
 import '../services/user_service.dart';
+import '../theme/sure_colors.dart';
+import '../theme/sure_tokens.dart';
+import '../widgets/ds/ds.dart';
+import '../widgets/open_on_web_action.dart';
+import 'backend_config_screen.dart';
 import 'log_viewer_screen.dart';
 import 'settings_links.dart';
 import '../models/custom_proxy_header.dart';
@@ -21,6 +29,44 @@ import '../services/api_config.dart';
 import '../services/custom_proxy_headers_service.dart';
 import '../widgets/custom_proxy_headers_editor.dart';
 import '../l10n/app_localizations.dart';
+
+/// The label of the app-lock switch: "Face ID lock" / "Touch ID lock" on iOS
+/// when the device reports that biometric, else "Biometric lock".
+@visibleForTesting
+String biometricLockLabel(
+  AppLocalizations l,
+  List<BiometricType> types,
+  TargetPlatform platform,
+) {
+  if (platform == TargetPlatform.iOS) {
+    if (types.contains(BiometricType.face)) return l.ds2sFaceIdLock;
+    if (types.contains(BiometricType.fingerprint)) return l.ds2sTouchIdLock;
+  }
+  return l.ds2sBiometricLock;
+}
+
+/// Up to two initials for the profile circle: first and last name, else the
+/// first letter of the display name (the email when there is no name).
+@visibleForTesting
+String profileInitials(User? user) {
+  if (user == null) return 'U';
+  String first(String? s) {
+    final t = s?.trim() ?? '';
+    return t.isEmpty ? '' : t.characters.first.toUpperCase();
+  }
+
+  final initials = first(user.firstName) + first(user.lastName);
+  if (initials.isNotEmpty) return initials;
+  final fallback = first(user.displayName);
+  return fallback.isEmpty ? 'U' : fallback;
+}
+
+/// The host of [baseUrl] ("demo.sure.am"), or the URL itself when it has none.
+@visibleForTesting
+String serverHost(String baseUrl) {
+  final host = Uri.tryParse(baseUrl)?.host ?? '';
+  return host.isEmpty ? baseUrl : host;
+}
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -30,7 +76,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _groupByType = false;
   String? _appVersion;
   // Identifiers for the in-progress destructive action. Defined once so the
   // discriminator can't drift via a mistyped string literal across handlers and
@@ -44,19 +89,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _biometricSupported = false;
   bool _biometricEnabled = false;
   bool _isTogglingBiometric = false;
+  List<BiometricType> _biometricTypes = const [];
   List<CustomProxyHeader> _customHeaders = [];
   bool _isCheckingForUpdate = false;
   late final Upgrader _manualUpgrader;
 
-  String _displayInitial(String? displayName) {
-    final trimmed = displayName?.trim() ?? '';
-    return trimmed.isEmpty ? 'U' : trimmed[0].toUpperCase();
-  }
-
   @override
   void initState() {
     super.initState();
-    _loadPreferences();
     _loadAppVersion();
     _loadBiometricState();
     _loadCustomHeaders();
@@ -145,6 +185,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadBiometricState() async {
     final supported = await BiometricService.instance.isDeviceSupported();
     final enabled = await PreferencesService.instance.getBiometricEnabled();
+    final types = supported
+        ? await BiometricService.instance.getAvailableBiometrics()
+        : const <BiometricType>[];
     if (!supported && enabled) {
       await PreferencesService.instance.setBiometricEnabled(false);
     }
@@ -152,6 +195,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         _biometricSupported = supported;
         _biometricEnabled = supported && enabled;
+        _biometricTypes = types;
       });
     }
   }
@@ -190,15 +234,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _loadPreferences() async {
-    final groupByType = await PreferencesService.instance.getGroupByType();
-    if (mounted) {
-      setState(() {
-        _groupByType = groupByType;
-      });
-    }
-  }
-
   Future<void> _loadCustomHeaders() async {
     try {
       final headers = await CustomProxyHeadersService.instance.loadHeaders();
@@ -231,7 +266,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: SureColors.of(context).palette.destructive,
             ),
             child: Text(l.settingsClearData),
           ),
@@ -258,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l.settingsClearDataSuccessDetailed),
-              backgroundColor: Colors.green,
+              backgroundColor: SureColors.of(context).palette.success,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -274,7 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l.settingsClearDataFailed),
-              backgroundColor: Colors.red,
+              backgroundColor: SureColors.of(context).palette.destructive,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -313,7 +348,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: SureColors.of(context).palette.destructive,
               ),
               child: Text(dl.settingsResetAccount),
             ),
@@ -350,7 +385,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l.settingsResetAccountInitiated),
-            backgroundColor: Colors.green,
+            backgroundColor: SureColors.of(context).palette.success,
           ),
         );
 
@@ -359,7 +394,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result['error'] ?? l.settingsResetAccountFailed),
-            backgroundColor: Colors.red,
+            backgroundColor: SureColors.of(context).palette.destructive,
           ),
         );
       }
@@ -385,7 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: SureColors.of(context).palette.destructive,
               ),
               child: Text(dl.settingsDeleteAccount),
             ),
@@ -416,7 +451,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result['error'] ?? l.settingsDeleteAccountFailed),
-            backgroundColor: Colors.red,
+            backgroundColor: SureColors.of(context).palette.destructive,
           ),
         );
       }
@@ -469,47 +504,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _customHeaders = latestHeaders);
     var draftHeaders = List<CustomProxyHeader>.from(latestHeaders);
 
-    final saved = await showDialog<bool>(
+    final saved = await showSureSheet<bool>(
       context: context,
       builder: (context) {
         final l = AppLocalizations.of(context);
-        return AlertDialog(
-          title: Text(l.settingsProxyHeadersLabel),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CustomProxyHeadersEditor(
-                    initialHeaders: draftHeaders,
-                    onChanged: (headers) => draftHeaders = headers,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l.settingsProxyHeadersNote,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                ],
+        final palette = SureColors.of(context).palette;
+        return SureSheet(
+          title: l.settingsProxyHeadersTileTitle,
+          onAction: () {
+            if (formKey.currentState?.validate() != true) return;
+            Navigator.pop(context, true);
+          },
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    CustomProxyHeadersEditor(
+                      initialHeaders: draftHeaders,
+                      onChanged: (headers) => draftHeaders = headers,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l.settingsProxyHeadersNote,
+                      style:
+                          TextStyle(fontSize: 13, color: palette.textSecondary),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l.commonCancel),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() != true) return;
-                Navigator.pop(context, true);
-              },
-              child: Text(l.commonSave),
-            ),
-          ],
         );
       },
     );
@@ -533,365 +563,462 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l.settingsProxyHeadersSaveFailed),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          backgroundColor: SureColors.of(context).palette.destructive,
         ),
       );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final authProvider = Provider.of<AuthProvider>(context);
-    final l = AppLocalizations.of(context);
+  /// Opens the server screen. A saved change of server signs out, since the
+  /// session belongs to the old server.
+  Future<void> _openServerConfig() async {
+    final previousUrl = ApiConfig.baseUrl;
+    var saved = false;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (routeContext) => BackendConfigScreen(
+          onConfigSaved: () {
+            saved = true;
+            Navigator.of(routeContext).pop();
+          },
+        ),
+      ),
+    );
+    if (!mounted) return;
+    // The server screen also saves proxy headers.
+    await _loadCustomHeaders();
+    if (!mounted) return;
+    setState(() {});
+    if (saved && ApiConfig.baseUrl != previousUrl) {
+      await _signOut(context.read<AuthProvider>());
+    }
+  }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l.shellSettingsTitle)),
-      body: ListView(
-        children: [
-          // User info section
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+  /// The "Account actions" sheet: clear local data, reset and delete. Each
+  /// action then runs its own confirm dialog.
+  Future<void> _showAccountActions() async {
+    final action = await showSureSheet<String>(
+      context: context,
+      builder: (sheetContext) {
+        final l = AppLocalizations.of(sheetContext);
+        final palette = SureColors.of(sheetContext).palette;
+        return SureSheet(
+          title: l.ds2sAccountActions,
+          showCancel: false,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SurePanel.rows(
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: colorScheme.primary,
-                          child: Text(
-                            _displayInitial(authProvider.user?.displayName),
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                authProvider.user?.displayName ?? l.settingsUserFallback,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                authProvider.user?.email ?? '',
-                                style: TextStyle(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    SureListRow(
+                      key: const ValueKey('accountActionClear'),
+                      title: l.ds2sClearLocalData,
+                      subtitle: l.settingsClearDataTileSubtitle,
+                      onTap: () => Navigator.pop(sheetContext, _clearAction),
+                    ),
+                    SureListRow(
+                      key: const ValueKey('accountActionReset'),
+                      title: l.ds2sResetAccount,
+                      subtitle: l.settingsResetAccountTileSubtitle,
+                      destructive: true,
+                      onTap: () => Navigator.pop(sheetContext, _resetAction),
+                    ),
+                    SureListRow(
+                      key: const ValueKey('accountActionDelete'),
+                      title: l.ds2sDeleteAccount,
+                      subtitle: l.settingsDeleteAccountTileSubtitle,
+                      destructive: true,
+                      onTap: () => Navigator.pop(sheetContext, _deleteAction),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ),
-
-          const SettingsLinkGroups(),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              l.shellSectionApp.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.4,
-                  ),
-            ),
-          ),
-
-          // App version
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l.settingsAppVersion(_appVersion ?? '…')),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(' > ui_layout: ${authProvider.user?.uiLayout}'),
-                Text(' > ai_enabled: ${authProvider.user?.aiEnabled}'),
+                _CenteredButtonPanel(
+                  key: const ValueKey('accountActionCancel'),
+                  label: l.dsCancel,
+                  color: palette.link,
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  onTap: () => Navigator.pop(sheetContext),
+                ),
               ],
             ),
           ),
+        );
+      },
+    );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case _clearAction:
+        await _handleClearLocalData(context);
+      case _resetAction:
+        await _handleResetAccount(context);
+      case _deleteAction:
+        await _handleDeleteAccount(context);
+    }
+  }
 
-          ListTile(
-            leading: const Icon(Icons.system_update_outlined),
-            title: Text(l.settingsCheckForUpdates),
-            subtitle: Text(l.settingsCheckForUpdatesSubtitle),
-            trailing: _isCheckingForUpdate
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.chevron_right),
-            onTap: _isCheckingForUpdate ? null : _checkForUpdate,
-          ),
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    final authProvider = Provider.of<AuthProvider>(context);
+    final l = AppLocalizations.of(context);
+    final user = authProvider.user;
+    final host = serverHost(ApiConfig.baseUrl);
+    final busy = _activeDestructiveAction != null;
 
-          ListTile(
-            leading: const Icon(Icons.chat_bubble_outline),
-            title: Text(l.settingsContactUs),
-            subtitle: Text(
-              'https://discord.com/invite/36ZGBsxYEK',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                decoration: TextDecoration.underline,
+    return SureLargeTitleScaffold(
+      title: l.shellSettingsTitle,
+      slivers: [
+        SliverList.list(
+          children: [
+            _ProfileRow(
+              initials: profileInitials(user),
+              name: user?.displayName ?? l.settingsUserFallback,
+              host: host,
+              onTap: () => openWebFallback(
+                context,
+                title: l.shellProfile,
+                path: '/settings/profile',
               ),
             ),
-            onTap: () => _launchContactUrl(context),
-          ),
-
-          Semantics(
-            label: l.settingsDebugLogsSemantics,
-            button: true,
-            child: ListTile(
-              leading: const Icon(Icons.bug_report),
-              title: Text(l.settingsDebugLogs),
-              subtitle: Text(l.settingsDebugLogsSubtitle),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const LogViewerScreen()),
-                );
-              },
-            ),
-          ),
-
-          const Divider(),
-
-          // Display Settings Section
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l.settingsSectionDisplay,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-
-          SwitchListTile(
-            secondary: const Icon(Icons.view_list),
-            title: Text(l.settingsGroupByAccountType),
-            subtitle: Text(l.settingsGroupByAccountTypeSubtitle),
-            value: _groupByType,
-            onChanged: (value) async {
-              await PreferencesService.instance.setGroupByType(value);
-              setState(() {
-                _groupByType = value;
-              });
-            },
-          ),
-
-          Consumer<ThemeProvider>(
-            builder: (context, themeProvider, _) {
-              return ListTile(
-                leading: const Icon(Icons.brightness_6_outlined),
-                title: Text(l.settingsThemeLabel),
-                trailing: SegmentedButton<ThemeMode>(
-                  segments: [
-                    ButtonSegment(
-                      value: ThemeMode.light,
-                      icon: const Icon(Icons.light_mode, size: 18),
-                      tooltip: l.settingsThemeLight,
+            const SettingsLinkGroups(),
+            SureSectionHeader(label: l.settingsSectionDisplay),
+            SurePanel.rows(
+              margin: settingsPanelMargin,
+              children: [
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, _) => SureListRow(
+                    title: l.settingsThemeLabel,
+                    trailing: SizedBox(
+                      width: 176,
+                      child: SureSegmentedControl<ThemeMode>(
+                        key: const ValueKey('settingsThemeControl'),
+                        segments: [
+                          SureSegment(
+                              value: ThemeMode.light,
+                              label: l.settingsThemeLight),
+                          SureSegment(
+                              value: ThemeMode.system,
+                              label: l.ds2sThemeAuto),
+                          SureSegment(
+                              value: ThemeMode.dark,
+                              label: l.settingsThemeDark),
+                        ],
+                        selected: themeProvider.themeMode,
+                        onChanged: themeProvider.setThemeMode,
+                      ),
                     ),
-                    ButtonSegment(
-                      value: ThemeMode.system,
-                      icon: const Icon(Icons.brightness_auto, size: 18),
-                      tooltip: l.settingsThemeSystem,
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.dark,
-                      icon: const Icon(Icons.dark_mode, size: 18),
-                      tooltip: l.settingsThemeDark,
-                    ),
-                  ],
-                  selected: {themeProvider.themeMode},
-                  onSelectionChanged: (modes) =>
-                      themeProvider.setThemeMode(modes.first),
-                  showSelectedIcon: false,
+                  ),
                 ),
-              );
-            },
-          ),
-
-          const Divider(),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l.settingsSectionConnection,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                SureListRow(
+                  title: l.settingsPrivacyHideAmountsLabel,
+                  trailing: _SettingsSwitch(
+                    key: const ValueKey('settingsHideAmountsSwitch'),
+                    value: context.watch<PrivacyProvider>().hidden,
+                    onChanged: (value) =>
+                        context.read<PrivacyProvider>().setHidden(value),
+                  ),
+                ),
+                SettingsWebRow(
+                  title: l.shellPreferences,
+                  path: '/settings/preferences',
+                ),
+              ],
+            ),
+            SureSectionHeader(label: l.settingsSectionSecurity),
+            SurePanel.rows(
+              margin: settingsPanelMargin,
+              children: [
+                if (_biometricSupported)
+                  SureListRow(
+                    title: biometricLockLabel(
+                        l, _biometricTypes, defaultTargetPlatform),
+                    trailing: _SettingsSwitch(
+                      key: const ValueKey('settingsBiometricSwitch'),
+                      value: _biometricEnabled,
+                      onChanged:
+                          _isTogglingBiometric ? null : _toggleBiometric,
+                    ),
+                  ),
+                SettingsWebRow(
+                  title: l.ds2sPasswordPasskeys,
+                  path: '/settings/security',
+                ),
+              ],
+            ),
+            SureSectionHeader(label: l.shellSectionApp),
+            SurePanel.rows(
+              margin: settingsPanelMargin,
+              children: [
+                SureListRow(
+                  key: const ValueKey('settingsServerRow'),
+                  title: l.shellServer,
+                  value: host,
+                  showChevron: true,
+                  onTap: _openServerConfig,
+                ),
+                SureListRow(
+                  key: const ValueKey('settingsProxyHeadersRow'),
+                  title: l.settingsProxyHeadersTileTitle,
+                  value: _customHeaders.isEmpty
+                      ? null
+                      : l.settingsProxyHeadersTileSubtitleCount(
+                          _customHeaders.length),
+                  showChevron: true,
+                  onTap: _showCustomHeadersDialog,
+                ),
+                SureListRow(
+                  title: l.ds2sVersion,
+                  trailing: Text(
+                    _appVersion ?? '…',
+                    style: TextStyle(
+                      fontFamily: SureTokens.fontMono,
+                      fontFamilyFallback: const <String>['Menlo', 'monospace'],
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      fontSize: 15,
+                      color: palette.textSecondary,
+                    ),
+                  ),
+                ),
+                SureListRow(
+                  key: const ValueKey('settingsCheckUpdatesRow'),
+                  title: l.ds2sCheckForUpdates,
+                  trailing: _isCheckingForUpdate
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap: _isCheckingForUpdate ? null : _checkForUpdate,
+                ),
+                SureListRow(
+                  title: l.settingsContactUs,
+                  trailing: const SettingsWebMark(),
+                  onTap: () => _launchContactUrl(context),
+                ),
+                SureListRow(
+                  title: l.ds2sDebugLogs,
+                  showChevron: true,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LogViewerScreen()),
+                  ),
+                ),
+              ],
+            ),
+            _CenteredButtonPanel(
+              key: const ValueKey('settingsSignOut'),
+              label: l.ds2sSignOut,
+              color: palette.destructive,
+              margin: const EdgeInsets.fromLTRB(16, 28, 16, 0),
+              onTap: () => _handleLogout(context),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Semantics(
+                button: true,
+                enabled: !busy,
+                child: GestureDetector(
+                  key: const ValueKey('settingsAccountActionsLink'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: busy ? null : _showAccountActions,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 44),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (busy) ...[
+                          const SizedBox.square(
+                            dimension: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Flexible(
+                          child: Text(
+                            l.ds2sAccountActionsLink,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: palette.textSubdued,
+                            ),
+                          ),
+                        ),
+                        if (!busy) ...[
+                          const SizedBox(width: 2),
+                          SureIcon(SureIcons.chevronRight,
+                              size: 14, color: palette.textSubdued),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
-          ListTile(
-            leading: const Icon(Icons.dns_outlined),
-            title: Text(l.shellServer),
-            subtitle: Text(ApiConfig.baseUrl),
-          ),
+/// The profile panel: a 30 px inverse circle with initials, the name, and
+/// "host · Profile on web ↗". Tapping opens the web profile page.
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow({
+    required this.initials,
+    required this.name,
+    required this.host,
+    required this.onTap,
+  });
 
-          ListTile(
-            leading: const Icon(Icons.http_outlined),
-            title: Text(l.settingsProxyHeadersTileTitle),
-            subtitle: Text(
-              _customHeaders.isEmpty
-                  ? l.settingsProxyHeadersTileSubtitleEmpty
-                  : l.settingsProxyHeadersTileSubtitleCount(_customHeaders.length),
-            ),
-            onTap: _showCustomHeadersDialog,
-          ),
+  final String initials;
+  final String name;
+  final String host;
+  final VoidCallback onTap;
 
-          const Divider(),
-
-          // Data Management Section
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l.settingsSectionDataManagement,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-
-          // Clear local data button
-          ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text(l.settingsClearDataTitle),
-            subtitle: Text(l.settingsClearDataTileSubtitle),
-            trailing: _activeDestructiveAction == _clearAction
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : null,
-            enabled: _activeDestructiveAction == null,
-            onTap: _activeDestructiveAction != null
-                ? null
-                : () => _handleClearLocalData(context),
-          ),
-
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l.settingsSectionSecurity,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.visibility_off_outlined),
-            title: Text(l.settingsPrivacyHideAmountsLabel),
-            subtitle: Text(l.settingsPrivacyHideAmountsContent),
-            value: context.watch<PrivacyProvider>().hidden,
-            onChanged: (value) =>
-                context.read<PrivacyProvider>().setHidden(value),
-          ),
-          if (_biometricSupported)
-            SwitchListTile(
-              secondary: const Icon(Icons.fingerprint),
-              title: Text(l.settingsBiometricLabel),
-              subtitle: Text(l.settingsBiometricEnableContent),
-              value: _biometricEnabled,
-              onChanged: _isTogglingBiometric ? null : _toggleBiometric,
-            ),
-
-          const Divider(),
-
-          // Danger Zone Section
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              l.settingsSectionDangerZone,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-          ),
-
-          ListTile(
-            leading: const Icon(Icons.restart_alt, color: Colors.red),
-            title: Text(l.settingsResetAccount),
-            subtitle: Text(l.settingsResetAccountTileSubtitle),
-            trailing: _activeDestructiveAction == _resetAction
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : null,
-            enabled: _activeDestructiveAction == null,
-            onTap: _activeDestructiveAction != null
-                ? null
-                : () => _handleResetAccount(context),
-          ),
-
-          ListTile(
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
-            title: Text(l.settingsDeleteAccount),
-            subtitle: Text(l.settingsDeleteAccountTileSubtitle),
-            trailing: _activeDestructiveAction == _deleteAction
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : null,
-            enabled: _activeDestructiveAction == null,
-            onTap: _activeDestructiveAction != null
-                ? null
-                : () => _handleDeleteAccount(context),
-          ),
-
-          const Divider(),
-
-          // Sign out button
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
-              onPressed: () => _handleLogout(context),
-              icon: const Icon(Icons.logout),
-              label: Text(l.settingsSignOut),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.error,
-                foregroundColor: colorScheme.onError,
-              ),
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    final l = AppLocalizations.of(context);
+    return SurePanel(
+      key: const ValueKey('settingsProfileRow'),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      onTap: onTap,
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: palette.bgInverse,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    initials,
+                    maxLines: 1,
+                    textScaler: MediaQuery.textScalerOf(context)
+                        .clamp(maxScaleFactor: 1.2),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: palette.textInverse,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: palette.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '$host · ${l.ds2sProfileOnWeb}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: palette.textSecondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const SettingsWebMark(size: 12),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+/// A panel holding one centered label (Sign out, Cancel).
+class _CenteredButtonPanel extends StatelessWidget {
+  const _CenteredButtonPanel({
+    super.key,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.margin,
+  });
+
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry? margin;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurePanel(
+      margin: margin,
+      onTap: onTap,
+      child: Semantics(
+        button: true,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The platform switch (Cupertino on iOS), tinted with `success` when on.
+class _SettingsSwitch extends StatelessWidget {
+  const _SettingsSwitch({super.key, required this.value, this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Switch.adaptive(
+      value: value,
+      onChanged: onChanged,
+      activeTrackColor: SureColors.of(context).palette.success,
     );
   }
 }

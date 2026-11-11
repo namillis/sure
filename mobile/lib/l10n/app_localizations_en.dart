@@ -3565,4 +3565,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dshAddTransaction => 'Add';
+
+  @override
+  String get ds2sProfileOnWeb => 'Profile on web';
+
+  @override
+  String get ds2sImportUpload => 'Import · Upload statement';
+
+  @override
+  String get ds2sImportCsv => 'Import CSV';
+
+  @override
+  String get ds2sMetadata => 'Categories, tags, merchants';
+
+  @override
+  String get ds2sThemeAuto => 'Auto';
+
+  @override
+  String get ds2sFaceIdLock => 'Face ID lock';
+
+  @override
+  String get ds2sTouchIdLock => 'Touch ID lock';
+
+  @override
+  String get ds2sBiometricLock => 'Biometric lock';
+
+  @override
+  String get ds2sPasswordPasskeys => 'Password and passkeys';
+
+  @override
+  String get ds2sVersion => 'Version';
+
+  @override
+  String get ds2sCheckForUpdates => 'Check for updates';
+
+  @override
+  String get ds2sDebugLogs => 'Debug logs';
+
+  @override
+  String get ds2sSignOut => 'Sign out';
+
+  @override
+  String get ds2sAccountActionsLink =>
+      'Clear local data · Reset · Delete account';
+
+  @override
+  String get ds2sAccountActions => 'Account actions';
+
+  @override
+  String get ds2sClearLocalData => 'Clear local data';
+
+  @override
+  String get ds2sResetAccount => 'Reset account';
+
+  @override
+  String get ds2sDeleteAccount => 'Delete account';
 }

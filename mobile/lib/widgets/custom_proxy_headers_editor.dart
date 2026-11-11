@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/custom_proxy_header.dart';
+import '../theme/sure_colors.dart';
+import 'sure_button.dart';
+import 'sure_icon.dart';
 import 'sure_text_field.dart';
 
 class CustomProxyHeadersEditor extends StatefulWidget {
@@ -78,10 +81,16 @@ class _CustomProxyHeadersEditorState extends State<CustomProxyHeadersEditor> {
           ),
           const SizedBox(height: 12),
         ],
-        OutlinedButton.icon(
+        SureButton(
+          label: l.proxyHeadersAddHeader,
+          variant: SureButtonVariant.outline,
+          fullWidth: true,
+          leading: SureIcon(
+            SureIcons.plus,
+            size: 16,
+            color: SureColors.of(context).palette.textPrimary,
+          ),
           onPressed: _addHeader,
-          icon: const Icon(Icons.add),
-          label: Text(l.proxyHeadersAddHeader),
         ),
       ],
     );
@@ -131,7 +140,11 @@ class _HeaderRow extends StatelessWidget {
         ),
         IconButton(
           tooltip: l.proxyHeadersRemove,
-          icon: const Icon(Icons.delete_outline),
+          icon: SureIcon(
+            SureIcons.trash,
+            size: 20,
+            color: SureColors.of(context).palette.textSecondary,
+          ),
           onPressed: onRemove,
         ),
       ],

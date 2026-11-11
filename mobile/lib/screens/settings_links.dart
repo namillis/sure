@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../theme/sure_tokens.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
-import '../widgets/sure_list_group.dart';
 import 'calendar_screen.dart';
 import 'categories_screen.dart';
 import 'connections_screen.dart';
@@ -16,124 +14,159 @@ import 'rules_screen.dart';
 import 'statement_upload_screen.dart';
 import 'tags_screen.dart';
 
-/// The Data, Tools and You sections at the top of the settings screen.
+/// The Data and Tools groups of the settings screen.
 ///
-/// Rows with a globe icon open the web page in the in-app web view (the You
-/// section); the rest, including Connections and Rules, are native screens.
+/// Every row here opens a native screen. "Import · Upload statement" and
+/// "Categories, tags, merchants" open a small chooser sheet first.
 class SettingsLinkGroups extends StatelessWidget {
   const SettingsLinkGroups({super.key});
-
-  static const _groupMargin = EdgeInsets.fromLTRB(
-    SureSpacing.xl,
-    SureSpacing.md,
-    SureSpacing.xl,
-    SureSpacing.xl,
-  );
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
 
-    SureListRow web(IconData icon, String title, String path) => SureListRow(
-          leading: _iconBadge(context, icon),
-          title: title,
-          trailing: Icon(
-            Icons.language,
-            size: 18,
-            color: SureColors.of(context).palette.textSubdued,
-            semanticLabel: l.shellOpensOnWeb,
-          ),
-          onTap: () => openWebFallback(context, title: title, path: path),
-        );
-
-    // A native screen with no subtitle.
-    SureListRow screen(IconData icon, String title, WidgetBuilder builder) =>
-        SureListRow(
-          leading: _iconBadge(context, icon),
-          title: title,
-          showChevron: true,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: builder),
-          ),
-        );
-
-    SureListRow native(
-      IconData icon,
-      String title,
-      String subtitle,
-      WidgetBuilder builder,
-    ) =>
-        SureListRow(
-          leading: _iconBadge(context, icon),
-          title: title,
-          subtitle: subtitle,
-          showChevron: true,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: builder),
-          ),
-        );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SureListGroup(
-          header: l.shellSectionData,
-          margin: _groupMargin,
+        SureSectionHeader(label: l.shellSectionData),
+        SurePanel.rows(
+          margin: settingsPanelMargin,
           children: [
-            screen(Icons.link, l.shellConnections,
+            _screenRow(context, l.shellConnections,
                 (_) => const ConnectionsScreen()),
-            screen(Icons.upload_file_outlined, l.shellImport,
-                (_) => const ImportScreen()),
-            screen(Icons.description_outlined, l.dataInStatementTitle,
-                (_) => const StatementUploadScreen()),
-            screen(Icons.category_outlined, l.shellCategories,
-                (_) => const CategoriesScreen()),
-            screen(Icons.sell_outlined, l.shellTags,
-                (_) => const TagsScreen()),
-            screen(Icons.storefront_outlined, l.shellMerchants,
-                (_) => const MerchantsScreen()),
-            screen(Icons.rule, l.shellRules, (_) => const RulesScreen()),
-            screen(Icons.download_outlined, l.shellExport,
-                (_) => const ExportScreen()),
+            SureListRow(
+              key: const ValueKey('settingsImportRow'),
+              title: l.ds2sImportUpload,
+              showChevron: true,
+              onTap: () => _showChooser(context, l.shellImport, [
+                _Choice(l.ds2sImportCsv, (_) => const ImportScreen()),
+                _Choice(l.dataInStatementTitle,
+                    (_) => const StatementUploadScreen()),
+              ]),
+            ),
+            SureListRow(
+              key: const ValueKey('settingsMetadataRow'),
+              title: l.ds2sMetadata,
+              showChevron: true,
+              onTap: () => _showChooser(context, l.ds2sMetadata, [
+                _Choice(l.shellCategories, (_) => const CategoriesScreen()),
+                _Choice(l.shellTags, (_) => const TagsScreen()),
+                _Choice(l.shellMerchants, (_) => const MerchantsScreen()),
+              ]),
+            ),
+            _screenRow(context, l.shellRules, (_) => const RulesScreen()),
+            _screenRow(context, l.shellExport, (_) => const ExportScreen()),
           ],
         ),
-        SureListGroup(
-          header: l.shellSectionTools,
-          margin: _groupMargin,
+        SureSectionHeader(label: l.shellSectionTools),
+        SurePanel.rows(
+          margin: settingsPanelMargin,
           children: [
-            native(Icons.calendar_month, l.moreCalendar,
-                l.moreCalendarSubtitle, (_) => const CalendarScreen()),
-            native(
-                Icons.receipt_long,
-                l.moreRecentTransactions,
-                l.moreRecentTransactionsSubtitle,
-                (_) => const RecentTransactionsScreen()),
-          ],
-        ),
-        SureListGroup(
-          header: l.shellSectionYou,
-          margin: _groupMargin,
-          children: [
-            web(Icons.person_outline, l.shellProfile, '/settings/profile'),
-            web(Icons.tune, l.shellPreferences, '/settings/preferences'),
-            web(Icons.shield_outlined, l.shellSecurity, '/settings/security'),
+            _screenRow(context, l.moreCalendar, (_) => const CalendarScreen(),
+                subtitle: l.moreCalendarSubtitle),
+            _screenRow(context, l.moreRecentTransactions,
+                (_) => const RecentTransactionsScreen(),
+                subtitle: l.moreRecentTransactionsSubtitle),
           ],
         ),
       ],
     );
   }
 
-  Widget _iconBadge(BuildContext context, IconData icon) {
-    final palette = SureColors.of(context).palette;
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: palette.surfaceInset,
-        borderRadius: BorderRadius.circular(SureTokens.radiusMd),
+  static SureListRow _screenRow(
+    BuildContext context,
+    String title,
+    WidgetBuilder builder, {
+    String? subtitle,
+  }) =>
+      SureListRow(
+        title: title,
+        subtitle: subtitle,
+        showChevron: true,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: builder)),
+      );
+
+  /// A small sheet listing [choices]; tapping one closes the sheet and opens
+  /// that screen.
+  static Future<void> _showChooser(
+    BuildContext context,
+    String title,
+    List<_Choice> choices,
+  ) async {
+    final picked = await showSureSheet<_Choice>(
+      context: context,
+      builder: (sheetContext) => SureSheet(
+        title: title,
+        child: SafeArea(
+          top: false,
+          child: SurePanel.rows(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            children: [
+              for (final choice in choices)
+                SureListRow(
+                  title: choice.label,
+                  showChevron: true,
+                  onTap: () => Navigator.pop(sheetContext, choice),
+                ),
+            ],
+          ),
+        ),
       ),
-      child: Icon(icon, color: palette.textPrimary),
+    );
+    if (picked == null || !context.mounted) return;
+    await Navigator.push(context, MaterialPageRoute(builder: picked.builder));
+  }
+}
+
+/// Horizontal margin of a settings panel, matching [SureSectionHeader]'s
+/// 16 px inset.
+const EdgeInsets settingsPanelMargin = EdgeInsets.symmetric(horizontal: 16);
+
+/// A settings row that opens [path] in the in-app web view, marked with a
+/// small arrow-up-right.
+class SettingsWebRow extends StatelessWidget {
+  const SettingsWebRow({
+    super.key,
+    required this.title,
+    required this.path,
+    this.subtitle,
+  });
+
+  final String title;
+  final String path;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return SureListRow(
+      title: title,
+      subtitle: subtitle,
+      trailing: const SettingsWebMark(),
+      onTap: () => openWebFallback(context, title: title, path: path),
     );
   }
+}
+
+/// The arrow-up-right that marks a row opening outside the native app.
+class SettingsWebMark extends StatelessWidget {
+  const SettingsWebMark({super.key, this.size = 16});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SureIcon(
+      SureIcons.arrowUpRight,
+      size: size,
+      color: SureColors.of(context).palette.textSubdued,
+      semanticLabel: AppLocalizations.of(context).shellOpensOnWeb,
+    );
+  }
+}
+
+class _Choice {
+  const _Choice(this.label, this.builder);
+
+  final String label;
+  final WidgetBuilder builder;
 }
