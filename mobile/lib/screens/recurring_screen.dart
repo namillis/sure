@@ -130,6 +130,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
           service: _service,
           accessTokenLoader: _token,
           onUnauthorized: _unauthorized,
+          clock: widget.clock,
         ),
       ),
     );
