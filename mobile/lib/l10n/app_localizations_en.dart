@@ -3344,4 +3344,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds2sDeleteAccount => 'Delete account';
+
+  @override
+  String get ds3aTitle => 'Assistant';
+
+  @override
+  String get ds3aNewChat => 'New chat';
+
+  @override
+  String get ds3aSearchHint => 'Search chats';
+
+  @override
+  String get ds3aClearSearch => 'Clear search';
+
+  @override
+  String get ds3aEmptyTitle => 'Ask about your money';
+
+  @override
+  String get ds3aEmptyBody => '“How much did I spend on groceries last month?”';
+
+  @override
+  String ds3aNoMatches(String query) {
+    return 'No chats match “$query”';
+  }
+
+  @override
+  String get ds3aNoMatchesBody => 'Try a different word.';
+
+  @override
+  String ds3aSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get ds3aSelectAll => 'Select all';
+
+  @override
+  String get ds3aDeleteSelected => 'Delete selected';
+
+  @override
+  String get ds3aDeleteFailed => 'Couldn\'t delete the chat.';
+
+  @override
+  String get ds3aNow => 'now';
+
+  @override
+  String ds3aMinutesShort(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String ds3aHoursShort(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String get ds3aBack => 'Chats';
+
+  @override
+  String get ds3aMenu => 'Chat actions';
+
+  @override
+  String get ds3aRename => 'Rename';
+
+  @override
+  String get ds3aRefresh => 'Refresh';
+
+  @override
+  String get ds3aComposerHint => 'Ask anything…';
+
+  @override
+  String get ds3aSend => 'Send';
+
+  @override
+  String get ds3aDisclaimer => 'AI responses are informational only.';
+
+  @override
+  String get ds3aThinking => 'Thinking';
+
+  @override
+  String get ds3aReplyFailed => 'Couldn\'t get a reply.';
+
+  @override
+  String get ds3aRetry => 'Retry';
+
+  @override
+  String get ds3aSendFailed => 'Couldn\'t send the message.';
 }

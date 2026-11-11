@@ -514,6 +514,43 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
+  /// The chat error that was showing when [retryLastResponse] started. The
+  /// server does not clear `chat.error` on an API retry, so polling ignores
+  /// this one value instead of stopping on it at once.
+  String? _errorBeforeRetry;
+
+  /// Asks the server to write the last assistant reply again
+  /// (`POST /chats/:id/messages/retry`) and polls for the new reply.
+  /// Returns false and sets [errorMessage] when the server refuses.
+  Future<bool> retryLastResponse({
+    required String accessToken,
+    required String chatId,
+  }) async {
+    final previousError = _currentChat?.id == chatId ? _currentChat!.error : null;
+    _errorMessage = null;
+    _isWaitingForResponse = true;
+    notifyListeners();
+
+    try {
+      final result = await _chatService.retryMessage(
+        accessToken: accessToken,
+        chatId: chatId,
+      );
+      if (result['success'] == true) {
+        _startPolling(accessToken, chatId);
+        _errorBeforeRetry = previousError;
+        return true;
+      }
+      _errorMessage = result['error'] as String? ?? 'Failed to retry message';
+    } catch (e) {
+      _log.warning('ChatProvider', 'retryLastResponse failed: ${e.runtimeType}');
+      _errorMessage = 'Something went wrong. Please try again.';
+    }
+    _isWaitingForResponse = false;
+    notifyListeners();
+    return false;
+  }
+
   /// Start polling for new messages (AI responses)
   void _startPolling(String accessToken, String chatId) {
     _pollingTimer?.cancel();
@@ -543,6 +580,7 @@ class ChatProvider with ChangeNotifier {
     _isWaitingForResponse = false;
     _lastAssistantContentLength = null;
     _stablePollingCount = 0;
+    _errorBeforeRetry = null;
   }
 
   /// Poll for updates
@@ -602,7 +640,9 @@ class ChatProvider with ChangeNotifier {
           notifyListeners();
         }
 
-        if (updatedChat.error != null && updatedChat.error!.isNotEmpty) {
+        if (updatedChat.error != null &&
+            updatedChat.error!.isNotEmpty &&
+            updatedChat.error != _errorBeforeRetry) {
           if (!shouldUpdate) {
             _currentChat = updatedChat;
           }

@@ -5701,6 +5701,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete account'**
   String get ds2sDeleteAccount;
+
+  /// Large title of the Assistant tab's chat list.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get ds3aTitle;
+
+  /// Compose button and empty-state button that start a new chat.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get ds3aNewChat;
+
+  /// Placeholder of the chat list search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats'**
+  String get ds3aSearchHint;
+
+  /// Screen-reader label of the search field's clear button.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get ds3aClearSearch;
+
+  /// Title of the empty chat list.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about your money'**
+  String get ds3aEmptyTitle;
+
+  /// Example question, in quotes, under the empty chat list title.
+  ///
+  /// In en, this message translates to:
+  /// **'“How much did I spend on groceries last month?”'**
+  String get ds3aEmptyBody;
+
+  /// Shown when the chat search finds nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats match “{query}”'**
+  String ds3aNoMatches(String query);
+
+  /// Body under the no-matches title in the chat list.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different word.'**
+  String get ds3aNoMatchesBody;
+
+  /// Chat list title while selecting chats.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String ds3aSelectedCount(int count);
+
+  /// Nav-bar action that selects or clears every chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get ds3aSelectAll;
+
+  /// Nav-bar action that deletes the selected chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get ds3aDeleteSelected;
+
+  /// Snackbar when deleting one chat fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the chat.'**
+  String get ds3aDeleteFailed;
+
+  /// Compact time of a chat from less than a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get ds3aNow;
+
+  /// Compact time of a chat from minutes ago, e.g. 5m.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String ds3aMinutesShort(int minutes);
+
+  /// Compact time of a chat from hours ago today, e.g. 2h.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h'**
+  String ds3aHoursShort(int hours);
+
+  /// Back link from a conversation to the chat list.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get ds3aBack;
+
+  /// Tooltip of the conversation's ⋯ menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat actions'**
+  String get ds3aMenu;
+
+  /// Conversation menu item that edits the chat title.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get ds3aRename;
+
+  /// Conversation menu item that reloads the chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get ds3aRefresh;
+
+  /// Placeholder of the message field.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything…'**
+  String get ds3aComposerHint;
+
+  /// Screen-reader label of the send button.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get ds3aSend;
+
+  /// Line under the message field.
+  ///
+  /// In en, this message translates to:
+  /// **'AI responses are informational only.'**
+  String get ds3aDisclaimer;
+
+  /// Shown with animated dots while the assistant writes a reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking'**
+  String get ds3aThinking;
+
+  /// Error panel title when the assistant's reply failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get a reply.'**
+  String get ds3aReplyFailed;
+
+  /// Link in the reply error panel that asks for the reply again.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get ds3aRetry;
+
+  /// Snackbar when a message could not be sent; the text is put back in the field.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the message.'**
+  String get ds3aSendFailed;
 }
 
 class _AppLocalizationsDelegate

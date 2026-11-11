@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Animated 3-dot "Thinking..." indicator shown while the AI generates a response.
-/// Each dot bounces up in sequence, giving the classic chat typing indicator feel.
+import '../l10n/app_localizations.dart';
+import '../theme/sure_colors.dart';
+
+/// Animated "Thinking" label with three bouncing dots, shown while the AI
+/// writes a reply. Each dot bounces in sequence.
 class TypingIndicator extends StatefulWidget {
   const TypingIndicator({super.key});
 
@@ -30,19 +33,16 @@ class _TypingIndicatorState extends State<TypingIndicator>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final dotColor = colorScheme.onSurfaceVariant;
+    final palette = SureColors.of(context).palette;
+    final dotColor = palette.textSubdued;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          'Thinking',
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontStyle: FontStyle.italic,
-          ),
+          AppLocalizations.of(context).ds3aThinking,
+          style: TextStyle(fontSize: 15, color: palette.textSecondary),
         ),
         const SizedBox(width: 6),
         SizedBox(
@@ -56,14 +56,14 @@ class _TypingIndicatorState extends State<TypingIndicator>
                 builder: (context, child) {
                   final offset = _dotOffset(index, _controller.value);
                   return Padding(
-                    padding: EdgeInsets.only(right: index < 2 ? 5 : 0),
+                    padding: EdgeInsets.only(right: index < 2 ? 4 : 0),
                     child: Transform.translate(
                       offset: Offset(0, offset),
                       child: Container(
-                        width: 7,
-                        height: 7,
+                        width: 5,
+                        height: 5,
                         decoration: BoxDecoration(
-                          color: dotColor.withValues(alpha: 0.75),
+                          color: dotColor,
                           shape: BoxShape.circle,
                         ),
                       ),

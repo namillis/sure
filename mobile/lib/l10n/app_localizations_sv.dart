@@ -3376,4 +3376,90 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds2sDeleteAccount => 'Radera användarkonto';
+
+  @override
+  String get ds3aTitle => 'Assistent';
+
+  @override
+  String get ds3aNewChat => 'Ny chatt';
+
+  @override
+  String get ds3aSearchHint => 'Sök i chattar';
+
+  @override
+  String get ds3aClearSearch => 'Rensa sökning';
+
+  @override
+  String get ds3aEmptyTitle => 'Fråga om din ekonomi';
+
+  @override
+  String get ds3aEmptyBody => '”Hur mycket lade jag på mat förra månaden?”';
+
+  @override
+  String ds3aNoMatches(String query) {
+    return 'Inga chattar matchar ”$query”';
+  }
+
+  @override
+  String get ds3aNoMatchesBody => 'Prova ett annat ord.';
+
+  @override
+  String ds3aSelectedCount(int count) {
+    return '$count markerade';
+  }
+
+  @override
+  String get ds3aSelectAll => 'Markera alla';
+
+  @override
+  String get ds3aDeleteSelected => 'Radera markerade';
+
+  @override
+  String get ds3aDeleteFailed => 'Det gick inte att radera chatten.';
+
+  @override
+  String get ds3aNow => 'nu';
+
+  @override
+  String ds3aMinutesShort(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String ds3aHoursShort(int hours) {
+    return '$hours tim';
+  }
+
+  @override
+  String get ds3aBack => 'Chattar';
+
+  @override
+  String get ds3aMenu => 'Chattåtgärder';
+
+  @override
+  String get ds3aRename => 'Byt namn';
+
+  @override
+  String get ds3aRefresh => 'Uppdatera';
+
+  @override
+  String get ds3aComposerHint => 'Fråga vad som helst…';
+
+  @override
+  String get ds3aSend => 'Skicka';
+
+  @override
+  String get ds3aDisclaimer => 'AI-svar är endast informativa.';
+
+  @override
+  String get ds3aThinking => 'Tänker';
+
+  @override
+  String get ds3aReplyFailed => 'Det gick inte att få ett svar.';
+
+  @override
+  String get ds3aRetry => 'Försök igen';
+
+  @override
+  String get ds3aSendFailed => 'Det gick inte att skicka meddelandet.';
 }
