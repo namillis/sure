@@ -256,45 +256,65 @@ class AccountDetailService {
         );
       }
 
-      final currentHoldings = <AccountHolding>[];
-      DateTime? currentDate;
       final totalPages = firstPage.totalPages < 1 ? 1 : firstPage.totalPages;
+      final lastPage = totalPages == 1
+          ? firstPage
+          : await _getHoldingsPage(
+              accessToken: accessToken,
+              accountId: accountId,
+              page: totalPages,
+            );
+      if (!lastPage.success) {
+        return _failureFromStatus(lastPage.statusCode, 'Failed to fetch holdings');
+      }
+      if (lastPage.holdings.isEmpty) {
+        return {'success': true, 'holdings': <AccountHolding>[]};
+      }
 
-      // Holdings are chronological, so the latest positions are at the end of
-      // the final page. Walk backward only until the date changes; this keeps
-      // the common case to page 1 + latest page while still handling accounts
-      // whose current positions span a page boundary.
-      for (var page = totalPages; page >= 1; page -= 1) {
-        final holdingsPage = page == 1
-            ? firstPage
-            : await _getHoldingsPage(
-                accessToken: accessToken,
-                accountId: accountId,
-                page: page,
-              );
+      // The server orders holdings by date only, so rows that share a date
+      // come back in an arbitrary order that can change between requests.
+      // Walking page boundaries could then repeat one position and skip
+      // another, differently on every refresh. Instead: the latest date is
+      // the last page's newest row; if that page also holds an older date,
+      // every latest-date row is on it (dates themselves are ordered).
+      // Otherwise ask for that date alone and drop any repeated row.
+      final latest = lastPage.holdings
+          .map((h) => h.date)
+          .reduce((a, b) => a.isAfter(b) ? a : b);
+      final pageHasOlderRow =
+          lastPage.holdings.any((h) => !_sameDate(h.date, latest));
 
-        if (!holdingsPage.success) {
-          return _failureFromStatus(
-            holdingsPage.statusCode,
-            'Failed to fetch holdings',
+      final List<AccountHolding> currentHoldings;
+      if (totalPages == 1 || pageHasOlderRow) {
+        currentHoldings = lastPage.holdings
+            .where((h) => _sameDate(h.date, latest))
+            .toList();
+      } else {
+        currentHoldings = [];
+        var page = 1;
+        var pages = 1;
+        do {
+          final datePage = await _getHoldingsPage(
+            accessToken: accessToken,
+            accountId: accountId,
+            page: page,
+            date: latest,
           );
-        }
-
-        for (final holding in holdingsPage.holdings.reversed) {
-          currentDate ??= holding.date;
-          if (!_sameDate(holding.date, currentDate)) {
-            return {
-              'success': true,
-              'holdings': _topHoldings(currentHoldings, displayLimit),
-            };
+          if (!datePage.success) {
+            return _failureFromStatus(
+              datePage.statusCode,
+              'Failed to fetch holdings',
+            );
           }
-          currentHoldings.add(holding);
-        }
+          currentHoldings.addAll(datePage.holdings);
+          pages = datePage.totalPages;
+          page += 1;
+        } while (page <= pages);
       }
 
       return {
         'success': true,
-        'holdings': _topHoldings(currentHoldings, displayLimit),
+        'holdings': _topHoldings(_unique(currentHoldings), displayLimit),
       };
     } catch (e) {
       _logFailure('getHoldings', e);
@@ -309,12 +329,14 @@ class AccountDetailService {
     required String accessToken,
     required String accountId,
     required int page,
+    DateTime? date,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/holdings').replace(
       queryParameters: {
         'account_id': accountId,
         'page': page.toString(),
         'per_page': _holdingsPageSize.toString(),
+        if (date != null) 'date': DateFormat('yyyy-MM-dd').format(date),
       },
     );
 
@@ -358,6 +380,19 @@ class AccountDetailService {
   double _amountValue(String amount) {
     final numeric = amount.replaceAll(RegExp(r'[^\d.-]'), '');
     return double.tryParse(numeric) ?? 0;
+  }
+
+  /// One row per holding: by id, else by security (a page boundary under the
+  /// server's date-only ordering can return the same row twice).
+  List<AccountHolding> _unique(List<AccountHolding> holdings) {
+    final seen = <String>{};
+    return [
+      for (final h in holdings)
+        if (seen.add(h.id.isNotEmpty
+            ? 'id:${h.id}'
+            : 'sec:${h.securityId ?? h.ticker}:${h.accountId}'))
+          h,
+    ];
   }
 
   bool _sameDate(DateTime left, DateTime right) {
