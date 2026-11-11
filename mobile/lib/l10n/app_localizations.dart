@@ -5659,6 +5659,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get dsFailed;
+
+  /// Category row value on the transaction sheet when the transaction is split into parts.
+  ///
+  /// In en, this message translates to:
+  /// **'Split ({count})'**
+  String dstSplitValue(int count);
+
+  /// Placeholder of the notes field on the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get dstAddNote;
+
+  /// Accessibility label of the + button that adds tags on the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get dstAddTag;
+
+  /// Row on the transaction sheet that sets the transaction up as recurring (opens the web app).
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get dstRecurring;
+
+  /// Value of the Recurring row on the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get dstRecurringSetUp;
+
+  /// Row on the transaction sheet that opens the transaction in the web app.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on the web'**
+  String get dstOpenOnWeb;
+
+  /// Destructive button at the bottom of the transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transaction'**
+  String get dstDeleteTransaction;
+
+  /// Accessibility label of the transaction sheet's hero amount, which opens the amount editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit amount'**
+  String get dstEditAmount;
+
+  /// Hint of the search field in the category picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Search categories'**
+  String get dstSearchCategories;
+
+  /// Category picker title when the search matches nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories match'**
+  String get dstNoCategoryMatches;
+
+  /// Category picker body when the search matches nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search.'**
+  String get dstNoCategoryMatchesBody;
+
+  /// Category picker title when the family has no categories.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get dstNoCategories;
 }
 
 class _AppLocalizationsDelegate

@@ -324,5 +324,20 @@ void main() {
       expect(updated.tagIds, ['tag_2']);
       expect(updated.tagNames, ['Travel']);
     });
+
+    test('reads the entry id the web routes take', () {
+      Transaction parse(Map<String, dynamic> extra) => Transaction.fromJson({
+            'id': 'tx_1',
+            'account': {'id': 'acct_1'},
+            'name': 'Coffee',
+            'date': '2026-06-01',
+            'amount': r'$4.50',
+            'currency': 'USD',
+            ...extra,
+          });
+      expect(parse({'entry_id': 'entry_1'}).entryId, 'entry_1');
+      expect(parse({}).entryId, isNull);
+      expect(parse({'entry_id': ''}).entryId, isNull);
+    });
   });
 }

@@ -10,6 +10,7 @@ import '../providers/categories_provider.dart';
 import '../providers/merchants_provider.dart';
 import '../providers/tags_provider.dart';
 import '../services/metadata_create_service.dart';
+import 'category_picker_sheet.dart';
 import 'metadata_picker_sheet.dart';
 
 /// Category, merchant and tag pickers for the transaction editors. Each
@@ -26,28 +27,12 @@ class TransactionMetadataPickers {
     required bool online,
     String? selectedId,
     List<PickerOption> extraOptions = const [],
-  }) async {
+  }) {
     final l = AppLocalizations.of(context);
     final provider = context.read<CategoriesProvider>();
-    // Sorted by full path so each subcategory sits under its parent
-    // ("Food & Dining", "Food & Dining > Groceries", ...).
-    final sortedCategories = provider.categories.toList()
-      ..sort((left, right) => left.displayName
-          .toLowerCase()
-          .compareTo(right.displayName.toLowerCase()));
-    final options = _merge(
-      sortedCategories
-          .map((models.Category c) => PickerOption(id: c.id, label: c.displayName)),
-      extraOptions,
-    );
-    final picked = await _show(
+    final onCreate = _creator(
       context,
-      title: l.txnDetailChooseCategory,
-      options: options,
-      selected: {if (selectedId != null) selectedId},
-      loading: provider.isLoading,
-      online: online,
-      create: (token, name) async {
+      (token, name) async {
         final result =
             await _service.createCategory(accessToken: token, name: name);
         if (result['success'] != true) return result;
@@ -60,7 +45,15 @@ class TransactionMetadataPickers {
         };
       },
     );
-    return picked?.firstOrNull;
+    return CategoryPickerSheet.show(
+      context,
+      categories: provider.categories,
+      extraOptions: extraOptions,
+      selectedId: selectedId,
+      loading: provider.isLoading,
+      onCreate: online ? onCreate : null,
+      createUnavailableNote: online ? null : l.txnDetailCreateOffline,
+    );
   }
 
   Future<PickerOption?> pickMerchant(
@@ -154,26 +147,10 @@ class TransactionMetadataPickers {
     bool multiSelect = false,
   }) async {
     final l = AppLocalizations.of(context);
-    final auth = context.read<AuthProvider>();
     final known = {for (final option in options) option.id: option};
-
-    Future<PickerOption> onCreate(String name) async {
-      final token = await auth.getValidAccessToken();
-      if (token == null) {
-        throw PickerCreateException(l.transactionEditSessionExpired);
-      }
-      final result = await create(token, name);
-      if (result['success'] != true) {
-        throw PickerCreateException(
-          result['error'] == 'unauthorized'
-              ? l.transactionEditSessionExpired
-              : result['error']?.toString() ?? l.txnDetailCreateFailed,
-        );
-      }
-      final option = result['option'] as PickerOption;
+    final onCreate = _creator(context, create, onCreated: (option) {
       known[option.id] = option;
-      return option;
-    }
+    });
 
     final ids = await MetadataPickerSheet.show(
       context,
@@ -190,5 +167,33 @@ class TransactionMetadataPickers {
       for (final id in ids)
         if (known[id] != null) known[id]!,
     ];
+  }
+
+  /// Wraps a create call in the picker's contract: a fresh token, and a
+  /// [PickerCreateException] with a readable message on failure.
+  PickerCreate _creator(
+    BuildContext context,
+    Future<Map<String, dynamic>> Function(String token, String name) create, {
+    void Function(PickerOption option)? onCreated,
+  }) {
+    final l = AppLocalizations.of(context);
+    final auth = context.read<AuthProvider>();
+    return (String name) async {
+      final token = await auth.getValidAccessToken();
+      if (token == null) {
+        throw PickerCreateException(l.transactionEditSessionExpired);
+      }
+      final result = await create(token, name);
+      if (result['success'] != true) {
+        throw PickerCreateException(
+          result['error'] == 'unauthorized'
+              ? l.transactionEditSessionExpired
+              : result['error']?.toString() ?? l.txnDetailCreateFailed,
+        );
+      }
+      final option = result['option'] as PickerOption;
+      onCreated?.call(option);
+      return option;
+    };
   }
 }

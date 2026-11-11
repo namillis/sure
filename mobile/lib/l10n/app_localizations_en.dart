@@ -3316,4 +3316,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dsFailed => 'Failed';
+
+  @override
+  String dstSplitValue(int count) {
+    return 'Split ($count)';
+  }
+
+  @override
+  String get dstAddNote => 'Add a note';
+
+  @override
+  String get dstAddTag => 'Add tag';
+
+  @override
+  String get dstRecurring => 'Recurring';
+
+  @override
+  String get dstRecurringSetUp => 'Set up';
+
+  @override
+  String get dstOpenOnWeb => 'Open on the web';
+
+  @override
+  String get dstDeleteTransaction => 'Delete transaction';
+
+  @override
+  String get dstEditAmount => 'Edit amount';
+
+  @override
+  String get dstSearchCategories => 'Search categories';
+
+  @override
+  String get dstNoCategoryMatches => 'No categories match';
+
+  @override
+  String get dstNoCategoryMatchesBody => 'Try a different search.';
+
+  @override
+  String get dstNoCategories => 'No categories yet';
 }

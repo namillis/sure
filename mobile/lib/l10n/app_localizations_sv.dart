@@ -3312,10 +3312,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get p3rpEmpty => 'Inga transaktioner under den här perioden.';
 
   @override
-  String get dsToday => 'Idag';
+  String get dsToday => 'I dag';
 
   @override
-  String get dsYesterday => 'Igår';
+  String get dsYesterday => 'I går';
 
   @override
   String get dsCancel => 'Avbryt';
@@ -3346,4 +3346,42 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dsFailed => 'Misslyckades';
+
+  @override
+  String dstSplitValue(int count) {
+    return 'Delad ($count)';
+  }
+
+  @override
+  String get dstAddNote => 'Lägg till en anteckning';
+
+  @override
+  String get dstAddTag => 'Lägg till tagg';
+
+  @override
+  String get dstRecurring => 'Återkommande';
+
+  @override
+  String get dstRecurringSetUp => 'Ställ in';
+
+  @override
+  String get dstOpenOnWeb => 'Öppna på webben';
+
+  @override
+  String get dstDeleteTransaction => 'Radera transaktion';
+
+  @override
+  String get dstEditAmount => 'Ändra belopp';
+
+  @override
+  String get dstSearchCategories => 'Sök kategorier';
+
+  @override
+  String get dstNoCategoryMatches => 'Inga kategorier matchar';
+
+  @override
+  String get dstNoCategoryMatchesBody => 'Prova en annan sökning.';
+
+  @override
+  String get dstNoCategories => 'Inga kategorier än';
 }

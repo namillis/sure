@@ -933,5 +933,17 @@
   "dsCategorize": "Kategorisera",
   "dsDelete": "Radera",
   "dsPending": "Väntar",
-  "dsFailed": "Misslyckades"
+  "dsFailed": "Misslyckades",
+  "dstSplitValue": "Delad ({count})",
+  "dstAddNote": "Lägg till en anteckning",
+  "dstAddTag": "Lägg till tagg",
+  "dstRecurring": "Återkommande",
+  "dstRecurringSetUp": "Ställ in",
+  "dstOpenOnWeb": "Öppna på webben",
+  "dstDeleteTransaction": "Radera transaktion",
+  "dstEditAmount": "Ändra belopp",
+  "dstSearchCategories": "Sök kategorier",
+  "dstNoCategoryMatches": "Inga kategorier matchar",
+  "dstNoCategoryMatchesBody": "Prova en annan sökning.",
+  "dstNoCategories": "Inga kategorier än"
 }
