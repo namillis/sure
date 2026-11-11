@@ -5,6 +5,7 @@ import '../models/custom_proxy_header.dart';
 import '../services/api_config.dart';
 import '../services/custom_proxy_headers_service.dart';
 import '../services/log_service.dart';
+import '../services/offline_cache_store.dart';
 import '../widgets/custom_proxy_headers_editor.dart';
 import '../l10n/app_localizations.dart';
 
@@ -156,7 +157,10 @@ class _BackendConfigScreenState extends State<BackendConfigScreen> {
       await CustomProxyHeadersService.instance.saveHeaders(_customHeaders);
       ApiConfig.setCustomProxyHeaders(_customHeaders);
 
-      // Update ApiConfig
+      // Update ApiConfig. Cached data belongs to the old server, so drop it.
+      if (normalizedUrl != ApiConfig.baseUrl) {
+        await OfflineCacheStore.instance.clearAll();
+      }
       ApiConfig.setBaseUrl(normalizedUrl);
 
       // Notify parent that config is saved

@@ -5413,6 +5413,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This security can\'t be priced from your accounts. You need a trade in it, or to hold it in a linked account you can edit.'**
   String get p3apPriceNotAllowed;
+
+  /// Hint on Home under net worth: the saved data shown was loaded from the server less than a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated just now'**
+  String get p3ocUpdatedJustNow;
+
+  /// Hint on Home under net worth: how long ago the saved data shown was loaded from the server.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Updated {count} minute ago} other{Updated {count} minutes ago}}'**
+  String p3ocUpdatedMinutesAgo(int count);
+
+  /// Hint on Home under net worth: how long ago the saved data shown was loaded from the server.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Updated {count} hour ago} other{Updated {count} hours ago}}'**
+  String p3ocUpdatedHoursAgo(int count);
+
+  /// Hint on Home under net worth: how long ago the saved data shown was loaded from the server.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Updated {count} day ago} other{Updated {count} days ago}}'**
+  String p3ocUpdatedDaysAgo(int count);
+
+  /// Connectivity banner text when the device has no network and saved data is shown.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. Data shown may be out of date.'**
+  String get p3ocOfflineMayBeOutdated;
 }
 
 class _AppLocalizationsDelegate

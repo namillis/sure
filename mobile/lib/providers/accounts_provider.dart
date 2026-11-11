@@ -4,15 +4,39 @@ import 'package:flutter/foundation.dart';
 import '../models/account.dart';
 import '../services/accounts_service.dart';
 import '../services/balance_sheet_service.dart';
-import '../services/offline_storage_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/log_service.dart';
+import '../services/offline_cache_codecs.dart';
+import '../services/offline_cache_store.dart';
 
+/// Accounts list and balance sheet for Home.
+///
+/// Cache first, then network: the last-good accounts and balance sheet for
+/// this server + user ([OfflineCacheStore]) are shown at once, then replaced
+/// by a fresh load when online. Offline, the cached copy stays on screen.
 class AccountsProvider with ChangeNotifier {
-  final AccountsService _accountsService = AccountsService();
-  final BalanceSheetService _balanceSheetService = BalanceSheetService();
-  final OfflineStorageService _offlineStorage = OfflineStorageService();
+  AccountsProvider({
+    AccountsService? accountsService,
+    BalanceSheetService? balanceSheetService,
+    OfflineCacheStore? cache,
+    bool Function()? isOnline,
+  })  : _accountsService = accountsService ?? AccountsService(),
+        _balanceSheetService = balanceSheetService ?? BalanceSheetService(),
+        _cacheOverride = cache,
+        _isOnlineOverride = isOnline;
+
+  final AccountsService _accountsService;
+  final BalanceSheetService _balanceSheetService;
+  final OfflineCacheStore? _cacheOverride;
+  final bool Function()? _isOnlineOverride;
   final LogService _log = LogService.instance;
+
+  OfflineCacheStore get _cache => _cacheOverride ?? OfflineCacheStore.instance;
+
+  /// Scope the data in memory belongs to; a different one resets it.
+  String? _scope;
+  DateTime? _lastUpdatedAt;
+  bool _isShowingCachedData = false;
 
   List<Account> _accounts = [];
   bool _isLoading = false;
@@ -38,6 +62,14 @@ class AccountsProvider with ChangeNotifier {
   String? get liabilitiesFormatted => _liabilitiesFormatted;
   String? get familyCurrency => _familyCurrency;
   bool get isBalanceSheetStale => _isBalanceSheetStale;
+
+  /// When the accounts shown were last loaded from the server (from the
+  /// cache's save time until a refresh succeeds).
+  DateTime? get lastUpdatedAt => _lastUpdatedAt;
+
+  /// True while the accounts shown came from the cache and no refresh has
+  /// succeeded since (still loading, offline, or the refresh failed).
+  bool get isShowingCachedData => _isShowingCachedData;
 
   List<Account> get assetAccounts {
     final assets = _accounts.where((a) => a.isAsset).toList();
@@ -92,7 +124,10 @@ class AccountsProvider with ChangeNotifier {
     });
   }
 
-  /// Fetch accounts (offline-first approach)
+  /// Cache first, then network. Shows the cached accounts and balance sheet
+  /// for this server + user at once (when nothing is in memory yet), then
+  /// refreshes from the server whenever online. [forceSync] is kept for
+  /// callers; an online call always refreshes.
   Future<bool> fetchAccounts({
     required String accessToken,
     bool forceSync = false,
@@ -102,21 +137,19 @@ class AccountsProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Always load from local storage first for instant display
-      final cachedAccounts = await _offlineStorage.getAccounts();
-      if (cachedAccounts.isNotEmpty) {
-        _accounts = cachedAccounts;
-        _isInitializing = false;
-        notifyListeners();
+      final scope = await _cache.currentScope();
+      if (scope != _scope) {
+        // Another server or user: never keep showing the previous one's data.
+        _resetData();
+        _scope = scope;
+      }
+      if (scope != null && _accounts.isEmpty) {
+        await _loadFromCache(scope);
       }
 
-      // If online and (force sync, no cached data, or a cache that may be the
-      // truncated first page older versions saved), fetch from server
-      final isOnline = _connectivityService?.isOnline ?? false;
-      final maybeTruncated =
-          cachedAccounts.length == AccountsService.legacyPageSize;
-      if (isOnline &&
-          (forceSync || cachedAccounts.isEmpty || maybeTruncated)) {
+      final isOnline =
+          _isOnlineOverride?.call() ?? _connectivityService?.isOnline ?? false;
+      if (isOnline) {
         final result = await _accountsService.getAllAccounts(
           accessToken: accessToken,
         );
@@ -125,29 +158,30 @@ class AccountsProvider with ChangeNotifier {
           final serverAccounts =
               (result['accounts'] as List<dynamic>?)?.cast<Account>() ?? [];
           _pagination = result['pagination'] as Map<String, dynamic>?;
-
-          // Save to local cache
-          await _offlineStorage.clearAccounts();
-          await _offlineStorage.saveAccounts(serverAccounts);
-
-          // Update in-memory accounts
           _accounts = serverAccounts;
           _errorMessage = null;
-        } else {
+          _isShowingCachedData = false;
+          _lastUpdatedAt = scope == null
+              ? DateTime.now()
+              : await _cache.write(
+                  scope,
+                  OfflineCacheStore.accountsKey,
+                  serverAccounts.map(OfflineCacheCodecs.account).toList(),
+                );
+        } else if (result['error'] == 'unauthorized') {
+          // A revoked session must sign out even when cached data is shown.
+          _errorMessage = 'unauthorized';
+        } else if (_accounts.isEmpty) {
           // If server fetch failed but we have cached data, that's OK
-          if (_accounts.isEmpty) {
-            _errorMessage =
-                result['error'] as String? ?? 'Failed to fetch accounts';
-          }
+          _errorMessage =
+              result['error'] as String? ?? 'Failed to fetch accounts';
         }
-      } else if (!isOnline && _accounts.isEmpty) {
+
+        // Fetch balance sheet independently — works even with cached accounts
+        await _fetchBalanceSheet(accessToken, scope);
+      } else if (_accounts.isEmpty) {
         _errorMessage =
             'You are offline. Please connect to the internet to load accounts.';
-      }
-
-      // Fetch balance sheet independently — works even with cached accounts
-      if (isOnline) {
-        await _fetchBalanceSheet(accessToken);
       }
 
       _isLoading = false;
@@ -192,19 +226,22 @@ class AccountsProvider with ChangeNotifier {
   /// Fetches balance sheet data and updates formatted net worth, assets,
   /// and liabilities values for display. On failure, marks the existing
   /// values as stale rather than clearing them.
-  Future<void> _fetchBalanceSheet(String accessToken) async {
+  Future<void> _fetchBalanceSheet(String accessToken, String? scope) async {
     try {
       final result =
           await _balanceSheetService.getBalanceSheet(accessToken: accessToken);
       if (result['success'] == true) {
-        _familyCurrency = result['currency'] as String?;
-        final netWorth = result['net_worth'] as Map<String, dynamic>?;
-        final assets = result['assets'] as Map<String, dynamic>?;
-        final liabilities = result['liabilities'] as Map<String, dynamic>?;
-        _netWorthFormatted = netWorth?['formatted'] as String?;
-        _assetsFormatted = assets?['formatted'] as String?;
-        _liabilitiesFormatted = liabilities?['formatted'] as String?;
+        final data = {
+          'currency': result['currency'],
+          'net_worth': result['net_worth'],
+          'assets': result['assets'],
+          'liabilities': result['liabilities'],
+        };
+        _applyBalanceSheet(data);
         _isBalanceSheetStale = false;
+        if (scope != null) {
+          await _cache.write(scope, OfflineCacheStore.balanceSheetKey, data);
+        }
       } else {
         // Keep existing values but mark as stale
         if (_netWorthFormatted != null) {
@@ -223,16 +260,66 @@ class AccountsProvider with ChangeNotifier {
     }
   }
 
-  void clearAccounts() {
+  void _applyBalanceSheet(Map<String, dynamic> data) {
+    String? formatted(Object? section) =>
+        section is Map ? section['formatted'] as String? : null;
+    _familyCurrency = data['currency'] as String?;
+    _netWorthFormatted = formatted(data['net_worth']);
+    _assetsFormatted = formatted(data['assets']);
+    _liabilitiesFormatted = formatted(data['liabilities']);
+  }
+
+  /// Puts the cached accounts and balance sheet on screen, if there are any.
+  Future<void> _loadFromCache(String scope) async {
+    final accountsEntry =
+        await _cache.read(scope, OfflineCacheStore.accountsKey);
+    final sheetEntry =
+        await _cache.read(scope, OfflineCacheStore.balanceSheetKey);
+    // A newer load for another scope may have run meanwhile.
+    if (_scope != scope) return;
+
+    final rawAccounts = accountsEntry?.data;
+    if (rawAccounts is List) {
+      try {
+        _accounts = rawAccounts
+            .map((a) => Account.fromJson((a as Map).cast<String, dynamic>()))
+            .toList();
+        _lastUpdatedAt = accountsEntry!.savedAt;
+        _isShowingCachedData = true;
+      } catch (e) {
+        _log.warning(
+          'AccountsProvider',
+          'Ignoring unreadable cached accounts: ${e.runtimeType}',
+        );
+        _accounts = [];
+      }
+    }
+    final sheet = sheetEntry?.data;
+    if (sheet is Map) _applyBalanceSheet(sheet.cast<String, dynamic>());
+
+    if (_accounts.isNotEmpty) {
+      _isInitializing = false;
+      notifyListeners();
+    }
+  }
+
+  void _resetData() {
     _accounts = [];
     _pagination = null;
-    _errorMessage = null;
-    _isInitializing = true;
     _netWorthFormatted = null;
     _assetsFormatted = null;
     _liabilitiesFormatted = null;
     _familyCurrency = null;
     _isBalanceSheetStale = false;
+    _lastUpdatedAt = null;
+    _isShowingCachedData = false;
+  }
+
+  void clearAccounts() {
+    _resetData();
+    _scope = null;
+    _errorMessage = null;
+    _isInitializing = true;
     notifyListeners();
   }
 

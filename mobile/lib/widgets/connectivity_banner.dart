@@ -92,7 +92,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
                 Expanded(
                   child: Text(
                     isOffline
-                        ? l.connectivityOffline
+                        ? l.p3ocOfflineMayBeOutdated
                         : l.connectivityPendingSync(pendingCount),
                     style: TextStyle(
                       color: isOffline ? Colors.orange.shade900 : Colors.blue.shade900,

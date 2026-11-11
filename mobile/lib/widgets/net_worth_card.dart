@@ -19,6 +19,10 @@ class NetWorthCard extends StatelessWidget {
   final String? netWorthFormatted;
   final bool isStale;
 
+  /// Small hint under the net worth, e.g. "Updated 5 minutes ago", shown
+  /// while the figures come from the offline cache.
+  final String? updatedLabel;
+
   const NetWorthCard({
     super.key,
     required this.assetTotalsByCurrency,
@@ -28,6 +32,7 @@ class NetWorthCard extends StatelessWidget {
     required this.formatAmount,
     this.netWorthFormatted,
     this.isStale = false,
+    this.updatedLabel,
   });
 
   @override
@@ -101,6 +106,16 @@ class NetWorthCard extends StatelessWidget {
                         ),
                   ),
                 ),
+                if (updatedLabel != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    updatedLabel!,
+                    key: const ValueKey('netWorthUpdatedLabel'),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: palette.textSubdued,
+                        ),
+                  ),
+                ],
               ],
             ),
           ),

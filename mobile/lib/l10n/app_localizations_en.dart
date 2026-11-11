@@ -3153,4 +3153,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get p3apPriceNotAllowed =>
       'This security can\'t be priced from your accounts. You need a trade in it, or to hold it in a linked account you can edit.';
+
+  @override
+  String get p3ocUpdatedJustNow => 'Updated just now';
+
+  @override
+  String p3ocUpdatedMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Updated $count minutes ago',
+      one: 'Updated $count minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3ocUpdatedHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Updated $count hours ago',
+      one: 'Updated $count hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3ocUpdatedDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Updated $count days ago',
+      one: 'Updated $count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3ocOfflineMayBeOutdated =>
+      'You\'re offline. Data shown may be out of date.';
 }

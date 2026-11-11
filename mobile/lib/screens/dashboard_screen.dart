@@ -5,8 +5,10 @@ import '../models/account.dart';
 import '../providers/auth_provider.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/transactions_provider.dart';
+import '../services/connectivity_service.dart';
 import '../services/log_service.dart';
 import '../services/preferences_service.dart';
+import '../utils/updated_ago.dart';
 import '../widgets/account_card.dart';
 import '../widgets/connectivity_banner.dart';
 import '../widgets/net_worth_card.dart';
@@ -374,6 +376,24 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// "Updated <time> ago" while the accounts shown came from the offline
+  /// cache (before the refresh lands, or when it can't) or the device is
+  /// offline; null once fresh data is on screen.
+  String? _updatedLabel(
+    BuildContext context,
+    AccountsProvider accountsProvider,
+  ) {
+    final updatedAt = accountsProvider.lastUpdatedAt;
+    if (updatedAt == null) return null;
+    final offline = context.watch<ConnectivityService>().isOffline;
+    if (!offline && !accountsProvider.isShowingCachedData) return null;
+    return updatedAgoLabel(
+      AppLocalizations.of(context),
+      updatedAt,
+      DateTime.now(),
+    );
+  }
+
   List<Account> _investmentAccounts(AccountsProvider accountsProvider) =>
       accountsProvider.accounts
           .where((account) =>
@@ -448,8 +468,11 @@ class DashboardScreenState extends State<DashboardScreen> {
           Expanded(
             child: Consumer2<AuthProvider, AccountsProvider>(
               builder: (context, authProvider, accountsProvider, _) {
-                // Show loading state during initialization or when loading
-                if (accountsProvider.isInitializing || accountsProvider.isLoading) {
+                // Spinner only when there is nothing to show yet: cached
+                // accounts stay on screen while a refresh runs.
+                if (accountsProvider.accounts.isEmpty &&
+                    (accountsProvider.isInitializing ||
+                        accountsProvider.isLoading)) {
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
@@ -547,6 +570,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     formatAmount: _formatAmount,
                     netWorthFormatted: accountsProvider.netWorthFormatted,
                     isStale: accountsProvider.isBalanceSheetStale,
+                    updatedLabel: _updatedLabel(context, accountsProvider),
                   ),
                 ),
 

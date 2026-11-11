@@ -885,5 +885,10 @@
   "p3apPriceInvalid": "Ange en kurs större än 0",
   "p3apPriceSaved": "Kursen har sparats. Värdena uppdateras när kontot har synkats.",
   "p3apPriceSelfHostedOnly": "Kurser kan bara anges på en egen server, eftersom de delas av alla på servern.",
-  "p3apPriceNotAllowed": "Det här värdepapperet kan inte prissättas från dina konton. Du behöver en affär i det, eller ha det i ett kopplat konto som du kan redigera."
+  "p3apPriceNotAllowed": "Det här värdepapperet kan inte prissättas från dina konton. Du behöver en affär i det, eller ha det i ett kopplat konto som du kan redigera.",
+  "p3ocUpdatedJustNow": "Uppdaterad nyss",
+  "p3ocUpdatedMinutesAgo": "{count, plural, one{Uppdaterad för {count} minut sedan} other{Uppdaterad för {count} minuter sedan}}",
+  "p3ocUpdatedHoursAgo": "{count, plural, one{Uppdaterad för {count} timme sedan} other{Uppdaterad för {count} timmar sedan}}",
+  "p3ocUpdatedDaysAgo": "{count, plural, one{Uppdaterad för {count} dag sedan} other{Uppdaterad för {count} dagar sedan}}",
+  "p3ocOfflineMayBeOutdated": "Du är offline. Uppgifterna som visas kan vara inaktuella."
 }

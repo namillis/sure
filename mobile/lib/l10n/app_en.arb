@@ -4276,5 +4276,40 @@
   "p3apPriceNotAllowed": "This security can't be priced from your accounts. You need a trade in it, or to hold it in a linked account you can edit.",
   "@p3apPriceNotAllowed": {
     "description": "Error when the server finds no account of the user that may price this security."
+  },
+  "p3ocUpdatedJustNow": "Updated just now",
+  "@p3ocUpdatedJustNow": {
+    "description": "Hint on Home under net worth: the saved data shown was loaded from the server less than a minute ago."
+  },
+  "p3ocUpdatedMinutesAgo": "{count, plural, one{Updated {count} minute ago} other{Updated {count} minutes ago}}",
+  "@p3ocUpdatedMinutesAgo": {
+    "description": "Hint on Home under net worth: how long ago the saved data shown was loaded from the server.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "p3ocUpdatedHoursAgo": "{count, plural, one{Updated {count} hour ago} other{Updated {count} hours ago}}",
+  "@p3ocUpdatedHoursAgo": {
+    "description": "Hint on Home under net worth: how long ago the saved data shown was loaded from the server.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "p3ocUpdatedDaysAgo": "{count, plural, one{Updated {count} day ago} other{Updated {count} days ago}}",
+  "@p3ocUpdatedDaysAgo": {
+    "description": "Hint on Home under net worth: how long ago the saved data shown was loaded from the server.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "p3ocOfflineMayBeOutdated": "You're offline. Data shown may be out of date.",
+  "@p3ocOfflineMayBeOutdated": {
+    "description": "Connectivity banner text when the device has no network and saved data is shown."
   }
 }

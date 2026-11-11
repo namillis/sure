@@ -3180,4 +3180,44 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get p3apPriceNotAllowed =>
       'Det här värdepapperet kan inte prissättas från dina konton. Du behöver en affär i det, eller ha det i ett kopplat konto som du kan redigera.';
+
+  @override
+  String get p3ocUpdatedJustNow => 'Uppdaterad nyss';
+
+  @override
+  String p3ocUpdatedMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Uppdaterad för $count minuter sedan',
+      one: 'Uppdaterad för $count minut sedan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3ocUpdatedHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Uppdaterad för $count timmar sedan',
+      one: 'Uppdaterad för $count timme sedan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String p3ocUpdatedDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Uppdaterad för $count dagar sedan',
+      one: 'Uppdaterad för $count dag sedan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get p3ocOfflineMayBeOutdated =>
+      'Du är offline. Uppgifterna som visas kan vara inaktuella.';
 }
