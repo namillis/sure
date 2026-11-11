@@ -3871,6 +3871,534 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No tags'**
   String get txnDetailNoTags;
+
+  /// Feature name for the CSV import and statement upload screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Import data'**
+  String get dataIn;
+
+  /// App bar title of the CSV import screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get dataInImportTitle;
+
+  /// Header of the list of past imports.
+  ///
+  /// In en, this message translates to:
+  /// **'Import history'**
+  String get dataInHistoryHeader;
+
+  /// Shown when the import history is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No imports yet.'**
+  String get dataInHistoryEmpty;
+
+  /// Error when the import history fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load import history.'**
+  String get dataInHistoryFailed;
+
+  /// Button that retries loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get dataInRetry;
+
+  /// Button that reloads an import's status.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get dataInRefresh;
+
+  /// Number of rows in an import.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 row} other{{count} rows}}'**
+  String dataInRowCount(int count);
+
+  /// Number of invalid rows in an import.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 row has errors} other{{count} rows have errors}}'**
+  String dataInInvalidRowCount(int count);
+
+  /// Label before an import's status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get dataInStatusLabel;
+
+  /// Label before an import's creation date.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get dataInCreatedLabel;
+
+  /// Error in the import status sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh the status.'**
+  String get dataInStatusLoadFailed;
+
+  /// Import status pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started'**
+  String get dataInStatusPending;
+
+  /// Import status importing.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing…'**
+  String get dataInStatusImporting;
+
+  /// Import status complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get dataInStatusComplete;
+
+  /// Import status failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get dataInStatusFailed;
+
+  /// Import status reverting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverting…'**
+  String get dataInStatusReverting;
+
+  /// Import status revert_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Revert failed'**
+  String get dataInStatusRevertFailed;
+
+  /// Import type TransactionImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get dataInTypeTransactions;
+
+  /// Import type TradeImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Trades'**
+  String get dataInTypeTrades;
+
+  /// Import type AccountImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get dataInTypeAccounts;
+
+  /// Heading of the current import wizard step.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}: {title}'**
+  String dataInStepOf(int step, int total, String title);
+
+  /// Import wizard step 1 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get dataInStepFile;
+
+  /// Import wizard step 2 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Map columns'**
+  String get dataInStepMap;
+
+  /// Import wizard step 3 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get dataInStepPreview;
+
+  /// Import wizard step 4 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get dataInStepPublish;
+
+  /// Help text on the choose-file step.
+  ///
+  /// In en, this message translates to:
+  /// **'Import transactions from a CSV file into one account. Files can be up to {size}.'**
+  String dataInFileHelp(String size);
+
+  /// Label of the account picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get dataInAccountLabel;
+
+  /// Shown when the user has no accounts to import into.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an account first.'**
+  String get dataInNoAccounts;
+
+  /// Button that opens the file picker for a CSV.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose CSV file'**
+  String get dataInChooseCsv;
+
+  /// Button that opens the file picker for a statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get dataInChooseFile;
+
+  /// Button that replaces the picked file.
+  ///
+  /// In en, this message translates to:
+  /// **'Change file'**
+  String get dataInChooseAnother;
+
+  /// Error when the picked file is not a CSV.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a file that ends in .csv.'**
+  String get dataInNotCsv;
+
+  /// Error when the picked file has no content.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is empty.'**
+  String get dataInFileEmpty;
+
+  /// Error when the picked file is over the server's limit.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is too large. The limit is {size}.'**
+  String dataInFileTooLarge(String size);
+
+  /// Error when the picked file can't be read.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the file.'**
+  String get dataInReadFailed;
+
+  /// Button that goes to the next wizard step.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get dataInContinue;
+
+  /// Button that goes to the previous wizard step.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get dataInBack;
+
+  /// What preflight found in the CSV.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {columns, plural, =1{1 column} other{{columns} columns}} and {rows, plural, =1{1 row} other{{rows} rows}}.'**
+  String dataInDetected(int columns, int rows);
+
+  /// Label of a required column picker.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} (required)'**
+  String dataInRequiredLabel(String label);
+
+  /// Column picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Date column'**
+  String get dataInColumnDate;
+
+  /// Column picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount column'**
+  String get dataInColumnAmount;
+
+  /// Column picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name column'**
+  String get dataInColumnName;
+
+  /// Column picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Category column'**
+  String get dataInColumnCategory;
+
+  /// Column picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags column'**
+  String get dataInColumnTags;
+
+  /// Column picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes column'**
+  String get dataInColumnNotes;
+
+  /// Column picker option for not using a column.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get dataInColumnNone;
+
+  /// Picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format'**
+  String get dataInDateFormat;
+
+  /// Picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Number format'**
+  String get dataInNumberFormat;
+
+  /// Picker label for the signage convention.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount signs'**
+  String get dataInSignage;
+
+  /// Signage option inflows_positive.
+  ///
+  /// In en, this message translates to:
+  /// **'Income is positive'**
+  String get dataInSignagePositive;
+
+  /// Signage option inflows_negative.
+  ///
+  /// In en, this message translates to:
+  /// **'Income is negative'**
+  String get dataInSignageNegative;
+
+  /// Picker label for col_sep.
+  ///
+  /// In en, this message translates to:
+  /// **'Column separator'**
+  String get dataInSeparator;
+
+  /// Column separator option.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma (,)'**
+  String get dataInSeparatorComma;
+
+  /// Column separator option.
+  ///
+  /// In en, this message translates to:
+  /// **'Semicolon (;)'**
+  String get dataInSeparatorSemicolon;
+
+  /// Shown until both required columns are mapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the date and amount columns to continue.'**
+  String get dataInNeedDateAndAmount;
+
+  /// Preview step summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {shown} of {total} rows.'**
+  String dataInPreviewSummary(int shown, int total);
+
+  /// Preview warning about invalid rows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 row doesn\'t match the chosen formats.} other{{count} rows don\'t match the chosen formats.}}'**
+  String dataInPreviewInvalid(int count);
+
+  /// Warning on the preview when category or tags columns are mapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories and tags from the file may not be applied when importing from the app. You can set them on the web.'**
+  String get dataInCategoriesNote;
+
+  /// Preview with no data rows.
+  ///
+  /// In en, this message translates to:
+  /// **'No rows to import.'**
+  String get dataInPreviewEmpty;
+
+  /// Preview row without a name.
+  ///
+  /// In en, this message translates to:
+  /// **'(no name)'**
+  String get dataInRowUntitled;
+
+  /// Preview row error.
+  ///
+  /// In en, this message translates to:
+  /// **'Date \"{value}\" doesn\'t match the date format.'**
+  String dataInRowBadDate(String value);
+
+  /// Preview row error.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount \"{value}\" isn\'t a number.'**
+  String dataInRowBadAmount(String value);
+
+  /// Button that starts the import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get dataInPublish;
+
+  /// Shown while the import is created.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get dataInUploading;
+
+  /// Shown when the import finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Import complete'**
+  String get dataInComplete;
+
+  /// Shown when polling stopped after two minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'The import is still running. Check its status in the import history.'**
+  String get dataInStillRunning;
+
+  /// Button that stops watching the import.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running in background'**
+  String get dataInKeepInBackground;
+
+  /// Snackbar after choosing to keep the import running in the background.
+  ///
+  /// In en, this message translates to:
+  /// **'The import keeps running. Its status is in the import history.'**
+  String get dataInRunningInBackground;
+
+  /// Header above row errors after a failed import.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows the server rejected'**
+  String get dataInRejectedRows;
+
+  /// Button that resets the import wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get dataInStartOver;
+
+  /// Button after an import finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Import another file'**
+  String get dataInImportAnother;
+
+  /// Link to the web import page.
+  ///
+  /// In en, this message translates to:
+  /// **'More import types on the web'**
+  String get dataInMoreTypesOnWeb;
+
+  /// App bar title of the statement upload screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload statement'**
+  String get dataInStatementTitle;
+
+  /// Help text on the statement upload screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a PDF, CSV or XLSX statement to the Statement Vault. Files can be up to {size}.'**
+  String dataInStatementHelp(String size);
+
+  /// Error when the picked statement has another type.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PDF, CSV or XLSX file.'**
+  String get dataInStatementWrongType;
+
+  /// Button that uploads the statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get dataInUpload;
+
+  /// Shown after a statement upload succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded {name}.'**
+  String dataInStatementUploaded(String name);
+
+  /// Link to the web statements page.
+  ///
+  /// In en, this message translates to:
+  /// **'View statements on the web'**
+  String get dataInStatementViewOnWeb;
+
+  /// Shown when the statement was uploaded before.
+  ///
+  /// In en, this message translates to:
+  /// **'Already uploaded on {date}.'**
+  String dataInStatementDuplicate(String date);
+
+  /// Shown when the statement is a duplicate the user can't see.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is already in the Statement Vault.'**
+  String get dataInStatementDuplicateHidden;
+
+  /// Fallback upload error.
+  ///
+  /// In en, this message translates to:
+  /// **'The statement couldn\'t be uploaded.'**
+  String get dataInStatementFailed;
+
+  /// Shown before an account is picked.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an account to see its statements.'**
+  String get dataInStatementPickAccount;
+
+  /// Error when the statement list fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load statements.'**
+  String get dataInStatementListFailed;
+
+  /// Empty statement list.
+  ///
+  /// In en, this message translates to:
+  /// **'No statements for this account yet.'**
+  String get dataInStatementListEmpty;
+
+  /// Header of the statement list.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent statements'**
+  String get dataInStatementRecent;
+
+  /// A statement's period.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String dataInStatementPeriod(String start, String end);
+
+  /// When a statement was uploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {date}'**
+  String dataInStatementAdded(String date);
 }
 
 class _AppLocalizationsDelegate

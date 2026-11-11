@@ -2175,4 +2175,336 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txnDetailNoTags => 'No tags';
+
+  @override
+  String get dataIn => 'Import data';
+
+  @override
+  String get dataInImportTitle => 'Import';
+
+  @override
+  String get dataInHistoryHeader => 'Import history';
+
+  @override
+  String get dataInHistoryEmpty => 'No imports yet.';
+
+  @override
+  String get dataInHistoryFailed => 'Couldn\'t load import history.';
+
+  @override
+  String get dataInRetry => 'Try again';
+
+  @override
+  String get dataInRefresh => 'Refresh';
+
+  @override
+  String dataInRowCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rows',
+      one: '1 row',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dataInInvalidRowCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rows have errors',
+      one: '1 row has errors',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dataInStatusLabel => 'Status';
+
+  @override
+  String get dataInCreatedLabel => 'Created';
+
+  @override
+  String get dataInStatusLoadFailed => 'Couldn\'t refresh the status.';
+
+  @override
+  String get dataInStatusPending => 'Not started';
+
+  @override
+  String get dataInStatusImporting => 'Importing…';
+
+  @override
+  String get dataInStatusComplete => 'Complete';
+
+  @override
+  String get dataInStatusFailed => 'Failed';
+
+  @override
+  String get dataInStatusReverting => 'Reverting…';
+
+  @override
+  String get dataInStatusRevertFailed => 'Revert failed';
+
+  @override
+  String get dataInTypeTransactions => 'Transactions';
+
+  @override
+  String get dataInTypeTrades => 'Trades';
+
+  @override
+  String get dataInTypeAccounts => 'Accounts';
+
+  @override
+  String dataInStepOf(int step, int total, String title) {
+    return 'Step $step of $total: $title';
+  }
+
+  @override
+  String get dataInStepFile => 'Choose file';
+
+  @override
+  String get dataInStepMap => 'Map columns';
+
+  @override
+  String get dataInStepPreview => 'Preview';
+
+  @override
+  String get dataInStepPublish => 'Import';
+
+  @override
+  String dataInFileHelp(String size) {
+    return 'Import transactions from a CSV file into one account. Files can be up to $size.';
+  }
+
+  @override
+  String get dataInAccountLabel => 'Account';
+
+  @override
+  String get dataInNoAccounts => 'Add an account first.';
+
+  @override
+  String get dataInChooseCsv => 'Choose CSV file';
+
+  @override
+  String get dataInChooseFile => 'Choose file';
+
+  @override
+  String get dataInChooseAnother => 'Change file';
+
+  @override
+  String get dataInNotCsv => 'Choose a file that ends in .csv.';
+
+  @override
+  String get dataInFileEmpty => 'This file is empty.';
+
+  @override
+  String dataInFileTooLarge(String size) {
+    return 'This file is too large. The limit is $size.';
+  }
+
+  @override
+  String get dataInReadFailed => 'Couldn\'t read the file.';
+
+  @override
+  String get dataInContinue => 'Continue';
+
+  @override
+  String get dataInBack => 'Back';
+
+  @override
+  String dataInDetected(int columns, int rows) {
+    String _temp0 = intl.Intl.pluralLogic(
+      columns,
+      locale: localeName,
+      other: '$columns columns',
+      one: '1 column',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      rows,
+      locale: localeName,
+      other: '$rows rows',
+      one: '1 row',
+    );
+    return 'Found $_temp0 and $_temp1.';
+  }
+
+  @override
+  String dataInRequiredLabel(String label) {
+    return '$label (required)';
+  }
+
+  @override
+  String get dataInColumnDate => 'Date column';
+
+  @override
+  String get dataInColumnAmount => 'Amount column';
+
+  @override
+  String get dataInColumnName => 'Name column';
+
+  @override
+  String get dataInColumnCategory => 'Category column';
+
+  @override
+  String get dataInColumnTags => 'Tags column';
+
+  @override
+  String get dataInColumnNotes => 'Notes column';
+
+  @override
+  String get dataInColumnNone => 'None';
+
+  @override
+  String get dataInDateFormat => 'Date format';
+
+  @override
+  String get dataInNumberFormat => 'Number format';
+
+  @override
+  String get dataInSignage => 'Amount signs';
+
+  @override
+  String get dataInSignagePositive => 'Income is positive';
+
+  @override
+  String get dataInSignageNegative => 'Income is negative';
+
+  @override
+  String get dataInSeparator => 'Column separator';
+
+  @override
+  String get dataInSeparatorComma => 'Comma (,)';
+
+  @override
+  String get dataInSeparatorSemicolon => 'Semicolon (;)';
+
+  @override
+  String get dataInNeedDateAndAmount =>
+      'Choose the date and amount columns to continue.';
+
+  @override
+  String dataInPreviewSummary(int shown, int total) {
+    return 'Showing $shown of $total rows.';
+  }
+
+  @override
+  String dataInPreviewInvalid(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rows don\'t match the chosen formats.',
+      one: '1 row doesn\'t match the chosen formats.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dataInCategoriesNote =>
+      'Categories and tags from the file may not be applied when importing from the app. You can set them on the web.';
+
+  @override
+  String get dataInPreviewEmpty => 'No rows to import.';
+
+  @override
+  String get dataInRowUntitled => '(no name)';
+
+  @override
+  String dataInRowBadDate(String value) {
+    return 'Date \"$value\" doesn\'t match the date format.';
+  }
+
+  @override
+  String dataInRowBadAmount(String value) {
+    return 'Amount \"$value\" isn\'t a number.';
+  }
+
+  @override
+  String get dataInPublish => 'Import';
+
+  @override
+  String get dataInUploading => 'Uploading…';
+
+  @override
+  String get dataInComplete => 'Import complete';
+
+  @override
+  String get dataInStillRunning =>
+      'The import is still running. Check its status in the import history.';
+
+  @override
+  String get dataInKeepInBackground => 'Keep running in background';
+
+  @override
+  String get dataInRunningInBackground =>
+      'The import keeps running. Its status is in the import history.';
+
+  @override
+  String get dataInRejectedRows => 'Rows the server rejected';
+
+  @override
+  String get dataInStartOver => 'Start over';
+
+  @override
+  String get dataInImportAnother => 'Import another file';
+
+  @override
+  String get dataInMoreTypesOnWeb => 'More import types on the web';
+
+  @override
+  String get dataInStatementTitle => 'Upload statement';
+
+  @override
+  String dataInStatementHelp(String size) {
+    return 'Add a PDF, CSV or XLSX statement to the Statement Vault. Files can be up to $size.';
+  }
+
+  @override
+  String get dataInStatementWrongType => 'Choose a PDF, CSV or XLSX file.';
+
+  @override
+  String get dataInUpload => 'Upload';
+
+  @override
+  String dataInStatementUploaded(String name) {
+    return 'Uploaded $name.';
+  }
+
+  @override
+  String get dataInStatementViewOnWeb => 'View statements on the web';
+
+  @override
+  String dataInStatementDuplicate(String date) {
+    return 'Already uploaded on $date.';
+  }
+
+  @override
+  String get dataInStatementDuplicateHidden =>
+      'This file is already in the Statement Vault.';
+
+  @override
+  String get dataInStatementFailed => 'The statement couldn\'t be uploaded.';
+
+  @override
+  String get dataInStatementPickAccount =>
+      'Choose an account to see its statements.';
+
+  @override
+  String get dataInStatementListFailed => 'Couldn\'t load statements.';
+
+  @override
+  String get dataInStatementListEmpty => 'No statements for this account yet.';
+
+  @override
+  String get dataInStatementRecent => 'Recent statements';
+
+  @override
+  String dataInStatementPeriod(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String dataInStatementAdded(String date) {
+    return 'Added $date';
+  }
 }

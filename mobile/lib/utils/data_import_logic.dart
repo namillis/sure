@@ -173,6 +173,33 @@ bool _matchesDate(String sample, String format) {
   return day >= 1 && day <= 31 && month >= 1 && month <= 12;
 }
 
+/// Whether [sample] fits the strftime [format] (one of [importDateFormats]).
+bool dateMatchesFormat(String sample, String format) => _matchesDate(sample, format);
+
+/// Whether [value] reads as a number in [numberFormat] (one of
+/// [importNumberFormats]), ignoring currency symbols and spaces as the
+/// server's `sanitize_number` does.
+///
+/// shortcut: approximates the server's parsing for the local preview; the
+/// server's row validation is the source of truth after publish.
+bool amountParses(String value, String numberFormat) {
+  var text = value.trim();
+  if (text.isEmpty) return false;
+  final (separator, delimiter) = switch (numberFormat) {
+    '1.234,56' => (',', '.'),
+    '1 234,56' => (',', ' '),
+    '1,234' => ('', ','),
+    _ => ('.', ','),
+  };
+  if (text.startsWith('(') && text.endsWith(')')) {
+    text = '-${text.substring(1, text.length - 1)}';
+  }
+  text = text.replaceAll(delimiter, '').replaceAll('\u00A0', '');
+  if (separator.isNotEmpty) text = text.replaceAll(separator, '.');
+  text = text.replaceAll(RegExp(r'[^0-9.\-+]'), '');
+  return double.tryParse(text) != null;
+}
+
 /// The first of [importDateFormats] that every non-empty sample fits, or null.
 /// Ambiguous samples (all days 12 or less) resolve to the earlier format, so
 /// the user should still check the preview.

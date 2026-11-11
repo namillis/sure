@@ -53,6 +53,18 @@ void main() {
     expect(detectColumnSeparator('Date,Amount\n'), ',');
   });
 
+  test('local row checks follow the chosen formats', () {
+    expect(dateMatchesFormat('2026-11-01', '%Y-%m-%d'), true);
+    expect(dateMatchesFormat('11/01/2026', '%Y-%m-%d'), false);
+    expect(dateMatchesFormat('13/13/2026', '%d/%m/%Y'), false);
+    expect(amountParses(r'$1,234.56', '1,234.56'), true);
+    expect(amountParses('-1.234,56', '1.234,56'), true);
+    expect(amountParses('1 234,56 kr', '1 234,56'), true);
+    expect(amountParses('(12.00)', '1,234.56'), true);
+    expect(amountParses('abc', '1,234.56'), false);
+    expect(amountParses('', '1,234.56'), false);
+  });
+
   test('parseCsv handles quotes, CRLF, BOM and limits', () {
     final records = parseCsv(
         '\uFEFFDate,Name,Amount\r\n11/01/2026,"Coffee, ""large""",-4.50\r\n\r\n11/02/2026,Tea,-2\r\n');

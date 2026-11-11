@@ -2193,4 +2193,339 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get txnDetailNoTags => 'Inga taggar';
+
+  @override
+  String get dataIn => 'Importera data';
+
+  @override
+  String get dataInImportTitle => 'Importera';
+
+  @override
+  String get dataInHistoryHeader => 'Importhistorik';
+
+  @override
+  String get dataInHistoryEmpty => 'Inga importer än.';
+
+  @override
+  String get dataInHistoryFailed =>
+      'Det gick inte att läsa in importhistoriken.';
+
+  @override
+  String get dataInRetry => 'Försök igen';
+
+  @override
+  String get dataInRefresh => 'Uppdatera';
+
+  @override
+  String dataInRowCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rader',
+      one: '1 rad',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dataInInvalidRowCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rader har fel',
+      one: '1 rad har fel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dataInStatusLabel => 'Status';
+
+  @override
+  String get dataInCreatedLabel => 'Skapad';
+
+  @override
+  String get dataInStatusLoadFailed => 'Det gick inte att uppdatera statusen.';
+
+  @override
+  String get dataInStatusPending => 'Inte startad';
+
+  @override
+  String get dataInStatusImporting => 'Importerar …';
+
+  @override
+  String get dataInStatusComplete => 'Klar';
+
+  @override
+  String get dataInStatusFailed => 'Misslyckades';
+
+  @override
+  String get dataInStatusReverting => 'Återställer …';
+
+  @override
+  String get dataInStatusRevertFailed => 'Återställningen misslyckades';
+
+  @override
+  String get dataInTypeTransactions => 'Transaktioner';
+
+  @override
+  String get dataInTypeTrades => 'Affärer';
+
+  @override
+  String get dataInTypeAccounts => 'Konton';
+
+  @override
+  String dataInStepOf(int step, int total, String title) {
+    return 'Steg $step av $total: $title';
+  }
+
+  @override
+  String get dataInStepFile => 'Välj fil';
+
+  @override
+  String get dataInStepMap => 'Koppla kolumner';
+
+  @override
+  String get dataInStepPreview => 'Förhandsgranska';
+
+  @override
+  String get dataInStepPublish => 'Importera';
+
+  @override
+  String dataInFileHelp(String size) {
+    return 'Importera transaktioner från en CSV-fil till ett konto. Filer får vara högst $size.';
+  }
+
+  @override
+  String get dataInAccountLabel => 'Konto';
+
+  @override
+  String get dataInNoAccounts => 'Lägg till ett konto först.';
+
+  @override
+  String get dataInChooseCsv => 'Välj CSV-fil';
+
+  @override
+  String get dataInChooseFile => 'Välj fil';
+
+  @override
+  String get dataInChooseAnother => 'Byt fil';
+
+  @override
+  String get dataInNotCsv => 'Välj en fil som slutar på .csv.';
+
+  @override
+  String get dataInFileEmpty => 'Filen är tom.';
+
+  @override
+  String dataInFileTooLarge(String size) {
+    return 'Filen är för stor. Gränsen är $size.';
+  }
+
+  @override
+  String get dataInReadFailed => 'Det gick inte att läsa filen.';
+
+  @override
+  String get dataInContinue => 'Fortsätt';
+
+  @override
+  String get dataInBack => 'Tillbaka';
+
+  @override
+  String dataInDetected(int columns, int rows) {
+    String _temp0 = intl.Intl.pluralLogic(
+      columns,
+      locale: localeName,
+      other: '$columns kolumner',
+      one: '1 kolumn',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      rows,
+      locale: localeName,
+      other: '$rows rader',
+      one: '1 rad',
+    );
+    return 'Hittade $_temp0 och $_temp1.';
+  }
+
+  @override
+  String dataInRequiredLabel(String label) {
+    return '$label (krävs)';
+  }
+
+  @override
+  String get dataInColumnDate => 'Datumkolumn';
+
+  @override
+  String get dataInColumnAmount => 'Beloppskolumn';
+
+  @override
+  String get dataInColumnName => 'Namnkolumn';
+
+  @override
+  String get dataInColumnCategory => 'Kategorikolumn';
+
+  @override
+  String get dataInColumnTags => 'Taggkolumn';
+
+  @override
+  String get dataInColumnNotes => 'Anteckningskolumn';
+
+  @override
+  String get dataInColumnNone => 'Ingen';
+
+  @override
+  String get dataInDateFormat => 'Datumformat';
+
+  @override
+  String get dataInNumberFormat => 'Talformat';
+
+  @override
+  String get dataInSignage => 'Beloppstecken';
+
+  @override
+  String get dataInSignagePositive => 'Inkomster är positiva';
+
+  @override
+  String get dataInSignageNegative => 'Inkomster är negativa';
+
+  @override
+  String get dataInSeparator => 'Kolumnavgränsare';
+
+  @override
+  String get dataInSeparatorComma => 'Komma (,)';
+
+  @override
+  String get dataInSeparatorSemicolon => 'Semikolon (;)';
+
+  @override
+  String get dataInNeedDateAndAmount =>
+      'Välj datum- och beloppskolumn för att fortsätta.';
+
+  @override
+  String dataInPreviewSummary(int shown, int total) {
+    return 'Visar $shown av $total rader.';
+  }
+
+  @override
+  String dataInPreviewInvalid(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rader matchar inte de valda formaten.',
+      one: '1 rad matchar inte de valda formaten.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dataInCategoriesNote =>
+      'Kategorier och taggar från filen kanske inte används vid import från appen. Du kan ange dem på webben.';
+
+  @override
+  String get dataInPreviewEmpty => 'Inga rader att importera.';
+
+  @override
+  String get dataInRowUntitled => '(inget namn)';
+
+  @override
+  String dataInRowBadDate(String value) {
+    return 'Datumet \"$value\" matchar inte datumformatet.';
+  }
+
+  @override
+  String dataInRowBadAmount(String value) {
+    return 'Beloppet \"$value\" är inte ett tal.';
+  }
+
+  @override
+  String get dataInPublish => 'Importera';
+
+  @override
+  String get dataInUploading => 'Laddar upp …';
+
+  @override
+  String get dataInComplete => 'Importen är klar';
+
+  @override
+  String get dataInStillRunning =>
+      'Importen pågår fortfarande. Se statusen i importhistoriken.';
+
+  @override
+  String get dataInKeepInBackground => 'Fortsätt i bakgrunden';
+
+  @override
+  String get dataInRunningInBackground =>
+      'Importen fortsätter. Statusen finns i importhistoriken.';
+
+  @override
+  String get dataInRejectedRows => 'Rader som servern avvisade';
+
+  @override
+  String get dataInStartOver => 'Börja om';
+
+  @override
+  String get dataInImportAnother => 'Importera en fil till';
+
+  @override
+  String get dataInMoreTypesOnWeb => 'Fler importtyper på webben';
+
+  @override
+  String get dataInStatementTitle => 'Ladda upp kontoutdrag';
+
+  @override
+  String dataInStatementHelp(String size) {
+    return 'Lägg till ett kontoutdrag som PDF, CSV eller XLSX i dokumentvalvet. Filer får vara högst $size.';
+  }
+
+  @override
+  String get dataInStatementWrongType => 'Välj en PDF-, CSV- eller XLSX-fil.';
+
+  @override
+  String get dataInUpload => 'Ladda upp';
+
+  @override
+  String dataInStatementUploaded(String name) {
+    return '$name laddades upp.';
+  }
+
+  @override
+  String get dataInStatementViewOnWeb => 'Visa kontoutdrag på webben';
+
+  @override
+  String dataInStatementDuplicate(String date) {
+    return 'Redan uppladdad $date.';
+  }
+
+  @override
+  String get dataInStatementDuplicateHidden =>
+      'Filen finns redan i dokumentvalvet.';
+
+  @override
+  String get dataInStatementFailed => 'Kontoutdraget kunde inte laddas upp.';
+
+  @override
+  String get dataInStatementPickAccount =>
+      'Välj ett konto för att se dess kontoutdrag.';
+
+  @override
+  String get dataInStatementListFailed =>
+      'Det gick inte att läsa in kontoutdragen.';
+
+  @override
+  String get dataInStatementListEmpty =>
+      'Inga kontoutdrag för det här kontot än.';
+
+  @override
+  String get dataInStatementRecent => 'Senaste kontoutdragen';
+
+  @override
+  String dataInStatementPeriod(String start, String end) {
+    return '$start–$end';
+  }
+
+  @override
+  String dataInStatementAdded(String date) {
+    return 'Tillagd $date';
+  }
 }
