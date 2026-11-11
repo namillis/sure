@@ -55,6 +55,7 @@ class SureSectionHeader extends StatelessWidget {
       );
     } else if (onAction != null && actionIcon != null) {
       action = Semantics(
+        container: true,
         button: true,
         label: actionSemanticLabel,
         child: _Tap(

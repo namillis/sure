@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,5 +65,76 @@ void main() {
       const MaterialApp(home: SureIcon(SureIcons.wallet)),
     );
     expect(find.bySemanticsLabel('wallet'), findsNothing);
+  });
+
+  test('every SureIcons name used by the app ships as an SVG', () {
+    const names = [
+      SureIcons.landmark,
+      SureIcons.creditCard,
+      SureIcons.trendingUp,
+      SureIcons.trendingDown,
+      SureIcons.receipt,
+      SureIcons.house,
+      SureIcons.car,
+      SureIcons.bitcoin,
+      SureIcons.shapes,
+      SureIcons.handCoins,
+      SureIcons.wallet,
+      SureIcons.circleAlert,
+      SureIcons.circleCheck,
+      SureIcons.cloudCheck,
+      SureIcons.refresh,
+      SureIcons.chevronUp,
+      SureIcons.chevronDown,
+      SureIcons.chevronRight,
+      SureIcons.chevronLeft,
+      SureIcons.arrowDown,
+      SureIcons.arrowUp,
+      SureIcons.arrowUpRight,
+      SureIcons.arrowLeftRight,
+      SureIcons.calendar,
+      SureIcons.chartLine,
+      SureIcons.chartPie,
+      SureIcons.check,
+      SureIcons.circleDashed,
+      SureIcons.circlePlus,
+      SureIcons.circleQuestionMark,
+      SureIcons.circleX,
+      SureIcons.clock,
+      SureIcons.cloudOff,
+      SureIcons.cloudUpload,
+      SureIcons.coins,
+      SureIcons.ellipsis,
+      SureIcons.externalLink,
+      SureIcons.eye,
+      SureIcons.eyeOff,
+      SureIcons.inbox,
+      SureIcons.info,
+      SureIcons.lightbulb,
+      SureIcons.listChecks,
+      SureIcons.messageCircle,
+      SureIcons.minus,
+      SureIcons.pencil,
+      SureIcons.piggyBank,
+      SureIcons.plus,
+      SureIcons.repeat,
+      SureIcons.search,
+      SureIcons.settings,
+      SureIcons.sparkles,
+      SureIcons.split,
+      SureIcons.squareCheck,
+      SureIcons.store,
+      SureIcons.stickyNote,
+      SureIcons.tag,
+      SureIcons.trash,
+      SureIcons.triangleAlert,
+      SureIcons.x,
+    ];
+    for (final name in names) {
+      expect(File('assets/icons/lucide/$name.svg').existsSync(), isTrue,
+          reason: name);
+    }
+    expect(File('assets/icons/lucide/LICENSE').readAsStringSync(),
+        contains('ISC License'));
   });
 }

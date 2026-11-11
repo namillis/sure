@@ -105,7 +105,8 @@ class _GalleryPage extends StatelessWidget {
       subtitle: 'Wave 1 components · ${brightness.name}',
       actions: [
         SureNavIconButton(
-          icon: brightness == Brightness.dark ? SureIcons.eye : SureIcons.eyeOff,
+          icon:
+              brightness == Brightness.dark ? SureIcons.eye : SureIcons.eyeOff,
           semanticLabel: 'Toggle light/dark',
           onPressed: () => state._toggleBrightness(brightness),
         ),
@@ -357,8 +358,8 @@ class _GalleryPage extends StatelessWidget {
                 dividerIndent: SurePanel.iconRowDividerIndent,
                 children: [
                   SureTransactionRow(
-                    transaction: _tx('Whole Foods', r'$54.20',
-                        category: 'Groceries'),
+                    transaction:
+                        _tx('Whole Foods', r'$54.20', category: 'Groceries'),
                     accountName: 'Chase Sapphire',
                     accountType: 'credit_card',
                     categoryColor: '#407706',
@@ -421,8 +422,8 @@ class _GalleryPage extends StatelessWidget {
                     hideAmount: false,
                   ),
                   SureTransactionRow(
-                    transaction: _tx('Hidden amount', r'$99.99',
-                        category: 'Shopping'),
+                    transaction:
+                        _tx('Hidden amount', r'$99.99', category: 'Shopping'),
                     accountType: 'depository',
                     categoryColor: '#3b82f6',
                     categoryIcon: 'shopping-cart',
@@ -436,8 +437,8 @@ class _GalleryPage extends StatelessWidget {
                 dividerIndent: SurePanel.iconRowDividerIndent,
                 children: [
                   SureTransactionRow(
-                    transaction: _tx('Selected row', r'$10.00',
-                        category: 'Fees'),
+                    transaction:
+                        _tx('Selected row', r'$10.00', category: 'Fees'),
                     accountType: 'depository',
                     selectionMode: true,
                     selected: state._selected,
@@ -446,8 +447,8 @@ class _GalleryPage extends StatelessWidget {
                         state.update(() => state._selected = !state._selected),
                   ),
                   SureTransactionRow(
-                    transaction: _tx('Unselected row', r'$20.00',
-                        category: 'Fees'),
+                    transaction:
+                        _tx('Unselected row', r'$20.00', category: 'Fees'),
                     accountType: 'depository',
                     selectionMode: true,
                     hideAmount: false,
@@ -499,8 +500,8 @@ class _GalleryPage extends StatelessWidget {
               ),
             SureListRow(
               title: 'Range',
-              value: SureDates.rangeOf(
-                  context, DateTime(2026, 11, 1), now, now: now),
+              value: SureDates.rangeOf(context, DateTime(2026, 11, 1), now,
+                  now: now),
             ),
             SureListRow(
               title: 'Full (chart scrub)',
@@ -553,8 +554,7 @@ class _GalleryPage extends StatelessWidget {
                 SureTabItem(icon: SureIcons.receipt, label: 'Activity'),
                 SureTabItem(icon: SureIcons.chartPie, label: 'Plan'),
                 SureTabItem(icon: SureIcons.trendingUp, label: 'Invest'),
-                SureTabItem(
-                    icon: SureIcons.messageCircle, label: 'Assistant'),
+                SureTabItem(icon: SureIcons.messageCircle, label: 'Assistant'),
               ],
             ),
           ),

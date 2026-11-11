@@ -123,7 +123,8 @@ void main() {
   });
 
   testWidgets('a dropdown chip ends with a chevron', (tester) async {
-    await pump(tester, SureChip(label: 'Category', dropdown: true, onSelected: (_) {}));
+    await pump(tester,
+        SureChip(label: 'Category', dropdown: true, onSelected: (_) {}));
     expect(
       tester.widget<SureIcon>(find.byType(SureIcon)).name,
       SureIcons.chevronDown,
@@ -144,7 +145,9 @@ void main() {
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
       (call) async {
-        if (call.method == 'HapticFeedback.vibrate') calls.add(call.arguments as String);
+        if (call.method == 'HapticFeedback.vibrate') {
+          calls.add(call.arguments as String);
+        }
         return null;
       },
     );
@@ -155,13 +158,17 @@ void main() {
     expect(calls, ['HapticFeedbackType.selectionClick']);
   });
 
-  testWidgets('a long label ellipsizes at 320 px without overflow', (tester) async {
+  testWidgets('a long label ellipsizes at 320 px without overflow',
+      (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await pump(
       tester,
-      SureChip(label: 'A very long category name ' * 4, dropdown: true, onSelected: (_) {}),
+      SureChip(
+          label: 'A very long category name ' * 4,
+          dropdown: true,
+          onSelected: (_) {}),
     );
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(SureChip)).width, lessThanOrEqualTo(320));

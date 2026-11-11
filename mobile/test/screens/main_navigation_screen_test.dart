@@ -39,8 +39,8 @@ void main() {
     final bar = find.byType(SureTabBar);
     expect(tester.widget<SureTabBar>(bar).items, hasLength(5));
     for (final label in ['Home', 'Activity', 'Plan', 'Invest', 'Assistant']) {
-      expect(find.descendant(of: bar, matching: find.text(label)),
-          findsOneWidget);
+      expect(
+          find.descendant(of: bar, matching: find.text(label)), findsOneWidget);
     }
     expect(find.text('body:home'), findsOneWidget);
     expect(find.byTooltip('Settings'), findsOneWidget);

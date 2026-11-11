@@ -64,7 +64,8 @@ class _SureSwipeActionsState extends State<SureSwipeActions>
 
   void _onDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    final open = velocity < -300 || (velocity <= 300 && _controller.value > 0.5);
+    final open =
+        velocity < -300 || (velocity <= 300 && _controller.value > 0.5);
     open ? _controller.fling(velocity: 1) : _controller.fling(velocity: -1);
   }
 

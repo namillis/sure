@@ -26,7 +26,8 @@ void main() {
     (Brightness.light, SureTokens.light),
     (Brightness.dark, SureTokens.dark),
   ]) {
-    testWidgets('paints the group as a flat hairline panel (${brightness.name})',
+    testWidgets(
+        'paints the group as a flat hairline panel (${brightness.name})',
         (tester) async {
       await pump(
         tester,
@@ -70,8 +71,7 @@ void main() {
     });
   }
 
-  testWidgets('renders a sentence-case header above the group',
-      (tester) async {
+  testWidgets('renders a sentence-case header above the group', (tester) async {
     await pump(
       tester,
       const SureListGroup(

@@ -239,15 +239,31 @@ class SureTransactionRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            if (badge != null) ...[badge, const SizedBox(width: 6)],
-            MoneyText(
-              MoneyMasker.mask(amountText, hidden: hidden),
-              trend: display.trend,
-              color: amountColor,
-              maxLines: 1,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: SureTokens.weightMedium,
+            // The amount never ellipsizes; past half the row it scales down
+            // instead, so the name keeps room.
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.5,
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerEnd,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (badge != null) ...[badge, const SizedBox(width: 6)],
+                    MoneyText(
+                      MoneyMasker.mask(amountText, hidden: hidden),
+                      trend: display.trend,
+                      color: amountColor,
+                      maxLines: 1,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: SureTokens.weightMedium,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

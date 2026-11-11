@@ -96,7 +96,8 @@ class SureTheme {
         elevation: 0,
         modalElevation: 0,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(sheetRadius)),
         ),
         clipBehavior: Clip.antiAlias,
         // Sheets that ask for Material's drag handle get the iOS grabber look.

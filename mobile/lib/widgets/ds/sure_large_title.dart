@@ -75,8 +75,8 @@ class SureLargeTitleScaffold extends StatelessWidget {
     if (onRefresh != null) {
       scroll = RefreshIndicator(
         onRefresh: onRefresh!,
-        edgeOffset: MediaQuery.paddingOf(context).top +
-            SureLargeTitleHeader.barHeight,
+        edgeOffset:
+            MediaQuery.paddingOf(context).top + SureLargeTitleHeader.barHeight,
         child: scroll,
       );
     }
@@ -181,8 +181,8 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
         color: palette.surface,
         border: Border(
           bottom: BorderSide(
-            color: colors.hairline.withValues(
-                alpha: colors.hairline.a * smallOpacity),
+            color: colors.hairline
+                .withValues(alpha: colors.hairline.a * smallOpacity),
           ),
         ),
       ),

@@ -113,8 +113,8 @@ class _Tab extends StatelessWidget {
               item.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textScaler: MediaQuery.textScalerOf(context)
-                  .clamp(maxScaleFactor: 1.2),
+              textScaler:
+                  MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.2),
               style: TextStyle(
                 fontSize: 10.5,
                 height: 1.1,
