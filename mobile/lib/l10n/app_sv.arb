@@ -941,5 +941,14 @@
   "ds2sAccountActions": "Kontoåtgärder",
   "ds2sClearLocalData": "Rensa lokal data",
   "ds2sResetAccount": "Återställ användarkonto",
-  "ds2sDeleteAccount": "Radera användarkonto"
+  "ds2sDeleteAccount": "Radera användarkonto",
+  "ds3fNewTransaction": "Ny transaktion",
+  "ds3fAdd": "Lägg till",
+  "ds3fClearCategory": "Ta bort kategori",
+  "ds3fOptional": "Valfritt",
+  "ds3fWasBalance": "Var {amount}",
+  "ds3fAsOf": "Per datum",
+  "ds3fNote": "Anteckning",
+  "ds3fFee": "Avgifter",
+  "ds3fPrice": "Pris"
 }

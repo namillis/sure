@@ -667,12 +667,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       account = accounts.firstWhere((a) => a.id == id);
     }
 
-    final created = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => TransactionFormScreen(account: account!),
-    );
+    final created = await showTransactionFormSheet(context, account: account);
     if (created == true && mounted) await _load(reset: true);
   }
 

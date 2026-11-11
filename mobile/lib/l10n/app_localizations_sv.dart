@@ -3376,4 +3376,33 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds2sDeleteAccount => 'Radera användarkonto';
+
+  @override
+  String get ds3fNewTransaction => 'Ny transaktion';
+
+  @override
+  String get ds3fAdd => 'Lägg till';
+
+  @override
+  String get ds3fClearCategory => 'Ta bort kategori';
+
+  @override
+  String get ds3fOptional => 'Valfritt';
+
+  @override
+  String ds3fWasBalance(String amount) {
+    return 'Var $amount';
+  }
+
+  @override
+  String get ds3fAsOf => 'Per datum';
+
+  @override
+  String get ds3fNote => 'Anteckning';
+
+  @override
+  String get ds3fFee => 'Avgifter';
+
+  @override
+  String get ds3fPrice => 'Pris';
 }

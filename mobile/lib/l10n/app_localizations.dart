@@ -5701,6 +5701,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete account'**
   String get ds2sDeleteAccount;
+
+  /// Title of the new-transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'New transaction'**
+  String get ds3fNewTransaction;
+
+  /// Bold toolbar action that creates the new transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get ds3fAdd;
+
+  /// Screen-reader label of the button that removes the chosen category in the new-transaction sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear category'**
+  String get ds3fClearCategory;
+
+  /// Placeholder of an optional inline field in a form sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get ds3fOptional;
+
+  /// Line under the new-balance field showing the account's current balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Was {amount}'**
+  String ds3fWasBalance(String amount);
+
+  /// Update balance sheet row: the date the new balance applies to.
+  ///
+  /// In en, this message translates to:
+  /// **'As of'**
+  String get ds3fAsOf;
+
+  /// Update balance sheet row label for the optional note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get ds3fNote;
+
+  /// Trade sheet row label for the optional fees.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees'**
+  String get ds3fFee;
+
+  /// Trade sheet row label for the price per share.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get ds3fPrice;
 }
 
 class _AppLocalizationsDelegate

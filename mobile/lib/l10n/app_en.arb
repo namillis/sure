@@ -2361,5 +2361,26 @@
   "ds2sResetAccount": "Reset account",
   "@ds2sResetAccount": {"description": "Account actions row that resets the account on the server."},
   "ds2sDeleteAccount": "Delete account",
-  "@ds2sDeleteAccount": {"description": "Account actions row that deletes the account on the server."}
+  "@ds2sDeleteAccount": {"description": "Account actions row that deletes the account on the server."},
+  "ds3fNewTransaction": "New transaction",
+  "@ds3fNewTransaction": {"description": "Title of the new-transaction sheet."},
+  "ds3fAdd": "Add",
+  "@ds3fAdd": {"description": "Bold toolbar action that creates the new transaction."},
+  "ds3fClearCategory": "Clear category",
+  "@ds3fClearCategory": {"description": "Screen-reader label of the button that removes the chosen category in the new-transaction sheet."},
+  "ds3fOptional": "Optional",
+  "@ds3fOptional": {"description": "Placeholder of an optional inline field in a form sheet."},
+  "ds3fWasBalance": "Was {amount}",
+  "@ds3fWasBalance": {
+    "description": "Line under the new-balance field showing the account's current balance.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "ds3fAsOf": "As of",
+  "@ds3fAsOf": {"description": "Update balance sheet row: the date the new balance applies to."},
+  "ds3fNote": "Note",
+  "@ds3fNote": {"description": "Update balance sheet row label for the optional note."},
+  "ds3fFee": "Fees",
+  "@ds3fFee": {"description": "Trade sheet row label for the optional fees."},
+  "ds3fPrice": "Price",
+  "@ds3fPrice": {"description": "Trade sheet row label for the price per share."}
 }

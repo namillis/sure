@@ -3344,4 +3344,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds2sDeleteAccount => 'Delete account';
+
+  @override
+  String get ds3fNewTransaction => 'New transaction';
+
+  @override
+  String get ds3fAdd => 'Add';
+
+  @override
+  String get ds3fClearCategory => 'Clear category';
+
+  @override
+  String get ds3fOptional => 'Optional';
+
+  @override
+  String ds3fWasBalance(String amount) {
+    return 'Was $amount';
+  }
+
+  @override
+  String get ds3fAsOf => 'As of';
+
+  @override
+  String get ds3fNote => 'Note';
+
+  @override
+  String get ds3fFee => 'Fees';
+
+  @override
+  String get ds3fPrice => 'Price';
 }
