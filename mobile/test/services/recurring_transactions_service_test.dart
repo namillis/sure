@@ -23,7 +23,7 @@ void main() {
           return http.Response(
             page == '1'
                 ? recurringIndexBody([
-                    recurringJson(rules: [
+                    recurringJson(categoryId: 'cat_gym', rules: [
                       {'frequency': 'weekly', 'interval': 2},
                     ]),
                   ], totalPages: 2)
@@ -52,6 +52,8 @@ void main() {
       expect(items, hasLength(2));
       expect(items[0].displayName, 'Gym Membership');
       expect(items[0].accountName, 'Checking');
+      expect(items[0].categoryId, 'cat_gym');
+      expect(items[1].categoryId, isNull);
       expect(items[0].nextExpectedDate, DateTime(2026, 11, 20));
       expect(items[0].primaryRule!.frequency, 'weekly');
       expect(items[0].primaryRule!.interval, 2);

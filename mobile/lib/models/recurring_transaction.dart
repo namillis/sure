@@ -51,6 +51,7 @@ class RecurringTransaction {
     this.paymentUrl,
     this.notes,
     this.billType,
+    this.categoryId,
   });
 
   final String id;
@@ -75,6 +76,10 @@ class RecurringTransaction {
   final String? paymentUrl;
   final String? notes;
   final String? billType;
+
+  /// The server sends only the id (no name, color or icon); resolve it
+  /// against the category list.
+  final String? categoryId;
 
   static const writableStatuses = ['active', 'inactive'];
 
@@ -101,6 +106,7 @@ class RecurringTransaction {
       paymentUrl: _blankToNull(json['payment_url']),
       notes: _blankToNull(json['notes']),
       billType: _blankToNull(json['bill_type']),
+      categoryId: _blankToNull(json['category_id']),
     );
   }
 
@@ -119,9 +125,8 @@ class RecurringTransaction {
   RecurrenceRule? get primaryRule => rules.isEmpty ? null : rules.first;
 
   /// Expected occurrences per month across all rules (1 without rules).
-  double get perMonth => rules.isEmpty
-      ? 1
-      : rules.fold(0.0, (sum, rule) => sum + rule.perMonth);
+  double get perMonth =>
+      rules.isEmpty ? 1 : rules.fold(0.0, (sum, rule) => sum + rule.perMonth);
 
   static String? _blankToNull(dynamic value) {
     final s = value?.toString().trim();

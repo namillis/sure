@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/account.dart';
+import '../models/category.dart';
 import '../models/recurring_transaction.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/categories_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../services/recurring_transactions_service.dart';
 import '../theme/sure_colors.dart';
@@ -98,6 +100,8 @@ class _RecurringScreenState extends State<RecurringScreen> {
       await _unauthorized();
       return;
     }
+    // Rows show their category's icon; the list is shared and fetched once.
+    context.read<CategoriesProvider?>()?.fetchCategories(accessToken: token);
     final result = await _service.getAll(accessToken: token);
     if (!mounted) return;
     if (result['error'] == 'unauthorized') {
@@ -170,8 +174,9 @@ class _RecurringScreenState extends State<RecurringScreen> {
     if (!mounted) return;
     if (result['error'] == 'unauthorized') return _unauthorized();
     messenger.showSnackBar(SnackBar(
-      content: Text(
-          result['success'] == true ? l.recurringDeleted : l.recurringActionFailed),
+      content: Text(result['success'] == true
+          ? l.recurringDeleted
+          : l.recurringActionFailed),
     ));
     if (result['success'] == true) await _load();
   }
@@ -242,6 +247,11 @@ class _RecurringScreenState extends State<RecurringScreen> {
       RecurringGroup.inactive: l.recurringGroupInactive,
     };
     final accounts = _accounts;
+    final categories = {
+      for (final category in context.watch<CategoriesProvider?>()?.categories ??
+          const <Category>[])
+        category.id: category,
+    };
     // The "+" sits on the first section shown (normally "Upcoming this
     // month"), so adding works whichever sections exist.
     final firstGroup =
@@ -267,6 +277,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
                   _RecurringRow(
                     key: ValueKey('recurring-${item.id}'),
                     item: item,
+                    category: categories[item.categoryId],
                     now: now,
                     onLiability: accounts.any((account) =>
                         account.id == item.accountId && account.isLiability),
@@ -393,9 +404,13 @@ class _RecurringRow extends StatelessWidget {
     required this.onSetStatus,
     required this.onDelete,
     this.onLiability = false,
+    this.category,
   });
 
   final RecurringTransaction item;
+
+  /// The item's category, when it has one and the list has it.
+  final Category? category;
   final DateTime now;
 
   /// True when the item belongs to a loan or credit card. Money flowing into
@@ -416,7 +431,8 @@ class _RecurringRow extends StatelessWidget {
     final income = item.isInflow && !onLiability;
     final amount = RecurringGrouping.amountOf(item).abs();
     final formatted = MoneyMasker.mask(
-      InvestmentMath.formatMoney(amount, currency: item.currency, locale: locale),
+      InvestmentMath.formatMoney(amount,
+          currency: item.currency, locale: locale),
       hidden: hidden,
     );
     final next = item.nextExpectedDate;
@@ -429,35 +445,40 @@ class _RecurringRow extends StatelessWidget {
 
     // Pause an active item, resume a paused or suggested one; an ended item
     // can only be deleted.
-    final String? statusAction = item.isActive
-        ? 'inactive'
-        : (item.status == 'ended' ? null : 'active');
-    final statusLabel = statusAction == 'inactive'
-        ? l.recurringActionPause
-        : l.ds2pResume;
+    final String? statusAction =
+        item.isActive ? 'inactive' : (item.status == 'ended' ? null : 'active');
+    final statusLabel =
+        statusAction == 'inactive' ? l.recurringActionPause : l.ds2pResume;
 
     final row = SureListRow(
       title: item.displayName,
       subtitle: subtitle,
       subtitleMaxLines: 1,
       onTap: onTap,
-      leading: Container(
-        width: SureCategoryIcon.rowSize,
-        height: SureCategoryIcon.rowSize,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: palette.surfaceInset,
-          shape: BoxShape.circle,
-        ),
-        child: SureIcon(
-          SureIcons.repeat,
-          size: 15,
-          color: palette.textSecondary,
-        ),
-      ),
+      leading: category != null
+          ? SureCategoryIcon(
+              name: category!.name,
+              color: category!.color,
+              icon: category!.icon,
+            )
+          : Container(
+              width: SureCategoryIcon.rowSize,
+              height: SureCategoryIcon.rowSize,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: palette.surfaceInset,
+                shape: BoxShape.circle,
+              ),
+              child: SureIcon(
+                SureIcons.repeat,
+                size: 15,
+                color: palette.textSecondary,
+              ),
+            ),
+      // Signed like transaction rows: "+" income in success, "-" otherwise.
       trailing: MoneyText(
-        income ? '+$formatted' : formatted,
-        trend: income ? MoneyTrend.inflow : MoneyTrend.neutral,
+        income ? '+$formatted' : '-$formatted',
+        trend: income ? MoneyTrend.inflow : MoneyTrend.outflow,
         color: income ? palette.success : palette.textPrimary,
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       ),

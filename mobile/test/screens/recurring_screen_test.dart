@@ -5,14 +5,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:sure_mobile/models/account.dart';
+import 'package:sure_mobile/models/category.dart';
+import 'package:sure_mobile/providers/categories_provider.dart';
 import 'package:sure_mobile/screens/recurring_screen.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/services/recurring_transactions_service.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 import 'package:sure_mobile/widgets/sure_text_field.dart';
 
 import '../support/l10n_harness.dart';
 import '../support/recurring_fixtures.dart';
+
+class _Categories extends CategoriesProvider {
+  int fetches = 0;
+  @override
+  List<Category> get categories => [
+        Category(
+            id: 'cat_gym', name: 'Fitness', color: '#e99537', icon: 'dumbbell'),
+      ];
+  @override
+  bool get isLoading => false;
+  @override
+  Future<void> fetchCategories({required String accessToken}) async =>
+      fetches++;
+}
 
 void main() {
   setUp(() {
@@ -100,7 +118,8 @@ void main() {
     expect(find.text('Monthly · Dec 25 · Checking'), findsOneWidget);
     expect(find.text('Monthly · Nov 20 · Checking · Inactive'), findsOneWidget);
     expect(find.text('+\$3,000.00'), findsOneWidget);
-    expect(find.text(r'$49.99'), findsNWidgets(2)); // the two gym rows
+    // Expenses carry a minus, like transaction rows.
+    expect(find.text(r'-$49.99'), findsNWidgets(2)); // the two gym rows
     expect(find.text(r'Monthly out $49.99 · in $3,000.00'), findsOneWidget);
 
     // Inactive rows sit at reduced opacity; active sections do not.
@@ -116,6 +135,50 @@ void main() {
             matching: find.byType(Opacity))
         .first);
     expect(active.opacity, 1);
+  });
+
+  testWidgets('rows show their category icon, else the repeat icon',
+      (tester) async {
+    final categories = _Categories();
+    await pumpLocalized(
+      tester,
+      ChangeNotifierProvider<CategoriesProvider>.value(
+        value: categories,
+        child: RecurringScreen(
+          service: RecurringTransactionsService(
+            client: server([
+              recurringJson(categoryId: 'cat_gym'),
+              recurringJson(id: 'rt_2', name: 'Unfiled'),
+              recurringJson(id: 'rt_3', name: 'Gone', categoryId: 'cat_gone'),
+            ]),
+          ),
+          accessTokenLoader: () async => 'token',
+          onUnauthorized: () async {},
+          accounts: accounts,
+          clock: () => DateTime(2026, 11, 10),
+        ),
+      ),
+    );
+
+    expect(categories.fetches, 1);
+    final icon = tester.widget<SureCategoryIcon>(find.descendant(
+        of: find.byKey(const ValueKey('recurring-rt_1')),
+        matching: find.byType(SureCategoryIcon)));
+    expect(icon.color, '#e99537');
+    expect(icon.icon, 'dumbbell');
+    for (final id in ['rt_2', 'rt_3']) {
+      final row = find.byKey(ValueKey('recurring-$id'));
+      expect(
+          find.descendant(of: row, matching: find.byType(SureCategoryIcon)),
+          findsNothing);
+      expect(
+        tester
+            .widget<SureIcon>(
+                find.descendant(of: row, matching: find.byType(SureIcon)))
+            .name,
+        SureIcons.repeat,
+      );
+    }
   });
 
   testWidgets('the + on the first section opens the new-item sheet',

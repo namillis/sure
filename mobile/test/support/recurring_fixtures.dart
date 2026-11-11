@@ -19,6 +19,7 @@ Map<String, dynamic> recurringJson({
     'account_type': 'depository',
   },
   Map<String, dynamic>? merchant,
+  String? categoryId,
 }) =>
     {
       'id': id,
@@ -42,7 +43,7 @@ Map<String, dynamic> recurringJson({
       'expected_amount_avg': null,
       'expected_amount_avg_cents': null,
       'bill_type': 'bill',
-      'category_id': null,
+      'category_id': categoryId,
       'anchor_date': null,
       'weekend_adjust': 'none',
       'end_mode': 'never',
