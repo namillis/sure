@@ -176,7 +176,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
         // Every tab draws its own header (Home's large title carries the
         // sync pill, privacy toggle and settings).
+        // extendBody lets content scroll under the translucent tab bar. The
+        // Scaffold then reports the bar's height as the body's bottom
+        // padding, and every tab root pads its scroll views by it.
         return Scaffold(
+          extendBody: true,
           body: IndexedStack(
             index: _currentIndex,
             children: [
@@ -186,10 +190,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     : const SizedBox.shrink(),
             ],
           ),
-          // shortcut: the bar is translucent but the body does not extend
-          // behind it yet (extendBody: false), because several tab roots
-          // (Invest, Home) do not pad their scroll views for it. Flip this
-          // once every tab root adds the bottom inset.
           bottomNavigationBar: SureTabBar(
             currentIndex: _currentIndex,
             onSelected: (index) {

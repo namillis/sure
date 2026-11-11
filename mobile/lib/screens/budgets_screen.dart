@@ -177,7 +177,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         onRefresh: () => _load(forceRefresh: true),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 32),
+          // Clears the shell's see-through tab bar.
+          padding: EdgeInsets.only(
+            bottom: 32 + MediaQuery.paddingOf(context).bottom,
+          ),
           children: children,
         ),
       ),

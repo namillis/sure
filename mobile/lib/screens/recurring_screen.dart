@@ -216,7 +216,10 @@ class _RecurringScreenState extends State<RecurringScreen> {
       onRefresh: _load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 32),
+        // Clears the shell's see-through tab bar.
+        padding: EdgeInsets.only(
+          bottom: 32 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: children,
       ),
     );

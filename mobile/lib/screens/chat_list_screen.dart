@@ -214,7 +214,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
           if (chatProvider.errorMessage != null && chatProvider.chats.isEmpty) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24) +
+                    EdgeInsets.only(
+                        bottom: MediaQuery.paddingOf(context).bottom),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -249,7 +251,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
           if (chatProvider.chats.isEmpty) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24) +
+                    EdgeInsets.only(
+                        bottom: MediaQuery.paddingOf(context).bottom),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -278,7 +282,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
           final chatListView = RefreshIndicator(
             onRefresh: _handleRefresh,
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              // The bottom inset clears the shell's see-through tab bar.
+              padding: EdgeInsets.only(
+                top: 8,
+                bottom: 8 + MediaQuery.paddingOf(context).bottom,
+              ),
               itemCount: chatProvider.chats.length,
               itemBuilder: (context, index) {
                 final chat = chatProvider.chats[index];

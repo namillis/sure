@@ -168,7 +168,10 @@ class WebOnlyView extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(top: 24),
+      padding: EdgeInsets.only(
+        top: 24,
+        bottom: 24 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         SureEmptyState(
           icon: icon,

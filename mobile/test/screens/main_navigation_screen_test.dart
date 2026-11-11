@@ -38,6 +38,10 @@ void main() {
 
     final bar = find.byType(SureTabBar);
     expect(tester.widget<SureTabBar>(bar).items, hasLength(5));
+    // Content scrolls under the see-through bar.
+    final shell = tester.widget<Scaffold>(
+        find.ancestor(of: bar, matching: find.byType(Scaffold)).first);
+    expect(shell.extendBody, isTrue);
     for (final label in ['Home', 'Activity', 'Plan', 'Invest', 'Assistant']) {
       expect(
           find.descendant(of: bar, matching: find.text(label)), findsOneWidget);
