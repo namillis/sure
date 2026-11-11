@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/account.dart';
+import '../models/account_holding.dart';
 import '../models/transaction.dart';
 import '../models/offline_transaction.dart';
 import '../providers/auth_provider.dart';
@@ -13,6 +14,7 @@ import '../widgets/account_actions_menu.dart';
 import '../widgets/account_detail_header.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/holdings_list.dart';
+import '../widgets/set_price_sheet.dart';
 import '../widgets/sure_segmented_control.dart';
 import '../widgets/trades_list.dart';
 import '../widgets/sync_status_badge.dart';
@@ -415,43 +417,76 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          AccountDetailHeader(
-            key: ValueKey('header-$_refreshTick'),
-            account: widget.account,
+      body: NestedScrollView(
+        // The header scrolls away with the list. The section switcher sits at
+        // the top of the body, so once the header is gone it stays pinned
+        // under the app bar while the section list scrolls below it.
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          SliverToBoxAdapter(
+            child: AccountDetailHeader(
+              key: ValueKey('header-$_refreshTick'),
+              account: widget.account,
+            ),
           ),
-          if (_hasInvestmentSections)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: SureSegmentedControl<_AccountSection>(
-                selected: _section,
-                onChanged: (section) => setState(() {
-                  _section = section;
-                  _isSelectionMode = false;
-                  _selectedTransactions.clear();
-                }),
-                segments: [
-                  SureSegment(
-                    value: _AccountSection.holdings,
-                    label: l.accountTabHoldings,
+        ],
+        body: !_hasInvestmentSections
+            ? _buildSection(l, colorScheme, hideAmounts)
+            : Column(
+                children: [
+                  Padding(
+                    key: const ValueKey('accountSectionSwitcher'),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                    child: SureSegmentedControl<_AccountSection>(
+                      selected: _section,
+                      onChanged: (section) => setState(() {
+                        _section = section;
+                        _isSelectionMode = false;
+                        _selectedTransactions.clear();
+                      }),
+                      segments: [
+                        SureSegment(
+                          value: _AccountSection.holdings,
+                          label: l.accountTabHoldings,
+                        ),
+                        SureSegment(
+                          value: _AccountSection.activity,
+                          label: l.accountTabActivity,
+                        ),
+                        SureSegment(
+                          value: _AccountSection.transactions,
+                          label: l.accountTabTransactions,
+                        ),
+                      ],
+                    ),
                   ),
-                  SureSegment(
-                    value: _AccountSection.activity,
-                    label: l.accountTabActivity,
-                  ),
-                  SureSegment(
-                    value: _AccountSection.transactions,
-                    label: l.accountTabTransactions,
-                  ),
+                  Expanded(child: _buildSection(l, colorScheme, hideAmounts)),
                 ],
               ),
-            ),
-          Expanded(
-            child: switch (_section) {
+      ),
+      floatingActionButton: _section == _AccountSection.transactions
+          ? FloatingActionButton(
+              onPressed: _showAddTransactionForm,
+              child: const Icon(Icons.add),
+            )
+          : null,
+    );
+  }
+
+  Future<void> _setHoldingPrice(AccountHolding holding) async {
+    final saved = await showSetPriceSheet(context, holding: holding);
+    if (saved && mounted) _onAccountChanged();
+  }
+
+  Widget _buildSection(
+    AppLocalizations l,
+    ColorScheme colorScheme,
+    bool hideAmounts,
+  ) {
+    return switch (_section) {
               _AccountSection.holdings => HoldingsList(
                   key: ValueKey('holdings-$_refreshTick'),
                   account: widget.account,
+                  onHoldingTap: _setHoldingPrice,
                 ),
               _AccountSection.activity => TradesList(
                   key: ValueKey('trades-$_refreshTick'),
@@ -544,9 +579,11 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
 
           return RefreshIndicator(
             onRefresh: _loadTransactions,
-            child: Column(
-              children: [
-                Consumer<CategoriesProvider>(
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Consumer<CategoriesProvider>(
                   builder: (context, categoriesProvider, _) {
                     if (categoriesProvider.isLoading || categoriesProvider.categories.isEmpty) {
                       return const SizedBox.shrink();
@@ -565,24 +602,24 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
                     );
                   },
                 ),
-                Expanded(
-                  child: transactions.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.4,
-                            child: Center(
-                              child: Text(
-                                l.transactionsListNoCategoryMatch,
-                                style: TextStyle(color: colorScheme.onSurfaceVariant),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : ListView.builder(
+                ),
+                if (transactions.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Center(
+                        child: Text(
+                          l.transactionsListNoCategoryMatch,
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
               padding: const EdgeInsets.all(16),
+              sliver: SliverList.builder(
               itemCount: transactions.length,
               itemBuilder: (context, index) {
                 final transaction = transactions[index];
@@ -819,16 +856,6 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
           );
               },
             ),
-            },
-          ),
-        ],
-      ),
-      floatingActionButton: _section == _AccountSection.transactions
-          ? FloatingActionButton(
-              onPressed: _showAddTransactionForm,
-              child: const Icon(Icons.add),
-            )
-          : null,
-    );
+    };
   }
 }

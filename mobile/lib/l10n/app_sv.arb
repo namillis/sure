@@ -302,7 +302,6 @@
   "chatListHoursAgo": "för {hours} tim sedan",
   "chatListDaysAgo": "för {days} d sedan",
   "chatConversationStartFailed": "Det gick inte att starta konversationen. Försök igen.",
-
   "moreBudgets": "Budgetar",
   "moreBudgetsSubtitle": "Budgeterat mot faktiskt utfall per kategori",
   "budgetsTitle": "Budgetar",
@@ -337,8 +336,7 @@
   "budgetCategoryTransactionsEmpty": "Inga transaktioner i den här kategorin för {month}.",
   "budgetCategoryTransactionsLoadMore": "Visa fler",
   "budgetCategoryTransactionsLoadFailed": "Kunde inte läsa in transaktioner",
-
-"moreCashFlow": "Kassaflöde",
+  "moreCashFlow": "Kassaflöde",
   "moreCashFlowSubtitle": "Inkomster, utgifter och sparande per kategori",
   "cashFlowTitle": "Kassaflöde",
   "cashFlowPeriodCurrentMonth": "Den här månaden",
@@ -392,7 +390,6 @@
   "portfolioRecentActivity": "Senaste aktivitet",
   "portfolioLoadFailed": "Kunde inte läsa in dina investeringar",
   "tradeQuantityAtPrice": "{quantity} à {price}",
-
   "shellNavActivity": "Aktivitet",
   "shellNavPlan": "Planera",
   "shellNavInvest": "Investera",
@@ -531,14 +528,12 @@
   "recurringErrorUrlInvalid": "Ange en länk som börjar med http:// eller https://",
   "recurringErrorLastAfterNext": "Måste vara före nästa förväntade datum",
   "recurringSaveFailed": "Kunde inte spara. Försök igen.",
-
   "insightsTitle": "Insikter",
   "insightsDismiss": "Avfärda",
   "insightsPriorityHigh": "Hög prioritet",
   "insightsShowDetails": "Visa detaljer",
   "insightsHideDetails": "Dölj detaljer",
   "insightsDismissFailed": "Kunde inte avfärda insikten",
-
   "spendingVsNormalTitle": "Utgifter mot normalt",
   "spendingVsNormalSoFar": "{amount} hittills",
   "spendingVsNormalNormal": "Normalt {amount}",
@@ -876,5 +871,19 @@
   "p3roRuleRunManual": "Körd manuellt",
   "p3roRuleRunScheduled": "Automatisk",
   "p3roRuleRunCounts": "{modified} av {processed} transaktioner ändrades",
-  "p3roRuleRunQueued": "{count, plural, one{{count} transaktion i kö} other{{count} transaktioner i kö}}"
+  "p3roRuleRunQueued": "{count, plural, one{{count} transaktion i kö} other{{count} transaktioner i kö}}",
+  "p3apZeroHoldingsHidden": "{count, plural, =1{1 innehav värt {amount} dolt} other{{count} innehav värda {amount} dolda}}",
+  "p3apZeroHoldingsShown": "{count, plural, =1{1 innehav värt {amount} visas} other{{count} innehav värda {amount} visas}}",
+  "p3apShow": "Visa",
+  "p3apHide": "Dölj",
+  "p3apAllHoldingsZero": "Alla innehav är värda {amount}",
+  "p3apSetPriceTitle": "Ange kurs",
+  "p3apSetPriceIntro": "Sparar en stängningskurs för ett värdepapper som ingen kursleverantör följer. Värdena uppdateras när kontot har synkats.",
+  "p3apCurrentPrice": "Nuvarande kurs: {price}",
+  "p3apPriceLabel": "Kurs per andel",
+  "p3apPriceRequired": "Ange en kurs",
+  "p3apPriceInvalid": "Ange en kurs större än 0",
+  "p3apPriceSaved": "Kursen har sparats. Värdena uppdateras när kontot har synkats.",
+  "p3apPriceSelfHostedOnly": "Kurser kan bara anges på en egen server, eftersom de delas av alla på servern.",
+  "p3apPriceNotAllowed": "Det här värdepapperet kan inte prissättas från dina konton. Du behöver en affär i det, eller ha det i ett kopplat konto som du kan redigera."
 }

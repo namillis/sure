@@ -7,9 +7,11 @@ import '../models/account_holding.dart';
 import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../services/account_detail_service.dart';
+import '../services/preferences_service.dart';
 import '../theme/sure_colors.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
+import '../utils/zero_holdings.dart';
 
 /// Every current position of an investment or crypto account, largest first,
 /// with shares, price and unrealized gain where the provider supplied a cost
@@ -19,16 +21,21 @@ class HoldingsList extends StatefulWidget {
     super.key,
     required this.account,
     this.accountDetailService,
+    this.onHoldingTap,
   });
 
   final Account account;
   final AccountDetailService? accountDetailService;
 
+  /// Called when a row is tapped; rows are not tappable when null.
+  final void Function(AccountHolding holding)? onHoldingTap;
+
   @override
   State<HoldingsList> createState() => _HoldingsListState();
 }
 
-class _HoldingsListState extends State<HoldingsList> {
+class _HoldingsListState extends State<HoldingsList>
+    with ZeroHoldingsPreference<HoldingsList> {
   late final AccountDetailService _service =
       widget.accountDetailService ?? AccountDetailService();
   List<AccountHolding> _holdings = [];
@@ -101,17 +108,137 @@ class _HoldingsListState extends State<HoldingsList> {
       );
     }
 
+    final visible =
+        ZeroHoldings.visible(_holdings, showZero: showZeroHoldings);
+    final zeroCount = ZeroHoldings.zeroCount(_holdings);
+    final currency = _holdings.first.currency;
+    final onHoldingTap = widget.onHoldingTap;
+
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView.separated(
+      child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-        itemCount: _holdings.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) =>
-            HoldingTile(holding: _holdings[index]),
+        children: [
+          for (final holding in visible) ...[
+            HoldingTile(
+              holding: holding,
+              onTap: onHoldingTap == null ? null : () => onHoldingTap(holding),
+            ),
+            const Divider(height: 1),
+          ],
+          if (visible.isEmpty)
+            AllZeroHoldingsMessage(currency: currency),
+          if (zeroCount > 0)
+            ZeroHoldingsFooter(
+              count: zeroCount,
+              currency: currency,
+              shown: showZeroHoldings,
+              onToggle: toggleShowZeroHoldings,
+            ),
+        ],
       ),
     );
+  }
+}
+
+/// Shown instead of rows when every holding is worth zero and those are
+/// hidden, so the list does not read as empty.
+class AllZeroHoldingsMessage extends StatelessWidget {
+  const AllZeroHoldingsMessage({super.key, required this.currency});
+
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final locale = Localizations.localeOf(context).toString();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: [
+          Icon(
+            Icons.pie_chart_outline,
+            size: 40,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.p3apAllHoldingsZero(
+                ZeroHoldings.zeroLabel(currency, locale: locale)),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "N holdings worth $0 hidden · Show" row under a holdings list.
+class ZeroHoldingsFooter extends StatelessWidget {
+  const ZeroHoldingsFooter({
+    super.key,
+    required this.count,
+    required this.currency,
+    required this.shown,
+    required this.onToggle,
+  });
+
+  final int count;
+  final String currency;
+  final bool shown;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final zero = ZeroHoldings.zeroLabel(currency, locale: locale);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              shown
+                  ? l.p3apZeroHoldingsShown(count, zero)
+                  : l.p3apZeroHoldingsHidden(count, zero),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('zeroHoldingsToggle'),
+            onPressed: onToggle,
+            child: Text(shown ? l.p3apHide : l.p3apShow),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Loads and persists whether zero-value holdings are shown.
+mixin ZeroHoldingsPreference<T extends StatefulWidget> on State<T> {
+  bool _showZero = false;
+
+  bool get showZeroHoldings => _showZero;
+
+  @override
+  void initState() {
+    super.initState();
+    PreferencesService.instance.getShowZeroHoldings().then((value) {
+      if (mounted && value != _showZero) setState(() => _showZero = value);
+    });
+  }
+
+  void toggleShowZeroHoldings() {
+    setState(() => _showZero = !_showZero);
+    PreferencesService.instance.setShowZeroHoldings(_showZero);
   }
 }
 
