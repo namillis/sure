@@ -63,7 +63,7 @@ import 'app_localizations_sv.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('sv')
+    Locale('sv'),
   ];
 
   /// Application title shown in the OS task switcher.
@@ -6073,6 +6073,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get dshAddTransaction;
+
+  /// After a budget category's spending when it has no limit, e.g. '$155 no limit'.
+  ///
+  /// In en, this message translates to:
+  /// **'no limit'**
+  String get ds2pNoLimit;
+
+  /// Under a budget category row when spending exceeds its limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Over by {amount}'**
+  String ds2pOverBy(String amount);
+
+  /// After the Budget hero amount, e.g. '$2,140.00 left'.
+  ///
+  /// In en, this message translates to:
+  /// **'left'**
+  String get ds2pLeft;
+
+  /// After the Budget hero amount when the month is over budget, e.g. '$120.00 over'.
+  ///
+  /// In en, this message translates to:
+  /// **'over'**
+  String get ds2pOver;
+
+  /// Budget hero subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{spent} spent of {budgeted}'**
+  String ds2pSpentOf(String spent, String budgeted);
+
+  /// Days left in the current budget period.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day left} other{{count} days left}}'**
+  String ds2pDaysLeft(int count);
+
+  /// Budget empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets are set up on the web. They show here once they exist.'**
+  String get ds2pNoBudgetBody;
+
+  /// Budget empty state button that opens the web budget page.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up on the web'**
+  String get ds2pSetUpOnWeb;
+
+  /// Link next to the Categories header that opens the web budget page.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit on web'**
+  String get ds2pEditOnWeb;
+
+  /// Recurring summary line of monthly totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly out {outflow} · in {inflow}'**
+  String ds2pMonthlySummary(String outflow, String inflow);
+
+  /// Swipe action that makes a paused recurring item active again.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get ds2pResume;
 }
 
 class _AppLocalizationsDelegate
@@ -6102,8 +6168,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

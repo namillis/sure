@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -10,19 +10,17 @@ import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../services/recurring_transactions_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
 import '../utils/recurring_grouping.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
-import '../widgets/sure_list_group.dart';
+import '../widgets/ds/ds.dart';
 import 'recurring_form_screen.dart';
 
-/// The Recurring segment of the Plan tab: monthly totals, then active items
-/// due this month, later ones, suggestions and inactive ones. Tap a row to
-/// edit it; its menu pauses, activates or deletes. Built to sit inside a
-/// parent Scaffold, so it has no app bar of its own.
+/// The Recurring segment of the Plan tab: a mono "Monthly out · in" line,
+/// then active items due this month, later ones, suggestions and inactive
+/// ones. Tap a row to edit it in a sheet; swipe it left to pause, resume or
+/// delete. Built to sit inside a parent Scaffold, so it has no app bar of its
+/// own.
 class RecurringScreen extends StatefulWidget {
   const RecurringScreen({
     super.key,
@@ -45,7 +43,7 @@ class RecurringScreen extends StatefulWidget {
   /// Accounts offered in the form; defaults to [AccountsProvider.accounts].
   final List<Account>? accounts;
 
-  /// "Today" for grouping; injected for tests.
+  /// "Today" for grouping and the form's default dates; injected for tests.
   final DateTime Function()? clock;
 
   @override
@@ -122,19 +120,21 @@ class _RecurringScreenState extends State<RecurringScreen> {
   }
 
   Future<void> _openForm([RecurringTransaction? existing]) async {
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => RecurringFormScreen(
-          existing: existing,
-          accounts: _accounts,
-          service: _service,
-          accessTokenLoader: _token,
-          onUnauthorized: _unauthorized,
-          clock: widget.clock,
-        ),
+    final changed = await showSureSheet<bool>(
+      context: context,
+      builder: (_) => RecurringFormScreen(
+        existing: existing,
+        accounts: _accounts,
+        service: _service,
+        accessTokenLoader: _token,
+        onUnauthorized: _unauthorized,
+        clock: widget.clock,
       ),
     );
-    if (changed == true) await _load();
+    if (changed == true && mounted) {
+      SureHaptics.success();
+      await _load();
+    }
   }
 
   Future<void> _setStatus(RecurringTransaction item, String status) async {
@@ -181,62 +181,53 @@ class _RecurringScreenState extends State<RecurringScreen> {
     final l = AppLocalizations.of(context);
     final items = _items;
 
-    final Widget content;
+    final List<Widget> children;
     if (items == null && _loading) {
-      content = const Padding(
-        padding: EdgeInsets.only(top: 96),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    } else if (items == null || (_failed && items.isEmpty)) {
-      content = _Message(
-        icon: Icons.error_outline,
-        title: l.recurringLoadFailed,
-        action: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 44),
-          child: SureButton(
-            label: l.recurringRetry,
-            variant: SureButtonVariant.outline,
-            onPressed: _load,
-          ),
+      children = const [
+        Padding(
+          padding: EdgeInsets.only(top: 96),
+          child: Center(child: CircularProgressIndicator()),
         ),
-      );
+      ];
+    } else if (items == null || (_failed && items.isEmpty)) {
+      children = [
+        _state(SureEmptyState(
+          icon: SureIcons.circleAlert,
+          title: l.recurringLoadFailed,
+          secondaryLabel: l.recurringRetry,
+          onSecondary: _load,
+        )),
+      ];
     } else if (items.isEmpty) {
-      content = _Message(
-        icon: Icons.event_repeat,
-        title: l.recurringEmptyTitle,
-        body: l.recurringEmptyBody,
-      );
+      children = [
+        _state(SureEmptyState(
+          icon: SureIcons.repeat,
+          title: l.recurringEmptyTitle,
+          body: l.recurringEmptyBody,
+          primaryLabel: l.recurringAdd,
+          onPrimary: () => _openForm(),
+        )),
+      ];
     } else {
-      content = _list(context, items);
+      children = _list(context, items);
     }
 
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: SureSpacing.huge),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 44),
-                child: SureButton(
-                  label: l.recurringAdd,
-                  leading: const Icon(Icons.add, size: 16),
-                  onPressed: () => _openForm(),
-                ),
-              ),
-            ),
-          ),
-          content,
-        ],
+        padding: const EdgeInsets.only(bottom: 32),
+        children: children,
       ),
     );
   }
 
-  Widget _list(BuildContext context, List<RecurringTransaction> items) {
+  Widget _state(Widget child) => Padding(
+        padding: const EdgeInsets.only(top: 48),
+        child: Center(child: child),
+      );
+
+  List<Widget> _list(BuildContext context, List<RecurringTransaction> items) {
     final l = AppLocalizations.of(context);
     final now = (widget.clock ?? DateTime.now)();
     final groups = RecurringGrouping.group(items, now);
@@ -247,21 +238,34 @@ class _RecurringScreenState extends State<RecurringScreen> {
       RecurringGroup.suggested: l.recurringGroupSuggested,
       RecurringGroup.inactive: l.recurringGroupInactive,
     };
+    final accounts = _accounts;
+    // The "+" sits on the first section shown (normally "Upcoming this
+    // month"), so adding works whichever sections exist.
+    final firstGroup =
+        RecurringGroup.values.firstWhere((g) => groups[g]!.isNotEmpty);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (totals.isNotEmpty) _TotalsCard(totals: totals),
-        for (final group in RecurringGroup.values)
-          if (groups[group]!.isNotEmpty)
-            SureListGroup(
-              header: headers[group],
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    return [
+      if (totals.isNotEmpty) _MonthlySummary(totals: totals),
+      for (final group in RecurringGroup.values)
+        if (groups[group]!.isNotEmpty) ...[
+          SureSectionHeader(
+            label: headers[group]!,
+            actionIcon: group == firstGroup ? SureIcons.plus : null,
+            actionSemanticLabel: l.recurringAdd,
+            onAction: group == firstGroup ? () => _openForm() : null,
+          ),
+          Opacity(
+            opacity: group == RecurringGroup.inactive ? 0.55 : 1,
+            child: SurePanel.rows(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              dividerIndent: SurePanel.iconRowDividerIndent,
               children: [
                 for (final item in groups[group]!)
                   _RecurringRow(
+                    key: ValueKey('recurring-${item.id}'),
                     item: item,
-                    onLiability: _accounts.any((account) =>
+                    now: now,
+                    onLiability: accounts.any((account) =>
                         account.id == item.accountId && account.isLiability),
                     onTap: () => _openForm(item),
                     onSetStatus: (status) => _setStatus(item, status),
@@ -269,8 +273,9 @@ class _RecurringScreenState extends State<RecurringScreen> {
                   ),
               ],
             ),
-      ],
-    );
+          ),
+        ],
+    ];
   }
 }
 
@@ -302,13 +307,12 @@ Future<bool> confirmRecurringDelete(
   return confirmed == true;
 }
 
-/// Localized cadence of [item], e.g. "Monthly" or "Every 2 weeks".
+/// Localized cadence of [item], e.g. "Monthly" or "Every 2 weeks". Items
+/// without a rule repeat monthly on their expected day, which the row's date
+/// already shows.
 String recurringCadenceLabel(AppLocalizations l, RecurringTransaction item) {
   final rule = item.primaryRule;
-  if (rule == null) {
-    final day = item.expectedDayOfMonth;
-    return day == null ? l.recurringEveryMonths(1) : l.recurringMonthlyOnDay(day);
-  }
+  if (rule == null) return l.recurringEveryMonths(1);
   switch (rule.frequency) {
     case 'weekly':
       return l.recurringEveryWeeks(rule.interval);
@@ -334,15 +338,15 @@ String _statusLabel(AppLocalizations l, String status) {
   }
 }
 
-class _TotalsCard extends StatelessWidget {
-  const _TotalsCard({required this.totals});
+/// "Monthly out $x · in $y" in mono, one line per currency.
+class _MonthlySummary extends StatelessWidget {
+  const _MonthlySummary({required this.totals});
 
   final Map<String, RecurringMonthlyTotal> totals;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
     final locale = Localizations.localeOf(context).toString();
     final hidden = context.watch<PrivacyProvider>().hidden;
@@ -353,32 +357,24 @@ class _TotalsCard extends StatelessWidget {
           hidden: hidden,
         );
 
-    Widget column(String label, String Function(String) value) => Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: theme.textTheme.labelLarge
-                      ?.copyWith(color: palette.textSecondary)),
-              const SizedBox(height: 4),
-              for (final currency in currencies)
-                Text(value(currency),
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
-            ],
-          ),
-        );
-
-    return SureCard(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      padding: const EdgeInsets.all(SureSpacing.xl),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          column(l.recurringMonthlyOut,
-              (c) => money(totals[c]!.outflow, c)),
-          column(l.recurringMonthlyIn,
-              (c) => money(totals[c]!.inflow, c)),
+          for (final currency in currencies)
+            MoneyText(
+              l.ds2pMonthlySummary(
+                money(totals[currency]!.outflow, currency),
+                money(totals[currency]!.inflow, currency),
+              ),
+              key: ValueKey('recurringSummary-$currency'),
+              trend: MoneyTrend.neutral,
+              color: palette.textSecondary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13),
+            ),
         ],
       ),
     );
@@ -387,7 +383,9 @@ class _TotalsCard extends StatelessWidget {
 
 class _RecurringRow extends StatelessWidget {
   const _RecurringRow({
+    super.key,
     required this.item,
+    required this.now,
     required this.onTap,
     required this.onSetStatus,
     required this.onDelete,
@@ -395,6 +393,7 @@ class _RecurringRow extends StatelessWidget {
   });
 
   final RecurringTransaction item;
+  final DateTime now;
 
   /// True when the item belongs to a loan or credit card. Money flowing into
   /// a liability is a payment toward it, not income.
@@ -406,8 +405,8 @@ class _RecurringRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final palette = SureColors.of(context).palette;
+    final colors = SureColors.of(context);
+    final palette = colors.palette;
     final locale = Localizations.localeOf(context).toString();
     final hidden = context.watch<PrivacyProvider>().hidden;
 
@@ -420,102 +419,69 @@ class _RecurringRow extends StatelessWidget {
     final next = item.nextExpectedDate;
     final subtitle = [
       recurringCadenceLabel(l, item),
-      if (next != null) l.recurringNextDate(DateFormat.MMMd(locale).format(next)),
+      if (next != null) SureDates.short(next, locale: locale, now: now),
       item.accountName ?? l.recurringNoAccount,
       if (!item.isActive) _statusLabel(l, item.status),
     ].join(' · ');
 
-    return SureListRow(
+    // Pause an active item, resume a paused or suggested one; an ended item
+    // can only be deleted.
+    final String? statusAction = item.isActive
+        ? 'inactive'
+        : (item.status == 'ended' ? null : 'active');
+    final statusLabel = statusAction == 'inactive'
+        ? l.recurringActionPause
+        : l.ds2pResume;
+
+    final row = SureListRow(
       title: item.displayName,
       subtitle: subtitle,
+      subtitleMaxLines: 1,
       onTap: onTap,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                income ? '+$formatted' : formatted,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: income ? palette.success : palette.textPrimary,
-                ),
-              ),
-              if (income)
-                Text(l.recurringIncome,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: palette.textSecondary)),
-            ],
-          ),
-          PopupMenuButton<String>(
-            tooltip: l.recurringMoreActions(item.displayName),
-            icon: Icon(Icons.more_vert, color: palette.textSecondary),
-            onSelected: (action) {
-              switch (action) {
-                case 'edit':
-                  onTap();
-                case 'delete':
-                  onDelete();
-                default:
-                  onSetStatus(action);
-              }
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'edit', child: Text(l.recurringActionEdit)),
-              if (item.isActive)
-                PopupMenuItem(
-                    value: 'inactive', child: Text(l.recurringActionPause))
-              else if (item.status != 'ended')
-                PopupMenuItem(
-                    value: 'active', child: Text(l.recurringActionActivate)),
-              PopupMenuItem(value: 'delete', child: Text(l.commonDelete)),
-            ],
-          ),
-        ],
+      leading: Container(
+        width: SureCategoryIcon.rowSize,
+        height: SureCategoryIcon.rowSize,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: palette.surfaceInset,
+          shape: BoxShape.circle,
+        ),
+        child: SureIcon(
+          SureIcons.repeat,
+          size: 15,
+          color: palette.textSecondary,
+        ),
+      ),
+      trailing: MoneyText(
+        income ? '+$formatted' : formatted,
+        trend: income ? MoneyTrend.inflow : MoneyTrend.neutral,
+        color: income ? palette.success : palette.textPrimary,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       ),
     );
-  }
-}
 
-class _Message extends StatelessWidget {
-  const _Message({
-    required this.icon,
-    required this.title,
-    this.body,
-    this.action,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? body;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = SureColors.of(context).palette;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 64, 32, 0),
-      child: Column(
-        children: [
-          Icon(icon, size: 48, color: palette.textSubdued),
-          const SizedBox(height: SureSpacing.lg),
-          Text(title,
-              textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
-          if (body != null) ...[
-            const SizedBox(height: SureSpacing.md),
-            Text(body!,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: palette.textSecondary)),
-          ],
-          if (action != null) ...[
-            const SizedBox(height: SureSpacing.xl),
-            action!,
-          ],
+    return Semantics(
+      customSemanticsActions: {
+        if (statusAction != null)
+          CustomSemanticsAction(label: statusLabel): () =>
+              onSetStatus(statusAction),
+        CustomSemanticsAction(label: l.commonDelete): onDelete,
+      },
+      child: SureSwipeActions(
+        actions: [
+          if (statusAction != null)
+            SureSwipeAction(
+              label: statusLabel,
+              color: palette.link,
+              onPressed: () => onSetStatus(statusAction),
+            ),
+          SureSwipeAction(
+            label: l.commonDelete,
+            color: palette.destructive,
+            onPressed: onDelete,
+          ),
         ],
+        child: ColoredBox(color: palette.container, child: row),
       ),
     );
   }

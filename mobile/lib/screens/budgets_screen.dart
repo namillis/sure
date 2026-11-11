@@ -9,19 +9,18 @@ import '../providers/budgets_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../services/connectivity_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
+import '../theme/sure_tokens.dart';
 import '../widgets/budget_category_row.dart';
 import '../widgets/budget_summary_card.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
-import '../widgets/sure_chip.dart';
-import '../widgets/sure_segmented_control.dart';
+import '../widgets/ds/ds.dart';
+import '../widgets/open_on_web_action.dart';
 import 'budget_category_transactions_screen.dart';
 
-/// Monthly budget overview, matching the web Budgets page: month navigation,
-/// budgeted / actual / remaining totals and a progress bar per category, with
-/// subcategories nested under their parent. Tapping a category opens its
-/// transactions for that budget period. Read-only: budgets are edited on web.
+/// Monthly budget overview, matching the web Budgets page: month switcher,
+/// a "left to spend" hero with a progress bar, then one panel of category
+/// rows (subcategories nested under their parent) and the month's income.
+/// Tapping a category opens its transactions for that budget period.
+/// Read-only: budgets are edited on web.
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({
     super.key,
@@ -30,7 +29,7 @@ class BudgetsScreen extends StatefulWidget {
     this.embedded = false,
   });
 
-  /// True when shown inside a parent that already has its own app bar (the
+  /// True when shown inside a parent that already has its own title bar (the
   /// Plan tab), so the screen leaves out its own.
   final bool embedded;
 
@@ -39,6 +38,11 @@ class BudgetsScreen extends StatefulWidget {
 
   /// Injected for tests; defaults to [AuthProvider.getValidAccessToken].
   final Future<String?> Function()? accessTokenLoader;
+
+  /// The web budget page for the period starting [month]
+  /// (`/budgets/nov-2026`, the Rails `Budget#to_param`).
+  static String webPath(DateTime month) =>
+      '/budgets/${DateFormat('MMM-yyyy', 'en').format(month).toLowerCase()}';
 
   @override
   State<BudgetsScreen> createState() => _BudgetsScreenState();
@@ -118,9 +122,19 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           categoryIds: ids,
           startDate: budget.startDate,
           endDate: budget.endDate,
+          categoryColor: bc.category.color,
+          categoryIcon: bc.category.lucideIcon,
           accessTokenLoader: widget.accessTokenLoader,
         ),
       ),
+    );
+  }
+
+  void _openWeb(DateTime month) {
+    openWebFallback(
+      context,
+      title: AppLocalizations.of(context).budgetsTitle,
+      path: BudgetsScreen.webPath(month),
     );
   }
 
@@ -145,23 +159,26 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   Widget _buildScaffold(BuildContext context, BudgetsProvider provider) {
     final l = AppLocalizations.of(context);
     final hideAmounts = context.watch<PrivacyProvider>().hidden;
+    final children = [
+      _buildMonthHeader(context, provider),
+      ..._buildBody(context, provider, hideAmounts),
+    ];
 
+    if (!widget.embedded) {
+      return SureLargeTitleScaffold(
+        title: l.budgetsTitle,
+        onRefresh: () => _load(forceRefresh: true),
+        slivers: [SliverList.list(children: children)],
+      );
+    }
     return Scaffold(
-      appBar: widget.embedded ? null : AppBar(title: Text(l.budgetsTitle)),
+      backgroundColor: SureColors.of(context).palette.surface,
       body: RefreshIndicator(
         onRefresh: () => _load(forceRefresh: true),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            SureSpacing.xl,
-            SureSpacing.md,
-            SureSpacing.xl,
-            SureSpacing.huge,
-          ),
-          children: [
-            _buildMonthHeader(context, provider),
-            ..._buildBody(context, provider, hideAmounts),
-          ],
+          padding: const EdgeInsets.only(bottom: 32),
+          children: children,
         ),
       ),
     );
@@ -169,29 +186,47 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
 
   Widget _buildMonthHeader(BuildContext context, BudgetsProvider provider) {
     final l = AppLocalizations.of(context);
-    final textTheme = Theme.of(context).textTheme;
-    return Row(
-      children: [
+    final palette = SureColors.of(context).palette;
+    Widget chevron(String icon, String tooltip, VoidCallback? onPressed) =>
         IconButton(
-          icon: const Icon(Icons.chevron_left),
-          tooltip: l.budgetsPreviousMonth,
-          onPressed: () => _changeMonth(provider.previousMonth),
-        ),
-        Expanded(
-          child: Text(
-            _periodLabel(context, provider.month, provider.budget),
-            textAlign: TextAlign.center,
-            style: textTheme.titleMedium,
+          icon: SureIcon(
+            icon,
+            size: 20,
+            color: onPressed == null ? palette.textSubdued : palette.textPrimary,
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.chevron_right),
-          tooltip: l.budgetsNextMonth,
-          onPressed: provider.canGoNext
-              ? () => _changeMonth(provider.nextMonth)
-              : null,
-        ),
-      ],
+          tooltip: tooltip,
+          onPressed: onPressed,
+        );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          chevron(
+            SureIcons.chevronLeft,
+            l.budgetsPreviousMonth,
+            () => _changeMonth(provider.previousMonth),
+          ),
+          Expanded(
+            child: Text(
+              _periodLabel(context, provider.month, provider.budget),
+              key: const ValueKey('budgetMonthLabel'),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: SureTokens.weightSemibold,
+                color: palette.textPrimary,
+              ),
+            ),
+          ),
+          chevron(
+            SureIcons.chevronRight,
+            l.budgetsNextMonth,
+            provider.canGoNext ? () => _changeMonth(provider.nextMonth) : null,
+          ),
+        ],
+      ),
     );
   }
 
@@ -201,12 +236,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     bool hideAmounts,
   ) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
 
     if (provider.isLoading && !provider.hasLoadedMonth) {
       return const [
         Padding(
-          padding: EdgeInsets.only(top: SureSpacing.huge * 3),
+          padding: EdgeInsets.only(top: 120),
           child: Center(child: CircularProgressIndicator()),
         ),
       ];
@@ -218,32 +252,30 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     switch (provider.refreshFailed ? null : provider.error) {
       case BudgetsLoadError.offline:
         return [
-          _message(
-            context,
-            icon: Icons.cloud_off_outlined,
+          _state(SureEmptyState(
+            icon: SureIcons.cloudOff,
             title: l.budgetsOfflineTitle,
             body: l.budgetsOfflineMessage,
-            onRetry: () => _load(forceRefresh: true),
-          ),
+            secondaryLabel: l.commonTryAgain,
+            onSecondary: () => _load(forceRefresh: true),
+          )),
         ];
       case BudgetsLoadError.unauthorized:
         return [
-          _message(
-            context,
-            icon: Icons.lock_outline,
+          _state(SureEmptyState(
+            icon: SureIcons.circleAlert,
             title: l.budgetsLoadFailed,
             body: l.budgetsSessionExpired,
-          ),
+          )),
         ];
       case BudgetsLoadError.failed:
         return [
-          _message(
-            context,
-            icon: Icons.error_outline,
+          _state(SureEmptyState(
+            icon: SureIcons.circleAlert,
             title: l.budgetsLoadFailed,
-            body: null,
-            onRetry: () => _load(forceRefresh: true),
-          ),
+            secondaryLabel: l.commonTryAgain,
+            onSecondary: () => _load(forceRefresh: true),
+          )),
         ];
       case null:
         break;
@@ -254,78 +286,50 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     final budget = provider.budget;
     if (budget == null) {
       final locale = Localizations.localeOf(context).toString();
+      final month = provider.month;
+      // "November" this year, "November 2025" otherwise.
+      final monthLabel = month.year == provider.today.year
+          ? DateFormat.MMMM(locale).format(month)
+          : DateFormat.yMMMM(locale).format(month);
       return [
-        _message(
-          context,
-          icon: Icons.pie_chart_outline,
-          title: l.budgetsNoBudgetTitle(
-            DateFormat.yMMMM(locale).format(provider.month),
-          ),
-          body: l.budgetsNoBudgetMessage,
-        ),
+        _state(SureEmptyState(
+          icon: SureIcons.chartPie,
+          title: l.budgetsNoBudgetTitle(monthLabel),
+          body: l.ds2pNoBudgetBody,
+          primaryLabel: l.ds2pSetUpOnWeb,
+          onPrimary: () => _openWeb(month),
+        )),
       ];
     }
 
     final widgets = <Widget>[];
+    const bannerMargin = EdgeInsets.fromLTRB(16, 4, 16, 8);
 
     if (provider.showingCachedWhileOffline) {
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: SureSpacing.lg),
-          child: Row(
-            children: [
-              Icon(Icons.cloud_off_outlined,
-                  size: 16, color: palette.textSecondary),
-              const SizedBox(width: SureSpacing.sm),
-              Expanded(
-                child: Text(
-                  l.budgetsOfflineCached,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: palette.textSecondary),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      widgets.add(SureBanner(
+        icon: SureIcons.cloudOff,
+        message: l.budgetsOfflineCached,
+        margin: bannerMargin,
+      ));
     }
 
     if (provider.refreshFailed) {
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: SureSpacing.lg),
-          child: Row(
-            children: [
-              Icon(Icons.error_outline, size: 16, color: palette.textSecondary),
-              const SizedBox(width: SureSpacing.sm),
-              Expanded(
-                child: Text(
-                  l.budgetsRefreshFailed,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: palette.textSecondary),
-                ),
-              ),
-              TextButton(
-                onPressed: () => _load(forceRefresh: true),
-                child: Text(l.commonTryAgain),
-              ),
-            ],
-          ),
-        ),
-      );
+      widgets.add(SureBanner(
+        icon: SureIcons.circleAlert,
+        message: l.budgetsRefreshFailed,
+        actionLabel: l.commonTryAgain,
+        onAction: () => _load(forceRefresh: true),
+        margin: bannerMargin,
+      ));
     }
 
     if (provider.monthBudgets.length > 1) {
       widgets.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: SureSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: Wrap(
-            spacing: SureSpacing.md,
-            runSpacing: SureSpacing.md,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               for (var i = 0; i < provider.monthBudgets.length; i++)
                 SureChip(
@@ -340,27 +344,48 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     }
 
     if (provider.isLoading) {
-      widgets.add(const LinearProgressIndicator(minHeight: 2));
-      widgets.add(const SizedBox(height: SureSpacing.md));
+      widgets.add(const Padding(
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: LinearProgressIndicator(minHeight: 2),
+      ));
     }
 
-    widgets.add(BudgetSummaryCard(budget: budget, hideAmounts: hideAmounts));
+    widgets.add(BudgetSummaryCard(
+      budget: budget,
+      hideAmounts: hideAmounts,
+      now: provider.today,
+    ));
 
     if (!budget.initialized) {
-      widgets.add(const SizedBox(height: SureSpacing.lg));
-      widgets.add(
-        _message(
-          context,
-          icon: Icons.tune,
-          title: null,
-          body: l.budgetsNotSetUpMessage,
+      widgets.add(Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: Text(
+          l.budgetsNotSetUpMessage,
+          style: TextStyle(
+            fontSize: 13,
+            color: SureColors.of(context).palette.textSecondary,
+          ),
         ),
-      );
+      ));
     }
 
     widgets.addAll(_buildCategories(context, provider, budget, hideAmounts));
+
+    if (budget.hasDerivedAmounts) {
+      // One row in the category style; its title names it, so no header.
+      widgets.add(const SizedBox(height: 16));
+      widgets.add(SurePanel.rows(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        children: [BudgetIncomeRow(budget: budget, hideAmounts: hideAmounts)],
+      ));
+    }
     return widgets;
   }
+
+  Widget _state(Widget child) => Padding(
+        padding: const EdgeInsets.only(top: 48),
+        child: Center(child: child),
+      );
 
   List<Widget> _buildCategories(
     BuildContext context,
@@ -376,9 +401,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
 
     final rows = <Widget>[];
     void addRow(BudgetCategory bc, List<String> ids, {bool indented = false}) {
-      if (rows.isNotEmpty) {
-        rows.add(Divider(height: 1, color: palette.borderSecondary));
-      }
       rows.add(
         BudgetCategoryRow(
           key: ValueKey('budget-category-${bc.id}'),
@@ -414,17 +436,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     }
 
     return [
-      const SizedBox(height: SureSpacing.xxxl),
-      Padding(
-        padding: const EdgeInsets.only(bottom: SureSpacing.md),
-        child: Text(
-          l.budgetsCategoriesTitle,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+      _WebLinkSectionHeader(
+        label: l.budgetsCategoriesTitle,
+        linkLabel: l.ds2pEditOnWeb,
+        onLink: () => _openWeb(budget.startDate),
       ),
       if (overCount > 0)
         Padding(
-          padding: const EdgeInsets.only(bottom: SureSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: SureSegmentedControl<_CategoryFilter>(
             segments: [
               SureSegment(value: _CategoryFilter.all, label: l.commonAll),
@@ -438,63 +457,90 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           ),
         ),
       if (rows.isEmpty)
-        _message(
-          context,
-          icon: Icons.category_outlined,
-          title: null,
-          body: l.budgetsNoCategories,
+        SurePanel(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(14),
+          child: Text(
+            l.budgetsNoCategories,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: palette.textSecondary),
+          ),
         )
       else
-        SureCard(
-          padding: EdgeInsets.zero,
-          child: Column(children: rows),
+        SurePanel.rows(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          dividerIndent: SurePanel.iconRowDividerIndent,
+          children: rows,
         ),
     ];
   }
+}
 
-  Widget _message(
-    BuildContext context, {
-    required IconData icon,
-    required String? title,
-    String? body,
-    VoidCallback? onRetry,
-  }) {
-    final l = AppLocalizations.of(context);
+/// A [SureSectionHeader]-styled header whose trailing link ends in a small
+/// arrow-up-right, for links that leave the app.
+///
+/// Gap: SureSectionHeader takes an action label or an action icon, not both.
+class _WebLinkSectionHeader extends StatelessWidget {
+  const _WebLinkSectionHeader({
+    required this.label,
+    required this.linkLabel,
+    required this.onLink,
+  });
+
+  final String label;
+  final String linkLabel;
+  final VoidCallback onLink;
+
+  @override
+  Widget build(BuildContext context) {
     final palette = SureColors.of(context).palette;
-    final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: EdgeInsets.only(
-        top: title == null ? 0 : SureSpacing.huge * 2,
-      ),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+      child: Row(
         children: [
-          Icon(icon, size: title == null ? 32 : 56, color: palette.textSubdued),
-          if (title != null) ...[
-            const SizedBox(height: SureSpacing.xl),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: textTheme.titleMedium,
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: SureTokens.weightMedium,
+                  color: palette.textSecondary,
+                ),
+              ),
             ),
-          ],
-          if (body != null && body.isNotEmpty) ...[
-            const SizedBox(height: SureSpacing.md),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style:
-                  textTheme.bodyMedium?.copyWith(color: palette.textSecondary),
+          ),
+          const SizedBox(width: 12),
+          Semantics(
+            button: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onLink,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 32),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      linkLabel,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: SureTokens.weightMedium,
+                        color: palette.link,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    SureIcon(SureIcons.arrowUpRight,
+                        size: 13, color: palette.link),
+                  ],
+                ),
+              ),
             ),
-          ],
-          if (onRetry != null) ...[
-            const SizedBox(height: SureSpacing.xl),
-            SureButton(
-              label: l.commonTryAgain,
-              onPressed: onRetry,
-              variant: SureButtonVariant.outline,
-              size: SureButtonSize.sm,
-            ),
-          ],
+          ),
         ],
       ),
     );

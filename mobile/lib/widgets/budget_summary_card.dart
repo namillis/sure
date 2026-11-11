@@ -3,17 +3,120 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/budget.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../theme/sure_tokens.dart';
 import '../utils/money_masker.dart';
 import 'budget_progress_bar.dart';
-import 'money_text.dart';
-import 'sure_card.dart';
+import 'ds/ds.dart';
 
-/// Month totals for a budget: budgeted, actual and remaining spending with an
-/// overall progress bar, plus actual vs. expected income.
+/// The Budget hero: "$2,140.00 left" (or "$120.00 over"), the mono line
+/// "$2,860.00 spent of $5,000.00 · 19 days left" (days left only for the
+/// current period) and a 6 px progress bar (success, warning at 90%,
+/// destructive when over).
 class BudgetSummaryCard extends StatelessWidget {
   const BudgetSummaryCard({
+    super.key,
+    required this.budget,
+    required this.hideAmounts,
+    this.now,
+  });
+
+  final Budget budget;
+  final bool hideAmounts;
+
+  /// Today, for the days-left count. Defaults to [DateTime.now].
+  final DateTime? now;
+
+  String _money(String? formatted) =>
+      MoneyMasker.mask(formatted ?? '--', hidden: hideAmounts);
+
+  /// Days from today to the period's last day, or null when [budget] is not
+  /// the current period.
+  static int? daysLeft(Budget budget, DateTime now) {
+    if (!budget.current) return null;
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final end = DateTime.utc(
+        budget.endDate.year, budget.endDate.month, budget.endDate.day);
+    final days = end.difference(today).inDays;
+    return days < 0 ? null : days;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final over = budget.isOverBudget;
+    final available = budget.availableToSpend;
+    final heroAmount = _money(
+      over ? available?.replaceFirst(RegExp('^[-\u2212]'), '') : available,
+    );
+    final days = daysLeft(budget, now ?? DateTime.now());
+    final subtitle = [
+      l.ds2pSpentOf(
+        _money(budget.actualSpending),
+        _money(budget.budgetedSpending),
+      ),
+      if (days != null) l.ds2pDaysLeft(days),
+    ].join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            key: const ValueKey('budgetHeroAmount'),
+            TextSpan(children: [
+              TextSpan(
+                text: heroAmount,
+                style: SureMoney.tabular(TextStyle(
+                  fontSize: 32,
+                  height: 1.2,
+                  fontWeight: SureTokens.weightSemibold,
+                  color: over ? palette.destructive : palette.textPrimary,
+                )),
+              ),
+              TextSpan(
+                text: ' ${over ? l.ds2pOver : l.ds2pLeft}',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: palette.textSecondary,
+                ),
+              ),
+            ]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            key: const ValueKey('budgetHeroSubtitle'),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: SureMoney.tabular(TextStyle(
+              fontSize: 13,
+              color: palette.textSecondary,
+            )),
+          ),
+          if (budget.initialized) ...[
+            const SizedBox(height: 12),
+            BudgetProgressBar(
+              fraction: budget.spentFraction,
+              overBudget: over,
+              nearLimit: budget.isNearLimit,
+              hidden: hideAmounts,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The month's income as a row in the Categories style: "$5,200 / $5,000"
+/// (actual / expected) with a success bar toward the expected amount.
+class BudgetIncomeRow extends StatelessWidget {
+  const BudgetIncomeRow({
     super.key,
     required this.budget,
     required this.hideAmounts,
@@ -28,141 +131,90 @@ class BudgetSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
-    final textTheme = Theme.of(context).textTheme;
-    final over = budget.isOverBudget;
+    final colors = SureColors.of(context);
+    final palette = colors.palette;
+    final expected = budget.expectedIncome;
+    final expectedCents = budget.expectedIncomeCents ?? 0;
+    final mono = SureMoney.tabular(TextStyle(
+      fontSize: 13,
+      fontWeight: SureTokens.weightMedium,
+      color: palette.success,
+    ));
 
-    return SureCard(
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _Stat(
-                  label: l.budgetsBudgeted,
-                  value: _money(budget.budgetedSpending),
-                ),
-              ),
-              Expanded(
-                child: _Stat(
-                  label: l.budgetsActual,
-                  value: _money(budget.actualSpending),
-                ),
-              ),
-              Expanded(
-                child: _Stat(
-                  label: l.budgetsRemaining,
-                  value: _money(budget.availableToSpend),
-                  valueColor: over ? palette.destructive : null,
-                  alignEnd: true,
-                ),
-              ),
-            ],
-          ),
-          if (budget.initialized) ...[
-            const SizedBox(height: SureSpacing.lg),
-            BudgetProgressBar(
-              fraction: budget.spentFraction,
-              overBudget: over,
-              nearLimit: budget.isNearLimit,
-              hidden: hideAmounts,
-              height: 8,
+          Container(
+            width: SureCategoryIcon.rowSize,
+            height: SureCategoryIcon.rowSize,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: palette.success
+                  .withValues(alpha: colors.isDark ? 0.18 : 0.14),
+              shape: BoxShape.circle,
             ),
-          ],
-          const SizedBox(height: SureSpacing.lg),
-          Divider(height: 1, color: palette.borderSecondary),
-          const SizedBox(height: SureSpacing.lg),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l.budgetsIncome,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: palette.textSecondary,
-                ),
-              ),
-              const SizedBox(width: SureSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    MoneyText(
-                      _money(budget.actualIncome),
-                      trend: MoneyTrend.inflow,
-                      textAlign: TextAlign.end,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodyMedium?.copyWith(
-                        fontWeight: SureTokens.weightMedium,
-                      ),
-                    ),
-                    if (budget.expectedIncome != null)
-                      Text(
-                        l.budgetsExpectedIncome(_money(budget.expectedIncome)),
-                        textAlign: TextAlign.end,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: SureMoney.tabular(
-                          textTheme.bodySmall?.copyWith(
-                            color: palette.textSubdued,
+            child: SureIcon(SureIcons.trendingUp,
+                size: 15, color: palette.success),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: SureCategoryIcon.rowSize,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l.budgetsIncome,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: SureTokens.weightMedium,
+                            color: palette.textPrimary,
                           ),
                         ),
                       ),
-                  ],
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text.rich(
+                          key: const ValueKey('budgetIncomeAmount'),
+                          TextSpan(style: mono, children: [
+                            TextSpan(text: _money(budget.actualIncome)),
+                            if (expected != null)
+                              TextSpan(
+                                text: ' / ${_money(expected)}',
+                                style: mono.copyWith(
+                                  color: palette.textSubdued,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                          ]),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                if (expectedCents > 0) ...[
+                  const SizedBox(height: 6),
+                  BudgetProgressBar(
+                    fraction: (budget.actualIncomeCents ?? 0) / expectedCents,
+                    hidden: hideAmounts,
+                    height: 4,
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.label,
-    required this.value,
-    this.valueColor,
-    this.alignEnd = false,
-  });
-
-  final String label;
-  final String value;
-  final Color? valueColor;
-  final bool alignEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: textTheme.bodySmall?.copyWith(color: palette.textSecondary),
-        ),
-        const SizedBox(height: SureSpacing.xs),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: alignEnd
-              ? AlignmentDirectional.centerEnd
-              : AlignmentDirectional.centerStart,
-          child: Text(
-            value,
-            maxLines: 1,
-            style: SureMoney.tabular(
-              textTheme.titleMedium?.copyWith(
-                fontWeight: SureTokens.weightSemibold,
-                color: valueColor ?? palette.textPrimary,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -7,20 +6,15 @@ import '../models/account.dart';
 import '../models/transaction.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
-import '../providers/privacy_provider.dart';
 import '../services/budgets_service.dart';
 import '../services/transactions_service.dart';
-import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../theme/sure_tokens.dart';
-import '../utils/money_masker.dart';
-import '../widgets/money_text.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/sure_button.dart';
 
 /// Transactions behind one budget line: the category (and, for a parent, its
 /// subcategories) within the budget's date range, newest first, paged from
 /// `GET /api/v1/transactions` with `category_ids[]`, `start_date` and
-/// `end_date`.
+/// `end_date`. Rows are grouped by day under a large title.
 class BudgetCategoryTransactionsScreen extends StatefulWidget {
   const BudgetCategoryTransactionsScreen({
     super.key,
@@ -29,6 +23,8 @@ class BudgetCategoryTransactionsScreen extends StatefulWidget {
     required this.categoryIds,
     required this.startDate,
     required this.endDate,
+    this.categoryColor,
+    this.categoryIcon,
     this.service,
     this.accessTokenLoader,
   });
@@ -38,6 +34,11 @@ class BudgetCategoryTransactionsScreen extends StatefulWidget {
   final List<String> categoryIds;
   final DateTime startDate;
   final DateTime endDate;
+
+  /// The budget category's `#rrggbb` color and Lucide icon, for the rows'
+  /// category icons (the transactions payload has neither).
+  final String? categoryColor;
+  final String? categoryIcon;
 
   /// Injected for tests.
   final TransactionsService? service;
@@ -126,43 +127,96 @@ class _BudgetCategoryTransactionsScreenState
     });
   }
 
+  Map<String, Account> _accountsById() {
+    try {
+      return {
+        for (final account in context.read<AccountsProvider>().accounts)
+          account.id: account,
+      };
+    } on ProviderNotFoundException {
+      // Account names are optional context; the rows still render.
+      return const {};
+    }
+  }
+
+  /// Consecutive transactions on the same day, in server order.
+  static List<({DateTime? day, String raw, List<Transaction> rows})> _byDay(
+      List<Transaction> transactions) {
+    final days = <({DateTime? day, String raw, List<Transaction> rows})>[];
+    for (final t in transactions) {
+      if (days.isNotEmpty && days.last.raw == t.date) {
+        days.last.rows.add(t);
+      } else {
+        days.add((day: SureDates.parseDay(t.date), raw: t.date, rows: [t]));
+      }
+    }
+    return days;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
-    final hideAmounts = context.watch<PrivacyProvider>().hidden;
 
-    Widget body;
+    final List<Widget> slivers;
     if (_loading && _transactions.isEmpty) {
-      body = const Center(child: CircularProgressIndicator());
-    } else if (_failed && _transactions.isEmpty) {
-      body = _centered(
-        context,
-        Icons.error_outline,
-        l.budgetCategoryTransactionsLoadFailed,
-        action: SureButton(
-          label: l.commonTryAgain,
-          onPressed: () => _loadPage(reset: true),
-          variant: SureButtonVariant.outline,
-          size: SureButtonSize.sm,
+      slivers = const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
         ),
-      );
+      ];
+    } else if (_failed && _transactions.isEmpty) {
+      slivers = [
+        _centered(SureEmptyState(
+          icon: SureIcons.circleAlert,
+          title: l.budgetCategoryTransactionsLoadFailed,
+          secondaryLabel: l.commonTryAgain,
+          onSecondary: () => _loadPage(reset: true),
+        )),
+      ];
     } else if (_transactions.isEmpty) {
-      body = _centered(
-        context,
-        Icons.receipt_long_outlined,
-        l.budgetCategoryTransactionsEmpty(widget.periodLabel),
-      );
+      slivers = [
+        _centered(SureEmptyState(
+          icon: SureIcons.receipt,
+          title: l.budgetCategoryTransactionsEmpty(widget.periodLabel),
+        )),
+      ];
     } else {
-      body = ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _transactions.length + (_hasMore || _failed ? 1 : 0),
-        separatorBuilder: (_, __) =>
-            Divider(height: 1, color: palette.borderSecondary),
-        itemBuilder: (context, index) {
-          if (index >= _transactions.length) {
-            return Padding(
-              padding: const EdgeInsets.all(SureSpacing.xl),
+      final accounts = _accountsById();
+      final days = _byDay(_transactions);
+      slivers = [
+        SliverList.builder(
+          itemCount: days.length,
+          itemBuilder: (context, index) {
+            final day = days[index];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (day.day != null)
+                  SureDayHeader.forDay(context, day.day!, background: false)
+                else
+                  SureDayHeader(label: day.raw, background: false),
+                SurePanel.rows(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  dividerIndent: SurePanel.iconRowDividerIndent,
+                  children: [
+                    for (final t in day.rows)
+                      SureTransactionRow(
+                        transaction: t,
+                        account: accounts[t.accountId],
+                        categoryColor: widget.categoryColor,
+                        categoryIcon: widget.categoryIcon,
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+        if (_hasMore || _failed)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Center(
                 child: SureButton(
                   label: _failed
@@ -176,135 +230,21 @@ class _BudgetCategoryTransactionsScreenState
                   size: SureButtonSize.sm,
                 ),
               ),
-            );
-          }
-          return _TransactionTile(
-            transaction: _transactions[index],
-            hideAmounts: hideAmounts,
-          );
-        },
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.title),
-            Text(
-              widget.periodLabel,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: palette.textSecondary),
             ),
-          ],
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => _loadPage(reset: true),
-        child: body,
-      ),
-    );
-  }
-
-  Widget _centered(
-    BuildContext context,
-    IconData icon,
-    String message, {
-    Widget? action,
-  }) {
-    final palette = SureColors.of(context).palette;
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(SureSpacing.xxxl),
-      children: [
-        const SizedBox(height: SureSpacing.huge * 2),
-        Icon(icon, size: 56, color: palette.textSubdued),
-        const SizedBox(height: SureSpacing.xl),
-        Text(
-          message,
-          textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: palette.textSecondary),
-        ),
-        if (action != null) ...[
-          const SizedBox(height: SureSpacing.xl),
-          Center(child: action),
-        ],
-      ],
-    );
-  }
-}
-
-class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({
-    required this.transaction,
-    required this.hideAmounts,
-  });
-
-  final Transaction transaction;
-  final bool hideAmounts;
-
-  Account? _account(BuildContext context) {
-    try {
-      final accounts = context.read<AccountsProvider>().accounts;
-      for (final account in accounts) {
-        if (account.id == transaction.accountId) return account;
-      }
-    } on ProviderNotFoundException {
-      // Account names are optional context; the tile still renders.
+          ),
+      ];
     }
-    return null;
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final palette = SureColors.of(context).palette;
-    final textTheme = Theme.of(context).textTheme;
-    final locale = Localizations.localeOf(context).toString();
-    final isIncome = transaction.isIncome;
-    final trend = isIncome ? MoneyTrend.inflow : MoneyTrend.outflow;
-    final magnitude =
-        transaction.amount.replaceFirst(RegExp('^[-\u2212+]'), '');
-    final amount = '${isIncome ? '+' : '-'}$magnitude';
-
-    final date = DateTime.tryParse(transaction.date);
-    final subtitleParts = <String>[
-      if (date != null) DateFormat.yMMMd(locale).format(date),
-      if (_account(context)?.name case final String name) name,
-      if (transaction.categoryName case final String category) category,
-    ];
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: SureSpacing.xl,
-        vertical: SureSpacing.xs,
-      ),
-      title: Text(
-        transaction.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: textTheme.bodyLarge?.copyWith(
-          fontWeight: SureTokens.weightMedium,
-        ),
-      ),
-      subtitle: Text(
-        subtitleParts.join(' · '),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: textTheme.bodySmall?.copyWith(color: palette.textSecondary),
-      ),
-      trailing: MoneyText(
-        MoneyMasker.mask(amount, hidden: hideAmounts),
-        trend: trend,
-        style: textTheme.bodyLarge?.copyWith(
-          fontWeight: SureTokens.weightMedium,
-        ),
-      ),
+    return SureLargeTitleScaffold(
+      title: widget.title,
+      subtitle: widget.periodLabel,
+      onRefresh: () => _loadPage(reset: true),
+      slivers: slivers,
     );
   }
+
+  Widget _centered(Widget state) => SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(child: state),
+      );
 }

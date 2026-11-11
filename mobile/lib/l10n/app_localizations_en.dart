@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -3565,4 +3566,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dshAddTransaction => 'Add';
+
+  @override
+  String get ds2pNoLimit => 'no limit';
+
+  @override
+  String ds2pOverBy(String amount) {
+    return 'Over by $amount';
+  }
+
+  @override
+  String get ds2pLeft => 'left';
+
+  @override
+  String get ds2pOver => 'over';
+
+  @override
+  String ds2pSpentOf(String spent, String budgeted) {
+    return '$spent spent of $budgeted';
+  }
+
+  @override
+  String ds2pDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ds2pNoBudgetBody =>
+      'Budgets are set up on the web. They show here once they exist.';
+
+  @override
+  String get ds2pSetUpOnWeb => 'Set up on the web';
+
+  @override
+  String get ds2pEditOnWeb => 'Edit on web';
+
+  @override
+  String ds2pMonthlySummary(String outflow, String inflow) {
+    return 'Monthly out $outflow · in $inflow';
+  }
+
+  @override
+  String get ds2pResume => 'Resume';
 }
