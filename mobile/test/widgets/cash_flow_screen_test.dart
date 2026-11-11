@@ -314,7 +314,8 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
-  testWidgets('Settings Tools section links to Cash Flow', (tester) async {
+  testWidgets('Settings Tools section no longer lists Cash Flow',
+      (tester) async {
     usePhoneSurface(tester);
     await tester.pumpWidget(ChangeNotifierProvider<PrivacyProvider>.value(
       value: PrivacyProvider(initialHidden: false),
@@ -327,15 +328,9 @@ void main() {
         ),
       ),
     ));
-    expect(find.text('Cash Flow'), findsOneWidget);
-    expect(
-        find.text('Income, spending and savings by category'), findsOneWidget);
-
-    await tester.tap(find.text('Cash Flow'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(CashFlowScreen), findsOneWidget);
-    expect(find.byType(SettingsLinkGroups), findsNothing);
+    // Reports on Home replaces it.
+    expect(find.text('Account Calendar'), findsOneWidget);
+    expect(find.text('Cash Flow'), findsNothing);
   });
 
   testWidgets('This month and Last month follow the family month start day',

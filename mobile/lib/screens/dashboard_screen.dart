@@ -20,12 +20,14 @@ import '../theme/sure_spacing.dart';
 import '../theme/sure_tokens.dart';
 import '../theme/sure_typography.dart';
 import 'portfolio_screen.dart';
+import 'reports_screen.dart';
 import 'transaction_form_screen.dart';
 import 'transactions_list_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/insights_card.dart';
 import '../widgets/investments_summary_card.dart';
 import '../widgets/spending_vs_normal_card.dart';
+import '../widgets/sure_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -416,6 +418,44 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Home entry to the Reports screen, styled like the cards above it.
+  Widget _buildReportsCard(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final palette = SureColors.of(context).palette;
+    return SureCard(
+      key: const ValueKey('homeReportsCard'),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ReportsScreen()),
+      ),
+      child: Semantics(
+        button: true,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.p3rpTitle,
+                    style: theme.textTheme.labelLarge
+                        ?.copyWith(color: palette.textSecondary),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(l.p3rpHomeSubtitle, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: palette.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleAccountSwipe(Account account) async {
     await Navigator.push(
       context,
@@ -588,6 +628,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     key: ValueKey('spending-$_homeRefreshCount'),
                   ),
                 ),
+                SliverToBoxAdapter(child: _buildReportsCard(context)),
 
                 // Investments entry point, when there is anything to show
                 if (_investmentAccounts(accountsProvider).isNotEmpty)
