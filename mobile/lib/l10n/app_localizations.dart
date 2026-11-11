@@ -134,12 +134,6 @@ abstract class AppLocalizations {
   /// **'All'**
   String get commonAll;
 
-  /// Generic refresh action label.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get commonRefresh;
-
   /// Generic close/dismiss action label.
   ///
   /// In en, this message translates to:
@@ -248,12 +242,6 @@ abstract class AppLocalizations {
   /// **'Assistant'**
   String get navAssistant;
 
-  /// Bottom navigation label for the More tab.
-  ///
-  /// In en, this message translates to:
-  /// **'More'**
-  String get navMore;
-
   /// Snackbar message when a sync attempt fails.
   ///
   /// In en, this message translates to:
@@ -301,18 +289,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No accounts yet'**
   String get dashboardNoAccounts;
-
-  /// Empty state subtitle when no accounts exist.
-  ///
-  /// In en, this message translates to:
-  /// **'Add accounts in the web app to see them here.'**
-  String get dashboardNoAccountsSubtitle;
-
-  /// Empty state when the active account filter returns no results.
-  ///
-  /// In en, this message translates to:
-  /// **'No accounts match the current filter'**
-  String get dashboardFilterEmpty;
 
   /// Title for the chat list screen / app bar.
   ///
@@ -398,18 +374,6 @@ abstract class AppLocalizations {
   /// **'Amount'**
   String get transactionFormAmountLabel;
 
-  /// Validation error when amount is empty.
-  ///
-  /// In en, this message translates to:
-  /// **'Amount is required'**
-  String get transactionFormAmountRequired;
-
-  /// Validation error when amount is not a number.
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a valid amount'**
-  String get transactionFormAmountInvalid;
-
   /// Label for the date picker field.
   ///
   /// In en, this message translates to:
@@ -428,12 +392,6 @@ abstract class AppLocalizations {
   /// **'Category'**
   String get transactionFormCategoryLabel;
 
-  /// App bar title for the edit-transaction screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Transaction'**
-  String get transactionEditTitle;
-
   /// Label for the name field in the edit form.
   ///
   /// In en, this message translates to:
@@ -445,12 +403,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name is required'**
   String get transactionEditNameRequired;
-
-  /// Label for the notes field in the edit form.
-  ///
-  /// In en, this message translates to:
-  /// **'Notes'**
-  String get transactionEditNotesLabel;
 
   /// Label for the category field in the edit form.
   ///
@@ -469,12 +421,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tags'**
   String get transactionEditTagsLabel;
-
-  /// In-progress label shown on the save button while saving.
-  ///
-  /// In en, this message translates to:
-  /// **'Saving…'**
-  String get transactionEditSaving;
 
   /// Title for the single-transaction delete confirmation dialog.
   ///
@@ -499,12 +445,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete the selected transactions?'**
   String get transactionsListDeleteMultiContent;
-
-  /// Empty-state message when no transactions exist.
-  ///
-  /// In en, this message translates to:
-  /// **'No transactions'**
-  String get transactionsListEmpty;
 
   /// Snackbar message when the API returns an auth failure.
   ///
@@ -608,41 +548,17 @@ abstract class AppLocalizations {
   /// **'Display'**
   String get settingsSectionDisplay;
 
-  /// Settings section header for server/connection options.
-  ///
-  /// In en, this message translates to:
-  /// **'Connection'**
-  String get settingsSectionConnection;
-
-  /// Settings section header for data import/export options.
-  ///
-  /// In en, this message translates to:
-  /// **'Data Management'**
-  String get settingsSectionDataManagement;
-
   /// Settings section header for security options.
   ///
   /// In en, this message translates to:
   /// **'Security'**
   String get settingsSectionSecurity;
 
-  /// Settings section header for destructive actions.
-  ///
-  /// In en, this message translates to:
-  /// **'Danger Zone'**
-  String get settingsSectionDangerZone;
-
   /// Label for the theme picker setting.
   ///
   /// In en, this message translates to:
   /// **'Theme'**
   String get settingsThemeLabel;
-
-  /// Theme option: follow system setting.
-  ///
-  /// In en, this message translates to:
-  /// **'System'**
-  String get settingsThemeSystem;
 
   /// Theme option: light mode.
   ///
@@ -656,47 +572,11 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get settingsThemeDark;
 
-  /// Label for the custom proxy headers setting.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom Proxy Headers'**
-  String get settingsProxyHeadersLabel;
-
   /// Label for the toggle that masks monetary amounts across the app.
   ///
   /// In en, this message translates to:
   /// **'Hide amounts'**
   String get settingsPrivacyHideAmountsLabel;
-
-  /// Subtitle describing the hide-amounts toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Mask money values across the app'**
-  String get settingsPrivacyHideAmountsContent;
-
-  /// Label for the biometric lock toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Biometric Lock'**
-  String get settingsBiometricLabel;
-
-  /// Title of the dialog to enable biometric lock.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable biometric lock?'**
-  String get settingsBiometricEnable;
-
-  /// Body text of the enable-biometric dialog.
-  ///
-  /// In en, this message translates to:
-  /// **'Require biometric authentication when resuming the app.'**
-  String get settingsBiometricEnableContent;
-
-  /// Label for the check-for-updates action.
-  ///
-  /// In en, this message translates to:
-  /// **'Check for Updates'**
-  String get settingsCheckForUpdates;
 
   /// Title for the update-available dialog.
   ///
@@ -752,12 +632,6 @@ abstract class AppLocalizations {
   /// **'Clear Data'**
   String get settingsClearData;
 
-  /// Snackbar after local data is cleared.
-  ///
-  /// In en, this message translates to:
-  /// **'Local data cleared'**
-  String get settingsClearDataSuccess;
-
   /// Title for the delete-account confirmation dialog.
   ///
   /// In en, this message translates to:
@@ -787,12 +661,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign Out'**
   String get settingsSignOut;
-
-  /// Label for the debug logs navigation tile.
-  ///
-  /// In en, this message translates to:
-  /// **'Debug Logs'**
-  String get settingsDebugLogs;
 
   /// App bar title for the SSO onboarding screen.
   ///
@@ -1112,12 +980,6 @@ abstract class AppLocalizations {
   /// **'No logs yet'**
   String get logViewerEmpty;
 
-  /// Message shown in the connectivity banner when the device has no network.
-  ///
-  /// In en, this message translates to:
-  /// **'You are offline'**
-  String get connectivityOffline;
-
   /// Connectivity banner message showing how many transactions are queued for sync.
   ///
   /// In en, this message translates to:
@@ -1159,12 +1021,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove header'**
   String get proxyHeadersRemove;
-
-  /// Tooltip for the refresh button on the account detail header.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh account details'**
-  String get accountDetailRefreshTooltip;
 
   /// Fallback label when a holding has no name.
   ///
@@ -1274,59 +1130,17 @@ abstract class AppLocalizations {
   /// **'Failed to save custom proxy headers.'**
   String get settingsProxyHeadersSaveFailed;
 
-  /// App version list tile title on the settings screen.
-  ///
-  /// In en, this message translates to:
-  /// **'App Version: {version}'**
-  String settingsAppVersion(String version);
-
-  /// Subtitle for the check-for-updates list tile.
-  ///
-  /// In en, this message translates to:
-  /// **'See if a newer version is available'**
-  String get settingsCheckForUpdatesSubtitle;
-
   /// Title for the contact-us list tile on the settings screen.
   ///
   /// In en, this message translates to:
   /// **'Contact us'**
   String get settingsContactUs;
 
-  /// Accessibility label for the debug logs list tile.
-  ///
-  /// In en, this message translates to:
-  /// **'Open debug logs'**
-  String get settingsDebugLogsSemantics;
-
-  /// Subtitle for the debug logs list tile.
-  ///
-  /// In en, this message translates to:
-  /// **'View app diagnostic logs'**
-  String get settingsDebugLogsSubtitle;
-
-  /// Title for the group-by-account-type toggle on the settings screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Group by Account Type'**
-  String get settingsGroupByAccountType;
-
-  /// Subtitle for the group-by-account-type toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Group accounts by type (Crypto, Bank, etc.)'**
-  String get settingsGroupByAccountTypeSubtitle;
-
   /// Title for the custom proxy headers list tile on the settings screen.
   ///
   /// In en, this message translates to:
   /// **'Custom proxy headers'**
   String get settingsProxyHeadersTileTitle;
-
-  /// Subtitle for the custom proxy headers list tile when no headers are configured.
-  ///
-  /// In en, this message translates to:
-  /// **'Optional headers for a reverse proxy or auth gateway'**
-  String get settingsProxyHeadersTileSubtitleEmpty;
 
   /// Subtitle for the custom proxy headers list tile when headers are configured.
   ///
@@ -1550,12 +1364,6 @@ abstract class AppLocalizations {
   /// **'Current merchant'**
   String get transactionEditCurrentMerchant;
 
-  /// Message shown when no tags are available to select in the edit form.
-  ///
-  /// In en, this message translates to:
-  /// **'No tags available'**
-  String get transactionEditNoTags;
-
   /// Fallback label for a selected tag whose name is unknown.
   ///
   /// In en, this message translates to:
@@ -1567,18 +1375,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only synced transactions can be edited from mobile.'**
   String get transactionEditSyncedOnly;
-
-  /// Helper text under the category dropdown in the edit form.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a replacement category'**
-  String get transactionEditCategoryHelper;
-
-  /// Helper text under the merchant dropdown in the edit form.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a replacement merchant'**
-  String get transactionEditMerchantHelper;
 
   /// Snackbar shown when the session expires while creating a transaction.
   ///
@@ -1748,12 +1544,6 @@ abstract class AppLocalizations {
   /// **'Unable to enable AI right now.'**
   String get navEnableAiChatFailed;
 
-  /// Tooltip for the edit button on a transaction row.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit transaction'**
-  String get transactionsListEditTooltip;
-
   /// Snackbar shown when trying to sync without being signed in.
   ///
   /// In en, this message translates to:
@@ -1910,18 +1700,6 @@ abstract class AppLocalizations {
   /// **'Failed to start conversation. Please try again.'**
   String get chatConversationStartFailed;
 
-  /// Menu item title for Budgets in the More screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Budgets'**
-  String get moreBudgets;
-
-  /// Subtitle for the Budgets menu item in the More screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Budgeted vs. actual spending by category'**
-  String get moreBudgetsSubtitle;
-
   /// App bar title of the Budgets screen.
   ///
   /// In en, this message translates to:
@@ -1940,53 +1718,11 @@ abstract class AppLocalizations {
   /// **'Next month'**
   String get budgetsNextMonth;
 
-  /// Label for the total amount budgeted for spending this month.
-  ///
-  /// In en, this message translates to:
-  /// **'Budgeted'**
-  String get budgetsBudgeted;
-
-  /// Label for the amount actually spent this month.
-  ///
-  /// In en, this message translates to:
-  /// **'Actual'**
-  String get budgetsActual;
-
-  /// Label for the amount left to spend this month.
-  ///
-  /// In en, this message translates to:
-  /// **'Remaining'**
-  String get budgetsRemaining;
-
   /// Label for the month's actual income in the budget summary.
   ///
   /// In en, this message translates to:
   /// **'Income'**
   String get budgetsIncome;
-
-  /// Expected income for the month, shown next to actual income.
-  ///
-  /// In en, this message translates to:
-  /// **'Expected {amount}'**
-  String budgetsExpectedIncome(String amount);
-
-  /// Budget limit shown after the amount spent in a category, e.g. '$120 of $300'.
-  ///
-  /// In en, this message translates to:
-  /// **'of {amount}'**
-  String budgetsOfAmount(String amount);
-
-  /// Amount still available to spend in a category.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} left'**
-  String budgetsAmountLeft(String amount);
-
-  /// Amount by which a category's spending exceeds its budget.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} over'**
-  String budgetsOverBy(String amount);
 
   /// Unspent amount carried over from the previous month into this category.
   ///
@@ -2000,12 +1736,6 @@ abstract class AppLocalizations {
   /// **'Shared budget'**
   String get budgetsSharedBudget;
 
-  /// Shown for a category with spending but no budgeted amount.
-  ///
-  /// In en, this message translates to:
-  /// **'No budget'**
-  String get budgetsNoLimit;
-
   /// Heading of the per-category budget list.
   ///
   /// In en, this message translates to:
@@ -2018,18 +1748,6 @@ abstract class AppLocalizations {
   /// **'Over budget ({count})'**
   String budgetsFilterOverBudget(int count);
 
-  /// Badge on a category that has spent more than its budget.
-  ///
-  /// In en, this message translates to:
-  /// **'Over budget'**
-  String get budgetsOverBudget;
-
-  /// Badge on a category that has spent at least 90% of its budget.
-  ///
-  /// In en, this message translates to:
-  /// **'Near limit'**
-  String get budgetsNearLimit;
-
   /// Label for one of several budgets that exist for the same month (household, personal or shared).
   ///
   /// In en, this message translates to:
@@ -2041,12 +1759,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No budget for {month}'**
   String budgetsNoBudgetTitle(String month);
-
-  /// Explains how to create a budget when none exists for the selected month.
-  ///
-  /// In en, this message translates to:
-  /// **'Budgets are created in Sure on the web. Open Budgets there to set one up for this month.'**
-  String get budgetsNoBudgetMessage;
 
   /// Shown when a budget exists for the month but has no amounts set.
   ///
@@ -2113,18 +1825,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load transactions'**
   String get budgetCategoryTransactionsLoadFailed;
-
-  /// Menu item title for the Cash Flow report in the More screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash Flow'**
-  String get moreCashFlow;
-
-  /// Subtitle for the Cash Flow menu item in the More screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Income, spending and savings by category'**
-  String get moreCashFlowSubtitle;
 
   /// App bar title of the Cash Flow report screen.
   ///
@@ -2306,18 +2006,6 @@ abstract class AppLocalizations {
   /// **'No balance history for this period'**
   String get accountChartNoHistory;
 
-  /// Balance change over the selected chart range, e.g. '+$1,204.00 (+1.4%) this period'.
-  ///
-  /// In en, this message translates to:
-  /// **'{change} ({percent}) this period'**
-  String accountChartChangeLabel(String change, String percent);
-
-  /// Balance change over the selected range when no percentage applies (the range started at zero).
-  ///
-  /// In en, this message translates to:
-  /// **'{change} this period'**
-  String accountChartChangeOnlyLabel(String change);
-
   /// Investment account section: current positions.
   ///
   /// In en, this message translates to:
@@ -2347,12 +2035,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load holdings'**
   String get holdingsLoadFailed;
-
-  /// Holding row subtitle: share count and current price.
-  ///
-  /// In en, this message translates to:
-  /// **'{quantity} shares · {price}'**
-  String holdingSharesAtPrice(String quantity, String price);
 
   /// Shown instead of gain/loss when the provider sent no cost basis for a holding.
   ///
@@ -2384,12 +2066,6 @@ abstract class AppLocalizations {
   /// **'Sell'**
   String get tradeSell;
 
-  /// Title of the dashboard investments card and the portfolio screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Investments'**
-  String get portfolioTitle;
-
   /// How many investment accounts the dashboard investments card covers.
   ///
   /// In en, this message translates to:
@@ -2419,12 +2095,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cash'**
   String get portfolioAllocationCash;
-
-  /// Section heading for the latest trades across investment accounts.
-  ///
-  /// In en, this message translates to:
-  /// **'Recent activity'**
-  String get portfolioRecentActivity;
 
   /// Error state of the portfolio screen.
   ///
@@ -2473,12 +2143,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tools'**
   String get shellSectionTools;
-
-  /// Settings section for the user's profile, preferences and security.
-  ///
-  /// In en, this message translates to:
-  /// **'You'**
-  String get shellSectionYou;
 
   /// Settings section for this app's own settings (theme, privacy, sign out).
   ///
@@ -2539,12 +2203,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preferences'**
   String get shellPreferences;
-
-  /// Settings row: password, MFA and sessions (opens the web).
-  ///
-  /// In en, this message translates to:
-  /// **'Security'**
-  String get shellSecurity;
 
   /// Settings row label showing the Sure server URL the app talks to.
   ///
@@ -2611,18 +2269,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open on the web'**
   String get shellOpenOnWeb;
-
-  /// Invest tab empty state title.
-  ///
-  /// In en, this message translates to:
-  /// **'No investment accounts'**
-  String get shellInvestEmptyTitle;
-
-  /// Invest tab empty state body.
-  ///
-  /// In en, this message translates to:
-  /// **'Investment and crypto accounts you add show up here.'**
-  String get shellInvestEmptyBody;
 
   /// Invest tab error state when accounts failed to load.
   ///
@@ -2726,12 +2372,6 @@ abstract class AppLocalizations {
   /// **'Custom range…'**
   String get activityDateCustom;
 
-  /// Label of the date filter chip for a custom range, e.g. 'Oct 1 – Oct 15'.
-  ///
-  /// In en, this message translates to:
-  /// **'{start} – {end}'**
-  String activityDateRange(String start, String end);
-
   /// Activity filter chip and sheet title for categories.
   ///
   /// In en, this message translates to:
@@ -2792,12 +2432,6 @@ abstract class AppLocalizations {
   /// **'Clear'**
   String get activityFilterClear;
 
-  /// Button in a filter sheet that applies the selection.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply'**
-  String get activityFilterApply;
-
   /// Placeholder of the search field inside a long filter or category list.
   ///
   /// In en, this message translates to:
@@ -2810,18 +2444,6 @@ abstract class AppLocalizations {
   /// **'Nothing to choose from yet'**
   String get activityFilterNoOptions;
 
-  /// Day header in the Activity list for today's transactions.
-  ///
-  /// In en, this message translates to:
-  /// **'Today'**
-  String get activityToday;
-
-  /// Day header in the Activity list for yesterday's transactions.
-  ///
-  /// In en, this message translates to:
-  /// **'Yesterday'**
-  String get activityYesterday;
-
   /// Day header for transactions whose date could not be read.
   ///
   /// In en, this message translates to:
@@ -2833,12 +2455,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions this month'**
   String get activityEmpty;
-
-  /// Activity empty state when a search or filter is set.
-  ///
-  /// In en, this message translates to:
-  /// **'No transactions match.'**
-  String get activityEmptyFiltered;
 
   /// Button in the filtered empty state that resets the search and filters.
   ///
@@ -2869,18 +2485,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add an account first.'**
   String get activityNoAccounts;
-
-  /// Accessibility label of the icon on a transaction that is split into parts.
-  ///
-  /// In en, this message translates to:
-  /// **'Split'**
-  String get activitySplit;
-
-  /// Accessibility label of the icon on a transaction that is part of a transfer.
-  ///
-  /// In en, this message translates to:
-  /// **'Transfer'**
-  String get activityTransfer;
 
   /// App bar title in Activity multi-select mode.
   ///
@@ -2966,18 +2570,6 @@ abstract class AppLocalizations {
   /// **'Inactive'**
   String get recurringGroupInactive;
 
-  /// Label for the monthly total of active recurring expenses.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly out'**
-  String get recurringMonthlyOut;
-
-  /// Label for the monthly total of active recurring income.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly in'**
-  String get recurringMonthlyIn;
-
   /// Empty state title of the Recurring list.
   ///
   /// In en, this message translates to:
@@ -3019,18 +2611,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Yearly} other{Every {count} years}}'**
   String recurringEveryYears(int count);
-
-  /// Cadence of a recurring item without explicit rules: monthly on a day of the month.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly on day {day}'**
-  String recurringMonthlyOnDay(int day);
-
-  /// Next expected date of a recurring item, e.g. 'Next Nov 15'.
-  ///
-  /// In en, this message translates to:
-  /// **'Next {date}'**
-  String recurringNextDate(String date);
 
   /// Recurring item status.
   ///
@@ -3074,29 +2654,11 @@ abstract class AppLocalizations {
   /// **'Expense'**
   String get recurringExpense;
 
-  /// Menu action that edits a recurring item.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get recurringActionEdit;
-
   /// Menu action that sets a recurring item inactive.
   ///
   /// In en, this message translates to:
   /// **'Pause'**
   String get recurringActionPause;
-
-  /// Menu action that sets a recurring item active.
-  ///
-  /// In en, this message translates to:
-  /// **'Activate'**
-  String get recurringActionActivate;
-
-  /// Tooltip of a recurring row's action menu.
-  ///
-  /// In en, this message translates to:
-  /// **'More actions for {name}'**
-  String recurringMoreActions(String name);
 
   /// Title of the confirm dialog for deleting a recurring item.
   ///
@@ -3284,18 +2846,6 @@ abstract class AppLocalizations {
   /// **'High priority'**
   String get insightsPriorityHigh;
 
-  /// Accessibility hint for expanding an insight.
-  ///
-  /// In en, this message translates to:
-  /// **'Show details'**
-  String get insightsShowDetails;
-
-  /// Accessibility hint for collapsing an insight.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide details'**
-  String get insightsHideDetails;
-
   /// Snackbar when acknowledging an insight fails.
   ///
   /// In en, this message translates to:
@@ -3307,54 +2857,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Spending vs normal'**
   String get spendingVsNormalTitle;
-
-  /// Spending in the unfinished current period.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} so far'**
-  String spendingVsNormalSoFar(String amount);
-
-  /// What is normal to have spent by now.
-  ///
-  /// In en, this message translates to:
-  /// **'Normal {amount}'**
-  String spendingVsNormalNormal(String amount);
-
-  /// Overall spending is above normal, e.g. '12% above normal'.
-  ///
-  /// In en, this message translates to:
-  /// **'{percent} above normal'**
-  String spendingVsNormalAbove(String percent);
-
-  /// Overall spending is below normal, e.g. '8% below normal'.
-  ///
-  /// In en, this message translates to:
-  /// **'{percent} below normal'**
-  String spendingVsNormalBelow(String percent);
-
-  /// A category with spending this period and none normally.
-  ///
-  /// In en, this message translates to:
-  /// **'New'**
-  String get spendingVsNormalNew;
-
-  /// Expands the spending card to every category.
-  ///
-  /// In en, this message translates to:
-  /// **'Show all categories'**
-  String get spendingVsNormalShowAll;
-
-  /// Collapses the spending card.
-  ///
-  /// In en, this message translates to:
-  /// **'Show less'**
-  String get spendingVsNormalShowLess;
-
-  /// Category row in the expanded spending card: spent and normal.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} · normal {normal}'**
-  String spendingVsNormalCategoryNormal(String amount, String normal);
 
   /// Tooltip of the account screen's overflow menu button.
   ///
@@ -3656,24 +3158,6 @@ abstract class AppLocalizations {
   /// **'Amount, date and type come from the split. Edit the split to change them.'**
   String get txnDetailSplitLockedFields;
 
-  /// Summary of how many tags are selected on the transaction.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 tag} other{{count} tags}}'**
-  String txnDetailTagCount(int count);
-
-  /// Tooltip for the delete button on a selected tag chip.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove tag'**
-  String get txnDetailRemoveTag;
-
-  /// Title of the category picker sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose category'**
-  String get txnDetailChooseCategory;
-
   /// Title of the merchant picker sheet.
   ///
   /// In en, this message translates to:
@@ -3727,18 +3211,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split transaction'**
   String get txnDetailSplitAction;
-
-  /// Heading of the split section on the transaction screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Split'**
-  String get txnDetailSplitHeading;
-
-  /// Button that opens the split editor for a split transaction.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit split'**
-  String get txnDetailEditSplit;
 
   /// Shown when splitting is unavailable because the device is offline.
   ///
@@ -3865,18 +3337,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split removed'**
   String get txnDetailSplitRemoved;
-
-  /// Tags row value on the transaction editor when the transaction has none.
-  ///
-  /// In en, this message translates to:
-  /// **'No tags'**
-  String get txnDetailNoTags;
-
-  /// Feature name for the CSV import and statement upload screens.
-  ///
-  /// In en, this message translates to:
-  /// **'Import data'**
-  String get dataIn;
 
   /// App bar title of the CSV import screen.
   ///
@@ -4400,12 +3860,6 @@ abstract class AppLocalizations {
   /// **'Added {date}'**
   String dataInStatementAdded(String date);
 
-  /// Start of the categories, tags, merchants and export block. Generic label for managing data.
-  ///
-  /// In en, this message translates to:
-  /// **'Manage'**
-  String get manage;
-
   /// Hint of the search field on the categories, tags and merchants screens.
   ///
   /// In en, this message translates to:
@@ -4789,12 +4243,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still preparing. Pull down to check again.'**
   String get manageExportStillPreparing;
-
-  /// Button on the home insights card that opens the full insights list.
-  ///
-  /// In en, this message translates to:
-  /// **'See all'**
-  String get p3roInsightsSeeAll;
 
   /// Title shown when there are no insights.
   ///
@@ -5450,12 +4898,6 @@ abstract class AppLocalizations {
   /// **'Reports'**
   String get p3rpTitle;
 
-  /// Subtitle of the Reports card on Home.
-  ///
-  /// In en, this message translates to:
-  /// **'Net worth, cash flow and spending over time'**
-  String get p3rpHomeSubtitle;
-
   /// Reports period chip: the family's current budget month.
   ///
   /// In en, this message translates to:
@@ -5917,12 +5359,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{type} · {count}'**
   String dshGroupTitle(String type, int count);
-
-  /// After a Home account group title: how many of its accounts have a zero balance.
-  ///
-  /// In en, this message translates to:
-  /// **'({count} empty)'**
-  String dshGroupEmpty(int count);
 
   /// Row at the bottom of an account group list that hides the zero-balance accounts.
   ///

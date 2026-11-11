@@ -27,9 +27,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonAll => 'All';
 
   @override
-  String get commonRefresh => 'Refresh';
-
-  @override
   String get commonClose => 'Close';
 
   @override
@@ -85,9 +82,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navAssistant => 'Assistant';
 
   @override
-  String get navMore => 'More';
-
-  @override
   String get dashboardSyncError => 'Sync failed';
 
   @override
@@ -110,13 +104,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardNoAccounts => 'No accounts yet';
-
-  @override
-  String get dashboardNoAccountsSubtitle =>
-      'Add accounts in the web app to see them here.';
-
-  @override
-  String get dashboardFilterEmpty => 'No accounts match the current filter';
 
   @override
   String get chatListTitle => 'Chats';
@@ -164,12 +151,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionFormAmountLabel => 'Amount';
 
   @override
-  String get transactionFormAmountRequired => 'Amount is required';
-
-  @override
-  String get transactionFormAmountInvalid => 'Please enter a valid amount';
-
-  @override
   String get transactionFormDateLabel => 'Date';
 
   @override
@@ -179,16 +160,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionFormCategoryLabel => 'Category';
 
   @override
-  String get transactionEditTitle => 'Edit Transaction';
-
-  @override
   String get transactionEditNameLabel => 'Name';
 
   @override
   String get transactionEditNameRequired => 'Name is required';
-
-  @override
-  String get transactionEditNotesLabel => 'Notes';
 
   @override
   String get transactionEditCategoryLabel => 'Category';
@@ -198,9 +173,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionEditTagsLabel => 'Tags';
-
-  @override
-  String get transactionEditSaving => 'Saving…';
 
   @override
   String get transactionsListDeleteTitle => 'Delete Transaction';
@@ -216,9 +188,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transactionsListDeleteMultiContent =>
       'Are you sure you want to delete the selected transactions?';
-
-  @override
-  String get transactionsListEmpty => 'No transactions';
 
   @override
   String get transactionsListAuthFailed =>
@@ -287,22 +256,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionDisplay => 'Display';
 
   @override
-  String get settingsSectionConnection => 'Connection';
-
-  @override
-  String get settingsSectionDataManagement => 'Data Management';
-
-  @override
   String get settingsSectionSecurity => 'Security';
 
   @override
-  String get settingsSectionDangerZone => 'Danger Zone';
-
-  @override
   String get settingsThemeLabel => 'Theme';
-
-  @override
-  String get settingsThemeSystem => 'System';
 
   @override
   String get settingsThemeLight => 'Light';
@@ -311,27 +268,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeDark => 'Dark';
 
   @override
-  String get settingsProxyHeadersLabel => 'Custom Proxy Headers';
-
-  @override
   String get settingsPrivacyHideAmountsLabel => 'Hide amounts';
-
-  @override
-  String get settingsPrivacyHideAmountsContent =>
-      'Mask money values across the app';
-
-  @override
-  String get settingsBiometricLabel => 'Biometric Lock';
-
-  @override
-  String get settingsBiometricEnable => 'Enable biometric lock?';
-
-  @override
-  String get settingsBiometricEnableContent =>
-      'Require biometric authentication when resuming the app.';
-
-  @override
-  String get settingsCheckForUpdates => 'Check for Updates';
 
   @override
   String get settingsUpdateAvailableTitle => 'Update Available';
@@ -364,9 +301,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsClearData => 'Clear Data';
 
   @override
-  String get settingsClearDataSuccess => 'Local data cleared';
-
-  @override
   String get settingsDeleteAccountTitle => 'Delete Account';
 
   @override
@@ -380,9 +314,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSignOut => 'Sign Out';
-
-  @override
-  String get settingsDebugLogs => 'Debug Logs';
 
   @override
   String get ssoOnboardingTitle => 'Link Your Account';
@@ -551,9 +482,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logViewerEmpty => 'No logs yet';
 
   @override
-  String get connectivityOffline => 'You are offline';
-
-  @override
   String connectivityPendingSync(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -581,9 +509,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proxyHeadersRemove => 'Remove header';
-
-  @override
-  String get accountDetailRefreshTooltip => 'Refresh account details';
 
   @override
   String get accountDetailHoldingFallback => 'Holding';
@@ -650,36 +575,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to save custom proxy headers.';
 
   @override
-  String settingsAppVersion(String version) {
-    return 'App Version: $version';
-  }
-
-  @override
-  String get settingsCheckForUpdatesSubtitle =>
-      'See if a newer version is available';
-
-  @override
   String get settingsContactUs => 'Contact us';
 
   @override
-  String get settingsDebugLogsSemantics => 'Open debug logs';
-
-  @override
-  String get settingsDebugLogsSubtitle => 'View app diagnostic logs';
-
-  @override
-  String get settingsGroupByAccountType => 'Group by Account Type';
-
-  @override
-  String get settingsGroupByAccountTypeSubtitle =>
-      'Group accounts by type (Crypto, Bank, etc.)';
-
-  @override
   String get settingsProxyHeadersTileTitle => 'Custom proxy headers';
-
-  @override
-  String get settingsProxyHeadersTileSubtitleEmpty =>
-      'Optional headers for a reverse proxy or auth gateway';
 
   @override
   String settingsProxyHeadersTileSubtitleCount(int count) {
@@ -817,20 +716,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionEditCurrentMerchant => 'Current merchant';
 
   @override
-  String get transactionEditNoTags => 'No tags available';
-
-  @override
   String get transactionEditUnknownTag => 'Unknown tag';
 
   @override
   String get transactionEditSyncedOnly =>
       'Only synced transactions can be edited from mobile.';
-
-  @override
-  String get transactionEditCategoryHelper => 'Choose a replacement category';
-
-  @override
-  String get transactionEditMerchantHelper => 'Choose a replacement merchant';
 
   @override
   String get transactionFormSessionExpired =>
@@ -923,9 +813,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navEnableAiChatFailed => 'Unable to enable AI right now.';
-
-  @override
-  String get transactionsListEditTooltip => 'Edit transaction';
 
   @override
   String get connectivitySignInToSync => 'Please sign in to sync transactions';
@@ -1030,12 +917,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to start conversation. Please try again.';
 
   @override
-  String get moreBudgets => 'Budgets';
-
-  @override
-  String get moreBudgetsSubtitle => 'Budgeted vs. actual spending by category';
-
-  @override
   String get budgetsTitle => 'Budgets';
 
   @override
@@ -1045,36 +926,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get budgetsNextMonth => 'Next month';
 
   @override
-  String get budgetsBudgeted => 'Budgeted';
-
-  @override
-  String get budgetsActual => 'Actual';
-
-  @override
-  String get budgetsRemaining => 'Remaining';
-
-  @override
   String get budgetsIncome => 'Income';
-
-  @override
-  String budgetsExpectedIncome(String amount) {
-    return 'Expected $amount';
-  }
-
-  @override
-  String budgetsOfAmount(String amount) {
-    return 'of $amount';
-  }
-
-  @override
-  String budgetsAmountLeft(String amount) {
-    return '$amount left';
-  }
-
-  @override
-  String budgetsOverBy(String amount) {
-    return '$amount over';
-  }
 
   @override
   String budgetsRolledOver(String amount) {
@@ -1085,21 +937,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get budgetsSharedBudget => 'Shared budget';
 
   @override
-  String get budgetsNoLimit => 'No budget';
-
-  @override
   String get budgetsCategoriesTitle => 'Categories';
 
   @override
   String budgetsFilterOverBudget(int count) {
     return 'Over budget ($count)';
   }
-
-  @override
-  String get budgetsOverBudget => 'Over budget';
-
-  @override
-  String get budgetsNearLimit => 'Near limit';
 
   @override
   String budgetsBudgetNumber(int number) {
@@ -1110,10 +953,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String budgetsNoBudgetTitle(String month) {
     return 'No budget for $month';
   }
-
-  @override
-  String get budgetsNoBudgetMessage =>
-      'Budgets are created in Sure on the web. Open Budgets there to set one up for this month.';
 
   @override
   String get budgetsNotSetUpMessage =>
@@ -1156,12 +995,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get budgetCategoryTransactionsLoadFailed =>
       'Couldn\'t load transactions';
-
-  @override
-  String get moreCashFlow => 'Cash Flow';
-
-  @override
-  String get moreCashFlowSubtitle => 'Income, spending and savings by category';
 
   @override
   String get cashFlowTitle => 'Cash Flow';
@@ -1261,16 +1094,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountChartNoHistory => 'No balance history for this period';
 
   @override
-  String accountChartChangeLabel(String change, String percent) {
-    return '$change ($percent) this period';
-  }
-
-  @override
-  String accountChartChangeOnlyLabel(String change) {
-    return '$change this period';
-  }
-
-  @override
   String get accountTabHoldings => 'Holdings';
 
   @override
@@ -1286,11 +1109,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get holdingsLoadFailed => 'Couldn\'t load holdings';
 
   @override
-  String holdingSharesAtPrice(String quantity, String price) {
-    return '$quantity shares · $price';
-  }
-
-  @override
   String get holdingNoCostBasis => 'No cost basis';
 
   @override
@@ -1304,9 +1122,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tradeSell => 'Sell';
-
-  @override
-  String get portfolioTitle => 'Investments';
 
   @override
   String portfolioAccountCount(int count) {
@@ -1334,9 +1149,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portfolioAllocationCash => 'Cash';
 
   @override
-  String get portfolioRecentActivity => 'Recent activity';
-
-  @override
   String get portfolioLoadFailed => 'Couldn\'t load your investments';
 
   @override
@@ -1361,9 +1173,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shellSectionTools => 'Tools';
-
-  @override
-  String get shellSectionYou => 'You';
 
   @override
   String get shellSectionApp => 'App';
@@ -1394,9 +1203,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shellPreferences => 'Preferences';
-
-  @override
-  String get shellSecurity => 'Security';
 
   @override
   String get shellServer => 'Server';
@@ -1432,13 +1238,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shellOpenOnWeb => 'Open on the web';
-
-  @override
-  String get shellInvestEmptyTitle => 'No investment accounts';
-
-  @override
-  String get shellInvestEmptyBody =>
-      'Investment and crypto accounts you add show up here.';
 
   @override
   String get shellInvestLoadFailed => 'Couldn\'t load your accounts';
@@ -1492,11 +1291,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityDateCustom => 'Custom range…';
 
   @override
-  String activityDateRange(String start, String end) {
-    return '$start – $end';
-  }
-
-  @override
   String get activityFilterCategory => 'Category';
 
   @override
@@ -1529,28 +1323,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityFilterClear => 'Clear';
 
   @override
-  String get activityFilterApply => 'Apply';
-
-  @override
   String get activityFilterSearchHint => 'Find';
 
   @override
   String get activityFilterNoOptions => 'Nothing to choose from yet';
 
   @override
-  String get activityToday => 'Today';
-
-  @override
-  String get activityYesterday => 'Yesterday';
-
-  @override
   String get activityUnknownDate => 'No date';
 
   @override
   String get activityEmpty => 'No transactions this month';
-
-  @override
-  String get activityEmptyFiltered => 'No transactions match.';
 
   @override
   String get activityClearFilters => 'Clear filters';
@@ -1566,12 +1348,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityNoAccounts => 'Add an account first.';
-
-  @override
-  String get activitySplit => 'Split';
-
-  @override
-  String get activityTransfer => 'Transfer';
 
   @override
   String activitySelectedCount(int count) {
@@ -1632,12 +1408,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringGroupInactive => 'Inactive';
 
   @override
-  String get recurringMonthlyOut => 'Monthly out';
-
-  @override
-  String get recurringMonthlyIn => 'Monthly in';
-
-  @override
   String get recurringEmptyTitle => 'No recurring transactions yet';
 
   @override
@@ -1684,16 +1454,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String recurringMonthlyOnDay(int day) {
-    return 'Monthly on day $day';
-  }
-
-  @override
-  String recurringNextDate(String date) {
-    return 'Next $date';
-  }
-
-  @override
   String get recurringStatusActive => 'Active';
 
   @override
@@ -1715,18 +1475,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringExpense => 'Expense';
 
   @override
-  String get recurringActionEdit => 'Edit';
-
-  @override
   String get recurringActionPause => 'Pause';
-
-  @override
-  String get recurringActionActivate => 'Activate';
-
-  @override
-  String recurringMoreActions(String name) {
-    return 'More actions for $name';
-  }
 
   @override
   String recurringDeleteTitle(String name) {
@@ -1834,50 +1583,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get insightsPriorityHigh => 'High priority';
 
   @override
-  String get insightsShowDetails => 'Show details';
-
-  @override
-  String get insightsHideDetails => 'Hide details';
-
-  @override
   String get insightsDismissFailed => 'Couldn\'t dismiss the insight';
 
   @override
   String get spendingVsNormalTitle => 'Spending vs normal';
-
-  @override
-  String spendingVsNormalSoFar(String amount) {
-    return '$amount so far';
-  }
-
-  @override
-  String spendingVsNormalNormal(String amount) {
-    return 'Normal $amount';
-  }
-
-  @override
-  String spendingVsNormalAbove(String percent) {
-    return '$percent above normal';
-  }
-
-  @override
-  String spendingVsNormalBelow(String percent) {
-    return '$percent below normal';
-  }
-
-  @override
-  String get spendingVsNormalNew => 'New';
-
-  @override
-  String get spendingVsNormalShowAll => 'Show all categories';
-
-  @override
-  String get spendingVsNormalShowLess => 'Show less';
-
-  @override
-  String spendingVsNormalCategoryNormal(String amount, String normal) {
-    return '$amount · normal $normal';
-  }
 
   @override
   String get accountActions => 'More actions';
@@ -2047,23 +1756,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Amount, date and type come from the split. Edit the split to change them.';
 
   @override
-  String txnDetailTagCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count tags',
-      one: '1 tag',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get txnDetailRemoveTag => 'Remove tag';
-
-  @override
-  String get txnDetailChooseCategory => 'Choose category';
-
-  @override
   String get txnDetailChooseMerchant => 'Choose merchant';
 
   @override
@@ -2092,12 +1784,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txnDetailSplitAction => 'Split transaction';
-
-  @override
-  String get txnDetailSplitHeading => 'Split';
-
-  @override
-  String get txnDetailEditSplit => 'Edit split';
 
   @override
   String get txnDetailSplitOffline => 'Splits need an internet connection.';
@@ -2172,12 +1858,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txnDetailSplitRemoved => 'Split removed';
-
-  @override
-  String get txnDetailNoTags => 'No tags';
-
-  @override
-  String get dataIn => 'Import data';
 
   @override
   String get dataInImportTitle => 'Import';
@@ -2509,9 +2189,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get manage => 'Manage';
-
-  @override
   String get manageSearch => 'Search';
 
   @override
@@ -2739,9 +2416,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get manageExportStillPreparing =>
       'Still preparing. Pull down to check again.';
-
-  @override
-  String get p3roInsightsSeeAll => 'See all';
 
   @override
   String get p3roInsightsEmpty => 'No insights right now';
@@ -3197,9 +2871,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get p3rpTitle => 'Reports';
 
   @override
-  String get p3rpHomeSubtitle => 'Net worth, cash flow and spending over time';
-
-  @override
   String get p3rpPeriodMonth => 'Month';
 
   @override
@@ -3467,11 +3138,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String dshGroupTitle(String type, int count) {
     return '$type · $count';
-  }
-
-  @override
-  String dshGroupEmpty(int count) {
-    return '($count empty)';
   }
 
   @override

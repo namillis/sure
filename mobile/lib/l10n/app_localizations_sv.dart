@@ -27,9 +27,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get commonAll => 'Alla';
 
   @override
-  String get commonRefresh => 'Uppdatera';
-
-  @override
   String get commonClose => 'Stäng';
 
   @override
@@ -86,9 +83,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get navAssistant => 'Assistent';
 
   @override
-  String get navMore => 'Mer';
-
-  @override
   String get dashboardSyncError => 'Synkningen misslyckades';
 
   @override
@@ -112,13 +106,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dashboardNoAccounts => 'Inga konton än';
-
-  @override
-  String get dashboardNoAccountsSubtitle =>
-      'Lägg till konton i webbappen för att se dem här.';
-
-  @override
-  String get dashboardFilterEmpty => 'Inga konton matchar det aktuella filtret';
 
   @override
   String get chatListTitle => 'Chattar';
@@ -168,12 +155,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get transactionFormAmountLabel => 'Belopp';
 
   @override
-  String get transactionFormAmountRequired => 'Belopp krävs';
-
-  @override
-  String get transactionFormAmountInvalid => 'Ange ett giltigt belopp';
-
-  @override
   String get transactionFormDateLabel => 'Datum';
 
   @override
@@ -183,16 +164,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get transactionFormCategoryLabel => 'Kategori';
 
   @override
-  String get transactionEditTitle => 'Redigera transaktion';
-
-  @override
   String get transactionEditNameLabel => 'Namn';
 
   @override
   String get transactionEditNameRequired => 'Namn krävs';
-
-  @override
-  String get transactionEditNotesLabel => 'Anteckningar';
 
   @override
   String get transactionEditCategoryLabel => 'Kategori';
@@ -202,9 +177,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get transactionEditTagsLabel => 'Taggar';
-
-  @override
-  String get transactionEditSaving => 'Sparar…';
 
   @override
   String get transactionsListDeleteTitle => 'Radera transaktion';
@@ -220,9 +192,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get transactionsListDeleteMultiContent =>
       'Vill du verkligen radera de valda transaktionerna?';
-
-  @override
-  String get transactionsListEmpty => 'Inga transaktioner';
 
   @override
   String get transactionsListAuthFailed =>
@@ -294,22 +263,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsSectionDisplay => 'Visning';
 
   @override
-  String get settingsSectionConnection => 'Anslutning';
-
-  @override
-  String get settingsSectionDataManagement => 'Datahantering';
-
-  @override
   String get settingsSectionSecurity => 'Säkerhet';
 
   @override
-  String get settingsSectionDangerZone => 'Riskzon';
-
-  @override
   String get settingsThemeLabel => 'Tema';
-
-  @override
-  String get settingsThemeSystem => 'System';
 
   @override
   String get settingsThemeLight => 'Ljust';
@@ -318,26 +275,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsThemeDark => 'Mörkt';
 
   @override
-  String get settingsProxyHeadersLabel => 'Anpassade proxyheaders';
-
-  @override
   String get settingsPrivacyHideAmountsLabel => 'Dölj belopp';
-
-  @override
-  String get settingsPrivacyHideAmountsContent => 'Maskera belopp i hela appen';
-
-  @override
-  String get settingsBiometricLabel => 'Biometriskt lås';
-
-  @override
-  String get settingsBiometricEnable => 'Aktivera biometriskt lås?';
-
-  @override
-  String get settingsBiometricEnableContent =>
-      'Kräv biometrisk autentisering när du återgår till appen.';
-
-  @override
-  String get settingsCheckForUpdates => 'Sök efter uppdateringar';
 
   @override
   String get settingsUpdateAvailableTitle => 'Uppdatering tillgänglig';
@@ -371,9 +309,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsClearData => 'Rensa data';
 
   @override
-  String get settingsClearDataSuccess => 'Lokal data har rensats';
-
-  @override
   String get settingsDeleteAccountTitle => 'Radera användarkonto';
 
   @override
@@ -387,9 +322,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settingsSignOut => 'Logga ut';
-
-  @override
-  String get settingsDebugLogs => 'Felsökningsloggar';
 
   @override
   String get ssoOnboardingTitle => 'Koppla ditt användarkonto';
@@ -558,9 +490,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get logViewerEmpty => 'Inga loggar än';
 
   @override
-  String get connectivityOffline => 'Du är offline';
-
-  @override
   String connectivityPendingSync(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -588,9 +517,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get proxyHeadersRemove => 'Ta bort header';
-
-  @override
-  String get accountDetailRefreshTooltip => 'Uppdatera kontouppgifter';
 
   @override
   String get accountDetailHoldingFallback => 'Innehav';
@@ -661,36 +587,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Det gick inte att spara anpassade proxyheaders.';
 
   @override
-  String settingsAppVersion(String version) {
-    return 'Appversion: $version';
-  }
-
-  @override
-  String get settingsCheckForUpdatesSubtitle =>
-      'Se om en nyare version finns tillgänglig';
-
-  @override
   String get settingsContactUs => 'Kontakta oss';
 
   @override
-  String get settingsDebugLogsSemantics => 'Öppna felsökningsloggar';
-
-  @override
-  String get settingsDebugLogsSubtitle => 'Visa appens diagnostikloggar';
-
-  @override
-  String get settingsGroupByAccountType => 'Gruppera efter kontotyp';
-
-  @override
-  String get settingsGroupByAccountTypeSubtitle =>
-      'Gruppera konton efter typ (krypto, bank osv.)';
-
-  @override
   String get settingsProxyHeadersTileTitle => 'Anpassade proxyheaders';
-
-  @override
-  String get settingsProxyHeadersTileSubtitleEmpty =>
-      'Valfria headers för en omvänd proxy eller autentiseringsgateway';
 
   @override
   String settingsProxyHeadersTileSubtitleCount(int count) {
@@ -830,20 +730,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get transactionEditCurrentMerchant => 'Nuvarande handlare';
 
   @override
-  String get transactionEditNoTags => 'Inga taggar tillgängliga';
-
-  @override
   String get transactionEditUnknownTag => 'Okänd tagg';
 
   @override
   String get transactionEditSyncedOnly =>
       'Bara synkade transaktioner kan redigeras i mobilen.';
-
-  @override
-  String get transactionEditCategoryHelper => 'Välj en ny kategori';
-
-  @override
-  String get transactionEditMerchantHelper => 'Välj en ny handlare';
 
   @override
   String get transactionFormSessionExpired =>
@@ -934,9 +825,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get navEnableAiChatFailed => 'Det gick inte att aktivera AI just nu.';
-
-  @override
-  String get transactionsListEditTooltip => 'Redigera transaktion';
 
   @override
   String get connectivitySignInToSync => 'Logga in för att synka transaktioner';
@@ -1041,13 +929,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Det gick inte att starta konversationen. Försök igen.';
 
   @override
-  String get moreBudgets => 'Budgetar';
-
-  @override
-  String get moreBudgetsSubtitle =>
-      'Budgeterat mot faktiskt utfall per kategori';
-
-  @override
   String get budgetsTitle => 'Budgetar';
 
   @override
@@ -1057,36 +938,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get budgetsNextMonth => 'Nästa månad';
 
   @override
-  String get budgetsBudgeted => 'Budgeterat';
-
-  @override
-  String get budgetsActual => 'Utfall';
-
-  @override
-  String get budgetsRemaining => 'Kvar';
-
-  @override
   String get budgetsIncome => 'Inkomster';
-
-  @override
-  String budgetsExpectedIncome(String amount) {
-    return 'Förväntat $amount';
-  }
-
-  @override
-  String budgetsOfAmount(String amount) {
-    return 'av $amount';
-  }
-
-  @override
-  String budgetsAmountLeft(String amount) {
-    return '$amount kvar';
-  }
-
-  @override
-  String budgetsOverBy(String amount) {
-    return '$amount över';
-  }
 
   @override
   String budgetsRolledOver(String amount) {
@@ -1097,21 +949,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get budgetsSharedBudget => 'Delad budget';
 
   @override
-  String get budgetsNoLimit => 'Ingen budget';
-
-  @override
   String get budgetsCategoriesTitle => 'Kategorier';
 
   @override
   String budgetsFilterOverBudget(int count) {
     return 'Över budget ($count)';
   }
-
-  @override
-  String get budgetsOverBudget => 'Över budget';
-
-  @override
-  String get budgetsNearLimit => 'Nära gränsen';
 
   @override
   String budgetsBudgetNumber(int number) {
@@ -1122,10 +965,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String budgetsNoBudgetTitle(String month) {
     return 'Ingen budget för $month';
   }
-
-  @override
-  String get budgetsNoBudgetMessage =>
-      'Budgetar skapas i Sure på webben. Öppna Budgetar där för att skapa en för den här månaden.';
 
   @override
   String get budgetsNotSetUpMessage =>
@@ -1167,13 +1006,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get budgetCategoryTransactionsLoadFailed =>
       'Kunde inte läsa in transaktioner';
-
-  @override
-  String get moreCashFlow => 'Kassaflöde';
-
-  @override
-  String get moreCashFlowSubtitle =>
-      'Inkomster, utgifter och sparande per kategori';
 
   @override
   String get cashFlowTitle => 'Kassaflöde';
@@ -1275,16 +1107,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get accountChartNoHistory => 'Ingen saldohistorik för perioden';
 
   @override
-  String accountChartChangeLabel(String change, String percent) {
-    return '$change ($percent) under perioden';
-  }
-
-  @override
-  String accountChartChangeOnlyLabel(String change) {
-    return '$change under perioden';
-  }
-
-  @override
   String get accountTabHoldings => 'Innehav';
 
   @override
@@ -1300,11 +1122,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get holdingsLoadFailed => 'Kunde inte läsa in innehav';
 
   @override
-  String holdingSharesAtPrice(String quantity, String price) {
-    return '$quantity st · $price';
-  }
-
-  @override
   String get holdingNoCostBasis => 'Inget anskaffningsvärde';
 
   @override
@@ -1318,9 +1135,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tradeSell => 'Sälj';
-
-  @override
-  String get portfolioTitle => 'Investeringar';
 
   @override
   String portfolioAccountCount(int count) {
@@ -1348,9 +1162,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get portfolioAllocationCash => 'Kontanter';
 
   @override
-  String get portfolioRecentActivity => 'Senaste aktivitet';
-
-  @override
   String get portfolioLoadFailed => 'Kunde inte läsa in dina investeringar';
 
   @override
@@ -1375,9 +1186,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get shellSectionTools => 'Verktyg';
-
-  @override
-  String get shellSectionYou => 'Du';
 
   @override
   String get shellSectionApp => 'App';
@@ -1408,9 +1216,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get shellPreferences => 'Inställningar för kontot';
-
-  @override
-  String get shellSecurity => 'Säkerhet';
 
   @override
   String get shellServer => 'Server';
@@ -1446,13 +1251,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get shellOpenOnWeb => 'Öppna på webben';
-
-  @override
-  String get shellInvestEmptyTitle => 'Inga investeringskonton';
-
-  @override
-  String get shellInvestEmptyBody =>
-      'Investerings- och kryptokonton som du lägger till visas här.';
 
   @override
   String get shellInvestLoadFailed => 'Kunde inte läsa in dina konton';
@@ -1506,11 +1304,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get activityDateCustom => 'Eget intervall…';
 
   @override
-  String activityDateRange(String start, String end) {
-    return '$start – $end';
-  }
-
-  @override
   String get activityFilterCategory => 'Kategori';
 
   @override
@@ -1543,28 +1336,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get activityFilterClear => 'Rensa';
 
   @override
-  String get activityFilterApply => 'Använd';
-
-  @override
   String get activityFilterSearchHint => 'Hitta';
 
   @override
   String get activityFilterNoOptions => 'Det finns inget att välja än';
 
   @override
-  String get activityToday => 'I dag';
-
-  @override
-  String get activityYesterday => 'I går';
-
-  @override
   String get activityUnknownDate => 'Inget datum';
 
   @override
   String get activityEmpty => 'Inga transaktioner den här månaden';
-
-  @override
-  String get activityEmptyFiltered => 'Inga transaktioner matchar.';
 
   @override
   String get activityClearFilters => 'Rensa filter';
@@ -1580,12 +1361,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get activityNoAccounts => 'Lägg till ett konto först.';
-
-  @override
-  String get activitySplit => 'Delad';
-
-  @override
-  String get activityTransfer => 'Överföring';
 
   @override
   String activitySelectedCount(int count) {
@@ -1647,12 +1422,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get recurringGroupInactive => 'Inaktiva';
 
   @override
-  String get recurringMonthlyOut => 'Ut per månad';
-
-  @override
-  String get recurringMonthlyIn => 'In per månad';
-
-  @override
   String get recurringEmptyTitle => 'Inga återkommande transaktioner än';
 
   @override
@@ -1700,16 +1469,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String recurringMonthlyOnDay(int day) {
-    return 'Varje månad den $day:e';
-  }
-
-  @override
-  String recurringNextDate(String date) {
-    return 'Nästa $date';
-  }
-
-  @override
   String get recurringStatusActive => 'Aktiv';
 
   @override
@@ -1731,18 +1490,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get recurringExpense => 'Utgift';
 
   @override
-  String get recurringActionEdit => 'Redigera';
-
-  @override
   String get recurringActionPause => 'Pausa';
-
-  @override
-  String get recurringActionActivate => 'Aktivera';
-
-  @override
-  String recurringMoreActions(String name) {
-    return 'Fler åtgärder för $name';
-  }
 
   @override
   String recurringDeleteTitle(String name) {
@@ -1851,50 +1599,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get insightsPriorityHigh => 'Hög prioritet';
 
   @override
-  String get insightsShowDetails => 'Visa detaljer';
-
-  @override
-  String get insightsHideDetails => 'Dölj detaljer';
-
-  @override
   String get insightsDismissFailed => 'Kunde inte avfärda insikten';
 
   @override
   String get spendingVsNormalTitle => 'Utgifter mot normalt';
-
-  @override
-  String spendingVsNormalSoFar(String amount) {
-    return '$amount hittills';
-  }
-
-  @override
-  String spendingVsNormalNormal(String amount) {
-    return 'Normalt $amount';
-  }
-
-  @override
-  String spendingVsNormalAbove(String percent) {
-    return '$percent över det normala';
-  }
-
-  @override
-  String spendingVsNormalBelow(String percent) {
-    return '$percent under det normala';
-  }
-
-  @override
-  String get spendingVsNormalNew => 'Ny';
-
-  @override
-  String get spendingVsNormalShowAll => 'Visa alla kategorier';
-
-  @override
-  String get spendingVsNormalShowLess => 'Visa färre';
-
-  @override
-  String spendingVsNormalCategoryNormal(String amount, String normal) {
-    return '$amount · normalt $normal';
-  }
 
   @override
   String get accountActions => 'Fler åtgärder';
@@ -2064,23 +1772,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Belopp, datum och typ kommer från uppdelningen. Ändra uppdelningen för att ändra dem.';
 
   @override
-  String txnDetailTagCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count taggar',
-      one: '1 tagg',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get txnDetailRemoveTag => 'Ta bort tagg';
-
-  @override
-  String get txnDetailChooseCategory => 'Välj kategori';
-
-  @override
   String get txnDetailChooseMerchant => 'Välj handlare';
 
   @override
@@ -2109,12 +1800,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get txnDetailSplitAction => 'Dela upp transaktion';
-
-  @override
-  String get txnDetailSplitHeading => 'Uppdelning';
-
-  @override
-  String get txnDetailEditSplit => 'Ändra uppdelning';
 
   @override
   String get txnDetailSplitOffline =>
@@ -2190,12 +1875,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get txnDetailSplitRemoved => 'Uppdelningen togs bort';
-
-  @override
-  String get txnDetailNoTags => 'Inga taggar';
-
-  @override
-  String get dataIn => 'Importera data';
 
   @override
   String get dataInImportTitle => 'Importera';
@@ -2530,9 +2209,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get manage => 'Hantera';
-
-  @override
   String get manageSearch => 'Sök';
 
   @override
@@ -2764,9 +2440,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get manageExportStillPreparing =>
       'Förbereds fortfarande. Dra nedåt för att kontrollera igen.';
-
-  @override
-  String get p3roInsightsSeeAll => 'Visa alla';
 
   @override
   String get p3roInsightsEmpty => 'Inga insikter just nu';
@@ -3224,10 +2897,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get p3rpTitle => 'Rapporter';
 
   @override
-  String get p3rpHomeSubtitle =>
-      'Nettoförmögenhet, kassaflöde och utgifter över tid';
-
-  @override
   String get p3rpPeriodMonth => 'Månad';
 
   @override
@@ -3500,11 +3169,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String dshGroupTitle(String type, int count) {
     return '$type · $count';
-  }
-
-  @override
-  String dshGroupEmpty(int count) {
-    return '($count tomma)';
   }
 
   @override
