@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sure_mobile/l10n/app_localizations.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/widgets/net_worth_card.dart';
@@ -18,17 +19,11 @@ void main() {
   Widget harness(PrivacyProvider privacy) {
     return ChangeNotifierProvider<PrivacyProvider>.value(
       value: privacy,
-      child: MaterialApp(
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: NetWorthCard(
-            assetTotalsByCurrency: const {'USD': 29669.71},
-            liabilityTotalsByCurrency: const {},
-            currentFilter: AccountFilter.all,
-            onFilterChanged: (_) {},
-            formatAmount: (currency, amount) =>
-                '\$${amount.toStringAsFixed(2)}',
-            netWorthFormatted: r'$29,669.71',
-          ),
+          body: NetWorthCard(netWorthFormatted: r'$29,669.71'),
         ),
       ),
     );
@@ -71,11 +66,9 @@ void main() {
     await privacy.setHidden(true);
     await tester.pump();
 
-    // The real value is gone, and both amounts the harness renders — the
-    // net-worth headline and the single USD asset total — collapse to the same
-    // fixed mask, so exactly two appear.
+    // The real value is gone and the net-worth headline shows the mask.
     expect(find.text(r'$29,669.71'), findsNothing);
-    expect(find.text(r'$••••'), findsNWidgets(2));
+    expect(find.text(r'$••••'), findsOneWidget);
   });
 
   testWidgets('hidden state persists across provider instances',
@@ -92,8 +85,8 @@ void main() {
     await tester.pumpWidget(harness(PrivacyProvider()));
     await settleLoad(tester);
 
-    // Net-worth headline + the single USD asset total both mask.
+    // The net-worth headline masks.
     expect(find.text(r'$29,669.71'), findsNothing);
-    expect(find.text(r'$••••'), findsNWidgets(2));
+    expect(find.text(r'$••••'), findsOneWidget);
   });
 }

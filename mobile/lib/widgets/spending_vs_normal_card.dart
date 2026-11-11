@@ -5,25 +5,25 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/spending_vs_normal.dart';
 import '../providers/auth_provider.dart';
-import '../providers/privacy_provider.dart';
+import '../screens/reports_screen.dart';
 import '../services/spending_vs_normal_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../utils/investment_math.dart';
-import '../utils/money_masker.dart';
-import 'budget_progress_bar.dart' show parseCategoryColor;
-import 'sure_card.dart';
+import 'ds/sure_panel.dart';
+import 'sure_icon.dart';
+import 'sure_list_group.dart';
 
-/// Home card comparing this month's spending with normal (from
-/// `GET /api/v1/spending_vs_normal`), with the categories furthest above
-/// normal. Tap to expand to every category. Renders nothing while loading,
-/// on any error, or when there is no history to compare with. Give it a new
-/// key to reload.
+/// Home's one-row "Spending 13% above normal ›" panel, from
+/// `GET /api/v1/spending_vs_normal`. Tapping opens [ReportsScreen], whose
+/// Month view flags the categories above normal. Renders nothing while
+/// loading, on any error, or when there is no history to compare with. Give
+/// it a new key to reload.
 class SpendingVsNormalCard extends StatefulWidget {
   const SpendingVsNormalCard({
     super.key,
     this.service,
     this.accessTokenLoader,
+    this.onOpen,
+    this.margin,
   });
 
   /// Injected for tests; otherwise the card owns one.
@@ -32,6 +32,13 @@ class SpendingVsNormalCard extends StatefulWidget {
   /// Defaults to [AuthProvider.getValidAccessToken].
   final Future<String?> Function()? accessTokenLoader;
 
+  /// Replaces opening [ReportsScreen] (tests).
+  final VoidCallback? onOpen;
+  final EdgeInsetsGeometry? margin;
+
+  /// Ratios closer to zero than this read as "about normal".
+  static const double aboutNormal = 0.005;
+
   @override
   State<SpendingVsNormalCard> createState() => _SpendingVsNormalCardState();
 }
@@ -39,7 +46,6 @@ class SpendingVsNormalCard extends StatefulWidget {
 class _SpendingVsNormalCardState extends State<SpendingVsNormalCard> {
   late final SpendingVsNormalService _service;
   SpendingVsNormal? _data;
-  bool _expanded = false;
 
   @override
   void initState() {
@@ -65,6 +71,14 @@ class _SpendingVsNormalCardState extends State<SpendingVsNormalCard> {
     setState(() => _data = result['spending'] as SpendingVsNormal);
   }
 
+  void _open() {
+    final onOpen = widget.onOpen;
+    if (onOpen != null) return onOpen();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const ReportsScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = _data;
@@ -73,154 +87,53 @@ class _SpendingVsNormalCardState extends State<SpendingVsNormalCard> {
     }
 
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
-    final locale = Localizations.localeOf(context).toString();
-    final hidden = context.watch<PrivacyProvider>().hidden;
-    final percentFormat = NumberFormat.percentPattern(locale);
-
-    String money(double value) => MoneyMasker.mask(
-          InvestmentMath.formatMoney(value, currency: data.currency, locale: locale),
-          hidden: hidden,
-        );
-    String signedPercent(double ratio) =>
-        '${ratio > 0 ? '+' : ''}${percentFormat.format(ratio)}';
-
+    final percent =
+        NumberFormat.percentPattern(Localizations.localeOf(context).toString());
     final ratio = data.ratio;
-    final summary = [
-      if (data.normalTotal != null) l.spendingVsNormalNormal(money(data.normalTotal!)),
-      if (ratio != null && ratio.abs() >= 0.005)
-        ratio > 0
-            ? l.spendingVsNormalAbove(percentFormat.format(ratio))
-            : l.spendingVsNormalBelow(percentFormat.format(-ratio)),
-    ].join(' · ');
-    final top = data.topAboveNormal();
+    final above = ratio != null && ratio >= SpendingVsNormalCard.aboutNormal;
 
-    return SureCard(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
-      onTap: () => setState(() => _expanded = !_expanded),
-      child: Semantics(
-        button: true,
-        expanded: _expanded,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(l.spendingVsNormalTitle,
-                      style: theme.textTheme.labelLarge
-                          ?.copyWith(color: palette.textSecondary)),
-                ),
-                Icon(_expanded ? Icons.expand_less : Icons.expand_more,
-                    color: palette.textSecondary),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              data.inProgress
-                  ? l.spendingVsNormalSoFar(money(data.total))
-                  : money(data.total),
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            if (summary.isNotEmpty)
-              Text(summary,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: palette.textSecondary)),
-            if (!_expanded && top.isNotEmpty) ...[
-              const SizedBox(height: SureSpacing.md),
-              Wrap(
-                spacing: SureSpacing.lg,
-                runSpacing: SureSpacing.xs,
-                children: [
-                  for (final c in top)
-                    Text(
-                      '${c.name} ${c.ratio == null ? l.spendingVsNormalNew : signedPercent(c.ratio!)}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: palette.warning, fontWeight: FontWeight.w600),
-                    ),
-                ],
+    final String title;
+    if (ratio == null) {
+      title = l.spendingVsNormalTitle;
+    } else if (ratio.abs() < SpendingVsNormalCard.aboutNormal) {
+      title = l.dshSpendingAboutNormal;
+    } else if (ratio > 0) {
+      title = l.dshSpendingAbove(percent.format(ratio));
+    } else {
+      title = l.dshSpendingBelow(percent.format(-ratio));
+    }
+
+    final tint = above ? palette.warning : palette.textSecondary;
+    return SurePanel.rows(
+      margin: widget.margin,
+      children: [
+        SureListRow(
+          leading: ExcludeSemantics(
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: above
+                    ? palette.warning.withValues(alpha: 0.15)
+                    : palette.surfaceInset,
+                shape: BoxShape.circle,
               ),
-            ],
-            if (_expanded) ...[
-              const SizedBox(height: SureSpacing.md),
-              for (final c in data.categories)
-                _CategoryLine(
-                  category: c,
-                  amount: c.normal == null
-                      ? money(c.total)
-                      : l.spendingVsNormalCategoryNormal(
-                          money(c.total), money(c.normal!)),
-                  change: c.ratio == null
-                      ? (c.total > 0 && (c.normal ?? 0) == 0
-                          ? l.spendingVsNormalNew
-                          : '')
-                      : signedPercent(c.ratio!),
-                ),
-            ],
-            const SizedBox(height: SureSpacing.xs),
-            Text(
-              _expanded ? l.spendingVsNormalShowLess : l.spendingVsNormalShowAll,
-              style: theme.textTheme.bodySmall?.copyWith(color: palette.link),
+              alignment: Alignment.center,
+              child: SureIcon(
+                ratio != null && ratio < 0
+                    ? SureIcons.trendingDown
+                    : SureIcons.trendingUp,
+                size: 15,
+                color: tint,
+              ),
             ),
-          ],
+          ),
+          title: title,
+          showChevron: true,
+          onTap: _open,
         ),
-      ),
-    );
-  }
-}
-
-class _CategoryLine extends StatelessWidget {
-  const _CategoryLine({
-    required this.category,
-    required this.amount,
-    required this.change,
-  });
-
-  final SpendingCategory category;
-  final String amount;
-  final String change;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = SureColors.of(context).palette;
-    final above = (category.change ?? 0) >= 1;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: SureSpacing.xs),
-      child: Row(
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: parseCategoryColor(category.color) ?? palette.textSubdued,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: SureSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(category.name, style: theme.textTheme.bodyMedium),
-                Text(amount,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: palette.textSecondary)),
-              ],
-            ),
-          ),
-          Text(
-            change,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: above ? palette.warning : palette.textSecondary,
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

@@ -7,8 +7,10 @@ import '../providers/privacy_provider.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
 import 'sure_card.dart';
+import 'sure_icon.dart';
 
-/// Dashboard entry point to the portfolio: the investment and crypto
+/// Entry point to the portfolio (no longer on Home; its [primaryCurrency]
+/// rule picks the Invest tab's currency): the investment and crypto
 /// accounts' total value per currency. Tapping it opens the portfolio in
 /// [primaryCurrency].
 class InvestmentsSummaryCard extends StatelessWidget {
@@ -96,7 +98,8 @@ class InvestmentsSummaryCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+            SureIcon(SureIcons.chevronRight,
+                color: colorScheme.onSurfaceVariant),
           ],
         ),
       ),

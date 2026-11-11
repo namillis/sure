@@ -1,12 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/connectivity_service.dart';
-import '../providers/transactions_provider.dart';
-import '../providers/auth_provider.dart';
-import '../l10n/app_localizations.dart';
 
+import '../l10n/app_localizations.dart';
+import '../providers/auth_provider.dart';
+import '../providers/transactions_provider.dart';
+import '../services/connectivity_service.dart';
+import '../theme/sure_colors.dart';
+import '../utils/updated_ago.dart';
+import 'ds/sure_banner.dart';
+import 'sure_icon.dart';
+
+/// The offline / pending-sync banner, as a [SureBanner].
+///
+/// Offline: "Offline · showing data from 2h ago" when [updatedAt] (when the
+/// data on screen was last loaded) is known, else a generic offline line.
+/// Online with transactions waiting to upload: "N transactions waiting to
+/// sync" with a "Sync now" link. Otherwise renders nothing.
 class ConnectivityBanner extends StatefulWidget {
-  const ConnectivityBanner({super.key});
+  const ConnectivityBanner({
+    super.key,
+    this.updatedAt,
+    this.margin,
+    this.clock,
+  });
+
+  final DateTime? updatedAt;
+  final EdgeInsetsGeometry? margin;
+
+  /// Source of "now"; injectable for tests.
+  final DateTime Function()? clock;
 
   @override
   State<ConnectivityBanner> createState() => _ConnectivityBannerState();
@@ -15,150 +37,86 @@ class ConnectivityBanner extends StatefulWidget {
 class _ConnectivityBannerState extends State<ConnectivityBanner> {
   bool _isSyncing = false;
 
-  Future<void> _handleSync(BuildContext context, String? accessToken, TransactionsProvider transactionsProvider) async {
+  T? _maybeWatch<T>() {
+    try {
+      return Provider.of<T>(context);
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
+  Future<void> _syncNow(TransactionsProvider transactionsProvider) async {
     // Capture context-derived objects before the async gap so we never touch
     // `context` after an await.
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    if (accessToken == null) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l.connectivitySignInToSync),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      if (mounted) {
-        setState(() {
-          _isSyncing = false;
-        });
-      }
-      return;
-    }
+    final palette = SureColors.of(context).palette;
+    final authProvider = context.read<AuthProvider>();
+    setState(() => _isSyncing = true);
+
+    void show(String text, Color color) => messenger.showSnackBar(
+          SnackBar(content: Text(text), backgroundColor: color),
+        );
 
     try {
-      await transactionsProvider.syncTransactions(accessToken: accessToken);
-
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l.connectivitySyncSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l.connectivitySyncFailed),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSyncing = false;
-        });
+      String? accessToken;
+      try {
+        accessToken = await authProvider.getValidAccessToken();
+      } catch (_) {
+        show(l.connectivityAuthFailed, palette.destructive);
+        return;
       }
+      if (accessToken == null) {
+        show(l.connectivitySignInToSync, palette.warning);
+        return;
+      }
+      try {
+        await transactionsProvider.syncTransactions(accessToken: accessToken);
+        if (mounted) show(l.connectivitySyncSuccess, palette.success);
+      } catch (_) {
+        if (mounted) show(l.connectivitySyncFailed, palette.destructive);
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncing = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ConnectivityService, TransactionsProvider>(
-      builder: (context, connectivityService, transactionsProvider, _) {
-        final l = AppLocalizations.of(context);
-        final isOffline = connectivityService.isOffline;
-        final hasPending = transactionsProvider.hasPendingTransactions;
-        final pendingCount = transactionsProvider.pendingCount;
+    final l = AppLocalizations.of(context);
+    final isOffline = _maybeWatch<ConnectivityService>()?.isOffline ?? false;
+    final transactions = _maybeWatch<TransactionsProvider>();
+    final hasPending = transactions?.hasPendingTransactions ?? false;
 
-        if (!isOffline && !hasPending) {
-          return const SizedBox.shrink();
-        }
+    if (isOffline) {
+      final updatedAt = widget.updatedAt;
+      final String message;
+      if (updatedAt == null) {
+        message = l.p3ocOfflineMayBeOutdated;
+      } else {
+        final now = (widget.clock ?? DateTime.now)();
+        final age = compactAgeLabel(l, updatedAt, now);
+        message = age == null
+            ? l.dshOfflineShowingJustNow
+            : l.dshOfflineShowing(age);
+      }
+      return SureBanner(
+        icon: SureIcons.cloudOff,
+        message: message,
+        margin: widget.margin,
+      );
+    }
 
-        return Material(
-          color: isOffline ? Colors.orange.shade100 : Colors.blue.shade100,
-          elevation: 2,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(
-                  isOffline ? Icons.cloud_off : Icons.sync,
-                  color: isOffline ? Colors.orange.shade900 : Colors.blue.shade900,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isOffline
-                        ? l.p3ocOfflineMayBeOutdated
-                        : l.connectivityPendingSync(pendingCount),
-                    style: TextStyle(
-                      color: isOffline ? Colors.orange.shade900 : Colors.blue.shade900,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                if (!isOffline && hasPending)
-                  Consumer<AuthProvider>(
-                    builder: (context, authProvider, _) {
-                      return TextButton(
-                        onPressed: _isSyncing
-                            ? null
-                            : () async {
-                                setState(() {
-                                  _isSyncing = true;
-                                });
+    if (hasPending) {
+      return SureBanner(
+        icon: SureIcons.cloudUpload,
+        message: l.connectivityPendingSync(transactions!.pendingCount),
+        actionLabel: _isSyncing ? null : l.connectivitySyncNow,
+        onAction: _isSyncing ? null : () => _syncNow(transactions),
+        margin: widget.margin,
+      );
+    }
 
-                                String? accessToken;
-                                try {
-                                  accessToken = await authProvider.getValidAccessToken();
-                                } catch (e) {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(l.connectivityAuthFailed),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                  if (mounted) {
-                                    setState(() {
-                                      _isSyncing = false;
-                                    });
-                                  }
-                                  return;
-                                }
-
-                                if (!context.mounted) return;
-                                await _handleSync(
-                                  context,
-                                  accessToken,
-                                  transactionsProvider,
-                                );
-                              },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blue.shade900,
-                        ),
-                        child: _isSyncing
-                            ? SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade900),
-                                ),
-                              )
-                            : Text(l.connectivitySyncNow),
-                      );
-                    },
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    return const SizedBox.shrink();
   }
 }
