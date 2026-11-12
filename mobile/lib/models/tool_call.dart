@@ -15,6 +15,21 @@ class ToolCall {
     required this.createdAt,
   });
 
+  /// A readable label for the tool the assistant used:
+  /// "get_income_statement" -> "Income statement".
+  String get displayName {
+    var name = functionName.trim();
+    for (final prefix in const ['get_', 'list_', 'fetch_', 'search_']) {
+      if (name.startsWith(prefix) && name.length > prefix.length) {
+        name = name.substring(prefix.length);
+        break;
+      }
+    }
+    final words = name.replaceAll(RegExp(r'[_\-]+'), ' ').trim();
+    if (words.isEmpty) return functionName;
+    return words[0].toUpperCase() + words.substring(1);
+  }
+
   factory ToolCall.fromJson(Map<String, dynamic> json) {
     return ToolCall(
       id: json['id'].toString(),

@@ -722,7 +722,7 @@ class _MessageView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              toolCall.functionName,
+                              toolCall.displayName,
                               style: TextStyle(
                                   fontSize: 11, color: palette.textSecondary),
                             ),
