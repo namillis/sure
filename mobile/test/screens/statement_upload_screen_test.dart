@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -7,6 +8,7 @@ import 'package:sure_mobile/models/account.dart';
 import 'package:sure_mobile/screens/statement_upload_screen.dart';
 import 'package:sure_mobile/services/account_statements_service.dart';
 import 'package:sure_mobile/services/file_pick.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 import 'package:sure_mobile/widgets/sure_button.dart';
 
 import '../support/l10n_harness.dart';
@@ -94,5 +96,63 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Choose a PDF, CSV or XLSX file.'), findsOneWidget);
     expect(_upload(tester).onPressed, isNull);
+  });
+
+  testWidgets('a failed statement list shows an error state that retries',
+      (tester) async {
+    var calls = 0;
+    final client = MockClient((_) async {
+      calls++;
+      return http.Response('{}', 500);
+    });
+    await _pump(tester, client, PickedFileData.bytes('oct.pdf', [1]));
+    final error = find.byKey(const ValueKey('statementsError'));
+    expect(error, findsOneWidget);
+    expect(find.text("Couldn't load statements."), findsOneWidget);
+    await tester.tap(find.descendant(of: error, matching: find.text('Try again')));
+    await tester.pumpAndSettle();
+    expect(calls, 2);
+  });
+
+  testWidgets('the account row opens a picker sheet and loads that account',
+      (tester) async {
+    final requested = <String?>[];
+    final client = MockClient((request) async {
+      requested.add(request.url.queryParameters['account_id']);
+      return http.Response(jsonEncode({'data': [], 'meta': {}}), 200);
+    });
+    await pumpLocalized(
+      tester,
+      StatementUploadScreen(
+        service: AccountStatementsService(client: client),
+        accessTokenLoader: () async => 'token',
+        onUnauthorized: () async {},
+        accounts: [
+          ..._accounts,
+          Account.fromJson({
+            'id': 'acct_2',
+            'name': 'Savings',
+            'balance': r'$5.00',
+            'currency': 'USD',
+            'classification': 'asset',
+            'account_type': 'depository',
+          }),
+        ],
+        pickFile: (_) async => PickedFileData.bytes('oct.pdf', [1]),
+      ),
+    );
+    final row = find.byKey(const ValueKey('statementAccountRow'));
+    expect(find.descendant(of: row, matching: find.text('Choose')), findsOneWidget);
+    expect(find.byKey(const ValueKey('statementsPickAccount')), findsOneWidget);
+
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(
+        of: find.byType(SureSheet), matching: find.text('Savings')));
+    await tester.pumpAndSettle();
+
+    expect(find.descendant(of: row, matching: find.text('Savings')), findsOneWidget);
+    expect(requested, ['acct_2']);
+    expect(find.byKey(const ValueKey('statementsEmpty')), findsOneWidget);
   });
 }

@@ -9,13 +9,10 @@ import '../services/metadata_create_service.dart';
 import '../services/metadata_manage_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
-import '../widgets/form_error_text.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/manage_widgets.dart';
 import '../widgets/open_on_web_action.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_icon.dart';
-import '../widgets/sure_list_group.dart';
-import '../widgets/sure_text_field.dart';
+import 'form_sheet_fields.dart';
 
 /// Lists the family's categories with their subcategories, and creates new
 /// ones. The API can't edit or delete categories, so a row opens an info
@@ -160,7 +157,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     showManageSheet<void>(
       context,
       (sheetContext) => ManageInfoSheet(
-        leading: _CategoryBadge(category: category, size: 40),
+        leading: _CategoriesScreenState._icon(category,
+            size: SureCategoryIcon.heroSize),
         title: category.name,
         lines: [
           if (category.parent != null)
@@ -188,43 +186,54 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     final Widget content;
     if (categories == null && _loading) {
-      content = const Padding(
-        padding: EdgeInsets.only(top: 96),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      content = const ManageLoading();
     } else if (categories == null || (_failed && categories.isEmpty)) {
-      content = ManageMessage(
-        icon: Icons.error_outline,
+      content = SureEmptyState(
+        key: const ValueKey('categoriesError'),
+        icon: SureIcons.circleAlert,
         title: l.manageCategoriesLoadFailed,
-        onRetry: _load,
+        primaryLabel: l.commonTryAgain,
+        onPrimary: _load,
       );
     } else if (categories.isEmpty) {
-      content = ManageMessage(
-        icon: Icons.category_outlined,
+      content = SureEmptyState(
+        key: const ValueKey('categoriesEmpty'),
+        icon: SureIcons.shapes,
         title: l.manageCategoriesEmpty,
         body: l.manageCategoriesEmptyBody,
+        primaryLabel: l.manageCategoryAdd,
+        onPrimary: _create,
       );
     } else {
       final tree = filterCategoryTree(buildCategoryTree(categories), _query);
       content = tree.isEmpty
-          ? ManageMessage(
-              icon: Icons.search_off, title: l.manageNoMatches(_query.trim()))
-          : SureListGroup(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          ? SureEmptyState(
+              icon: SureIcons.search,
+              title: l.manageNoMatches(_query.trim()),
+              secondaryLabel: l.manageClearSearch,
+              onSecondary: () {
+                _search.clear();
+                setState(() => _query = '');
+              },
+            )
+          : SurePanel.rows(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              dividerIndent: SurePanel.iconRowDividerIndent,
               children: [
                 for (final node in tree) ...[
                   SureListRow(
                     title: node.category.name,
-                    leading: _CategoryBadge(category: node.category),
+                    leading: _icon(node.category),
                     showChevron: true,
                     onTap: () => _showInfo(node.category),
                   ),
                   for (final child in node.children)
                     Padding(
-                      padding: const EdgeInsets.only(left: 28),
+                      padding: const EdgeInsetsDirectional.only(
+                          start: _childIndent),
                       child: SureListRow(
                         title: child.name,
-                        leading: _CategoryBadge(category: child, size: 24),
+                        leading: _icon(child),
                         showChevron: true,
                         onTap: () => _showInfo(child),
                       ),
@@ -234,81 +243,46 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.manageCategoriesTitle),
-        actions: [
-          IconButton(
-            tooltip: l.manageCategoryAdd,
-            icon: const Icon(Icons.add),
-            onPressed: categories == null ? null : _create,
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: SureSpacing.huge),
-          children: [
-            if (categories != null && categories.isNotEmpty)
-              ManageSearchField(
-                controller: _search,
-                onChanged: (value) => setState(() => _query = value),
-              ),
-            content,
-          ],
+    return SureLargeTitleScaffold(
+      title: l.manageCategoriesTitle,
+      leading: manageBackLink(context),
+      actions: [
+        SureNavIconButton(
+          icon: SureIcons.plus,
+          semanticLabel: l.manageCategoryAdd,
+          onPressed: categories == null ? null : _create,
         ),
-      ),
+      ],
+      onRefresh: _load,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (categories != null && categories.isNotEmpty)
+                ManageSearchField(
+                  controller: _search,
+                  onChanged: (value) => setState(() => _query = value),
+                ),
+              content,
+            ],
+          ),
+        ),
+      ],
     );
   }
-}
 
-/// A colored circle with the category's icon when the app bundles it, or
-/// its first letter otherwise.
-class _CategoryBadge extends StatelessWidget {
-  const _CategoryBadge({required this.category, this.size = 28});
+  /// How far a subcategory row is indented under its parent.
+  static const double _childIndent = 24;
 
-  final Category category;
-  final double size;
-
-  // shortcut: the app bundles only a few Lucide SVGs, so other server icons
-  // fall back to the first letter. Bundle more SVGs to show them all.
-  static const _bundled = {
-    SureIcons.landmark,
-    SureIcons.creditCard,
-    SureIcons.trendingUp,
-    SureIcons.trendingDown,
-    SureIcons.receipt,
-    SureIcons.house,
-    SureIcons.car,
-    SureIcons.bitcoin,
-    SureIcons.shapes,
-    SureIcons.handCoins,
-    SureIcons.wallet,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = category.icon;
-    final letter = category.name.isEmpty
-        ? '?'
-        : category.name.characters.first.toUpperCase();
-    return ManageColorDot(
-      hex: category.color,
-      size: size,
-      child: icon != null && _bundled.contains(icon)
-          ? SureIcon(icon, size: size * 0.55, color: Colors.white)
-          : Text(
-              letter,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: size * 0.45,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-    );
-  }
+  static Widget _icon(Category category,
+          {double size = SureCategoryIcon.rowSize}) =>
+      SureCategoryIcon(
+        name: category.name,
+        color: category.color,
+        icon: category.icon,
+        size: size,
+      );
 }
 
 /// The create category form: name, color and an optional parent. [onSubmit]
@@ -331,14 +305,23 @@ class CategoryForm extends StatefulWidget {
 class _CategoryFormState extends State<CategoryForm> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
+  final _nameFocus = FocusNode();
   String _color = kMetadataColors.first;
   String? _parentId;
   bool _saving = false;
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _nameFocus.requestFocus());
+  }
+
+  @override
   void dispose() {
     _name.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
@@ -356,66 +339,82 @@ class _CategoryFormState extends State<CategoryForm> {
     });
   }
 
+  Future<void> _pickParent() async {
+    final l = AppLocalizations.of(context);
+    final picked = await showManageOptionSheet<String?>(
+      context,
+      title: l.manageCategoryParent,
+      selected: _parentId,
+      options: [
+        (null, l.manageCategoryNoParent),
+        for (final parent in widget.parents) (parent.id, parent.name),
+      ],
+    );
+    if (picked != null && mounted) setState(() => _parentId = picked.value);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(l.manageCategoryNew, style: theme.textTheme.titleLarge),
-          const SizedBox(height: SureSpacing.xl),
-          SureTextField(
-            controller: _name,
-            label: l.manageNameLabel,
-            autofocus: true,
-            textCapitalization: TextCapitalization.sentences,
-            validator: (value) => (value ?? '').trim().isEmpty
-                ? l.manageNameRequired
-                : null,
-          ),
-          const SizedBox(height: SureSpacing.xl),
-          ManageColorPicker(
-            value: _color,
-            onChanged: (value) =>
-                setState(() => _color = value ?? kMetadataColors.first),
-          ),
-          if (widget.parents.isNotEmpty) ...[
-            const SizedBox(height: SureSpacing.xl),
-            DropdownButtonFormField<String?>(
-              initialValue: _parentId,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: l.manageCategoryParent),
-              items: [
-                DropdownMenuItem<String?>(
-                    value: null, child: Text(l.manageCategoryNoParent)),
-                for (final parent in widget.parents)
-                  DropdownMenuItem<String?>(
-                      value: parent.id, child: Text(parent.name)),
+    final parent = widget.parents.where((p) => p.id == _parentId).firstOrNull;
+    return SureSheet(
+      title: l.manageCategoryNew,
+      actionLabel: l.commonSave,
+      actionKey: const ValueKey('categoryFormSave'),
+      busy: _saving,
+      onAction: _submit,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SurePanel.rows(
+                children: [
+                  FormSheetFieldRow(
+                    label: l.manageNameLabel,
+                    controller: _name,
+                    focusNode: _nameFocus,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.done,
+                    validator: (value) => (value ?? '').trim().isEmpty
+                        ? l.manageNameRequired
+                        : null,
+                  ),
+                  if (widget.parents.isNotEmpty)
+                    SureListRow(
+                      key: const ValueKey('categoryFormParent'),
+                      title: l.manageCategoryParent,
+                      value: parent?.name ?? l.manageCategoryNoParent,
+                      showChevron: true,
+                      onTap: _saving ? null : _pickParent,
+                    ),
+                ],
+              ),
+              ManageColorPicker(
+                value: _color,
+                onChanged: (value) =>
+                    setState(() => _color = value ?? kMetadataColors.first),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                child: Text(
+                  l.manageCategoryIconHint,
+                  style: TextStyle(
+                      fontSize: 13, height: 1.35, color: palette.textSecondary),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: SureSpacing.lg),
+                ManageErrorText(_error!),
               ],
-              onChanged: (value) => setState(() => _parentId = value),
-            ),
-          ],
-          const SizedBox(height: SureSpacing.lg),
-          Text(l.manageCategoryIconHint,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: palette.textSecondary)),
-          if (_error != null) ...[
-            const SizedBox(height: SureSpacing.lg),
-            FormErrorText(_error!),
-          ],
-          const SizedBox(height: SureSpacing.xl),
-          SureButton(
-            label: l.commonSave,
-            fullWidth: true,
-            loading: _saving,
-            onPressed: _saving ? null : _submit,
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

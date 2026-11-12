@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -15,11 +14,10 @@ import '../services/imports_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
 import '../utils/data_import_logic.dart';
-import '../widgets/form_error_text.dart';
+import '../widgets/ds/ds.dart';
+import '../widgets/manage_widgets.dart';
 import '../widgets/open_on_web_action.dart';
 import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
-import '../widgets/sure_list_group.dart';
 
 /// Settings -> Import: import history, then a four-step CSV transaction
 /// import (choose file and account, map columns, preview, publish).
@@ -376,116 +374,127 @@ class _ImportScreenState extends State<ImportScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.dataInImportTitle),
-        actions: const [OpenOnWebAction(path: '/imports')],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadHistory,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: SureSpacing.huge),
-          children: [
-            _historySection(context),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: SureSpacing.xl),
-              child: SureCard(child: _wizard(context)),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(SureSpacing.xl),
-              child: Center(
-                child: DataInLinkButton(
-                  label: l.dataInMoreTypesOnWeb,
-                  icon: Icons.language,
-                  onPressed: () => openWebFallback(context,
-                      title: l.dataInImportTitle, path: '/imports/new'),
+    return SureLargeTitleScaffold(
+      title: l.dataInImportTitle,
+      leading: manageBackLink(context),
+      actions: [
+        SureNavIconButton(
+          icon: SureIcons.externalLink,
+          semanticLabel: l.shellOpenOnWeb,
+          onPressed: () => openWebFallback(context,
+              title: l.dataInImportTitle, path: '/imports'),
+        ),
+      ],
+      onRefresh: _loadHistory,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _historySection(context),
+              _wizard(context),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: Center(
+                  child: DataInLinkButton(
+                    label: l.dataInMoreTypesOnWeb,
+                    icon: SureIcons.arrowUpRight,
+                    onPressed: () => openWebFallback(context,
+                        title: l.dataInImportTitle, path: '/imports/new'),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
+
+  static const _hMargin = EdgeInsets.symmetric(horizontal: 16);
 
   Widget _historySection(BuildContext context) {
     final l = AppLocalizations.of(context);
     final history = _history;
-    const margin = EdgeInsets.fromLTRB(
-        SureSpacing.xl, SureSpacing.lg, SureSpacing.xl, SureSpacing.xl);
     if (history == null && _historyLoading) {
       return const Padding(
         padding: EdgeInsets.all(SureSpacing.xxxl),
         child: Center(child: CircularProgressIndicator()),
       );
     }
+    final Widget panel;
     if (history == null || (_historyFailed && history.isEmpty)) {
-      return Padding(
-        padding: margin,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FormErrorText(l.dataInHistoryFailed),
-            const SizedBox(height: SureSpacing.md),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: SureButton(
-                label: l.dataInRetry,
-                variant: SureButtonVariant.outline,
-                onPressed: _loadHistory,
-              ),
-            ),
-          ],
+      panel = SurePanel(
+        margin: _hMargin,
+        child: SureEmptyState(
+          key: const ValueKey('importHistoryError'),
+          icon: SureIcons.circleAlert,
+          title: l.dataInHistoryFailed,
+          primaryLabel: l.dataInRetry,
+          onPrimary: _loadHistory,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         ),
       );
-    }
-    if (history.isEmpty) {
-      return Padding(
-        padding: margin,
-        child: Text(l.dataInHistoryEmpty,
-            style: TextStyle(color: SureColors.of(context).palette.textSubdued)),
+    } else if (history.isEmpty) {
+      panel = SurePanel(
+        margin: _hMargin,
+        child: SureEmptyState(
+          key: const ValueKey('importHistoryEmpty'),
+          icon: SureIcons.inbox,
+          title: l.dataInHistoryEmpty,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        ),
+      );
+    } else {
+      panel = SurePanel.rows(
+        margin: _hMargin,
+        dividerIndent: SurePanel.iconRowDividerIndent,
+        children: [
+          for (final item in history)
+            SureListRow(
+              leading: _statusBadge(item),
+              title: dataInTypeLabel(l, item.type),
+              subtitle: [
+                if (item.createdAt != null)
+                  SureDates.shortOf(context, item.createdAt!.toLocal()),
+                dataInStatusLabel(l, item.status),
+                if (item.rowsCount != null) l.dataInRowCount(item.rowsCount!),
+              ].join(' · '),
+              showChevron: true,
+              onTap: () => _showStatus(item),
+            ),
+        ],
       );
     }
-    return SureListGroup(
-      header: l.dataInHistoryHeader,
-      margin: margin,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final item in history)
-          SureListRow(
-            leading: Icon(_statusIcon(item), semanticLabel: dataInStatusLabel(l, item.status)),
-            title: dataInTypeLabel(l, item.type),
-            subtitle: [
-              if (item.createdAt != null) _date(context, item.createdAt!),
-              dataInStatusLabel(l, item.status),
-              if (item.rowsCount != null) l.dataInRowCount(item.rowsCount!),
-            ].join(' · '),
-            showChevron: true,
-            onTap: () => _showStatus(item),
-          ),
+        SureSectionHeader(label: l.dataInHistoryHeader),
+        panel,
       ],
     );
   }
 
-  IconData _statusIcon(DataImport item) {
-    if (item.isComplete) return Icons.check_circle_outline;
-    if (item.isFailed) return Icons.error_outline;
-    if (item.inProgress) return Icons.hourglass_top;
-    return Icons.pending_outlined;
+  /// Decorative: the row or line next to it states the status in words.
+  Widget _statusBadge(DataImport item) {
+    final palette = SureColors.of(context).palette;
+    if (item.isComplete) {
+      return ManageIconBadge(icon: SureIcons.circleCheck, color: palette.success);
+    }
+    if (item.isFailed) {
+      return ManageIconBadge(
+          icon: SureIcons.circleAlert, color: palette.destructive);
+    }
+    if (item.inProgress) return const ManageIconBadge(icon: SureIcons.clock);
+    return const ManageIconBadge(icon: SureIcons.circleDashed);
   }
 
-  String _date(BuildContext context, DateTime date) =>
-      DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
-          .format(date.toLocal());
-
   Future<void> _showStatus(DataImport item) async {
-    await showModalBottomSheet<void>(
+    await showSureSheet<void>(
       context: context,
-      showDragHandle: true,
       builder: (_) => _ImportStatusSheet(
         initial: item,
         load: () => _authed((t) => _service.show(accessToken: t, id: item.id)),
-        formatDate: (d) => _date(context, d),
       ),
     );
   }
@@ -498,7 +507,6 @@ class _ImportScreenState extends State<ImportScreen> {
       l.dataInStepPreview,
       l.dataInStepPublish,
     ];
-    final theme = Theme.of(context);
     final body = switch (_step) {
       _Step.file => _fileStep(context),
       _Step.map => _mapStep(context),
@@ -508,17 +516,18 @@ class _ImportScreenState extends State<ImportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Semantics(
-          header: true,
-          child: Text(l.dataInStepOf(_step.index + 1, 4, titles[_step.index]),
-              style: theme.textTheme.titleMedium),
+        _StepIndicator(
+          step: _step.index,
+          count: titles.length,
+          label: l.dataInStepOf(_step.index + 1, titles.length,
+              titles[_step.index]),
         ),
-        const SizedBox(height: SureSpacing.lg),
         body,
-        if (_error != null) ...[
-          const SizedBox(height: SureSpacing.lg),
-          FormErrorText(_error!),
-        ],
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: ManageErrorText(_error!),
+          ),
       ],
     );
   }
@@ -526,25 +535,32 @@ class _ImportScreenState extends State<ImportScreen> {
   Widget _buttons({VoidCallback? onBack, required String next, VoidCallback? onNext}) {
     final l = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: SureSpacing.xl),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
         children: [
-          if (onBack != null)
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: SureButton(
-                label: l.dataInBack,
-                variant: SureButtonVariant.outline,
-                onPressed: _busy ? null : onBack,
+          if (onBack != null) ...[
+            Expanded(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: SureButton(
+                  label: l.dataInBack,
+                  variant: SureButtonVariant.outline,
+                  fullWidth: true,
+                  onPressed: _busy ? null : onBack,
+                ),
               ),
             ),
-          const Spacer(),
-          ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: SureButton(
-              label: next,
-              loading: _busy,
-              onPressed: _busy ? null : onNext,
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 44),
+              child: SureButton(
+                label: next,
+                fullWidth: true,
+                loading: _busy,
+                onPressed: _busy ? null : onNext,
+              ),
             ),
           ),
         ],
@@ -552,60 +568,68 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
+  /// A step's lead-in line in `textSecondary`.
+  Widget _help(String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.35,
+            color: SureColors.of(context).palette.textSecondary,
+          ),
+        ),
+      );
+
+  Future<void> _pickAccount() async {
+    final l = AppLocalizations.of(context);
+    final picked = await showManageOptionSheet<String?>(
+      context,
+      title: l.dataInAccountLabel,
+      selected: _accountId,
+      options: [for (final a in _accounts) (a.id, a.name)],
+    );
+    if (picked != null && mounted) setState(() => _accountId = picked.value);
+  }
+
   Widget _fileStep(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
     final accounts = _accounts;
     final file = _file;
     final canContinue = file != null && _fileError == null && _accountId != null;
+    final account = accounts.where((a) => a.id == _accountId).firstOrNull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l.dataInFileHelp(formatByteSize(maxCsvImportBytes)),
-            style: TextStyle(color: palette.textSubdued)),
-        const SizedBox(height: SureSpacing.lg),
+        _help(l.dataInFileHelp(formatByteSize(maxCsvImportBytes))),
         if (accounts.isEmpty)
-          FormErrorText(l.dataInNoAccounts)
-        else
-          DropdownButtonFormField<String>(
-            key: ValueKey('account-$_accountId'),
-            initialValue: _accountId,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: l.dataInAccountLabel),
-            items: [
-              for (final a in accounts)
-                DropdownMenuItem(value: a.id, child: Text(a.name, overflow: TextOverflow.ellipsis)),
-            ],
-            onChanged: _busy ? null : (v) => setState(() => _accountId = v),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+            child: ManageErrorText(l.dataInNoAccounts),
           ),
-        const SizedBox(height: SureSpacing.lg),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: SureButton(
-              label: file == null ? l.dataInChooseCsv : l.dataInChooseAnother,
-              variant: SureButtonVariant.outline,
-              leading: const Icon(Icons.upload_file, size: 16),
-              onPressed: _busy ? null : _chooseFile,
+        SurePanel.rows(
+          margin: _hMargin,
+          children: [
+            if (accounts.isNotEmpty)
+              SureListRow(
+                key: const ValueKey('importAccountRow'),
+                title: l.dataInAccountLabel,
+                value: account?.name ?? l.ds4dChoose,
+                showChevron: true,
+                onTap: _busy ? null : _pickAccount,
+              ),
+            DataInFileRow(
+              file: file,
+              chooseLabel: l.dataInChooseCsv,
+              onTap: _busy ? null : _chooseFile,
             ),
-          ),
+          ],
         ),
-        if (file != null) ...[
-          const SizedBox(height: SureSpacing.md),
-          Row(
-            children: [
-              const Icon(Icons.description_outlined, size: 20),
-              const SizedBox(width: SureSpacing.md),
-              Expanded(child: Text(file.name, overflow: TextOverflow.ellipsis)),
-              Text(formatByteSize(file.size), style: TextStyle(color: palette.textSubdued)),
-            ],
+        if (_fileError != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+            child: ManageErrorText(_fileError!),
           ),
-        ],
-        if (_fileError != null) ...[
-          const SizedBox(height: SureSpacing.md),
-          FormErrorText(_fileError!),
-        ],
         _buttons(
           next: l.dataInContinue,
           onNext: canContinue ? () => _runPreflight() : null,
@@ -614,30 +638,38 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
-  Widget _dropdown<T>({
+  /// A panel row showing the chosen option's label; tapping opens a picker
+  /// sheet of [options].
+  Widget _optionRow<T>({
+    required Key key,
     required String label,
-    required T? value,
-    required List<(T?, String)> options,
-    required ValueChanged<T?> onChanged,
-  }) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: SureSpacing.lg),
-        child: DropdownButtonFormField<T>(
-          key: ValueKey('$label-$value-${options.length}'),
-          initialValue: value,
-          isExpanded: true,
-          decoration: InputDecoration(labelText: label),
-          items: [
-            for (final (v, text) in options)
-              DropdownMenuItem<T>(value: v, child: Text(text, overflow: TextOverflow.ellipsis)),
-          ],
-          onChanged: _busy ? null : onChanged,
-        ),
-      );
+    required T value,
+    required List<ManageOption<T>> options,
+    required ValueChanged<T> onChanged,
+  }) {
+    final current =
+        options.where((o) => o.$1 == value).map((o) => o.$2).firstOrNull;
+    return SureListRow(
+      key: key,
+      title: label,
+      value: current ?? value?.toString(),
+      showChevron: true,
+      onTap: _busy
+          ? null
+          : () async {
+              final picked = await showManageOptionSheet<T>(
+                context,
+                title: label,
+                selected: value,
+                options: options,
+              );
+              if (picked != null && mounted) onChanged(picked.value);
+            },
+    );
+  }
 
   Widget _mapStep(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
     final preflight = _preflight!;
     final headers = preflight.headers;
     final columnLabels = {
@@ -657,71 +689,91 @@ class _ImportScreenState extends State<ImportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l.dataInDetected(headers.length, preflight.rowsCount),
-            style: TextStyle(color: palette.textSubdued)),
-        for (final e in errors) ...[
-          const SizedBox(height: SureSpacing.md),
-          FormErrorText(e),
-        ],
-        for (final w in preflight.warnings) ...[
-          const SizedBox(height: SureSpacing.md),
-          _Warning(w),
-        ],
-        const SizedBox(height: SureSpacing.lg),
-        for (final column in ImportColumn.values)
-          _dropdown<String>(
-            label: column.required
-                ? l.dataInRequiredLabel(columnLabels[column]!)
-                : columnLabels[column]!,
-            value: _mapping[column],
-            options: [
-              (null, l.dataInColumnNone),
-              for (final h in headers) (h, h),
-            ],
-            onChanged: (v) => setState(() {
-              _mapping = {..._mapping, column: v};
-              if (column == ImportColumn.date && v != null) {
-                final detected = detectDateFormat(
-                    columnValues(_records(maxRecords: 51), v));
-                if (detected != null) _dateFormat = detected;
-              }
-            }),
+        _help(l.dataInDetected(headers.length, preflight.rowsCount)),
+        for (final e in errors)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+            child: ManageErrorText(e),
           ),
-        _dropdown<String>(
-          label: l.dataInDateFormat,
-          value: _dateFormat,
-          options: [for (final (label, v) in importDateFormats) (v, label)],
-          onChanged: (v) => setState(() => _dateFormat = v ?? _dateFormat),
-        ),
-        _dropdown<String>(
-          label: l.dataInNumberFormat,
-          value: _numberFormat,
-          options: [for (final f in importNumberFormats) (f, f)],
-          onChanged: (v) => setState(() => _numberFormat = v ?? _numberFormat),
-        ),
-        _dropdown<String>(
-          label: l.dataInSignage,
-          value: _signage,
-          options: [
-            ('inflows_positive', l.dataInSignagePositive),
-            ('inflows_negative', l.dataInSignageNegative),
+        for (final w in preflight.warnings)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: ManageNotice(w),
+          ),
+        SurePanel.rows(
+          margin: _hMargin,
+          children: [
+            for (final column in ImportColumn.values)
+              _optionRow<String?>(
+                key: ValueKey('importMap-${column.param}'),
+                label: column.required
+                    ? l.dataInRequiredLabel(columnLabels[column]!)
+                    : columnLabels[column]!,
+                value: _mapping[column],
+                options: [
+                  (null, l.dataInColumnNone),
+                  for (final h in headers) (h, h),
+                ],
+                onChanged: (v) => setState(() {
+                  _mapping = {..._mapping, column: v};
+                  if (column == ImportColumn.date && v != null) {
+                    final detected = detectDateFormat(
+                        columnValues(_records(maxRecords: 51), v));
+                    if (detected != null) _dateFormat = detected;
+                  }
+                }),
+              ),
           ],
-          onChanged: (v) => setState(() => _signage = v ?? _signage),
         ),
-        _dropdown<String>(
-          label: l.dataInSeparator,
-          value: _colSep,
-          options: [
-            (',', l.dataInSeparatorComma),
-            (';', l.dataInSeparatorSemicolon),
+        SureSectionHeader(label: l.ds4dFormatsHeader),
+        SurePanel.rows(
+          margin: _hMargin,
+          children: [
+            _optionRow<String>(
+              key: const ValueKey('importDateFormat'),
+              label: l.dataInDateFormat,
+              value: _dateFormat,
+              options: [for (final (label, v) in importDateFormats) (v, label)],
+              onChanged: (v) => setState(() => _dateFormat = v),
+            ),
+            _optionRow<String>(
+              key: const ValueKey('importNumberFormat'),
+              label: l.dataInNumberFormat,
+              value: _numberFormat,
+              options: [for (final f in importNumberFormats) (f, f)],
+              onChanged: (v) => setState(() => _numberFormat = v),
+            ),
+            _optionRow<String>(
+              key: const ValueKey('importSignage'),
+              label: l.dataInSignage,
+              value: _signage,
+              options: [
+                ('inflows_positive', l.dataInSignagePositive),
+                ('inflows_negative', l.dataInSignageNegative),
+              ],
+              onChanged: (v) => setState(() => _signage = v),
+            ),
+            _optionRow<String>(
+              key: const ValueKey('importSeparator'),
+              label: l.dataInSeparator,
+              value: _colSep,
+              options: [
+                (',', l.dataInSeparatorComma),
+                (';', l.dataInSeparatorSemicolon),
+              ],
+              onChanged: (v) {
+                if (v == _colSep) return;
+                setState(() => _colSep = v);
+                _runPreflight(resetMapping: false);
+              },
+            ),
           ],
-          onChanged: (v) {
-            if (v == null || v == _colSep) return;
-            setState(() => _colSep = v);
-            _runPreflight(resetMapping: false);
-          },
         ),
-        if (!ready) FormErrorText(l.dataInNeedDateAndAmount),
+        if (!ready)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: ManageErrorText(l.dataInNeedDateAndAmount),
+          ),
         _buttons(
           onBack: () => setState(() => _step = _Step.file),
           next: l.dataInContinue,
@@ -733,7 +785,6 @@ class _ImportScreenState extends State<ImportScreen> {
 
   Widget _previewStep(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
     final records = _records(maxRecords: _previewRows + 1);
     final header = records.isEmpty ? const <String>[] : records.first;
     String cell(List<String> row, ImportColumn column) {
@@ -760,29 +811,45 @@ class _ImportScreenState extends State<ImportScreen> {
         title: cell(row, ImportColumn.name).isEmpty
             ? l.dataInRowUntitled
             : cell(row, ImportColumn.name),
-        detail: [date, amount, cell(row, ImportColumn.category)]
+        detail: [date, cell(row, ImportColumn.category)]
             .where((s) => s.isNotEmpty)
             .join(' · '),
+        amount: amount,
         errors: problems,
       ));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l.dataInPreviewSummary(rows.length, _preflight?.rowsCount ?? rows.length),
-          style: TextStyle(color: palette.textSubdued),
-        ),
-        if (invalid > 0) ...[
-          const SizedBox(height: SureSpacing.md),
-          _Warning(l.dataInPreviewInvalid(invalid)),
-        ],
-        if (_mapping[ImportColumn.category] != null || _mapping[ImportColumn.tags] != null) ...[
-          const SizedBox(height: SureSpacing.md),
-          _Warning(l.dataInCategoriesNote),
-        ],
-        const SizedBox(height: SureSpacing.md),
-        if (tiles.isEmpty) Text(l.dataInPreviewEmpty) else ...tiles,
+        _help(l.dataInPreviewSummary(
+            rows.length, _preflight?.rowsCount ?? rows.length)),
+        if (invalid > 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: ManageNotice(l.dataInPreviewInvalid(invalid)),
+          ),
+        if (_mapping[ImportColumn.category] != null ||
+            _mapping[ImportColumn.tags] != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: ManageNotice(l.dataInCategoriesNote, info: true),
+          ),
+        if (tiles.isEmpty)
+          SurePanel(
+            margin: _hMargin,
+            child: SureEmptyState(
+              key: const ValueKey('importPreviewEmpty'),
+              icon: SureIcons.inbox,
+              title: l.dataInPreviewEmpty,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            ),
+          )
+        else
+          SurePanel.rows(
+            margin: _hMargin,
+            dividerIndent: _PreviewRow.dividerIndent,
+            children: tiles,
+          ),
         _buttons(
           onBack: () => setState(() => _step = _Step.map),
           next: l.dataInPublish,
@@ -794,80 +861,97 @@ class _ImportScreenState extends State<ImportScreen> {
 
   Widget _publishStep(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final palette = SureColors.of(context).palette;
     final item = _published;
-    final children = <Widget>[];
+    final status = <Widget>[];
     if (item == null && _busy) {
-      children.add(Row(children: [
-        const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-        const SizedBox(width: SureSpacing.lg),
-        Expanded(child: Text(l.dataInUploading)),
-      ]));
+      status.add(_statusLine(
+        leading: const SizedBox.square(
+            dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+        text: l.dataInUploading,
+      ));
     } else if (item != null) {
       final done = item.isComplete;
-      children.add(Row(children: [
-        if (_busy)
-          const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-        else
-          Icon(_statusIcon(item)),
-        const SizedBox(width: SureSpacing.lg),
-        Expanded(
-          child: Semantics(
-            liveRegion: true,
-            child: Text(
-              done ? l.dataInComplete : dataInStatusLabel(l, item.status),
-              style: theme.textTheme.titleSmall,
-            ),
-          ),
-        ),
-      ]));
+      status.add(_statusLine(
+        leading: _busy
+            ? const SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(strokeWidth: 2))
+            : _statusBadge(item),
+        text: done ? l.dataInComplete : dataInStatusLabel(l, item.status),
+      ));
       if (item.rowsCount != null) {
-        children.add(Padding(
-          padding: const EdgeInsets.only(top: SureSpacing.md),
-          child: Text(l.dataInRowCount(item.rowsCount!)),
+        status.add(Padding(
+          padding: const EdgeInsets.only(top: 4, left: 40),
+          child: Text(l.dataInRowCount(item.rowsCount!),
+              style: TextStyle(fontSize: 13, color: palette.textSecondary)),
         ));
       }
       if (item.error != null) {
-        children.add(Padding(
-          padding: const EdgeInsets.only(top: SureSpacing.md),
-          child: FormErrorText(item.error!),
-        ));
-      }
-      if (_timedOut) {
-        children.add(Padding(
-          padding: const EdgeInsets.only(top: SureSpacing.md),
-          child: _Warning(l.dataInStillRunning),
+        status.add(Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: ManageErrorText(item.error!),
         ));
       }
     }
-    if (_rejectedRows.isNotEmpty) {
-      children.add(Padding(
-        padding: const EdgeInsets.only(top: SureSpacing.lg),
-        child: Text(l.dataInRejectedRows, style: theme.textTheme.titleSmall),
+    if (_busy) {
+      status.add(Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: LinearProgressIndicator(
+            key: const ValueKey('importPublishProgress'),
+            minHeight: 3,
+            color: palette.textPrimary,
+            backgroundColor: palette.surfaceInset,
+          ),
+        ),
       ));
-      for (final row in _rejectedRows.take(_previewRows)) {
-        children.add(_PreviewRow(
-          number: row.rowNumber,
-          title: row.name ?? l.dataInRowUntitled,
-          detail: [row.date, row.amount].whereType<String>().join(' · '),
-          errors: row.errors,
-        ));
-      }
     }
     final polling = _busy && item != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ...children,
+        if (status.isNotEmpty)
+          SurePanel(
+            margin: _hMargin,
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: status,
+            ),
+          ),
+        if (_timedOut)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: ManageNotice(l.dataInStillRunning),
+          ),
+        if (_rejectedRows.isNotEmpty) ...[
+          SureSectionHeader(label: l.dataInRejectedRows),
+          SurePanel.rows(
+            margin: _hMargin,
+            dividerIndent: _PreviewRow.dividerIndent,
+            children: [
+              for (final row in _rejectedRows.take(_previewRows))
+                _PreviewRow(
+                  number: row.rowNumber,
+                  title: row.name ?? l.dataInRowUntitled,
+                  detail: row.date ?? '',
+                  amount: row.amount ?? '',
+                  errors: row.errors,
+                ),
+            ],
+          ),
+        ],
         if (polling)
           // Stays enabled while busy, unlike the shared button row.
           Padding(
-            padding: const EdgeInsets.only(top: SureSpacing.xl),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: DataInLinkButton(
                 label: l.dataInKeepInBackground,
-                icon: Icons.schedule,
+                icon: SureIcons.clock,
                 onPressed: _keepInBackground,
               ),
             ),
@@ -887,10 +971,33 @@ class _ImportScreenState extends State<ImportScreen> {
       ],
     );
   }
+
+  Widget _statusLine({required Widget leading, required String text}) {
+    final palette = SureColors.of(context).palette;
+    return Row(
+      children: [
+        SizedBox(width: 28, child: Center(child: leading)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: palette.textPrimary,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-/// A text link with an icon whose label wraps instead of overflowing, for
-/// actions with long labels (SureButton keeps its label on one line).
+/// A text link with a Lucide icon whose label wraps instead of overflowing,
+/// for actions with long labels (SureButton keeps its label on one line).
 class DataInLinkButton extends StatelessWidget {
   const DataInLinkButton({
     super.key,
@@ -900,7 +1007,9 @@ class DataInLinkButton extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
+
+  /// Lucide icon name.
+  final String icon;
   final VoidCallback? onPressed;
 
   @override
@@ -910,10 +1019,52 @@ class DataInLinkButton extends StatelessWidget {
       style: TextButton.styleFrom(
         foregroundColor: palette.link,
         minimumSize: const Size(44, 44),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       ),
-      icon: Icon(icon, size: 18),
+      icon: SureIcon(icon,
+          size: 16, color: onPressed == null ? palette.textSubdued : palette.link),
       label: Text(label, textAlign: TextAlign.start),
       onPressed: onPressed,
+    );
+  }
+}
+
+/// The file row of the import and statement forms: "Choose file" in the
+/// link color until a file is picked, then its name and size with a
+/// "Change file" link.
+class DataInFileRow extends StatelessWidget {
+  const DataInFileRow({
+    super.key,
+    required this.file,
+    required this.chooseLabel,
+    required this.onTap,
+  });
+
+  final PickedFileData? file;
+  final String chooseLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final picked = file;
+    return SureListRow(
+      key: const ValueKey('dataInFileRow'),
+      leading: ManageIconBadge(
+        icon: picked == null ? SureIcons.cloudUpload : ManageIcons.receiptText,
+        color: picked == null ? palette.link : null,
+      ),
+      title: picked?.name ?? chooseLabel,
+      titleColor: picked == null ? palette.link : null,
+      subtitle: picked == null ? null : formatByteSize(picked.size),
+      trailing: picked == null
+          ? null
+          : Text(
+              l.dataInChooseAnother,
+              style: TextStyle(fontSize: 15, color: palette.link),
+            ),
+      onTap: onTap,
     );
   }
 }
@@ -937,60 +1088,166 @@ String dataInTypeLabel(AppLocalizations l, String type) => switch (type) {
       _ => type.endsWith('Import') ? type.substring(0, type.length - 6) : type,
     };
 
-class _Warning extends StatelessWidget {
-  const _Warning(this.message);
+/// The slim step indicator: "Step 2 of 4: Map columns" over [count] short
+/// bars, the ones up to [step] filled.
+class _StepIndicator extends StatelessWidget {
+  const _StepIndicator({
+    required this.step,
+    required this.count,
+    required this.label,
+  });
 
-  final String message;
+  final int step;
+  final int count;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final color = SureColors.of(context).palette.warning;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.warning_amber_rounded, size: 20, color: color),
-        const SizedBox(width: SureSpacing.md),
-        Expanded(child: Text(message)),
-      ],
+    final palette = SureColors.of(context).palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: palette.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ExcludeSemantics(
+            child: Row(
+              children: [
+                for (var i = 0; i < count; i++) ...[
+                  if (i > 0) const SizedBox(width: 4),
+                  Expanded(
+                    child: Container(
+                      key: ValueKey('importStepBar-$i'),
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: i <= step
+                            ? palette.textPrimary
+                            : palette.surfaceInset,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
+/// One CSV row in the preview (or one row the server rejected): the row
+/// number, its name over date and category, the raw amount, and any
+/// problems inline under it.
 class _PreviewRow extends StatelessWidget {
   const _PreviewRow({
     required this.number,
     required this.title,
     required this.detail,
+    required this.amount,
     this.errors = const [],
   });
+
+  /// Lines the dividers up with the title: 14 padding + 28 number + 8 gap.
+  static const double dividerIndent = 50;
 
   final int number;
   final String title;
   final String detail;
+
+  /// The amount as written in the file (not parsed, so not a MoneyText).
+  final String amount;
   final List<String> errors;
 
   @override
   Widget build(BuildContext context) {
     final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
+    final mono = SureMoney.tabular(
+        TextStyle(fontSize: 13, color: palette.textSubdued));
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: SureSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 28,
-            child: Text('$number', style: TextStyle(color: palette.textSubdued)),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text('$number',
+                  style: mono.copyWith(
+                      color: errors.isEmpty
+                          ? palette.textSubdued
+                          : palette.destructive)),
+            ),
           ),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: theme.textTheme.bodyMedium),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.25,
+                          fontWeight: FontWeight.w500,
+                          color: palette.textPrimary,
+                        ),
+                      ),
+                    ),
+                    if (amount.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                            maxWidth: MediaQuery.sizeOf(context).width * 0.35),
+                        child: Text(
+                          amount,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SureMoney.tabular(TextStyle(
+                            fontSize: 15,
+                            height: 1.25,
+                            color: palette.textPrimary,
+                          )),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 if (detail.isNotEmpty)
-                  Text(detail,
-                      style: theme.textTheme.bodySmall?.copyWith(color: palette.textSubdued)),
-                for (final e in errors) FormErrorText(e),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      detail,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 13, color: palette.textSecondary),
+                    ),
+                  ),
+                for (final e in errors)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: ManageErrorText(e, compact: true),
+                  ),
               ],
             ),
           ),
@@ -1005,12 +1262,10 @@ class _ImportStatusSheet extends StatefulWidget {
   const _ImportStatusSheet({
     required this.initial,
     required this.load,
-    required this.formatDate,
   });
 
   final DataImport initial;
   final Future<Map<String, dynamic>?> Function() load;
-  final String Function(DateTime) formatDate;
 
   @override
   State<_ImportStatusSheet> createState() => _ImportStatusSheetState();
@@ -1041,42 +1296,54 @@ class _ImportStatusSheetState extends State<_ImportStatusSheet> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final palette = SureColors.of(context).palette;
     final item = _item;
-    String line(String label, String value) => '$label: $value';
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-            SureSpacing.xl, 0, SureSpacing.xl, SureSpacing.xl),
+    return SureSheet(
+      title: dataInTypeLabel(l, item.type),
+      showCancel: false,
+      actionLabel: l.dsDone,
+      onAction: () => Navigator.of(context).maybePop(),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(dataInTypeLabel(l, item.type), style: theme.textTheme.titleMedium),
-            const SizedBox(height: SureSpacing.md),
-            Text(line(l.dataInStatusLabel, dataInStatusLabel(l, item.status))),
-            if (item.createdAt != null)
-              Text(line(l.dataInCreatedLabel, widget.formatDate(item.createdAt!))),
-            if (item.rowsCount != null) Text(l.dataInRowCount(item.rowsCount!)),
-            if (item.invalidRowsCount != null && item.invalidRowsCount! > 0)
-              Text(l.dataInInvalidRowCount(item.invalidRowsCount!)),
+            SurePanel.rows(
+              children: [
+                SureListRow(
+                  key: const ValueKey('importStatusRow'),
+                  title: l.dataInStatusLabel,
+                  value: dataInStatusLabel(l, item.status),
+                ),
+                if (item.createdAt != null)
+                  SureListRow(
+                    title: l.dataInCreatedLabel,
+                    value: SureDates.fullOf(context, item.createdAt!.toLocal()),
+                  ),
+                if (item.rowsCount != null)
+                  SureListRow(title: l.dataInRowCount(item.rowsCount!)),
+                if (item.invalidRowsCount != null && item.invalidRowsCount! > 0)
+                  SureListRow(
+                    title: l.dataInInvalidRowCount(item.invalidRowsCount!),
+                    titleColor: palette.destructive,
+                  ),
+              ],
+            ),
             if (item.error != null) ...[
-              const SizedBox(height: SureSpacing.md),
-              FormErrorText(item.error!),
+              const SizedBox(height: 12),
+              ManageErrorText(item.error!),
             ],
             if (_failed) ...[
-              const SizedBox(height: SureSpacing.md),
-              FormErrorText(l.dataInStatusLoadFailed),
+              const SizedBox(height: 12),
+              ManageErrorText(l.dataInStatusLoadFailed),
             ],
-            const SizedBox(height: SureSpacing.lg),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: SureButton(
-                label: l.dataInRefresh,
-                variant: SureButtonVariant.outline,
-                loading: _loading,
-                onPressed: _loading ? null : _refresh,
-              ),
+            SureButtonPanel(
+              label: l.dataInRefresh,
+              busy: _loading,
+              margin: const EdgeInsets.only(top: 16),
+              onPressed: _loading ? null : _refresh,
             ),
           ],
         ),

@@ -10,6 +10,7 @@ import 'package:sure_mobile/l10n/app_localizations.dart';
 import 'package:sure_mobile/models/category.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 import 'package:sure_mobile/screens/categories_screen.dart';
 import 'package:sure_mobile/screens/export_screen.dart';
 import 'package:sure_mobile/screens/merchants_screen.dart';
@@ -57,15 +58,14 @@ void main() {
       String? sentColor;
       await pumpLocalized(
         tester,
-        SingleChildScrollView(
-          child: CategoryForm(
-            parents: [Category(id: 'c1', name: 'Food')],
-            onSubmit: (name, color, parentId) async {
-              sentName = name;
-              sentColor = color;
-              return 'Categories are locked. Unlock them to add a new category.';
-            },
-          ),
+        // The form is its own sheet (toolbar Save), so no scroll wrapper.
+        CategoryForm(
+          parents: [Category(id: 'c1', name: 'Food')],
+          onSubmit: (name, color, parentId) async {
+            sentName = name;
+            sentColor = color;
+            return 'Categories are locked. Unlock them to add a new category.';
+          },
         ),
       );
 
@@ -108,14 +108,12 @@ void main() {
       String? sentColor = 'unset';
       await pumpLocalized(
         tester,
-        SingleChildScrollView(
-          child: MerchantForm(
-            onSubmit: (name, color, website) async {
-              sentWebsite = website;
-              sentColor = color;
-              return null;
-            },
-          ),
+        MerchantForm(
+          onSubmit: (name, color, website) async {
+            sentWebsite = website;
+            sentColor = color;
+            return null;
+          },
         ),
       );
       final fields = find.byType(TextFormField);
@@ -172,7 +170,10 @@ void main() {
     expect(tester.getTopLeft(find.text('Groceries')).dx,
         greaterThan(tester.getTopLeft(find.text('Food')).dx));
 
-    await tester.enterText(find.byType(TextFormField), 'trav');
+    await tester.enterText(
+        find.descendant(
+            of: find.byType(SureSearchField), matching: find.byType(TextField)),
+        'trav');
     await tester.pumpAndSettle();
     expect(find.text('Food'), findsNothing);
     expect(find.text('Travel'), findsOneWidget);
@@ -317,5 +318,152 @@ void main() {
     expect(formatByteSize(512), '512 B');
     expect(formatByteSize(2048), '2.0 KB');
     expect(formatByteSize(3 * 1024 * 1024), '3.0 MB');
+  });
+
+  group('restyled list states', () {
+    MetadataManageService service(http.Response Function() respond) =>
+        MetadataManageService(client: MockClient((_) async => respond()));
+
+    Widget screen(String which, MetadataManageService s) => switch (which) {
+          'categories' => CategoriesScreen(
+              service: s,
+              accessTokenLoader: _token,
+              onUnauthorized: () async {}),
+          'tags' => TagsScreen(
+              service: s,
+              accessTokenLoader: _token,
+              onUnauthorized: () async {}),
+          _ => MerchantsScreen(
+              service: s,
+              accessTokenLoader: _token,
+              onUnauthorized: () async {}),
+        };
+
+    String emptyBody(String which) => switch (which) {
+          'categories' => jsonEncode({
+              'categories': [],
+              'pagination': {'total_pages': 1}
+            }),
+          _ => '[]',
+        };
+
+    for (final which in ['categories', 'tags', 'merchants']) {
+      testWidgets('$which: empty state offers to add one', (tester) async {
+        await pumpLocalized(
+            tester, screen(which, service(() => http.Response(emptyBody(which), 200))));
+        expect(find.byKey(ValueKey('${which}Empty')), findsOneWidget);
+        expect(find.byType(SureEmptyState), findsOneWidget);
+        expect(find.byType(SureLargeTitleHeader), findsOneWidget);
+      });
+
+      testWidgets('$which: load failure shows an error state that retries',
+          (tester) async {
+        var calls = 0;
+        await pumpLocalized(
+            tester,
+            screen(
+                which,
+                service(() {
+                  calls++;
+                  return http.Response('{}', 500);
+                })));
+        final error = find.byKey(ValueKey('${which}Error'));
+        expect(error, findsOneWidget);
+        final before = calls;
+        await tester.tap(find.descendant(of: error, matching: find.text('Try Again')));
+        await tester.pumpAndSettle();
+        expect(calls, greaterThan(before));
+      });
+    }
+
+    testWidgets('categories show SureCategoryIcon and a no-match state',
+        (tester) async {
+      await pumpLocalized(
+        tester,
+        screen(
+            'categories',
+            service(() => http.Response(
+                jsonEncode({
+                  'categories': [
+                    {
+                      'id': 'c1',
+                      'name': 'Food',
+                      'color': '#e99537',
+                      'icon': 'utensils',
+                      'parent': null
+                    },
+                  ],
+                  'pagination': {'total_pages': 1},
+                }),
+                200))),
+      );
+      final icon = tester.widget<SureCategoryIcon>(find.byType(SureCategoryIcon));
+      expect(icon.icon, 'utensils');
+      expect(icon.color, '#e99537');
+
+      await tester.enterText(
+          find.descendant(
+              of: find.byType(SureSearchField), matching: find.byType(TextField)),
+          'zzz');
+      await tester.pumpAndSettle();
+      expect(find.text('Nothing matches “zzz”.'), findsOneWidget);
+      await tester.tap(find.text('Clear search'));
+      await tester.pumpAndSettle();
+      expect(find.text('Food'), findsOneWidget);
+    });
+
+    testWidgets('opened from Settings, the back link reads Settings',
+        (tester) async {
+      await pumpLocalized(
+        tester,
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) =>
+                    screen('tags', service(() => http.Response('[]', 200))))),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(
+          find.descendant(
+              of: find.byType(SureBackButton), matching: find.text('Settings')),
+          findsOneWidget);
+    });
+
+    testWidgets('the tag form is a sheet with Save in the toolbar and swatches',
+        (tester) async {
+      await pumpLocalized(
+        tester,
+        screen('tags',
+            service(() => http.Response('[{"id":"t1","name":"Trip","color":"#4da568"}]', 200))),
+      );
+      await tester.tap(find.text('Trip'));
+      await tester.pumpAndSettle();
+      final sheet = find.byType(SureSheet);
+      expect(sheet, findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text('Edit tag')), findsOneWidget);
+      expect(find.byKey(const ValueKey('tagFormSave')), findsOneWidget);
+      expect(find.bySemanticsLabel('Color 1'), findsOneWidget);
+      expect(find.widgetWithText(SureButtonPanel, 'Delete tag'), findsOneWidget);
+    });
+  });
+
+  testWidgets('ExportScreen shows an empty state with no exports',
+      (tester) async {
+    await pumpLocalized(
+      tester,
+      ExportScreen(
+        service: FamilyExportsService(
+            client: MockClient((_) async => http.Response('{"data":[]}', 200))),
+        accessTokenLoader: _token,
+        onUnauthorized: () async {},
+      ),
+    );
+    expect(find.byKey(const ValueKey('exportEmpty')), findsOneWidget);
+    expect(find.text('No exports yet'), findsOneWidget);
+    expect(find.text('Create export'), findsOneWidget);
   });
 }
