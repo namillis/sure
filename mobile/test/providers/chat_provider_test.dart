@@ -257,6 +257,80 @@ void main() {
     });
   });
 
+  group('ChatProvider.retryLastResponse', () {
+    http.Response chatWithError(String? error, {String reply = ''}) =>
+        http.Response(
+          jsonEncode({
+            'id': 'chat_1',
+            'title': 'Test chat',
+            'error': error,
+            'created_at': '2026-06-01T00:00:00Z',
+            'updated_at': '2026-06-01T00:00:00Z',
+            'messages': [
+              jsonDecode(_message(1)),
+              {
+                'id': '2',
+                'type': 'assistant_message',
+                'role': 'assistant',
+                'content': reply,
+                'created_at': '2026-06-01T00:00:02Z',
+                'updated_at': '2026-06-01T00:00:02Z',
+              },
+            ],
+          }),
+          200,
+        );
+
+    test('posts to the retry endpoint and polls for the new reply', () async {
+      final posts = <String>[];
+      final client = MockClient((request) async {
+        if (request.method == 'POST') {
+          posts.add(request.url.path);
+          return http.Response('{"message":"Retry initiated"}', 202);
+        }
+        return chatWithError('Provider timed out');
+      });
+      final provider = ChatProvider(chatService: ChatService(client: client));
+      addTearDown(provider.dispose);
+      await provider.fetchChat(accessToken: 'token', chatId: 'chat_1');
+
+      final ok = await provider.retryLastResponse(
+          accessToken: 'token', chatId: 'chat_1');
+
+      expect(ok, isTrue);
+      expect(posts, ['/api/v1/chats/chat_1/messages/retry']);
+      expect(provider.isWaitingForResponse, isTrue);
+      expect(provider.isPolling, isTrue);
+      expect(provider.errorMessage, isNull);
+
+      // The server keeps chat.error after an API retry; the first poll must
+      // not stop on that stale value.
+      await Future<void>.delayed(const Duration(milliseconds: 2300));
+      expect(provider.isPolling, isTrue);
+      expect(provider.errorMessage, isNull);
+    });
+
+    test('a refused retry reports the error and stops waiting', () async {
+      final client = MockClient((request) async {
+        if (request.method == 'POST') {
+          return http.Response(
+              '{"error":"No assistant message to retry"}', 422);
+        }
+        return chatWithError(null);
+      });
+      final provider = ChatProvider(chatService: ChatService(client: client));
+      addTearDown(provider.dispose);
+
+      final ok = await provider.retryLastResponse(
+          accessToken: 'token', chatId: 'chat_1');
+
+      expect(ok, isFalse);
+      expect(provider.errorMessage, 'No assistant message to retry');
+      expect(provider.isWaitingForResponse, isFalse);
+      expect(provider.isPolling, isFalse);
+    });
+  });
+
   group('ChatProvider.fetchChat pagination', () {
     test('merges every page so older and newer messages both surface', () async {
       final requestedPages = <String>[];
