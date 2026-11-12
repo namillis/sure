@@ -3601,4 +3601,113 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get txnParityOpenOnWebSubtitle =>
       'Bilagor, matchning av överföringar och mer';
+
+  @override
+  String get billsSectionOverdue => 'Försenade';
+
+  @override
+  String get billsSectionDue => 'Förfaller denna månad';
+
+  @override
+  String billsSectionPaid(int count) {
+    return 'Betalda denna månad · $count';
+  }
+
+  @override
+  String get billsSectionLater => 'Senare';
+
+  @override
+  String billsSectionPaused(int count) {
+    return 'Pausade · $count';
+  }
+
+  @override
+  String get billsShow => 'Visa';
+
+  @override
+  String get billsHide => 'Dölj';
+
+  @override
+  String get billsLeftToPay => 'kvar att betala';
+
+  @override
+  String billsPaidOf(String paid, String total, int paidCount, int billCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      billCount,
+      locale: localeName,
+      other: '$billCount räkningar',
+      one: '1 räkning',
+    );
+    return '$paid betalt av $total · $paidCount av $_temp0';
+  }
+
+  @override
+  String billsOtherCurrencies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count räkningar',
+      one: '1 räkning',
+    );
+    return 'Även $_temp0 i andra valutor';
+  }
+
+  @override
+  String billsDueOn(String date) {
+    return 'Förföll $date';
+  }
+
+  @override
+  String billsPaidOn(String date) {
+    return 'Betald $date';
+  }
+
+  @override
+  String get billsAutopay => 'Autobetalning';
+
+  @override
+  String get billsTypeSubscription => 'Prenumeration';
+
+  @override
+  String get billsTypeInstallment => 'Avbetalning';
+
+  @override
+  String billsTrialEnds(String date) {
+    return 'Provperiod slutar $date';
+  }
+
+  @override
+  String billsRenews(String date) {
+    return 'Förnyas $date';
+  }
+
+  @override
+  String get billsPay => 'Betala';
+
+  @override
+  String billsPaySemantics(String name) {
+    return 'Öppna betalsidan för $name';
+  }
+
+  @override
+  String get billsEmptyTitle => 'Inga räkningar än';
+
+  @override
+  String get billsEmptyBody =>
+      'Markera en transaktion som återkommande, eller hitta räkningar i din historik på webben.';
+
+  @override
+  String get billsFindOnWeb => 'Hitta räkningar på webben';
+
+  @override
+  String get billsLoadFailed => 'Kunde inte läsa in räkningar';
+
+  @override
+  String get billsRefreshFailed => 'Kunde inte uppdatera räkningar.';
+
+  @override
+  String get billsOfflineTitle => 'Du är offline';
+
+  @override
+  String get billsOfflineBody => 'Räkningar kräver en internetanslutning.';
 }

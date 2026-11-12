@@ -5,21 +5,23 @@ import '../theme/sure_colors.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
 import 'app_tabs.dart';
+import 'bills_screen.dart';
 import 'budgets_screen.dart';
 
 enum PlanSection { budget, recurring, goals, bills }
 
 /// The Plan tab: a large title "Plan" over a segmented control
-/// Budget | Recurring | Goals ↗ | Bills ↗.
+/// Budget | Recurring | Goals ↗ | Bills.
 ///
 /// The title scrolls away with the active segment's list while the segmented
-/// control stays pinned under the bar, like the account page. Goals and Bills
-/// have no API yet, so they point to the web.
+/// control stays pinned under the bar, like the account page. Goals has no
+/// API yet, so it points to the web.
 class PlanScreen extends StatefulWidget {
   const PlanScreen({
     super.key,
     this.budgetBuilder = _buildBudget,
     this.recurringBuilder = AppTabs.recurring,
+    this.billsBuilder = _buildBills,
   });
 
   /// Body of the Budget segment. Injected in tests.
@@ -28,8 +30,13 @@ class PlanScreen extends StatefulWidget {
   /// Body of the Recurring segment. Defaults to [AppTabs.recurring].
   final WidgetBuilder recurringBuilder;
 
+  /// Body of the Bills segment. Defaults to [BillsScreen].
+  final WidgetBuilder billsBuilder;
+
   static Widget _buildBudget(BuildContext context) =>
       const BudgetsScreen(embedded: true);
+
+  static Widget _buildBills(BuildContext context) => const BillsScreen();
 
   @override
   State<PlanScreen> createState() => _PlanScreenState();
@@ -56,12 +63,7 @@ class _PlanScreenState extends State<PlanScreen> {
           path: '/goals',
         );
       case PlanSection.bills:
-        return WebOnlyView(
-          icon: SureIcons.calendar,
-          title: l.shellPlanBills,
-          message: l.shellBillsOnWeb,
-          path: '/bills',
-        );
+        return widget.billsBuilder(context);
     }
   }
 
@@ -97,8 +99,7 @@ class _PlanScreenState extends State<PlanScreen> {
         // before the label rather than after it.
         SureSegment(
             value: PlanSection.goals, label: l.shellPlanGoals, icon: webMark),
-        SureSegment(
-            value: PlanSection.bills, label: l.shellPlanBills, icon: webMark),
+        SureSegment(value: PlanSection.bills, label: l.shellPlanBills),
       ],
     );
   }

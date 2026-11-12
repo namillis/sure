@@ -3568,4 +3568,113 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get txnParityOpenOnWebSubtitle =>
       'Attachments, transfer matching and more';
+
+  @override
+  String get billsSectionOverdue => 'Overdue';
+
+  @override
+  String get billsSectionDue => 'Due this month';
+
+  @override
+  String billsSectionPaid(int count) {
+    return 'Paid this month · $count';
+  }
+
+  @override
+  String get billsSectionLater => 'Later';
+
+  @override
+  String billsSectionPaused(int count) {
+    return 'Paused · $count';
+  }
+
+  @override
+  String get billsShow => 'Show';
+
+  @override
+  String get billsHide => 'Hide';
+
+  @override
+  String get billsLeftToPay => 'left to pay';
+
+  @override
+  String billsPaidOf(String paid, String total, int paidCount, int billCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      billCount,
+      locale: localeName,
+      other: '$billCount bills',
+      one: '1 bill',
+    );
+    return '$paid paid of $total · $paidCount of $_temp0';
+  }
+
+  @override
+  String billsOtherCurrencies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bills',
+      one: '1 bill',
+    );
+    return 'Also $_temp0 in other currencies';
+  }
+
+  @override
+  String billsDueOn(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String billsPaidOn(String date) {
+    return 'Paid $date';
+  }
+
+  @override
+  String get billsAutopay => 'Autopay';
+
+  @override
+  String get billsTypeSubscription => 'Subscription';
+
+  @override
+  String get billsTypeInstallment => 'Installment';
+
+  @override
+  String billsTrialEnds(String date) {
+    return 'Trial ends $date';
+  }
+
+  @override
+  String billsRenews(String date) {
+    return 'Renews $date';
+  }
+
+  @override
+  String get billsPay => 'Pay';
+
+  @override
+  String billsPaySemantics(String name) {
+    return 'Open the payment page for $name';
+  }
+
+  @override
+  String get billsEmptyTitle => 'No bills yet';
+
+  @override
+  String get billsEmptyBody =>
+      'Mark a transaction as recurring, or find bills from your history on the web.';
+
+  @override
+  String get billsFindOnWeb => 'Find bills on the web';
+
+  @override
+  String get billsLoadFailed => 'Couldn\'t load bills';
+
+  @override
+  String get billsRefreshFailed => 'Couldn\'t refresh bills.';
+
+  @override
+  String get billsOfflineTitle => 'You\'re offline';
+
+  @override
+  String get billsOfflineBody => 'Bills need an internet connection.';
 }

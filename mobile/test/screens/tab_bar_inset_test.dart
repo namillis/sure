@@ -19,6 +19,7 @@ import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/providers/tags_provider.dart';
 import 'package:sure_mobile/providers/transactions_provider.dart';
 import 'package:sure_mobile/screens/activity_screen.dart';
+import 'package:sure_mobile/screens/bills_screen.dart';
 import 'package:sure_mobile/screens/budgets_screen.dart';
 import 'package:sure_mobile/screens/chat_list_screen.dart';
 import 'package:sure_mobile/screens/dashboard_screen.dart';
@@ -327,17 +328,36 @@ void main() {
     await _expectLastClearsBar(tester, find.textContaining('Bill '));
   });
 
-  testWidgets('Plan Goals and Bills: the web button clears the tab bar',
+  testWidgets('Plan Bills: the last bill row clears the tab bar',
+      (tester) async {
+    await _pumpInShell(
+      tester,
+      PlanScreen(
+        budgetBuilder: (_) => const SizedBox.shrink(),
+        billsBuilder: (_) => BillsScreen(
+          service: RecurringTransactionsService(client: _client()),
+          accessTokenLoader: () async => 'token',
+          onUnauthorized: () async {},
+          accounts: const <Account>[],
+          familyCurrency: 'USD',
+          clock: () => DateTime(2026, 11, 10),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Bills'));
+    await tester.pumpAndSettle();
+    await _expectLastClearsBar(tester, find.textContaining('Bill '));
+  });
+
+  testWidgets('Plan Goals: the web button clears the tab bar',
       (tester) async {
     await _pumpInShell(
       tester,
       PlanScreen(budgetBuilder: (_) => const SizedBox.shrink()),
     );
-    for (final segment in ['Goals', 'Bills']) {
-      await tester.tap(find.text(segment));
-      await tester.pumpAndSettle();
-      await _expectLastClearsBar(tester, find.text('Open on the web'));
-    }
+    await tester.tap(find.text('Goals'));
+    await tester.pumpAndSettle();
+    await _expectLastClearsBar(tester, find.text('Open on the web'));
   });
 
   testWidgets('Invest Activity: the last trade clears the tab bar',

@@ -6115,6 +6115,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Attachments, transfer matching and more'**
   String get txnParityOpenOnWebSubtitle;
+
+  /// Bills section header: bills past their due date.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get billsSectionOverdue;
+
+  /// Bills section header: bills still due this month.
+  ///
+  /// In en, this message translates to:
+  /// **'Due this month'**
+  String get billsSectionDue;
+
+  /// Folded Bills section header with the number of bills paid this month.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid this month · {count}'**
+  String billsSectionPaid(int count);
+
+  /// Bills section header: bills due after this month.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get billsSectionLater;
+
+  /// Folded Bills section header with the number of paused bills.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused · {count}'**
+  String billsSectionPaused(int count);
+
+  /// Link that unfolds a Bills section.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get billsShow;
+
+  /// Link that folds a Bills section.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get billsHide;
+
+  /// Text after the big amount in the Bills summary, e.g. '$420.00 left to pay'.
+  ///
+  /// In en, this message translates to:
+  /// **'left to pay'**
+  String get billsLeftToPay;
+
+  /// Line under the Bills summary amount, e.g. '$80.00 paid of $500.00 · 2 of 6 bills'.
+  ///
+  /// In en, this message translates to:
+  /// **'{paid} paid of {total} · {paidCount} of {billCount, plural, =1{1 bill} other{{billCount} bills}}'**
+  String billsPaidOf(String paid, String total, int paidCount, int billCount);
+
+  /// Note under the Bills summary when some bills are in another currency and left out of the totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Also {count, plural, =1{1 bill} other{{count} bills}} in other currencies'**
+  String billsOtherCurrencies(int count);
+
+  /// Overdue bill row subtitle, e.g. 'Due Nov 3'.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String billsDueOn(String date);
+
+  /// Paid bill row subtitle, e.g. 'Paid Nov 5'.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {date}'**
+  String billsPaidOn(String date);
+
+  /// Bill row subtitle part when the bill is paid automatically.
+  ///
+  /// In en, this message translates to:
+  /// **'Autopay'**
+  String get billsAutopay;
+
+  /// Chip on a bill row whose type is subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get billsTypeSubscription;
+
+  /// Chip on a bill row whose type is installment.
+  ///
+  /// In en, this message translates to:
+  /// **'Installment'**
+  String get billsTypeInstallment;
+
+  /// Chip on a bill row with a free trial ending on a future date.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial ends {date}'**
+  String billsTrialEnds(String date);
+
+  /// Chip on a bill row that renews on a future date.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews {date}'**
+  String billsRenews(String date);
+
+  /// Small button on a bill row that opens its payment page in the browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get billsPay;
+
+  /// Screen reader label of the Pay button on a bill row.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the payment page for {name}'**
+  String billsPaySemantics(String name);
+
+  /// Bills empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No bills yet'**
+  String get billsEmptyTitle;
+
+  /// Bills empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark a transaction as recurring, or find bills from your history on the web.'**
+  String get billsEmptyBody;
+
+  /// Bills empty state button that opens the web Bills page.
+  ///
+  /// In en, this message translates to:
+  /// **'Find bills on the web'**
+  String get billsFindOnWeb;
+
+  /// Bills error state title.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load bills'**
+  String get billsLoadFailed;
+
+  /// Snackbar when a refresh fails and the last loaded bills stay on screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh bills.'**
+  String get billsRefreshFailed;
+
+  /// Bills offline state title, when nothing was loaded yet.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get billsOfflineTitle;
+
+  /// Bills offline state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills need an internet connection.'**
+  String get billsOfflineBody;
 }
 
 class _AppLocalizationsDelegate

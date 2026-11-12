@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
+import 'package:sure_mobile/screens/bills_screen.dart';
 import 'package:sure_mobile/screens/plan_screen.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/widgets/sure_icon.dart';
@@ -17,10 +18,12 @@ void main() {
             ? PlanScreen(
                 budgetBuilder: (_) => const Text('budget body'),
                 recurringBuilder: (_) => const ComingSoonView(),
+                billsBuilder: (_) => const Text('bills body'),
               )
             : PlanScreen(
                 budgetBuilder: (_) => const Text('budget body'),
                 recurringBuilder: recurring,
+                billsBuilder: (_) => const Text('bills body'),
               ),
       ),
     ));
@@ -44,7 +47,8 @@ void main() {
 
     await tester.tap(find.text('Bills'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Bills live on the web'), findsOneWidget);
+    expect(find.text('bills body'), findsOneWidget);
+    expect(find.textContaining('Bills live on the web'), findsNothing);
 
     await tester.tap(find.text('Budget'));
     await tester.pumpAndSettle();
@@ -61,7 +65,16 @@ void main() {
     expect(find.text('Coming soon'), findsNothing);
   });
 
-  testWidgets('shows a large Plan title and marks the web-only segments',
+  testWidgets('the Bills segment is native by default', (tester) async {
+    late Widget bills;
+    await tester.pumpWidget(Builder(builder: (context) {
+      bills = const PlanScreen().billsBuilder(context);
+      return const SizedBox();
+    }));
+    expect(bills, isA<BillsScreen>());
+  });
+
+  testWidgets('shows a large Plan title and marks the web-only segment',
       (tester) async {
     await pumpPlan(tester);
 
@@ -71,7 +84,8 @@ void main() {
     final webMarks = tester
         .widgetList<SureIcon>(find.byType(SureIcon))
         .where((icon) => icon.name == SureIcons.arrowUpRight);
-    expect(webMarks, hasLength(2));
+    // Only Goals is web-only now.
+    expect(webMarks, hasLength(1));
   });
 
   testWidgets('Goals opens an empty state with a web button', (tester) async {
