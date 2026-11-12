@@ -55,6 +55,8 @@ class RecurringTransaction {
     this.categoryId,
     this.expectedAmountMinCents,
     this.expectedAmountMaxCents,
+    this.renewsOn,
+    this.trialEndsOn,
   });
 
   final String id;
@@ -90,6 +92,12 @@ class RecurringTransaction {
   final int? expectedAmountMinCents;
   final int? expectedAmountMaxCents;
 
+  /// When a subscription renews (e.g. an annual plan), if the user set it.
+  final DateTime? renewsOn;
+
+  /// When a free trial converts to paid, if the user set it.
+  final DateTime? trialEndsOn;
+
   static const writableStatuses = ['active', 'inactive'];
 
   factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
@@ -121,6 +129,8 @@ class RecurringTransaction {
           JsonParsing.parseInt(json['expected_amount_min_cents']),
       expectedAmountMaxCents:
           JsonParsing.parseInt(json['expected_amount_max_cents']),
+      renewsOn: _date(json['renews_on']),
+      trialEndsOn: _date(json['trial_ends_on']),
     );
   }
 
