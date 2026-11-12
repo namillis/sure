@@ -976,5 +976,7 @@
   "ds3aThinking": "Tänker",
   "ds3aReplyFailed": "Det gick inte att få ett svar.",
   "ds3aRetry": "Försök igen",
-  "ds3aSendFailed": "Det gick inte att skicka meddelandet."
+  "ds3aSendFailed": "Det gick inte att skicka meddelandet.",
+  "ds4tLogShare": "Dela loggar",
+  "ds4tLogAutoScroll": "Rulla automatiskt"
 }

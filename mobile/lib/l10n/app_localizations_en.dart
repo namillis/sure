@@ -3459,4 +3459,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds3aSendFailed => 'Couldn\'t send the message.';
+
+  @override
+  String get ds4tLogShare => 'Share logs';
+
+  @override
+  String get ds4tLogAutoScroll => 'Auto-scroll';
 }

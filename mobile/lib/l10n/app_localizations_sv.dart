@@ -3491,4 +3491,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds3aSendFailed => 'Det gick inte att skicka meddelandet.';
+
+  @override
+  String get ds4tLogShare => 'Dela loggar';
+
+  @override
+  String get ds4tLogAutoScroll => 'Rulla automatiskt';
 }

@@ -2434,5 +2434,9 @@
   "ds3aRetry": "Retry",
   "@ds3aRetry": {"description": "Link in the reply error panel that asks for the reply again."},
   "ds3aSendFailed": "Couldn't send the message.",
-  "@ds3aSendFailed": {"description": "Snackbar when a message could not be sent; the text is put back in the field."}
+  "@ds3aSendFailed": {"description": "Snackbar when a message could not be sent; the text is put back in the field."},
+  "ds4tLogShare": "Share logs",
+  "@ds4tLogShare": {"description": "Nav-bar action on the debug log screen that opens the share sheet with the logs."},
+  "ds4tLogAutoScroll": "Auto-scroll",
+  "@ds4tLogAutoScroll": {"description": "Chip on the debug log screen that keeps the list scrolled to the newest entry."}
 }

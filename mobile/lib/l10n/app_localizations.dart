@@ -5911,6 +5911,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t send the message.'**
   String get ds3aSendFailed;
+
+  /// Nav-bar action on the debug log screen that opens the share sheet with the logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Share logs'**
+  String get ds4tLogShare;
+
+  /// Chip on the debug log screen that keeps the list scrolled to the newest entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-scroll'**
+  String get ds4tLogAutoScroll;
 }
 
 class _AppLocalizationsDelegate
