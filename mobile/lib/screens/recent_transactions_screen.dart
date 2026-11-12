@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/transaction.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../widgets/ds/ds.dart';
 
@@ -71,6 +72,11 @@ class _RecentTransactionsScreenState extends State<RecentTransactionsScreen> {
     final accessToken = await authProvider.getValidAccessToken();
 
     if (accessToken != null) {
+      // Categories give each row its icon and color; load them once.
+      final categories = context.read<CategoriesProvider>();
+      if (categories.categories.isEmpty) {
+        categories.fetchCategories(accessToken: accessToken);
+      }
       // Load transactions for all accounts
       await transactionsProvider.fetchTransactions(
         accessToken: accessToken,
@@ -86,6 +92,10 @@ class _RecentTransactionsScreenState extends State<RecentTransactionsScreen> {
     final accounts = {
       for (final account in context.watch<AccountsProvider>().accounts)
         account.id: account,
+    };
+    final categories = {
+      for (final category in context.watch<CategoriesProvider>().categories)
+        category.id: category,
     };
 
     final recent = RecentTransactionsScreen.newest(
@@ -143,6 +153,8 @@ class _RecentTransactionsScreenState extends State<RecentTransactionsScreen> {
                         accountName: accounts[t.accountId] == null
                             ? l.recentTransactionsUnknownAccount
                             : null,
+                        categoryColor: categories[t.categoryId]?.color,
+                        categoryIcon: categories[t.categoryId]?.icon,
                       ),
                   ],
                 ),

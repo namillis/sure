@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sure_mobile/models/transaction.dart';
 import 'package:sure_mobile/providers/accounts_provider.dart';
 import 'package:sure_mobile/providers/auth_provider.dart';
+import 'package:sure_mobile/providers/categories_provider.dart';
 import 'package:sure_mobile/providers/transactions_provider.dart';
 import 'package:sure_mobile/screens/recent_transactions_screen.dart';
 import 'package:sure_mobile/widgets/ds/ds.dart';
@@ -62,6 +63,8 @@ void main() {
             ]),
           ),
           ChangeNotifierProvider<TransactionsProvider>.value(value: provider),
+          ChangeNotifierProvider<CategoriesProvider>(
+              create: (_) => CategoriesProvider()),
         ],
         child: const RecentTransactionsScreen(),
       ),
