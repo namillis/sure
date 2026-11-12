@@ -6,12 +6,11 @@ import '../models/rule.dart';
 import '../providers/auth_provider.dart';
 import '../services/rules_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../utils/rule_text.dart';
-import '../widgets/manage_widgets.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
-import '../widgets/sure_list_group.dart';
 import 'rule_detail_screen.dart';
+import 'settings_links.dart';
 
 /// The family's rules from `GET /api/v1/rules`, read-only. Tap one for its
 /// conditions, actions and recent runs; creating and editing is on the web.
@@ -114,78 +113,95 @@ class _RulesScreenState extends State<RulesScreen> {
     final text = RuleText(l,
         lookup: widget.nameLookup ?? ruleNameLookupFromProviders(context));
 
-    final Widget content;
+    final List<Widget> content;
     if (rules == null && _loading) {
-      content = const Padding(
-        padding: EdgeInsets.only(top: 96),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      content = const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ];
     } else if (rules == null) {
-      content = ManageMessage(
-        icon: Icons.error_outline,
-        title: l.p3roRulesLoadFailed,
-        onRetry: _load,
-      );
+      content = [
+        _centered(SureEmptyState(
+          icon: SureIcons.circleAlert,
+          title: l.p3roRulesLoadFailed,
+          secondaryLabel: l.commonTryAgain,
+          onSecondary: _load,
+        )),
+      ];
     } else if (rules.isEmpty) {
-      content = ManageMessage(
-        icon: Icons.rule,
-        title: l.p3roRulesEmpty,
-        body: l.p3roRulesEmptyBody,
-      );
+      content = [
+        _centered(SureEmptyState(
+          icon: SureIcons.listChecks,
+          title: l.p3roRulesEmpty,
+          body: l.p3roRulesEmptyBody,
+        )),
+      ];
     } else {
-      content = SureListGroup(
-        margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-        children: [
-          for (final rule in rules)
-            SureListRow(
-              title: text.title(rule),
-              subtitle: [
-                if (rule.actions.isNotEmpty) text.action(rule.actions.first),
-                text.resourceType(rule.resourceType),
-                rule.active ? l.p3roRuleActive : l.p3roRuleInactive,
-              ].join(' · '),
-              leading: Icon(
-                rule.active ? Icons.check_circle : Icons.pause_circle_outline,
-                color: rule.active ? palette.success : palette.textSubdued,
-                semanticLabel:
+      content = [
+        SliverToBoxAdapter(
+          child: SurePanel.rows(
+            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            dividerIndent: SurePanel.iconRowDividerIndent,
+            children: [
+              for (final rule in rules)
+                SureListRow(
+                  key: ValueKey('rule-${rule.id}'),
+                  title: text.title(rule),
+                  subtitle: [
+                    if (rule.actions.isNotEmpty)
+                      text.action(rule.actions.first),
+                    text.resourceType(rule.resourceType),
                     rule.active ? l.p3roRuleActive : l.p3roRuleInactive,
-              ),
-              showChevron: true,
-              onTap: () => _open(rule),
-            ),
-        ],
-      );
+                  ].join(' · '),
+                  leading: SureIcon(
+                    rule.active ? SureIcons.circleCheck : SureIcons.circleDashed,
+                    size: 20,
+                    color: rule.active ? palette.success : palette.textSubdued,
+                    semanticLabel:
+                        rule.active ? l.p3roRuleActive : l.p3roRuleInactive,
+                  ),
+                  showChevron: true,
+                  onTap: () => _open(rule),
+                ),
+            ],
+          ),
+        ),
+      ];
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l.shellRules)),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: SureSpacing.huge),
-          children: [
-            SureListGroup(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              children: [
-                SureListRow(
-                  leading: Icon(Icons.edit_note, color: palette.textPrimary),
-                  title: l.p3roRulesManageOnWeb,
-                  trailing: Icon(
-                    Icons.language,
-                    size: 18,
-                    color: palette.textSubdued,
-                    semanticLabel: l.shellOpensOnWeb,
-                  ),
-                  onTap: () => openWebFallback(context,
-                      title: l.shellRules, path: RulesScreen.webPath),
-                ),
-              ],
-            ),
-            content,
-          ],
+    return SureLargeTitleScaffold(
+      title: l.shellRules,
+      // Rules opens from Settings.
+      leading: Navigator.of(context).canPop()
+          ? SureBackButton(label: l.shellSettingsTitle)
+          : null,
+      onRefresh: _load,
+      slivers: [
+        SliverToBoxAdapter(
+          child: SurePanel.rows(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            dividerIndent: SurePanel.iconRowDividerIndent,
+            children: [
+              SureListRow(
+                leading: SureIcon(SureIcons.pencil,
+                    size: 20, color: palette.textPrimary),
+                title: l.p3roRulesManageOnWeb,
+                trailing: const SettingsWebMark(),
+                onTap: () => openWebFallback(context,
+                    title: l.shellRules, path: RulesScreen.webPath),
+              ),
+            ],
+          ),
         ),
-      ),
+        ...content,
+      ],
     );
   }
+
+  Widget _centered(Widget state) => SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(child: state),
+      );
 }

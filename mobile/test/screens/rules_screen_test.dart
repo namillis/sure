@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -7,6 +8,7 @@ import 'package:sure_mobile/screens/rule_detail_screen.dart';
 import 'package:sure_mobile/screens/rules_screen.dart';
 import 'package:sure_mobile/services/rules_service.dart';
 import 'package:sure_mobile/utils/rule_text.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/l10n_harness.dart';
 
@@ -165,7 +167,8 @@ void main() {
       ]),
     );
 
-    expect(find.text('Coffee runs'), findsOneWidget); // app bar
+    // The large title and its small nav-bar copy.
+    expect(find.text('Coffee runs'), findsNWidgets(2));
     expect(find.byTooltip('Edit on the web'), findsOneWidget);
     expect(find.text('Transactions · Active'), findsOneWidget);
     expect(find.textContaining('Applies to transactions from'), findsOneWidget);
@@ -183,6 +186,44 @@ void main() {
     expect(find.text('Running'), findsOneWidget);
     expect(find.text('7 transactions queued'), findsOneWidget);
     expect(find.textContaining('Run by hand'), findsNWidgets(3));
+  });
+
+  testWidgets('detail lists sentences in panels with sentence-case headers',
+      (tester) async {
+    await pumpDetail(tester, server(runs: [_run('success')]));
+    expect(find.byType(SurePanel), findsNWidgets(4));
+    expect(find.byType(Card), findsNothing);
+    expect(find.widgetWithText(SureSectionHeader, 'Conditions'),
+        findsOneWidget);
+    expect(find.widgetWithText(SureSectionHeader, 'Recent runs'),
+        findsOneWidget);
+  });
+
+  testWidgets('opened from Settings, the list back link says Settings',
+      (tester) async {
+    await pumpLocalized(
+      tester,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => RulesScreen(
+              service: RulesService(client: server(rules: [_rule('r1')])),
+              accessTokenLoader: () async => 'token',
+              onUnauthorized: () async {},
+              nameLookup: _names,
+            ),
+          )),
+          child: const Text('open'),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(SureBackButton, 'Settings'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('rule-r1')));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(SureBackButton, 'Rules'), findsOneWidget);
   });
 
   testWidgets('detail with no runs', (tester) async {

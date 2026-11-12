@@ -7,6 +7,7 @@ import 'package:http/testing.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
 import 'package:sure_mobile/screens/connections_screen.dart';
 import 'package:sure_mobile/services/provider_connections_service.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/connection_fixtures.dart';
 import '../support/l10n_harness.dart';
@@ -62,6 +63,43 @@ void main() {
     expect(find.text('Sync failed'), findsOneWidget);
     expect(find.text('2 accounts need setup'), findsOneWidget);
     expect(find.text('Fix on the web'), findsOneWidget);
+  });
+
+  testWidgets('connections are hairline panels, back link says Settings',
+      (tester) async {
+    await pumpLocalized(
+      tester,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => ConnectionsScreen(
+              service: ProviderConnectionsService(
+                  client: MockClient((_) async => http.Response(
+                      jsonEncode({'data': [connectionJson()]}), 200))),
+              accessTokenLoader: () async => 'token',
+              onUnauthorized: () async {},
+              now: () => now,
+            ),
+          )),
+          child: const Text('open'),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(SureBackButton, 'Settings'), findsOneWidget);
+    expect(find.byType(SurePanel), findsNWidgets(2));
+    expect(find.byType(Card), findsNothing);
+    expect(find.text('Fix on the web'), findsNothing);
+    expect(find.bySemanticsLabel('Sync now'), findsOneWidget);
+  });
+
+  testWidgets('empty state disables Sync now', (tester) async {
+    await pump(tester,
+        MockClient((_) async => http.Response('{"data":[]}', 200)));
+    final sync = tester.widget<SureNavIconButton>(find.byType(SureNavIconButton));
+    expect(sync.onPressed, isNull);
   });
 
   testWidgets('empty state', (tester) async {
