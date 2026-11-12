@@ -6031,6 +6031,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose'**
   String get ds4dChoose;
+
+  /// Value of the Transfer row in the transaction sheet when money went out to the other account.
+  ///
+  /// In en, this message translates to:
+  /// **'To {account}'**
+  String txnParityTransferTo(String account);
+
+  /// Value of the Transfer row in the transaction sheet when money came in from the other account.
+  ///
+  /// In en, this message translates to:
+  /// **'From {account}'**
+  String txnParityTransferFrom(String account);
+
+  /// Stands in for the other account's name in the Transfer row when the server does not send it.
+  ///
+  /// In en, this message translates to:
+  /// **'another account'**
+  String get txnParityTransferOtherAccount;
+
+  /// Title of the read-only row showing how budgets and reports treat this transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets and reports'**
+  String get txnParityBudgetsTitle;
+
+  /// Budgets and reports value: the transaction is excluded from budgets and reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded'**
+  String get txnParityBudgetsExcluded;
+
+  /// Budgets and reports value: a one-time transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time'**
+  String get txnParityBudgetsOneTime;
+
+  /// Budgets and reports value: a transfer between accounts, left out of totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer, not counted'**
+  String get txnParityBudgetsFundsMovement;
+
+  /// Budgets and reports value: a credit card payment, left out of totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Card payment, not counted'**
+  String get txnParityBudgetsCcPayment;
+
+  /// Budgets and reports value: a loan payment or investment contribution counted as spending.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted as expense'**
+  String get txnParityBudgetsCountedExpense;
+
+  /// Budgets and reports value: a normal transaction counted in budgets and reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Included'**
+  String get txnParityBudgetsIncluded;
+
+  /// Subtitle under the Budgets and reports row; tapping opens the transaction on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Change on the web'**
+  String get txnParityChangeOnWeb;
+
+  /// Row in the transaction sheet that creates a recurring transaction from this one.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as recurring'**
+  String get txnParityMarkRecurring;
+
+  /// Value of the Recurring row when the transaction matches a recurring item, e.g. 'Netflix · Monthly'.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {cadence}'**
+  String txnParityRecurringValue(String name, String cadence);
+
+  /// Note under the Recurring row when offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring needs an internet connection.'**
+  String get txnParityRecurringOffline;
+
+  /// Subtitle under 'Open on the web' in the transaction sheet, naming what lives on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments, transfer matching and more'**
+  String get txnParityOpenOnWebSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -3520,4 +3520,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds4dChoose => 'Choose';
+
+  @override
+  String txnParityTransferTo(String account) {
+    return 'To $account';
+  }
+
+  @override
+  String txnParityTransferFrom(String account) {
+    return 'From $account';
+  }
+
+  @override
+  String get txnParityTransferOtherAccount => 'another account';
+
+  @override
+  String get txnParityBudgetsTitle => 'Budgets and reports';
+
+  @override
+  String get txnParityBudgetsExcluded => 'Excluded';
+
+  @override
+  String get txnParityBudgetsOneTime => 'One-time';
+
+  @override
+  String get txnParityBudgetsFundsMovement => 'Transfer, not counted';
+
+  @override
+  String get txnParityBudgetsCcPayment => 'Card payment, not counted';
+
+  @override
+  String get txnParityBudgetsCountedExpense => 'Counted as expense';
+
+  @override
+  String get txnParityBudgetsIncluded => 'Included';
+
+  @override
+  String get txnParityChangeOnWeb => 'Change on the web';
+
+  @override
+  String get txnParityMarkRecurring => 'Mark as recurring';
+
+  @override
+  String txnParityRecurringValue(String name, String cadence) {
+    return '$name · $cadence';
+  }
+
+  @override
+  String get txnParityRecurringOffline =>
+      'Recurring needs an internet connection.';
+
+  @override
+  String get txnParityOpenOnWebSubtitle =>
+      'Attachments, transfer matching and more';
 }

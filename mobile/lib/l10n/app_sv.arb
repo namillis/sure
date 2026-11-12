@@ -996,5 +996,20 @@
   "ds4dExportEmptyTitle": "Inga exporter än",
   "ds4dExportEmptyBody": "Skapa en för att få en kopia av dina data.",
   "ds4dFormatsHeader": "Format",
-  "ds4dChoose": "Välj"
+  "ds4dChoose": "Välj",
+  "txnParityTransferTo": "Till {account}",
+  "txnParityTransferFrom": "Från {account}",
+  "txnParityTransferOtherAccount": "ett annat konto",
+  "txnParityBudgetsTitle": "Budgetar och rapporter",
+  "txnParityBudgetsExcluded": "Exkluderad",
+  "txnParityBudgetsOneTime": "Engångs",
+  "txnParityBudgetsFundsMovement": "Överföring, räknas inte",
+  "txnParityBudgetsCcPayment": "Kortbetalning, räknas inte",
+  "txnParityBudgetsCountedExpense": "Räknas som utgift",
+  "txnParityBudgetsIncluded": "Inkluderad",
+  "txnParityChangeOnWeb": "Ändra på webben",
+  "txnParityMarkRecurring": "Markera som återkommande",
+  "txnParityRecurringValue": "{name} · {cadence}",
+  "txnParityRecurringOffline": "Återkommande kräver en internetanslutning.",
+  "txnParityOpenOnWebSubtitle": "Bilagor, matchning av överföringar och mer"
 }

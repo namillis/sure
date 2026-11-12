@@ -18,15 +18,18 @@ import 'package:sure_mobile/providers/merchants_provider.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/providers/tags_provider.dart';
 import 'package:sure_mobile/providers/transactions_provider.dart';
+import 'package:sure_mobile/screens/recurring_form_screen.dart';
 import 'package:sure_mobile/screens/transaction_edit_screen.dart';
 import 'package:sure_mobile/screens/transaction_sheet.dart';
 import 'package:sure_mobile/services/connectivity_service.dart';
+import 'package:sure_mobile/services/recurring_transactions_service.dart';
 import 'package:sure_mobile/services/transaction_split_service.dart';
 import 'package:sure_mobile/services/transactions_service.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/ds_harness.dart';
+import '../support/recurring_fixtures.dart';
 
 class _Connectivity extends ChangeNotifier implements ConnectivityService {
   _Connectivity(this.isOnline);
@@ -191,6 +194,7 @@ final _categories = [
 class _Harness {
   final auth = _FakeAuth();
   final transactions = _FakeTransactions();
+  final List<http.Request> recurringRequests = [];
   bool? result;
 }
 
@@ -202,9 +206,31 @@ Future<_Harness> _open(
   double width = 390,
   OfflineTransaction? transaction,
   bool asPage = false,
+  Map<String, dynamic> serverExtra = const {},
+  List<Map<String, dynamic>> recurring = const [],
+  bool recurringFails = false,
 }) async {
   final h = _Harness();
   final client = MockClient((request) async {
+    if (request.url.path.endsWith('/recurring_transactions')) {
+      h.recurringRequests.add(request);
+      if (request.method == 'POST') {
+        final attrs = (jsonDecode(request.body)
+            as Map<String, dynamic>)['recurring_transaction'] as Map;
+        return http.Response(
+          jsonEncode(recurringJson(
+            id: 'rt_new',
+            name: attrs['name'] as String,
+            amount: '\$${attrs['amount']}',
+            amountCents: ((attrs['amount'] as num) * 100).round(),
+            merchant: {'id': attrs['merchant_id'], 'name': 'Blue Bottle'},
+          )),
+          201,
+        );
+      }
+      if (recurringFails) return http.Response('{}', 500);
+      return http.Response(recurringIndexBody(recurring), 200);
+    }
     if (request.url.path.endsWith('/split')) {
       return http.Response(
         jsonEncode({
@@ -234,7 +260,10 @@ Future<_Harness> _open(
         200,
       );
     }
-    return http.Response(jsonEncode(_serverJson(split: split)), 200);
+    return http.Response(
+      jsonEncode({..._serverJson(split: split), ...serverExtra}),
+      200,
+    );
   });
 
   tester.view.physicalSize = Size(width, 1600);
@@ -282,6 +311,8 @@ Future<_Harness> _open(
                         transactionsService:
                             TransactionsService(client: client),
                         splitService: TransactionSplitService(client: client),
+                        recurringService:
+                            RecurringTransactionsService(client: client),
                       ),
                     ),
                   );
@@ -292,6 +323,8 @@ Future<_Harness> _open(
                   transaction: transaction ?? _txn(),
                   transactionsService: TransactionsService(client: client),
                   splitService: TransactionSplitService(client: client),
+                  recurringService:
+                      RecurringTransactionsService(client: client),
                 );
               },
               child: const Text('open'),
@@ -336,8 +369,10 @@ void main() {
       'Tags',
       'Add a note',
       'Date',
-      'Recurring',
+      'Mark as recurring',
+      'Budgets and reports',
       'Open on the web',
+      'Attachments, transfer matching and more',
       'Delete transaction',
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
@@ -525,6 +560,204 @@ void main() {
       find.widgetWithText(SureListRow, 'Open on the web'),
     );
     expect(web.onTap, isNull);
+  });
+
+  group('web parity', () {
+    Finder inRow(String key, String text) => find.descendant(
+          of: find.byKey(ValueKey(key)),
+          matching: find.text(text),
+        );
+
+    const transfer = {
+      'id': 'tr_1',
+      'amount': '\$4.50',
+      'currency': 'USD',
+      'other_account': {
+        'id': 'acct_2',
+        'name': 'Savings',
+        'account_type': 'depository',
+      },
+    };
+
+    testWidgets('a transfer outflow reads "To <account>"', (tester) async {
+      await _open(tester, serverExtra: {'transfer': transfer});
+      expect(find.byKey(const ValueKey('transaction-transfer-row')),
+          findsOneWidget);
+      expect(inRow('transaction-transfer-row', 'Transfer'), findsOneWidget);
+      expect(inRow('transaction-transfer-row', 'To Savings'), findsOneWidget);
+    });
+
+    testWidgets('a transfer inflow reads "From <account>"', (tester) async {
+      await _open(tester, serverExtra: {
+        'transfer': transfer,
+        'amount_decimal': '-4.5',
+        'classification': 'income',
+      });
+      expect(inRow('transaction-transfer-row', 'From Savings'), findsOneWidget);
+    });
+
+    testWidgets('no transfer row without a transfer', (tester) async {
+      await _open(tester);
+      expect(
+          find.byKey(const ValueKey('transaction-transfer-row')), findsNothing);
+    });
+
+    for (final (kind, excluded, label) in [
+      ('standard', false, 'Included'),
+      ('one_time', false, 'One-time'),
+      ('funds_movement', false, 'Transfer, not counted'),
+      ('cc_payment', false, 'Card payment, not counted'),
+      ('loan_payment', false, 'Counted as expense'),
+      ('investment_contribution', false, 'Counted as expense'),
+      ('standard', true, 'Excluded'),
+    ]) {
+      testWidgets('Budgets and reports: $kind excluded=$excluded -> $label',
+          (tester) async {
+        await _open(tester, serverExtra: {'kind': kind, 'excluded': excluded});
+        expect(inRow('transaction-budgets-row', label), findsOneWidget);
+        expect(inRow('transaction-budgets-row', 'Change on the web'),
+            findsOneWidget);
+        final row = tester.widget<SureListRow>(
+            find.byKey(const ValueKey('transaction-budgets-row')));
+        expect(row.onTap, isNotNull);
+      });
+    }
+
+    testWidgets('a matching series shows "Recurring · <name> · cadence"',
+        (tester) async {
+      await _open(tester, serverExtra: {
+        'merchant': {'id': 'm_bb', 'name': 'Blue Bottle'},
+      }, recurring: [
+        recurringJson(
+          id: 'rt_bb',
+          name: 'Coffee subscription',
+          amount: '\$4.50',
+          amountCents: 450,
+          merchant: {'id': 'm_bb', 'name': 'Blue Bottle'},
+        ),
+      ]);
+
+      expect(inRow('transaction-recurring-row', 'Recurring'), findsOneWidget);
+      expect(
+          inRow('transaction-recurring-row', 'Coffee subscription · Monthly'),
+          findsOneWidget);
+      expect(find.text('Mark as recurring'), findsNothing);
+
+      await tester.ensureVisible(
+          find.byKey(const ValueKey('transaction-recurring-row')));
+      await tester.tap(find.byKey(const ValueKey('transaction-recurring-row')));
+      await tester.pumpAndSettle();
+      final form =
+          tester.widget<RecurringFormScreen>(find.byType(RecurringFormScreen));
+      expect(form.existing?.id, 'rt_bb');
+      expect(find.text('Edit recurring'), findsOneWidget);
+    });
+
+    testWidgets(
+        'no match: "Mark as recurring" opens a prefilled form and '
+        'a create flips the row', (tester) async {
+      final haptics = recordHaptics(tester);
+      final h = await _open(tester, serverExtra: {
+        'date': '2026-01-31',
+        'merchant': {'id': 'm_bb', 'name': 'Blue Bottle'},
+      }, recurring: [
+        // Same merchant, far-off amount: not a match.
+        recurringJson(
+          amountCents: 9900,
+          merchant: {'id': 'm_bb', 'name': 'Blue Bottle'},
+        ),
+      ]);
+
+      expect(inRow('transaction-recurring-row', 'Mark as recurring'),
+          findsOneWidget);
+      await tester.ensureVisible(
+          find.byKey(const ValueKey('transaction-recurring-row')));
+      await tester.tap(find.byKey(const ValueKey('transaction-recurring-row')));
+      await tester.pumpAndSettle();
+
+      final form =
+          tester.widget<RecurringFormScreen>(find.byType(RecurringFormScreen));
+      expect(form.existing, isNull);
+      final prefill = form.prefill!;
+      expect(prefill.name, 'Blue Bottle');
+      expect(prefill.amount, 4.5);
+      expect(prefill.income, isFalse);
+      expect(prefill.currency, 'USD');
+      expect(prefill.accountId, 'acct_1');
+      expect(prefill.merchantId, 'm_bb');
+      expect(prefill.expectedDayOfMonth, 31);
+      expect(prefill.lastOccurrenceDate, DateTime(2026, 1, 31));
+      expect(prefill.nextExpectedDate, DateTime(2026, 2, 28));
+      expect(find.text('New recurring'), findsOneWidget);
+      Finder inForm(String text) => find.descendant(
+            of: find.byType(RecurringFormScreen),
+            matching: find.widgetWithText(TextFormField, text),
+          );
+      expect(inForm('Blue Bottle'), findsOneWidget);
+      expect(inForm('4.50'), findsOneWidget);
+      expect(inForm('USD'), findsOneWidget);
+
+      await tester.tap(find.descendant(
+        of: find.byType(RecurringFormScreen),
+        matching: find.widgetWithText(TextButton, 'Save'),
+      ));
+      await tester.pumpAndSettle();
+
+      final post = h.recurringRequests.singleWhere((r) => r.method == 'POST');
+      final attrs = (jsonDecode(post.body)
+          as Map<String, dynamic>)['recurring_transaction'] as Map;
+      expect(attrs['name'], 'Blue Bottle');
+      expect(attrs['amount'], 4.5);
+      expect(attrs['currency'], 'USD');
+      expect(attrs['account_id'], 'acct_1');
+      expect(attrs['merchant_id'], 'm_bb');
+      expect(attrs['expected_day_of_month'], 31);
+      expect(attrs['last_occurrence_date'], '2026-01-31');
+      expect(attrs['next_expected_date'], '2026-02-28');
+
+      expect(find.byType(RecurringFormScreen), findsNothing);
+      expect(find.byType(TransactionEditScreen), findsOneWidget);
+      expect(inRow('transaction-recurring-row', 'Recurring'), findsOneWidget);
+      expect(inRow('transaction-recurring-row', 'Blue Bottle · Monthly'),
+          findsOneWidget);
+      expect(haptics, contains('HapticFeedbackType.lightImpact'));
+      // One list fetch; the flip needs no re-read.
+      expect(h.recurringRequests.where((r) => r.method == 'GET'), hasLength(1));
+    });
+
+    testWidgets(
+        'a failed recurring fetch disables the row, offers a retry '
+        'and leaves the rest of the sheet working', (tester) async {
+      final h = await _open(tester, recurringFails: true);
+
+      final row = tester.widget<SureListRow>(
+          find.byKey(const ValueKey('transaction-recurring-row')));
+      expect(row.enabled, isFalse);
+      expect(row.onTap, isNull);
+      expect(find.text("Couldn't load recurring transactions"), findsOneWidget);
+      expect(find.byKey(const ValueKey('transaction-budgets-row')),
+          findsOneWidget);
+
+      await tester.tap(_save());
+      await tester.pumpAndSettle();
+      expect(h.transactions.updates, hasLength(1));
+    });
+
+    testWidgets(
+        'offline: recurring disabled with a note, nothing fetched, '
+        'budgets row hidden', (tester) async {
+      final h = await _open(tester, online: false);
+
+      final row = tester.widget<SureListRow>(
+          find.byKey(const ValueKey('transaction-recurring-row')));
+      expect(row.enabled, isFalse);
+      expect(row.onTap, isNull);
+      expect(
+          find.text('Recurring needs an internet connection.'), findsOneWidget);
+      expect(h.recurringRequests, isEmpty);
+      expect(
+          find.byKey(const ValueKey('transaction-budgets-row')), findsNothing);
+    });
   });
 
   for (final brightness in brightnesses) {

@@ -3553,4 +3553,57 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds4dChoose => 'Välj';
+
+  @override
+  String txnParityTransferTo(String account) {
+    return 'Till $account';
+  }
+
+  @override
+  String txnParityTransferFrom(String account) {
+    return 'Från $account';
+  }
+
+  @override
+  String get txnParityTransferOtherAccount => 'ett annat konto';
+
+  @override
+  String get txnParityBudgetsTitle => 'Budgetar och rapporter';
+
+  @override
+  String get txnParityBudgetsExcluded => 'Exkluderad';
+
+  @override
+  String get txnParityBudgetsOneTime => 'Engångs';
+
+  @override
+  String get txnParityBudgetsFundsMovement => 'Överföring, räknas inte';
+
+  @override
+  String get txnParityBudgetsCcPayment => 'Kortbetalning, räknas inte';
+
+  @override
+  String get txnParityBudgetsCountedExpense => 'Räknas som utgift';
+
+  @override
+  String get txnParityBudgetsIncluded => 'Inkluderad';
+
+  @override
+  String get txnParityChangeOnWeb => 'Ändra på webben';
+
+  @override
+  String get txnParityMarkRecurring => 'Markera som återkommande';
+
+  @override
+  String txnParityRecurringValue(String name, String cadence) {
+    return '$name · $cadence';
+  }
+
+  @override
+  String get txnParityRecurringOffline =>
+      'Återkommande kräver en internetanslutning.';
+
+  @override
+  String get txnParityOpenOnWebSubtitle =>
+      'Bilagor, matchning av överföringar och mer';
 }

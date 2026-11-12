@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/offline_transaction.dart';
+import '../services/recurring_transactions_service.dart';
 import '../services/transaction_split_service.dart';
 import '../services/transactions_service.dart';
 import '../widgets/ds/ds.dart';
@@ -16,6 +17,7 @@ Future<bool?> showTransactionSheet(
   required OfflineTransaction transaction,
   TransactionsService? transactionsService,
   TransactionSplitService? splitService,
+  RecurringTransactionsService? recurringService,
 }) async {
   var changed = false;
   final result = await showSureSheet<bool>(
@@ -26,6 +28,7 @@ Future<bool?> showTransactionSheet(
       onChanged: () => changed = true,
       transactionsService: transactionsService,
       splitService: splitService,
+      recurringService: recurringService,
     ),
   );
   return result ?? (changed ? true : null);

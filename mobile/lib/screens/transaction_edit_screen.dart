@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/account.dart';
 import '../models/category.dart' as models;
 import '../models/offline_transaction.dart';
+import '../models/recurring_transaction.dart';
 import '../models/transaction.dart';
 import '../models/transaction_split.dart';
 import '../providers/accounts_provider.dart';
@@ -15,6 +16,7 @@ import '../providers/tags_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/connectivity_service.dart';
+import '../services/recurring_transactions_service.dart';
 import '../services/transaction_split_service.dart';
 import '../services/transactions_service.dart';
 import '../theme/sure_colors.dart';
@@ -22,11 +24,14 @@ import '../theme/sure_tokens.dart';
 import '../utils/amount_parser.dart';
 import '../utils/investment_math.dart';
 import '../utils/money_masker.dart';
+import '../utils/recurring_grouping.dart';
 import '../utils/split_math.dart';
 import '../utils/transaction_amount_display.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/metadata_picker_sheet.dart';
 import '../widgets/transaction_metadata_pickers.dart';
+import 'recurring_form_screen.dart';
+import 'recurring_screen.dart' show recurringCadenceLabel;
 import 'transaction_split_screen.dart';
 import 'web_view_screen.dart';
 
@@ -58,6 +63,7 @@ class TransactionEditScreen extends StatefulWidget {
   /// Overrides for tests.
   final TransactionsService? transactionsService;
   final TransactionSplitService? splitService;
+  final RecurringTransactionsService? recurringService;
 
   const TransactionEditScreen({
     super.key,
@@ -66,6 +72,7 @@ class TransactionEditScreen extends StatefulWidget {
     this.onChanged,
     this.transactionsService,
     this.splitService,
+    this.recurringService,
   });
 
   @override
@@ -81,6 +88,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
       widget.transactionsService ?? TransactionsService();
   late final TransactionSplitService _splitService =
       widget.splitService ?? TransactionSplitService();
+  late final RecurringTransactionsService _recurringService;
   final _pickers = TransactionMetadataPickers();
 
   late final TextEditingController _nameController;
@@ -106,6 +114,12 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   String? _splitError;
   bool _splitChanged = false;
 
+  /// The recurring list, fetched once after the details. Null until loaded.
+  List<RecurringTransaction>? _recurringItems;
+  RecurringTransaction? _recurringMatch;
+  bool _loadingRecurring = false;
+  bool _recurringFailed = false;
+
   bool _isSaving = false;
   bool _isDeleting = false;
   String? _error;
@@ -116,6 +130,8 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   @override
   void initState() {
     super.initState();
+    _recurringService =
+        widget.recurringService ?? RecurringTransactionsService();
     _nameController = TextEditingController(text: _txn.name);
     _notesController = TextEditingController(text: _txn.notes ?? '');
     _amountController = TextEditingController();
@@ -142,6 +158,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
 
   @override
   void dispose() {
+    if (widget.recurringService == null) _recurringService.close();
     _nameController.dispose();
     _notesController.dispose();
     _amountController.dispose();
@@ -239,6 +256,72 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
       _split = split;
       _splitError = splitError;
     });
+    if (_recurringItems == null && !_loadingRecurring) _loadRecurring();
+  }
+
+  /// Fetches the recurring list and looks for the series this transaction
+  /// belongs to. Online only; a failure leaves the row disabled with a retry
+  /// and never blocks the rest of the sheet.
+  Future<void> _loadRecurring() async {
+    if (!mounted || !context.read<ConnectivityService>().isOnline) return;
+    setState(() {
+      _loadingRecurring = true;
+      _recurringFailed = false;
+    });
+    final token = await context.read<AuthProvider>().getValidAccessToken();
+    if (!mounted) return;
+    final result = token == null
+        ? const {'success': false}
+        : await _recurringService.getAll(accessToken: token);
+    if (!mounted) return;
+    setState(() {
+      _loadingRecurring = false;
+      if (result['success'] == true) {
+        final items =
+            result['recurring_transactions'] as List<RecurringTransaction>;
+        _recurringItems = items;
+        _recurringMatch = findRecurringMatch(_fresh ?? _txn, items);
+      } else {
+        _recurringFailed = true;
+      }
+    });
+  }
+
+  List<Account> _accountsForForm() {
+    try {
+      return context.read<AccountsProvider>().accounts;
+    } on ProviderNotFoundException {
+      return const [];
+    }
+  }
+
+  /// Matched: edits the series. Not matched: a new series prefilled from
+  /// this transaction; on create the row shows it at once.
+  Future<void> _openRecurring() async {
+    final existing = _recurringMatch;
+    final authProvider = context.read<AuthProvider>();
+    final changed = await showSureSheet<bool>(
+      context: context,
+      builder: (_) => RecurringFormScreen(
+        existing: existing,
+        prefill: existing == null ? recurringPrefillFor(_fresh ?? _txn) : null,
+        onCreated: (created) {
+          if (!mounted) return;
+          setState(() {
+            _recurringMatch = created;
+            _recurringItems = [...?_recurringItems, created];
+          });
+        },
+        accounts: _accountsForForm(),
+        service: _recurringService,
+        accessTokenLoader: authProvider.getValidAccessToken,
+        onUnauthorized: authProvider.logout,
+      ),
+    );
+    if (changed != true || !mounted) return;
+    SureHaptics.success();
+    // An edit or delete of the matched series: re-read the list.
+    if (existing != null) await _loadRecurring();
   }
 
   Future<void> _openSplit() async {
@@ -692,6 +775,8 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
             _buildDetailsPanel(
                 l, palette, merchants, tags, online, enabled, financialEnabled),
             const SizedBox(height: 16),
+            _buildRecurringPanel(l, palette, online),
+            const SizedBox(height: 16),
             _buildWebPanel(l, palette, online),
             if (_error != null) ...[
               const SizedBox(height: 16),
@@ -1116,8 +1201,103 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
             onTap: financialEnabled ? _pickDate : null,
           ),
         ),
+        if (_fresh?.transfer case final transfer?)
+          SureListRow(
+            key: const ValueKey('transaction-transfer-row'),
+            leading: SureIcon(
+              SureIcons.arrowLeftRight,
+              size: 18,
+              color: palette.textSecondary,
+            ),
+            title: l.dsTransfer,
+            value: transferLabel(l, _fresh!, transfer),
+          ),
       ],
     );
+  }
+
+  /// Recurring (or "Mark as recurring") and the read-only Budgets and
+  /// reports row.
+  Widget _buildRecurringPanel(
+    AppLocalizations l,
+    SureTokenPalette palette,
+    bool online,
+  ) {
+    final fresh = _fresh;
+    final entryId = fresh?.entryId;
+    final match = _recurringMatch;
+    final loaded = online && _recurringItems != null;
+    final rows = <Widget>[];
+
+    if (loaded && match != null) {
+      rows.add(SureListRow(
+        key: const ValueKey('transaction-recurring-row'),
+        title: l.dstRecurring,
+        value: l.txnParityRecurringValue(
+          match.displayName,
+          recurringCadenceLabel(l, match),
+        ),
+        showChevron: true,
+        onTap: _openRecurring,
+      ));
+    } else if (loaded) {
+      rows.add(SureListRow(
+        key: const ValueKey('transaction-recurring-row'),
+        title: l.txnParityMarkRecurring,
+        titleColor: palette.link,
+        onTap: _openRecurring,
+      ));
+    } else {
+      rows.add(SureListRow(
+        key: const ValueKey('transaction-recurring-row'),
+        title: l.dstRecurring,
+        value: _loadingRecurring ? null : l.dstRecurringSetUp,
+        trailing: _loadingRecurring && online
+            ? const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : null,
+        showChevron: true,
+        enabled: false,
+      ));
+      if (!online) {
+        rows.add(SureListRow(
+          title: l.txnParityRecurringOffline,
+          titleColor: palette.textSecondary,
+        ));
+      } else if (_recurringFailed) {
+        rows.add(SureListRow(
+          title: l.recurringLoadFailed,
+          titleColor: palette.destructive,
+          trailing: TextButton(
+            onPressed: _loadingRecurring ? null : _loadRecurring,
+            style: TextButton.styleFrom(foregroundColor: palette.link),
+            child: Text(l.commonTryAgain),
+          ),
+        ));
+      }
+    }
+
+    if (fresh != null) {
+      final available = online && entryId != null;
+      rows.add(SureListRow(
+        key: const ValueKey('transaction-budgets-row'),
+        title: l.txnParityBudgetsTitle,
+        subtitle: l.txnParityChangeOnWeb,
+        value: budgetsAndReportsLabel(l, fresh),
+        showChevron: true,
+        enabled: available,
+        onTap: available
+            ? () => _openWeb(
+                  l.txnDetail,
+                  '/transactions/${Uri.encodeComponent(entryId)}',
+                )
+            : null,
+      ));
+    }
+
+    return SurePanel.rows(children: rows);
   }
 
   Widget _buildWebPanel(
@@ -1132,22 +1312,8 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
         _dim(
           enabled: available,
           child: SureListRow(
-            title: l.dstRecurring,
-            value: l.dstRecurringSetUp,
-            showChevron: true,
-            onTap: available
-                ? () => _openWeb(
-                      l.dstRecurring,
-                      '/recurring_transactions/new?entry_id='
-                      '${Uri.encodeQueryComponent(entryId)}',
-                    )
-                : null,
-          ),
-        ),
-        _dim(
-          enabled: available,
-          child: SureListRow(
             title: l.dstOpenOnWeb,
+            subtitle: l.txnParityOpenOnWebSubtitle,
             titleColor: palette.link,
             trailing: SureIcon(
               SureIcons.arrowUpRight,
@@ -1175,9 +1341,149 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     );
   }
 
-
   Widget _dim({required bool enabled, required Widget child}) =>
       Opacity(opacity: enabled ? 1 : 0.5, child: child);
+}
+
+/// Whether [transaction] moved money out of its account: a positive stored
+/// amount (Sure's sign convention), else an expense classification.
+bool _isOutflow(Transaction transaction) {
+  final units = SplitMath.toUnits(transaction.amountDecimal);
+  if (units != null && units != 0) return units > 0;
+  return transaction.isExpense;
+}
+
+/// "To Savings" for the outflow side of a transfer, "From Checking" for the
+/// inflow side.
+String transferLabel(
+  AppLocalizations l,
+  Transaction transaction,
+  TransactionTransfer transfer,
+) {
+  final other = transfer.otherAccountName ?? l.txnParityTransferOtherAccount;
+  return _isOutflow(transaction)
+      ? l.txnParityTransferTo(other)
+      : l.txnParityTransferFrom(other);
+}
+
+/// How budgets and reports treat [transaction], as the web's Exclude and
+/// One-time settings: excluded first, then by `kind`.
+String budgetsAndReportsLabel(AppLocalizations l, Transaction transaction) {
+  if (transaction.excluded == true) return l.txnParityBudgetsExcluded;
+  return switch (transaction.kind) {
+    'one_time' => l.txnParityBudgetsOneTime,
+    'funds_movement' => l.txnParityBudgetsFundsMovement,
+    'cc_payment' => l.txnParityBudgetsCcPayment,
+    'loan_payment' ||
+    'investment_contribution' =>
+      l.txnParityBudgetsCountedExpense,
+    _ => l.txnParityBudgetsIncluded,
+  };
+}
+
+String _normalized(String? value) =>
+    (value ?? '').trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+
+/// The transaction's unsigned amount in major units.
+double _majorAmount(Transaction transaction) {
+  final exact = double.tryParse(transaction.amountDecimal ?? '');
+  if (exact != null) return exact.abs();
+  return (InvestmentMath.parse(transaction.amount) ?? 0).abs();
+}
+
+/// The recurring series [transaction] belongs to, or null.
+///
+/// Same series: the same merchant id when both sides carry one, else the
+/// merchant name (case-insensitive) when the transaction has a merchant;
+/// without a merchant, the transaction name equals the item's display name
+/// (trimmed, case- and whitespace-insensitive). Same amount: within the
+/// item's expected min..max when it has both, else within 10% of its amount.
+/// The currency must match. Ended (cancelled or dismissed) items are skipped;
+/// an active match wins over an inactive one.
+RecurringTransaction? findRecurringMatch(
+  Transaction transaction,
+  List<RecurringTransaction> items,
+) {
+  const epsilon = 0.000001;
+  final amount = _majorAmount(transaction);
+  final hasMerchant = transaction.merchantId != null ||
+      _normalized(transaction.merchantName).isNotEmpty;
+  final merchantName = _normalized(transaction.merchantName);
+  final name = _normalized(transaction.name);
+  final currency = transaction.currency.trim().toUpperCase();
+
+  bool sameSeries(RecurringTransaction item) {
+    if (!hasMerchant) {
+      return name.isNotEmpty && _normalized(item.displayName) == name;
+    }
+    if (transaction.merchantId != null && item.merchantId != null) {
+      return item.merchantId == transaction.merchantId;
+    }
+    return merchantName.isNotEmpty &&
+        _normalized(item.merchantName) == merchantName;
+  }
+
+  bool sameAmount(RecurringTransaction item) {
+    final min = item.expectedAmountMinCents;
+    final max = item.expectedAmountMaxCents;
+    if (min != null && max != null) {
+      final a =
+          InvestmentMath.fromMinorUnits(min.abs(), currency: item.currency);
+      final b =
+          InvestmentMath.fromMinorUnits(max.abs(), currency: item.currency);
+      final low = a < b ? a : b;
+      final high = a < b ? b : a;
+      return amount >= low - epsilon && amount <= high + epsilon;
+    }
+    final base = RecurringGrouping.amountOf(item).abs();
+    return (amount - base).abs() <= base * 0.10 + epsilon;
+  }
+
+  RecurringTransaction? fallback;
+  for (final item in items) {
+    if (item.status == 'ended') continue;
+    if (currency.isNotEmpty && item.currency.toUpperCase() != currency) {
+      continue;
+    }
+    if (!sameSeries(item) || !sameAmount(item)) continue;
+    if (item.isActive) return item;
+    fallback ??= item;
+  }
+  return fallback;
+}
+
+/// One month after [date], with the day clamped to that month's length
+/// (Jan 31 -> Feb 28 or 29).
+DateTime addOneMonthClamped(DateTime date) {
+  final lastDay = DateTime(date.year, date.month + 2, 0).day;
+  final day = date.day > lastDay ? lastDay : date.day;
+  return DateTime(date.year, date.month + 1, day);
+}
+
+/// A new recurring series from [transaction]: the merchant's name (else the
+/// transaction's), the unsigned amount and its direction, currency, account
+/// and merchant; the transaction date as the last occurrence and its day as
+/// the expected day; next expected one month later.
+RecurringPrefill recurringPrefillFor(
+  Transaction transaction, {
+  DateTime Function() clock = DateTime.now,
+}) {
+  final parsed = SureDates.parseDay(transaction.date);
+  final now = clock();
+  final date = parsed ?? DateTime(now.year, now.month, now.day);
+  final merchant = transaction.merchantName?.trim();
+  final currency = transaction.currency.trim();
+  return RecurringPrefill(
+    name: merchant != null && merchant.isNotEmpty ? merchant : transaction.name,
+    amount: _majorAmount(transaction),
+    income: !_isOutflow(transaction),
+    currency: currency.isEmpty ? null : currency,
+    accountId: transaction.accountId.isEmpty ? null : transaction.accountId,
+    merchantId: transaction.merchantId,
+    expectedDayOfMonth: date.day,
+    lastOccurrenceDate: date,
+    nextExpectedDate: addOneMonthClamped(date),
+  );
 }
 
 /// The split's parts listed under the Category row, indented: a 16 px
