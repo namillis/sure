@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import '../l10n/app_localizations.dart';
+import '../models/chat.dart';
 import '../providers/auth_provider.dart';
 import '../providers/chat_provider.dart';
+import '../theme/sure_colors.dart';
+import '../widgets/chat_widgets.dart';
+import '../widgets/ds/ds.dart';
 import 'chat_conversation_screen.dart';
-import '../l10n/app_localizations.dart';
 
+/// The Assistant tab: a large title with a compose action, a search field
+/// and the chats in day sections. Swipe left to delete one chat; long-press
+/// to select several.
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
 
@@ -16,11 +23,19 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   bool _isSelectionMode = false;
   final Set<String> _selectedChatIds = {};
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
     _loadChats();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadChats() async {
@@ -40,9 +55,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
     await _loadChats();
   }
 
-  void _toggleSelectionMode() {
+  void _exitSelectionMode() {
     setState(() {
-      _isSelectionMode = !_isSelectionMode;
+      _isSelectionMode = false;
       _selectedChatIds.clear();
     });
   }
@@ -69,20 +84,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
     });
   }
 
-  Future<void> _deleteSelectedChats() async {
-    final l = AppLocalizations.of(context);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-
+  Future<bool> _confirmDelete(String content) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         final dl = AppLocalizations.of(context);
+        final palette = SureColors.of(context).palette;
         return AlertDialog(
           title: Text(dl.chatListDeleteTitle),
-          content: Text(
-            dl.chatListDeleteMultiContent(_selectedChatIds.length),
-          ),
+          content: Text(content),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -90,14 +100,24 @@ class _ChatListScreenState extends State<ChatListScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(dl.commonDelete, style: const TextStyle(color: Colors.red)),
+              child: Text(dl.commonDelete,
+                  style: TextStyle(color: palette.destructive)),
             ),
           ],
         );
       },
     );
+    return confirmed == true;
+  }
 
-    if (confirmed != true || !mounted) return;
+  Future<void> _deleteSelectedChats() async {
+    final l = AppLocalizations.of(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+
+    final confirmed =
+        await _confirmDelete(l.chatListDeleteMultiContent(_selectedChatIds.length));
+    if (!confirmed || !mounted) return;
 
     final accessToken = await authProvider.getValidAccessToken();
     if (accessToken == null) {
@@ -111,318 +131,270 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
 
     if (!mounted) return;
-
-    setState(() {
-      _isSelectionMode = false;
-      _selectedChatIds.clear();
-    });
-
+    _exitSelectionMode();
+    final palette = SureColors.of(context).palette;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           success ? l.chatListDeletedSuccess : l.chatListDeleteFailed,
         ),
-        backgroundColor: success ? Colors.green : Colors.red,
+        backgroundColor: success ? palette.success : palette.destructive,
       ),
     );
   }
 
-  Future<void> _openNewChat() async {
-    if (!mounted) return;
+  Future<void> _deleteChat(Chat chat) async {
+    final l = AppLocalizations.of(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
 
+    final confirmed = await _confirmDelete(l.chatListDeleteSingleContent(chat.title));
+    if (!confirmed || !mounted) return;
+
+    final accessToken = await authProvider.getValidAccessToken();
+    if (accessToken == null) {
+      await authProvider.logout();
+      return;
+    }
+    final success = await chatProvider.deleteChat(
+      accessToken: accessToken,
+      chatId: chat.id,
+    );
+    if (!mounted || success) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l.ds3aDeleteFailed),
+        backgroundColor: SureColors.of(context).palette.destructive,
+      ),
+    );
+  }
+
+  Future<void> _openChat(String? chatId) async {
+    if (!mounted) return;
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const ChatConversationScreen(chatId: null),
+        builder: (context) => ChatConversationScreen(chatId: chatId),
       ),
     );
-
     if (mounted) _loadChats();
   }
 
-  String _formatDateTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    final l = AppLocalizations.of(context);
-    if (difference.inMinutes < 1) {
-      return l.chatListJustNow;
-    } else if (difference.inHours < 1) {
-      return l.chatListMinutesAgo(difference.inMinutes);
-    } else if (difference.inDays < 1) {
-      return l.chatListHoursAgo(difference.inHours);
-    } else if (difference.inDays < 7) {
-      return l.chatListDaysAgo(difference.inDays);
-    } else {
-      return DateFormat.yMd(Localizations.localeOf(context).toString())
-          .format(dateTime.toLocal());
+  List<Widget> _headerActions(AppLocalizations l, List<Chat> chats) {
+    final palette = SureColors.of(context).palette;
+    if (_isSelectionMode) {
+      return [
+        SureNavIconButton(
+          icon: SureIcons.trash,
+          semanticLabel: l.ds3aDeleteSelected,
+          color: palette.destructive,
+          onPressed: _selectedChatIds.isNotEmpty ? _deleteSelectedChats : null,
+        ),
+        SureNavIconButton(
+          icon: SureIcons.listChecks,
+          semanticLabel: l.ds3aSelectAll,
+          onPressed: () => _toggleSelectAll(chats.map((c) => c.id).toList()),
+        ),
+        SureNavTextButton(label: l.commonCancel, onPressed: _exitSelectionMode),
+      ];
     }
+    return [
+      SureNavIconButton(
+        icon: composeIcon,
+        semanticLabel: l.ds3aNewChat,
+        onPressed: () => _openChat(null),
+      ),
+      const SizedBox(width: 4),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
+    final palette = SureColors.of(context).palette;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.chatListTitle),
-        centerTitle: false,
-        actions: [
-          if (_isSelectionMode) ...[
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _selectedChatIds.isNotEmpty ? _deleteSelectedChats : null,
-            ),
-            IconButton(
-              icon: const Icon(Icons.select_all),
-              onPressed: () {
-                final allIds = Provider.of<ChatProvider>(context, listen: false)
-                    .chats
-                    .map((c) => c.id)
-                    .toList();
-                _toggleSelectAll(allIds);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: _toggleSelectionMode,
-            ),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.only(top: 12, right: 12),
-              child: InkWell(
-                onTap: _handleRefresh,
-                child: const SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Icon(Icons.refresh),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-      body: Consumer<ChatProvider>(
-        builder: (context, chatProvider, _) {
-          if (chatProvider.isLoading && chatProvider.chats.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (chatProvider.errorMessage != null && chatProvider.chats.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24) +
-                    EdgeInsets.only(
-                        bottom: MediaQuery.paddingOf(context).bottom),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l.chatListError,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      chatProvider.errorMessage!,
-                      style: TextStyle(color: colorScheme.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _handleRefresh,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(l.commonTryAgain),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          if (chatProvider.chats.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24) +
-                    EdgeInsets.only(
-                        bottom: MediaQuery.paddingOf(context).bottom),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 64,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l.chatListEmpty,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l.chatListEmptySubtitle,
-                      style: TextStyle(color: colorScheme.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          final chatListView = RefreshIndicator(
-            onRefresh: _handleRefresh,
-            child: ListView.builder(
-              // The bottom inset clears the shell's see-through tab bar.
-              padding: EdgeInsets.only(
-                top: 8,
-                bottom: 8 + MediaQuery.paddingOf(context).bottom,
-              ),
-              itemCount: chatProvider.chats.length,
-              itemBuilder: (context, index) {
-                final chat = chatProvider.chats[index];
-                final isSelected = _selectedChatIds.contains(chat.id);
-                return Dismissible(
-                  key: Key(chat.id),
-                  direction: _isSelectionMode
-                      ? DismissDirection.none
-                      : DismissDirection.endToStart,
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 16),
-                    child: const Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                    ),
+    return Consumer<ChatProvider>(
+      builder: (context, chatProvider, _) {
+        final chats = chatProvider.chats;
+        return PopScope(
+          canPop: !_isSelectionMode,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _exitSelectionMode();
+          },
+          child: Scaffold(
+            backgroundColor: palette.surface,
+            body: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              edgeOffset: MediaQuery.paddingOf(context).top +
+                  SureLargeTitleHeader.barHeight,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SureLargeTitleHeader(
+                    title: _isSelectionMode
+                        ? l.ds3aSelectedCount(_selectedChatIds.length)
+                        : l.ds3aTitle,
+                    automaticallyImplyLeading: false,
+                    actions: _headerActions(l, chats),
                   ),
-                  confirmDismiss: (direction) async {
-                    return await showDialog<bool>(
-                      context: context,
-                      builder: (context) {
-                        final l = AppLocalizations.of(context);
-                        return AlertDialog(
-                          title: Text(l.chatListDeleteTitle),
-                          content: Text(l.chatListDeleteSingleContent(chat.title)),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(l.commonCancel),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: Text(l.commonDelete, style: const TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  onDismissed: (direction) async {
-                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                    final accessToken = await authProvider.getValidAccessToken();
-                    if (accessToken != null) {
-                      await chatProvider.deleteChat(
-                        accessToken: accessToken,
-                        chatId: chat.id,
-                      );
-                    }
-                  },
-                  child: ListTile(
-                    leading: _isSelectionMode
-                        ? Checkbox(
-                            value: isSelected,
-                            onChanged: (_) => _toggleChatSelection(chat.id),
-                          )
-                        : CircleAvatar(
-                            backgroundColor: colorScheme.primaryContainer,
-                            child: Icon(
-                              Icons.chat,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                    title: Text(
-                      chat.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  ..._buildBody(l, chatProvider),
+                  // Keep the last row clear of the shell's see-through tab
+                  // bar (and the home indicator).
+                  SliverPadding(
+                    padding: EdgeInsets.only(
+                      bottom: 24 + MediaQuery.paddingOf(context).bottom,
                     ),
-                    subtitle: chat.lastMessageAt != null
-                        ? Text(_formatDateTime(chat.lastMessageAt!))
-                        : null,
-                    trailing: chat.messageCount != null && !_isSelectionMode
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: colorScheme.secondaryContainer,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${chat.messageCount}',
-                              style: TextStyle(
-                                color: colorScheme.onSecondaryContainer,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        : null,
-                    onTap: () async {
-                      if (_isSelectionMode) {
-                        _toggleChatSelection(chat.id);
-                        return;
-                      }
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatConversationScreen(chatId: chat.id),
-                        ),
-                      );
-                      _loadChats();
-                    },
-                    onLongPress: _isSelectionMode
-                        ? null
-                        : () {
-                            setState(() {
-                              _isSelectionMode = true;
-                              _selectedChatIds.add(chat.id);
-                            });
-                          },
-                  ),
-                );
-              },
-            ),
-          );
-
-          if (!chatProvider.hasIncompleteChatList) return chatListView;
-          return Column(
-            children: [
-              MaterialBanner(
-                content: Text(l.chatListIncomplete),
-                actions: [
-                  TextButton(
-                    onPressed: _handleRefresh,
-                    child: Text(l.commonTryAgain),
                   ),
                 ],
               ),
-              Expanded(child: chatListView),
-            ],
-          );
-        },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildBody(AppLocalizations l, ChatProvider chatProvider) {
+    final chats = chatProvider.chats;
+
+    if (chatProvider.isLoading && chats.isEmpty) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ];
+    }
+
+    if (chatProvider.errorMessage != null && chats.isEmpty) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: SureEmptyState(
+              icon: SureIcons.circleAlert,
+              title: l.chatListError,
+              body: chatProvider.errorMessage,
+              primaryLabel: l.commonTryAgain,
+              onPrimary: _handleRefresh,
+            ),
+          ),
+        ),
+      ];
+    }
+
+    if (chats.isEmpty) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: SureEmptyState(
+              icon: SureIcons.sparkles,
+              title: l.ds3aEmptyTitle,
+              body: l.ds3aEmptyBody,
+              primaryLabel: l.ds3aNewChat,
+              onPrimary: () => _openChat(null),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    final visible = filterChats(chats, _query);
+    return [
+      if (chatProvider.hasIncompleteChatList)
+        SliverToBoxAdapter(
+          child: SureBanner(
+            message: l.chatListIncomplete,
+            actionLabel: l.commonTryAgain,
+            onAction: _handleRefresh,
+            margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+          ),
+        ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: SureSearchField(
+            controller: _searchController,
+            hintText: l.ds3aSearchHint,
+            clearSemanticLabel: l.ds3aClearSearch,
+            onChanged: (value) => setState(() => _query = value),
+          ),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openNewChat,
-        tooltip: l.chatListNewChat,
-        child: const Icon(Icons.add),
+      if (visible.isEmpty)
+        SliverToBoxAdapter(
+          child: SureEmptyState(
+            icon: SureIcons.search,
+            title: l.ds3aNoMatches(_query.trim()),
+            body: l.ds3aNoMatchesBody,
+          ),
+        )
+      else
+        for (final group in groupChatsByDay(visible)) ...[
+          SliverToBoxAdapter(
+            child: SureSectionHeader(
+              label: SureDates.relativeDayOf(context, group.day),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SurePanel.rows(
+                dividerIndent: SurePanel.iconRowDividerIndent,
+                children: [for (final chat in group.chats) _buildRow(l, chat)],
+              ),
+            ),
+          ),
+        ],
+    ];
+  }
+
+  Widget _buildRow(AppLocalizations l, Chat chat) {
+    final palette = SureColors.of(context).palette;
+    final selected = _selectedChatIds.contains(chat.id);
+    return SureSwipeActions(
+      key: ValueKey('chat_${chat.id}'),
+      enabled: !_isSelectionMode,
+      actions: [
+        SureSwipeAction(
+          label: l.dsDelete,
+          color: palette.destructive,
+          onPressed: () => _deleteChat(chat),
+        ),
+      ],
+      child: ColoredBox(
+        color: selected ? palette.containerInset : palette.container,
+        child: SureListRow(
+          leading: _isSelectionMode
+              ? ChatSelectionCircle(selected: selected)
+              : const AssistantAvatar(),
+          title: chat.title,
+          trailing: Text(
+            chatRelativeTime(
+              chatListTime(chat),
+              l: l,
+              locale: Localizations.localeOf(context).toString(),
+            ),
+            style: TextStyle(fontSize: 13, color: palette.textSubdued),
+          ),
+          onTap: () {
+            if (_isSelectionMode) {
+              _toggleChatSelection(chat.id);
+            } else {
+              _openChat(chat.id);
+            }
+          },
+          onLongPress: _isSelectionMode
+              ? null
+              : () {
+                  SureHaptics.selection();
+                  setState(() {
+                    _isSelectionMode = true;
+                    _selectedChatIds.add(chat.id);
+                  });
+                },
+        ),
       ),
     );
   }
