@@ -6,13 +6,10 @@ import '../models/provider_connection.dart';
 import '../providers/auth_provider.dart';
 import '../services/provider_connections_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
-import '../widgets/manage_widgets.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
-import '../widgets/sure_list_group.dart';
 import '../widgets/sync_now_dialog.dart';
+import 'settings_links.dart';
 
 /// The family's bank and broker connections from
 /// `GET /api/v1/provider_connections`, read-only. Connecting, reconnecting
@@ -129,84 +126,93 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     final connections = _connections;
     final now = (widget.now ?? DateTime.now)();
 
-    final Widget content;
+    final List<Widget> content;
     if (connections == null && _loading) {
-      content = const Padding(
-        padding: EdgeInsets.only(top: 96),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      content = const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ];
     } else if (connections == null) {
-      content = ManageMessage(
-        icon: Icons.error_outline,
-        title: l.p3roConnectionsLoadFailed,
-        onRetry: _load,
-      );
+      content = [
+        _centered(SureEmptyState(
+          icon: SureIcons.circleAlert,
+          title: l.p3roConnectionsLoadFailed,
+          secondaryLabel: l.commonTryAgain,
+          onSecondary: _load,
+        )),
+      ];
     } else if (connections.isEmpty) {
-      content = ManageMessage(
-        icon: Icons.link_off,
-        title: l.p3roConnectionsEmpty,
-        body: l.p3roConnectionsEmptyBody,
-      );
+      content = [
+        _centered(SureEmptyState(
+          icon: 'unplug',
+          title: l.p3roConnectionsEmpty,
+          body: l.p3roConnectionsEmptyBody,
+        )),
+      ];
     } else {
-      content = Column(
-        children: [
-          for (final connection in connections)
-            _ConnectionCard(
-              connection: connection,
-              lastSynced: ConnectionsScreen.lastSyncedLabel(
-                  l, connection.lastSyncedAt?.toLocal(),
-                  now: now),
-              onFix: _openWeb,
-            ),
-        ],
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.shellConnections),
-        actions: [
-          IconButton(
-            tooltip: l.accountActionsSyncNow,
-            icon: const Icon(Icons.sync),
-            onPressed: connections == null || connections.isEmpty
-                ? null
-                : _syncNow,
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: SureSpacing.huge),
+      content = [
+        SliverList.list(
           children: [
-            SureListGroup(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              children: [
-                SureListRow(
-                  leading: Icon(Icons.add_link, color: palette.textPrimary),
-                  title: l.p3roConnectionsManageOnWeb,
-                  trailing: Icon(
-                    Icons.language,
-                    size: 18,
-                    color: palette.textSubdued,
-                    semanticLabel: l.shellOpensOnWeb,
-                  ),
-                  onTap: _openWeb,
-                ),
-              ],
-            ),
-            content,
+            const SizedBox(height: 20),
+            for (final connection in connections)
+              _ConnectionPanel(
+                connection: connection,
+                lastSynced: ConnectionsScreen.lastSyncedLabel(
+                    l, connection.lastSyncedAt?.toLocal(),
+                    now: now),
+                onFix: _openWeb,
+              ),
           ],
         ),
-      ),
+      ];
+    }
+
+    return SureLargeTitleScaffold(
+      title: l.shellConnections,
+      // Connections opens from Settings.
+      leading: Navigator.of(context).canPop()
+          ? SureBackButton(label: l.shellSettingsTitle)
+          : null,
+      actions: [
+        SureNavIconButton(
+          icon: SureIcons.refresh,
+          semanticLabel: l.accountActionsSyncNow,
+          onPressed: connections == null || connections.isEmpty
+              ? null
+              : _syncNow,
+        ),
+      ],
+      onRefresh: _load,
+      slivers: [
+        SliverToBoxAdapter(
+          child: SurePanel.rows(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            dividerIndent: SurePanel.iconRowDividerIndent,
+            children: [
+              SureListRow(
+                leading: SureIcon('plug', size: 20, color: palette.textPrimary),
+                title: l.p3roConnectionsManageOnWeb,
+                trailing: const SettingsWebMark(),
+                onTap: _openWeb,
+              ),
+            ],
+          ),
+        ),
+        ...content,
+      ],
     );
   }
+
+  Widget _centered(Widget state) => SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(child: state),
+      );
 }
 
-class _ConnectionCard extends StatelessWidget {
-  const _ConnectionCard({
+class _ConnectionPanel extends StatelessWidget {
+  const _ConnectionPanel({
     required this.connection,
     required this.lastSynced,
     required this.onFix,
@@ -219,22 +225,21 @@ class _ConnectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
     final c = connection;
 
-    final (String status, Color statusColor, IconData statusIcon) =
+    final (String status, Color statusColor, String statusIcon) =
         c.scheduledForDeletion
             ? (l.p3roConnectionStatusDeleting, palette.textSubdued,
-                Icons.delete_outline)
+                SureIcons.trash)
             : c.needsAttention
                 ? (l.p3roConnectionStatusNeedsAttention, palette.warning,
-                    Icons.error_outline)
+                    SureIcons.triangleAlert)
                 : c.syncing
                     ? (l.p3roConnectionStatusSyncing, palette.textSecondary,
-                        Icons.sync)
+                        SureIcons.refresh)
                     : (l.p3roConnectionStatusConnected, palette.success,
-                        Icons.check_circle_outline);
+                        SureIcons.circleCheck);
 
     final problems = <String>[
       if (c.needsReconnect) l.p3roConnectionReconnect,
@@ -246,68 +251,78 @@ class _ConnectionCard extends StatelessWidget {
         l.p3roConnectionPendingSetup,
     ];
 
-    final secondary = theme.textTheme.bodySmall
-        ?.copyWith(color: palette.textSecondary);
+    final secondary = TextStyle(fontSize: 13, color: palette.textSecondary);
 
-    return SureCard(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return SurePanel.rows(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(c.displayName,
-                        style: theme.textTheme.bodyLarge
-                            ?.copyWith(fontWeight: FontWeight.w600)),
-                    Text(
-                      '${c.providerLabel} · ${l.p3roConnectionAccounts(c.totalAccounts)}',
-                      style: secondary,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: SureSpacing.md),
               Row(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(statusIcon, size: 16, color: statusColor),
-                  const SizedBox(width: SureSpacing.xs),
-                  Text(status,
-                      style: theme.textTheme.labelMedium
-                          ?.copyWith(color: statusColor)),
+                  Expanded(
+                    child: Text(
+                      c.displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: palette.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SureIcon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            status,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: statusColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
+              const SizedBox(height: 2),
+              Text(
+                '${c.providerLabel} · ${l.p3roConnectionAccounts(c.totalAccounts)}',
+                style: secondary,
+              ),
+              Text(lastSynced, style: secondary),
+              for (final problem in problems)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(problem,
+                      style: TextStyle(fontSize: 13, color: palette.warning)),
+                ),
             ],
           ),
-          const SizedBox(height: SureSpacing.sm),
-          Text(lastSynced, style: secondary),
-          for (final problem in problems)
-            Padding(
-              padding: const EdgeInsets.only(top: SureSpacing.xs),
-              child: Text(problem,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: palette.warning)),
-            ),
-          if (c.needsAttention) ...[
-            const SizedBox(height: SureSpacing.lg),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: SureButton(
-                label: l.p3roConnectionFixOnWeb,
-                leading: const Icon(Icons.language, size: 16),
-                variant: SureButtonVariant.outline,
-                onPressed: onFix,
-              ),
-            ),
-          ],
-        ],
-      ),
+        ),
+        if (c.needsAttention)
+          SureListRow(
+            title: l.p3roConnectionFixOnWeb,
+            titleColor: palette.link,
+            trailing: const SettingsWebMark(),
+            onTap: onFix,
+          ),
+      ],
     );
   }
 }

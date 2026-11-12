@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sure_mobile/screens/insights_screen.dart';
 import 'package:sure_mobile/services/insights_service.dart';
+import 'package:sure_mobile/widgets/ds/sure_large_title.dart';
 import 'package:sure_mobile/widgets/ds/sure_panel.dart';
 import 'package:sure_mobile/widgets/insights_card.dart';
 import 'package:sure_mobile/widgets/sure_list_group.dart';
@@ -59,7 +60,7 @@ void main() {
     expect(find.byType(InsightsScreen), findsOneWidget);
     expect(find.text('Rent posted'), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.tap(find.byType(SureBackButton));
     await tester.pumpAndSettle();
     expect(gets, 3, reason: 'row, screen, and row reload on return');
   });

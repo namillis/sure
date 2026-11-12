@@ -7,10 +7,8 @@ import '../l10n/app_localizations.dart';
 import '../services/api_config.dart';
 import '../services/log_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../utils/web_fallback.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_icon.dart';
+import '../widgets/ds/ds.dart';
 
 /// Shows a page of the Sure web app (at [ApiConfig.baseUrl] + [path]) inside
 /// the app, for features that aren't native yet.
@@ -20,9 +18,18 @@ import '../widgets/sure_icon.dart';
 /// (password and MFA typed by them; nothing is prefilled or stored by the app).
 /// Links to other hosts open outside the app.
 class WebViewScreen extends StatefulWidget {
-  const WebViewScreen({super.key, required this.title, required this.path});
+  const WebViewScreen({
+    super.key,
+    required this.title,
+    required this.path,
+    this.backLabel,
+  });
 
   final String title;
+
+  /// Label of the back link, naming the screen that opened this one. Null
+  /// shows only the chevron.
+  final String? backLabel;
 
   /// Server-relative path, e.g. `/goals`.
   final String path;
@@ -146,69 +153,119 @@ class _WebViewScreenState extends State<WebViewScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          if (_canGoBack)
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              tooltip: l.shellWebBack,
-              onPressed: () => _controller.goBack(),
-            ),
-          if (_canGoForward)
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              tooltip: l.shellWebForward,
-              onPressed: () => _controller.goForward(),
-            ),
-          IconButton(
-            icon: const Icon(Icons.open_in_new),
-            tooltip: isIos ? l.shellWebOpenInSafari : l.shellWebOpenInBrowser,
-            onPressed: _openCurrentExternally,
+      backgroundColor: palette.surface,
+      body: Column(
+        children: [
+          WebViewTitleBar(
+            title: widget.title,
+            backLabel: widget.backLabel,
+            progress: _loading && !_failed ? _progress / 100 : null,
+            onWebBack: _canGoBack ? () => _controller.goBack() : null,
+            onWebForward: _canGoForward ? () => _controller.goForward() : null,
+            onOpenExternally: _openCurrentExternally,
+          ),
+          Expanded(
+            child: _failed
+                ? Center(
+                    child: SingleChildScrollView(
+                      child: SureEmptyState(
+                        icon: SureIcons.cloudOff,
+                        title: l.shellWebLoadFailed,
+                        primaryLabel: l.commonTryAgain,
+                        onPrimary: _retry,
+                      ),
+                    ),
+                  )
+                : WebViewWidget(controller: _controller),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(2),
-          child: _loading && !_failed
-              ? LinearProgressIndicator(
-                  value: _progress > 0 ? _progress / 100 : null,
-                  minHeight: 2,
-                )
-              : const SizedBox(height: 2),
-        ),
       ),
-      body: _failed
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(SureSpacing.xxxl),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SureIcon(
-                      SureIcons.circleAlert,
-                      size: 64,
-                      color: palette.destructive,
-                    ),
-                    const SizedBox(height: SureSpacing.xl),
-                    Text(
-                      l.shellWebLoadFailed,
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: SureSpacing.xxxl),
-                    SureButton(
-                      label: l.commonTryAgain,
-                      onPressed: _retry,
-                      leading: const SureIcon(SureIcons.refresh, size: 18),
-                    ),
-                  ],
-                ),
+    );
+  }
+}
+
+/// The web view's chrome: a [SureNavBar] with a labeled back link, the
+/// page title, in-page back/forward when there is history, and an "Open in
+/// Safari" (or browser) action; under it a 2 px progress bar in the link
+/// color while a page loads.
+class WebViewTitleBar extends StatelessWidget {
+  const WebViewTitleBar({
+    super.key,
+    required this.title,
+    required this.onOpenExternally,
+    this.backLabel,
+    this.progress,
+    this.onWebBack,
+    this.onWebForward,
+  });
+
+  final String title;
+
+  /// The back link's label, e.g. "Settings". Null shows only the chevron.
+  final String? backLabel;
+
+  /// Load progress 0–1; null hides the bar. 0 shows it indeterminate.
+  final double? progress;
+
+  /// Shown only when set (the page has history).
+  final VoidCallback? onWebBack;
+  final VoidCallback? onWebForward;
+  final VoidCallback onOpenExternally;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    final value = progress;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SureNavBar(
+          title: title,
+          showTitle: true,
+          leading: Navigator.of(context).canPop()
+              ? SureBackButton(label: backLabel)
+              : null,
+          actions: [
+            if (onWebBack != null)
+              SureNavIconButton(
+                icon: SureIcons.chevronLeft,
+                semanticLabel: l.shellWebBack,
+                onPressed: onWebBack,
               ),
-            )
-          : WebViewWidget(controller: _controller),
+            if (onWebForward != null)
+              SureNavIconButton(
+                icon: SureIcons.chevronRight,
+                semanticLabel: l.shellWebForward,
+                onPressed: onWebForward,
+              ),
+            SureNavIconButton(
+              key: const ValueKey('webViewOpenExternally'),
+              icon: isIos ? 'compass' : SureIcons.externalLink,
+              semanticLabel:
+                  isIos ? l.shellWebOpenInSafari : l.shellWebOpenInBrowser,
+              color: palette.link,
+              onPressed: onOpenExternally,
+            ),
+          ],
+        ),
+        SizedBox(
+          height: 2,
+          child: value == null
+              ? null
+              : LinearProgressIndicator(
+                  key: const ValueKey('webViewProgress'),
+                  value: value > 0 ? value : null,
+                  minHeight: 2,
+                  color: palette.link,
+                  backgroundColor: Colors.transparent,
+                ),
+        ),
+      ],
     );
   }
 }

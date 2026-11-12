@@ -11,11 +11,9 @@ import '../providers/merchants_provider.dart';
 import '../providers/tags_provider.dart';
 import '../services/rules_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
 import '../utils/rule_text.dart';
-import '../widgets/manage_widgets.dart';
 import '../widgets/open_on_web_action.dart';
-import '../widgets/sure_card.dart';
+import '../widgets/ds/ds.dart';
 
 T? _maybe<T>(BuildContext context) {
   try {
@@ -164,214 +162,247 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
     final text = RuleText(l,
         lookup: widget.nameLookup ?? ruleNameLookupFromProviders(context));
 
-    final List<Widget> children;
+    final List<Widget> slivers;
     if (rule == null && _loading) {
-      children = const [
-        Padding(
-          padding: EdgeInsets.only(top: 96),
+      slivers = const [
+        SliverFillRemaining(
+          hasScrollBody: false,
           child: Center(child: CircularProgressIndicator()),
         ),
       ];
     } else if (rule == null) {
-      children = [
-        _notFound
-            ? ManageMessage(icon: Icons.rule, title: l.p3roRuleNotFound)
-            : ManageMessage(
-                icon: Icons.error_outline,
-                title: l.p3roRuleLoadFailed,
-                onRetry: _load,
-              ),
+      slivers = [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: _notFound
+                ? SureEmptyState(
+                    icon: SureIcons.listChecks, title: l.p3roRuleNotFound)
+                : SureEmptyState(
+                    icon: SureIcons.circleAlert,
+                    title: l.p3roRuleLoadFailed,
+                    secondaryLabel: l.commonTryAgain,
+                    onSecondary: _load,
+                  ),
+          ),
+        ),
       ];
     } else {
-      children = _ruleBody(context, rule, text);
+      slivers = [SliverList.list(children: _ruleBody(context, rule, text))];
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(rule == null ? l.p3roRuleTitle : text.title(rule)),
-        actions: [
-          if (!_notFound)
-            IconButton(
-              icon: const Icon(Icons.language),
-              tooltip: l.manageEditOnWeb,
-              onPressed: () => openWebFallback(context,
-                  title: l.shellRules,
-                  path: RuleDetailScreen.webPath(widget.ruleId)),
-            ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(
-              top: SureSpacing.md, bottom: SureSpacing.huge),
-          children: children,
-        ),
-      ),
+    return SureLargeTitleScaffold(
+      title: rule == null ? l.p3roRuleTitle : text.title(rule),
+      // The detail opens from the Rules list.
+      leading: Navigator.of(context).canPop()
+          ? SureBackButton(label: l.shellRules)
+          : null,
+      actions: [
+        if (!_notFound)
+          SureNavIconButton(
+            icon: SureIcons.arrowUpRight,
+            semanticLabel: l.manageEditOnWeb,
+            color: SureColors.of(context).palette.link,
+            onPressed: () => openWebFallback(context,
+                title: l.shellRules,
+                path: RuleDetailScreen.webPath(widget.ruleId)),
+          ),
+      ],
+      onRefresh: _load,
+      slivers: slivers,
     );
   }
 
   List<Widget> _ruleBody(BuildContext context, Rule rule, RuleText text) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
-    final locale = Localizations.localeOf(context).toString();
-    final secondary =
-        theme.textTheme.bodySmall?.copyWith(color: palette.textSecondary);
     final effective = rule.effectiveDate;
 
-    Widget line(String value, {double indent = 0}) => Padding(
-          padding: EdgeInsets.only(left: indent, top: SureSpacing.xs),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('•  ', style: theme.textTheme.bodyMedium),
-              Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
-            ],
-          ),
-        );
-
     return [
-      _Section(
+      SurePanel.rows(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         children: [
-          Text(
-            [
-              text.resourceType(rule.resourceType),
-              rule.active ? l.p3roRuleActive : l.p3roRuleInactive,
-            ].join(' · '),
-            style: theme.textTheme.labelLarge?.copyWith(
-                color: rule.active ? palette.success : palette.textSubdued),
-          ),
-          if (effective != null)
-            Padding(
-              padding: const EdgeInsets.only(top: SureSpacing.xs),
-              child: Text(
-                  l.p3roRuleEffectiveFrom(
-                      DateFormat.yMMMd(locale).format(effective)),
-                  style: secondary),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  [
+                    text.resourceType(rule.resourceType),
+                    rule.active ? l.p3roRuleActive : l.p3roRuleInactive,
+                  ].join(' · '),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color:
+                        rule.active ? palette.success : palette.textSubdued,
+                  ),
+                ),
+                if (effective != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      l.p3roRuleEffectiveFrom(
+                          SureDates.shortOf(context, effective)),
+                      style: TextStyle(
+                          fontSize: 13, color: palette.textSecondary),
+                    ),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
-      _Section(
-        title: l.p3roRuleConditions,
+      SureSectionHeader(label: l.p3roRuleConditions),
+      SurePanel.rows(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          if (rule.conditions.isEmpty) line(l.p3roRuleAllTransactions),
+          if (rule.conditions.isEmpty) _Line(l.p3roRuleAllTransactions),
           for (final c in rule.conditions)
             if (c.isCompound) ...[
-              line(text.compoundHeading(c)),
+              _Line(text.compoundHeading(c), secondary: true),
               for (final sub in c.subConditions)
-                line(text.condition(sub), indent: SureSpacing.xl),
+                _Line(text.condition(sub), indent: 16),
             ] else
-              line(text.condition(c)),
+              _Line(text.condition(c)),
         ],
       ),
-      _Section(
-        title: l.p3roRuleActions,
-        children: [for (final a in rule.actions) line(text.action(a))],
+      SureSectionHeader(label: l.p3roRuleActions),
+      SurePanel.rows(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        children: [for (final a in rule.actions) _Line(text.action(a))],
       ),
-      _Section(
-        title: l.p3roRuleRecentRuns,
-        children: _runRows(context),
-      ),
+      SureSectionHeader(label: l.p3roRuleRecentRuns),
+      ..._runRows(context),
     ];
   }
 
   List<Widget> _runRows(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
     final locale = Localizations.localeOf(context).toString();
-    final secondary =
-        theme.textTheme.bodySmall?.copyWith(color: palette.textSecondary);
     final runs = _runs;
+    final secondary = TextStyle(fontSize: 13, color: palette.textSecondary);
+    const margin = EdgeInsets.symmetric(horizontal: 16);
 
     if (runs == null) {
+      if (!_runsFailed) return const [];
       return [
-        Text(_runsFailed ? l.p3roRuleRunsLoadFailed : '', style: secondary),
+        Padding(
+          padding: margin,
+          child: Text(l.p3roRuleRunsLoadFailed, style: secondary),
+        ),
       ];
     }
-    if (runs.isEmpty) return [Text(l.p3roRuleNoRuns, style: secondary)];
+    if (runs.isEmpty) {
+      return [
+        Padding(
+          padding: margin,
+          child: Text(l.p3roRuleNoRuns, style: secondary),
+        ),
+      ];
+    }
 
     return [
-      for (final run in runs)
-        Padding(
-          padding: const EdgeInsets.only(top: SureSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      SurePanel.rows(
+        margin: margin,
+        children: [
+          for (final run in runs)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      [
-                        if (run.executedAt != null)
-                          DateFormat.yMMMd(locale)
-                              .add_jm()
-                              .format(run.executedAt!.toLocal()),
-                        if (run.executionType == 'manual') l.p3roRuleRunManual,
-                        if (run.executionType == 'scheduled')
-                          l.p3roRuleRunScheduled,
-                      ].join(' · '),
-                      style: theme.textTheme.bodyMedium,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          [
+                            if (run.executedAt != null)
+                              '${SureDates.shortOf(context, run.executedAt!.toLocal())}, '
+                                  '${DateFormat.jm(locale).format(run.executedAt!.toLocal())}',
+                            if (run.executionType == 'manual')
+                              l.p3roRuleRunManual,
+                            if (run.executionType == 'scheduled')
+                              l.p3roRuleRunScheduled,
+                          ].join(' · '),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: palette.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        switch (run.status) {
+                          'success' => l.p3roRuleRunSuccess,
+                          'failed' => l.p3roRuleRunFailed,
+                          _ => l.p3roRuleRunPending,
+                        },
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: switch (run.status) {
+                            'success' => palette.success,
+                            'failed' => palette.destructive,
+                            _ => palette.textSecondary,
+                          },
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    switch (run.status) {
-                      'success' => l.p3roRuleRunSuccess,
-                      'failed' => l.p3roRuleRunFailed,
-                      _ => l.p3roRuleRunPending,
-                    },
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: switch (run.status) {
-                        'success' => palette.success,
-                        'failed' => palette.destructive,
-                        _ => palette.textSecondary,
-                      },
-                    ),
+                    run.status == 'pending'
+                        ? l.p3roRuleRunQueued(run.transactionsQueued)
+                        : l.p3roRuleRunCounts(run.transactionsModified,
+                            run.transactionsProcessed),
+                    style: secondary,
                   ),
+                  if (run.errorMessage != null &&
+                      run.errorMessage!.isNotEmpty)
+                    Text(run.errorMessage!,
+                        style: TextStyle(
+                            fontSize: 13, color: palette.destructive)),
                 ],
               ),
-              Text(
-                run.status == 'pending'
-                    ? l.p3roRuleRunQueued(run.transactionsQueued)
-                    : l.p3roRuleRunCounts(
-                        run.transactionsModified, run.transactionsProcessed),
-                style: secondary,
-              ),
-              if (run.errorMessage != null && run.errorMessage!.isNotEmpty)
-                Text(run.errorMessage!,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: palette.destructive)),
-            ],
-          ),
-        ),
+            ),
+        ],
+      ),
     ];
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({this.title, required this.children});
+/// One condition or action sentence as a panel row.
+class _Line extends StatelessWidget {
+  const _Line(this.value, {this.indent = 0, this.secondary = false});
 
-  final String? title;
-  final List<Widget> children;
+  final String value;
+  final double indent;
+
+  /// A compound heading ("Any of these match") in `textSecondary`.
+  final bool secondary;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final palette = SureColors.of(context).palette;
-    return SureCard(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null)
-            Text(title!,
-                style: theme.textTheme.labelLarge
-                    ?.copyWith(color: palette.textSecondary)),
-          ...children,
-        ],
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 44),
+      child: Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(14 + indent, 11, 14, 11),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 15,
+              color: secondary ? palette.textSecondary : palette.textPrimary,
+            ),
+          ),
+        ),
       ),
     );
   }
