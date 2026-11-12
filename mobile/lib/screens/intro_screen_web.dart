@@ -59,8 +59,8 @@ const String _introHtmlContent = '''
         margin: 0;
         min-height: 100vh;
         font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        color: #111827;
-        background: transparent;
+        color: #171717;
+        background: #f7f7f7;
       }
 
       .grow {
@@ -127,11 +127,13 @@ const String _introHtmlContent = '''
       }
 
       .text-secondary {
-        color: #4b5563;
+        color: #737373;
+        font-size: 0.8125rem;
+        line-height: 1.4;
       }
 
       .text-primary {
-        color: #111827;
+        color: #171717;
       }
 
       .space-y-4 > * + * {
@@ -140,7 +142,6 @@ const String _introHtmlContent = '''
 
       .bg-container {
         background: #ffffff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.1);
       }
 
       .intro-card-shell {
@@ -151,11 +152,24 @@ const String _introHtmlContent = '''
       }
 
       .shadow-border-xs {
-        border: 1px solid #e5e7eb;
+        border: 1px solid rgba(11, 11, 11, 0.10);
       }
 
       .rounded-2xl {
-        border-radius: 1rem;
+        border-radius: 10px;
+      }
+
+      .text-xl {
+        font-size: 0.9375rem;
+      }
+
+      /* Sure dark palette: surface, container, hairline, text. */
+      @media (prefers-color-scheme: dark) {
+        body { color: #ffffff; background: #0b0b0b; }
+        .bg-container { background: #171717; }
+        .shadow-border-xs { border-color: rgba(255, 255, 255, 0.10); }
+        .text-primary { color: #ffffff; }
+        .text-secondary { color: #cfcfcf; }
       }
 
       .p-8 {

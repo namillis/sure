@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+import '../widgets/ds/ds.dart';
+
 class IntroScreenPlatform extends StatelessWidget {
   const IntroScreenPlatform({super.key, this.onStartChat});
 
@@ -7,34 +10,28 @@ class IntroScreenPlatform extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16) +
-          EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: const Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                children: <Widget>[
-                  Text(
-                    'Intro experience coming soon',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    "We're building a richer onboarding journey to learn about your goals, milestones, and day-to-day needs. "
-                    'For now, head over to the chat sidebar to start a conversation with Sure and let us know where you are in your financial journey.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+    final l = AppLocalizations.of(context);
+    return SureLargeTitleScaffold(
+      title: l.navIntro,
+      automaticallyImplyLeading: false,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: SurePanel(
+                key: const ValueKey('intro-panel'),
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: SureEmptyState(
+                  icon: SureIcons.sparkles,
+                  title: l.ds4aIntroTitle,
+                  body: l.ds4aIntroBody,
+                ),
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

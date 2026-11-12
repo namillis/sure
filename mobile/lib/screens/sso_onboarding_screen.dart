@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/auth_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/ds/ds.dart';
+import '../widgets/sure_button.dart';
+import 'auth_fields.dart';
 
 class SsoOnboardingScreen extends StatefulWidget {
   const SsoOnboardingScreen({super.key});
@@ -61,318 +63,194 @@ class _SsoOnboardingScreenState extends State<SsoOnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Provider.of<AuthProvider>(context, listen: false)
-                .cancelSsoOnboarding();
-          },
-        ),
-        title: Text(AppLocalizations.of(context).ssoOnboardingTitle),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Consumer<AuthProvider>(
-            builder: (context, authProvider, _) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return SureLargeTitleScaffold(
+          title: l.ssoOnboardingTitle,
+          subtitle: authProvider.ssoEmail != null
+              ? l.ssoOnboardingSignedInAs(authProvider.ssoEmail!)
+              : l.ssoOnboardingGoogleVerified,
+          // Onboarding replaces the sign-in screen, so "back" cancels it.
+          leading: SureBackButton(
+            label: l.loginSignIn,
+            onPressed: authProvider.cancelSsoOnboarding,
+          ),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              sliver: SliverList.list(
                 children: [
-                  // Header
-                  SvgPicture.asset(
-                    'assets/images/google_g_logo.svg',
-                    width: 48,
-                    height: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    authProvider.ssoEmail != null
-                        ? AppLocalizations.of(context)
-                            .ssoOnboardingSignedInAs(authProvider.ssoEmail!)
-                        : AppLocalizations.of(context)
-                            .ssoOnboardingGoogleVerified,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Error message
-                  if (authProvider.errorMessage != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: colorScheme.error),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              authProvider.errorMessage!,
-                              style: TextStyle(
-                                  color: colorScheme.onErrorContainer),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => authProvider.clearError(),
-                            iconSize: 20,
-                          ),
-                        ],
-                      ),
+                  if (authProvider.errorMessage != null) ...[
+                    AuthErrorPanel(
+                      message: authProvider.errorMessage!,
+                      dismissLabel: l.ds4aDismissError,
+                      onDismiss: authProvider.clearError,
                     ),
-
-                  // Tab selector
-                  if (authProvider.ssoAllowAccountCreation) ...[
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _TabButton(
-                              label: AppLocalizations.of(context).ssoOnboardingTabLink,
-                              isSelected: _showLinkForm,
-                              onTap: () =>
-                                  setState(() => _showLinkForm = true),
-                            ),
-                          ),
-                          Expanded(
-                            child: _TabButton(
-                              label: authProvider.ssoHasPendingInvitation
-                                  ? AppLocalizations.of(context).ssoOnboardingAcceptInvitation
-                                  : AppLocalizations.of(context).ssoOnboardingTabCreate,
-                              isSelected: !_showLinkForm,
-                              onTap: () =>
-                                  setState(() => _showLinkForm = false),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                   ],
 
-                  // Link existing account form
-                  if (_showLinkForm) _buildLinkForm(authProvider, colorScheme),
+                  // Link existing / create new
+                  if (authProvider.ssoAllowAccountCreation) ...[
+                    SureSegmentedControl<bool>(
+                      key: const ValueKey('sso-onboarding-mode'),
+                      segments: [
+                        SureSegment(
+                          value: true,
+                          label: l.ssoOnboardingTabLink,
+                        ),
+                        SureSegment(
+                          value: false,
+                          label: authProvider.ssoHasPendingInvitation
+                              ? l.ssoOnboardingAcceptInvitation
+                              : l.ssoOnboardingTabCreate,
+                        ),
+                      ],
+                      selected: _showLinkForm,
+                      onChanged: (value) =>
+                          setState(() => _showLinkForm = value),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                  // Create new account form
-                  if (!_showLinkForm)
-                    _buildCreateForm(authProvider, colorScheme),
+                  if (_showLinkForm)
+                    _buildLinkForm(authProvider, l)
+                  else
+                    _buildCreateForm(authProvider, l),
                 ],
-              );
-            },
-          ),
-        ),
-      ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildLinkForm(AuthProvider authProvider, ColorScheme colorScheme) {
+  Widget _buildLinkForm(AuthProvider authProvider, AppLocalizations l) {
     return Form(
       key: _linkFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.link, color: colorScheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context)
-                        .ssoOnboardingLinkCredentialsNote,
-                    style: TextStyle(color: colorScheme.onSurface),
-                  ),
-                ),
-              ],
-            ),
+          AuthNotePanel(
+            icon: AuthIcons.link,
+            message: l.ssoOnboardingLinkCredentialsNote,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context).loginEmailLabel,
-              prefixIcon: const Icon(Icons.email_outlined),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return AppLocalizations.of(context).loginEmailRequired;
-              if (!value.contains('@')) return AppLocalizations.of(context).loginEmailInvalid;
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context).loginPasswordLabel,
-              prefixIcon: const Icon(Icons.lock_outlined),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                ),
-                onPressed: () {
-                  setState(() => _obscurePassword = !_obscurePassword);
+          const SizedBox(height: 12),
+          SurePanel.rows(
+            children: [
+              AuthFieldRow(
+                fieldKey: const ValueKey('sso-link-email'),
+                label: l.loginEmailLabel,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                autofillHints: const [AutofillHints.email],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return l.loginEmailRequired;
+                  }
+                  if (!value.contains('@')) return l.loginEmailInvalid;
+                  return null;
                 },
               ),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return AppLocalizations.of(context).loginPasswordRequired;
-              return null;
-            },
-            onFieldSubmitted: (_) => _handleLinkAccount(),
+              AuthFieldRow(
+                fieldKey: const ValueKey('sso-link-password'),
+                label: l.loginPasswordLabel,
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                autofillHints: const [AutofillHints.password],
+                textInputAction: TextInputAction.done,
+                trailing: AuthPasswordToggle(
+                  obscured: _obscurePassword,
+                  showLabel: l.ds4aShowPassword,
+                  hideLabel: l.ds4aHidePassword,
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return l.loginPasswordRequired;
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (_) => _handleLinkAccount(),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: authProvider.isLoading ? null : _handleLinkAccount,
-            child: authProvider.isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(AppLocalizations.of(context).ssoOnboardingLinkButton),
+          const SizedBox(height: 20),
+          SureButton(
+            key: const ValueKey('sso-link-submit'),
+            label: l.ssoOnboardingLinkButton,
+            size: SureButtonSize.lg,
+            fullWidth: true,
+            loading: authProvider.isLoading,
+            onPressed: _handleLinkAccount,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCreateForm(AuthProvider authProvider, ColorScheme colorScheme) {
+  Widget _buildCreateForm(AuthProvider authProvider, AppLocalizations l) {
     final hasPendingInvitation = authProvider.ssoHasPendingInvitation;
     return Form(
       key: _createFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  hasPendingInvitation ? Icons.mail_outline : Icons.person_add,
-                  color: colorScheme.primary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    hasPendingInvitation
-                        ? AppLocalizations.of(context)
-                            .ssoOnboardingPendingInvitationNote
-                        : AppLocalizations.of(context)
-                            .ssoOnboardingCreateIdentityNote,
-                    style: TextStyle(color: colorScheme.onSurface),
-                  ),
-                ),
-              ],
-            ),
+          AuthNotePanel(
+            icon: hasPendingInvitation ? AuthIcons.mail : AuthIcons.userPlus,
+            message: hasPendingInvitation
+                ? l.ssoOnboardingPendingInvitationNote
+                : l.ssoOnboardingCreateIdentityNote,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _firstNameController,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context).ssoOnboardingFirstNameLabel,
-              prefixIcon: const Icon(Icons.person_outlined),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return AppLocalizations.of(context).ssoOnboardingFirstNameRequired;
-              return null;
-            },
+          const SizedBox(height: 12),
+          SurePanel.rows(
+            children: [
+              AuthFieldRow(
+                fieldKey: const ValueKey('sso-create-first-name'),
+                label: l.ssoOnboardingFirstNameLabel,
+                controller: _firstNameController,
+                textCapitalization: TextCapitalization.words,
+                autofillHints: const [AutofillHints.givenName],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return l.ssoOnboardingFirstNameRequired;
+                  }
+                  return null;
+                },
+              ),
+              AuthFieldRow(
+                fieldKey: const ValueKey('sso-create-last-name'),
+                label: l.ssoOnboardingLastNameLabel,
+                controller: _lastNameController,
+                textCapitalization: TextCapitalization.words,
+                autofillHints: const [AutofillHints.familyName],
+                textInputAction: TextInputAction.done,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return l.ssoOnboardingLastNameRequired;
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (_) => _handleCreateAccount(),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _lastNameController,
-            textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context).ssoOnboardingLastNameLabel,
-              prefixIcon: const Icon(Icons.person_outlined),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return AppLocalizations.of(context).ssoOnboardingLastNameRequired;
-              return null;
-            },
-            onFieldSubmitted: (_) => _handleCreateAccount(),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: authProvider.isLoading ? null : _handleCreateAccount,
-            child: authProvider.isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(hasPendingInvitation
-                        ? AppLocalizations.of(context).ssoOnboardingAcceptInvitation
-                        : AppLocalizations.of(context).ssoOnboardingCreateButton),
+          const SizedBox(height: 20),
+          SureButton(
+            key: const ValueKey('sso-create-submit'),
+            label: hasPendingInvitation
+                ? l.ssoOnboardingAcceptInvitation
+                : l.ssoOnboardingCreateButton,
+            size: SureButtonSize.lg,
+            fullWidth: true,
+            loading: authProvider.isLoading,
+            onPressed: _handleCreateAccount,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _TabButton extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _TabButton({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }
