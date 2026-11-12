@@ -988,5 +988,13 @@
   "ds4aUnlockFaceId": "Lås upp med Face ID",
   "ds4aUnlockTouchId": "Lås upp med Touch ID",
   "ds4aIntroTitle": "Introduktionen kommer snart",
-  "ds4aIntroBody": "Vi bygger en mer genomarbetad introduktion för att lära oss om dina mål, milstolpar och vardagsbehov. Börja under tiden en konversation med Sure på fliken Assistent och berätta var du befinner dig i din ekonomiska resa."
+  "ds4aIntroBody": "Vi bygger en mer genomarbetad introduktion för att lära oss om dina mål, milstolpar och vardagsbehov. Börja under tiden en konversation med Sure på fliken Assistent och berätta var du befinner dig i din ekonomiska resa.",
+  "ds4tLogShare": "Dela loggar",
+  "ds4tLogAutoScroll": "Rulla automatiskt",
+  "ds4tCalendarMonthlyChange": "Förändring under månaden",
+  "ds4tCalendarNoAccounts": "Inga konton av den här typen",
+  "ds4dExportEmptyTitle": "Inga exporter än",
+  "ds4dExportEmptyBody": "Skapa en för att få en kopia av dina data.",
+  "ds4dFormatsHeader": "Format",
+  "ds4dChoose": "Välj"
 }

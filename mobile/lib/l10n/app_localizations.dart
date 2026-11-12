@@ -63,7 +63,7 @@ import 'app_localizations_sv.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('sv'),
+    Locale('sv')
   ];
 
   /// Application title shown in the OS task switcher.
@@ -5983,6 +5983,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We\'re building a richer onboarding journey to learn about your goals, milestones, and day-to-day needs. For now, start a conversation with Sure in the Assistant tab and tell it where you are in your financial journey.'**
   String get ds4aIntroBody;
+
+  /// Nav-bar action on the debug log screen that opens the share sheet with the logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Share logs'**
+  String get ds4tLogShare;
+
+  /// Chip on the debug log screen that keeps the list scrolled to the newest entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-scroll'**
+  String get ds4tLogAutoScroll;
+
+  /// Row on the account calendar showing the selected month's net change.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly change'**
+  String get ds4tCalendarMonthlyChange;
+
+  /// Empty state on the account calendar when there is no asset (or liability) account.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts of this type'**
+  String get ds4tCalendarNoAccounts;
+
+  /// Title of the empty state on the Export data screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No exports yet'**
+  String get ds4dExportEmptyTitle;
+
+  /// Body of the empty state on the Export data screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create one to get a copy of your data.'**
+  String get ds4dExportEmptyBody;
+
+  /// Section header above the date, number, sign and separator format rows in the CSV import's column-mapping step.
+  ///
+  /// In en, this message translates to:
+  /// **'Formats'**
+  String get ds4dFormatsHeader;
+
+  /// Value of a picker row (e.g. Account) when nothing is chosen yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get ds4dChoose;
 }
 
 class _AppLocalizationsDelegate
@@ -6012,9 +6060,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

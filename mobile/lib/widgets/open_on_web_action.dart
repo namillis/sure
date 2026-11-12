@@ -29,15 +29,18 @@ class OpenOnWebAction extends StatelessWidget {
   }
 }
 
-/// Pushes a [WebViewScreen] for [path].
+/// Pushes a [WebViewScreen] for [path]. [backLabel] names the screen the
+/// back link returns to; without it the link reads "Back".
 Future<void> openWebFallback(
   BuildContext context, {
   required String title,
   required String path,
+  String? backLabel,
 }) {
   return Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => WebViewScreen(title: title, path: path),
+      builder: (_) =>
+          WebViewScreen(title: title, path: path, backLabel: backLabel),
     ),
   );
 }

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -3529,4 +3528,29 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get ds4aIntroBody =>
       'Vi bygger en mer genomarbetad introduktion för att lära oss om dina mål, milstolpar och vardagsbehov. Börja under tiden en konversation med Sure på fliken Assistent och berätta var du befinner dig i din ekonomiska resa.';
+
+  @override
+  String get ds4tLogShare => 'Dela loggar';
+
+  @override
+  String get ds4tLogAutoScroll => 'Rulla automatiskt';
+
+  @override
+  String get ds4tCalendarMonthlyChange => 'Förändring under månaden';
+
+  @override
+  String get ds4tCalendarNoAccounts => 'Inga konton av den här typen';
+
+  @override
+  String get ds4dExportEmptyTitle => 'Inga exporter än';
+
+  @override
+  String get ds4dExportEmptyBody =>
+      'Skapa en för att få en kopia av dina data.';
+
+  @override
+  String get ds4dFormatsHeader => 'Format';
+
+  @override
+  String get ds4dChoose => 'Välj';
 }

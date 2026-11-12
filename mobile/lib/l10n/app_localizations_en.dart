@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -3497,4 +3496,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ds4aIntroBody =>
       'We\'re building a richer onboarding journey to learn about your goals, milestones, and day-to-day needs. For now, start a conversation with Sure in the Assistant tab and tell it where you are in your financial journey.';
+
+  @override
+  String get ds4tLogShare => 'Share logs';
+
+  @override
+  String get ds4tLogAutoScroll => 'Auto-scroll';
+
+  @override
+  String get ds4tCalendarMonthlyChange => 'Monthly change';
+
+  @override
+  String get ds4tCalendarNoAccounts => 'No accounts of this type';
+
+  @override
+  String get ds4dExportEmptyTitle => 'No exports yet';
+
+  @override
+  String get ds4dExportEmptyBody => 'Create one to get a copy of your data.';
+
+  @override
+  String get ds4dFormatsHeader => 'Formats';
+
+  @override
+  String get ds4dChoose => 'Choose';
 }

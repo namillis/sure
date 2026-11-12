@@ -2458,5 +2458,21 @@
   "ds4aIntroTitle": "Intro experience coming soon",
   "@ds4aIntroTitle": {"description": "Title of the Intro tab placeholder."},
   "ds4aIntroBody": "We're building a richer onboarding journey to learn about your goals, milestones, and day-to-day needs. For now, start a conversation with Sure in the Assistant tab and tell it where you are in your financial journey.",
-  "@ds4aIntroBody": {"description": "Body of the Intro tab placeholder."}
+  "@ds4aIntroBody": {"description": "Body of the Intro tab placeholder."},
+  "ds4tLogShare": "Share logs",
+  "@ds4tLogShare": {"description": "Nav-bar action on the debug log screen that opens the share sheet with the logs."},
+  "ds4tLogAutoScroll": "Auto-scroll",
+  "@ds4tLogAutoScroll": {"description": "Chip on the debug log screen that keeps the list scrolled to the newest entry."},
+  "ds4tCalendarMonthlyChange": "Monthly change",
+  "@ds4tCalendarMonthlyChange": {"description": "Row on the account calendar showing the selected month's net change."},
+  "ds4tCalendarNoAccounts": "No accounts of this type",
+  "@ds4tCalendarNoAccounts": {"description": "Empty state on the account calendar when there is no asset (or liability) account."},
+  "ds4dExportEmptyTitle": "No exports yet",
+  "@ds4dExportEmptyTitle": {"description": "Title of the empty state on the Export data screen."},
+  "ds4dExportEmptyBody": "Create one to get a copy of your data.",
+  "@ds4dExportEmptyBody": {"description": "Body of the empty state on the Export data screen."},
+  "ds4dFormatsHeader": "Formats",
+  "@ds4dFormatsHeader": {"description": "Section header above the date, number, sign and separator format rows in the CSV import's column-mapping step."},
+  "ds4dChoose": "Choose",
+  "@ds4dChoose": {"description": "Value of a picker row (e.g. Account) when nothing is chosen yet."}
 }

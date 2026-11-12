@@ -160,7 +160,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
         children: [
           WebViewTitleBar(
             title: widget.title,
-            backLabel: widget.backLabel,
+            // Openers that name themselves pass a label; the rest read "Back".
+            backLabel: widget.backLabel ?? AppLocalizations.of(context).shellWebBack,
             progress: _loading && !_failed ? _progress / 100 : null,
             onWebBack: _canGoBack ? () => _controller.goBack() : null,
             onWebForward: _canGoForward ? () => _controller.goForward() : null,
