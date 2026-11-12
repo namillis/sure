@@ -3562,11 +3562,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get txnParityMarkRecurring => 'Mark as recurring';
 
   @override
-  String txnParityRecurringValue(String name, String cadence) {
-    return '$name · $cadence';
-  }
-
-  @override
   String get txnParityRecurringOffline =>
       'Recurring needs an internet connection.';
 

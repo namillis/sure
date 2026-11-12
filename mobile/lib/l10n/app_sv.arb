@@ -1009,7 +1009,6 @@
   "txnParityBudgetsIncluded": "Inkluderad",
   "txnParityChangeOnWeb": "Ändra på webben",
   "txnParityMarkRecurring": "Markera som återkommande",
-  "txnParityRecurringValue": "{name} · {cadence}",
   "txnParityRecurringOffline": "Återkommande kräver en internetanslutning.",
   "txnParityOpenOnWebSubtitle": "Bilagor, matchning av överföringar och mer"
 }

@@ -6104,12 +6104,6 @@ abstract class AppLocalizations {
   /// **'Mark as recurring'**
   String get txnParityMarkRecurring;
 
-  /// Value of the Recurring row when the transaction matches a recurring item, e.g. 'Netflix · Monthly'.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} · {cadence}'**
-  String txnParityRecurringValue(String name, String cadence);
-
   /// Note under the Recurring row when offline.
   ///
   /// In en, this message translates to:

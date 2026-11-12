@@ -2499,8 +2499,6 @@
   "@txnParityChangeOnWeb": {"description": "Subtitle under the Budgets and reports row; tapping opens the transaction on the web."},
   "txnParityMarkRecurring": "Mark as recurring",
   "@txnParityMarkRecurring": {"description": "Row in the transaction sheet that creates a recurring transaction from this one."},
-  "txnParityRecurringValue": "{name} · {cadence}",
-  "@txnParityRecurringValue": {"description": "Value of the Recurring row when the transaction matches a recurring item, e.g. 'Netflix · Monthly'.", "placeholders": {"name": {"type": "String"}, "cadence": {"type": "String"}}},
   "txnParityRecurringOffline": "Recurring needs an internet connection.",
   "@txnParityRecurringOffline": {"description": "Note under the Recurring row when offline."},
   "txnParityOpenOnWebSubtitle": "Attachments, transfer matching and more",

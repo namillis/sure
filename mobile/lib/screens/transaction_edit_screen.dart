@@ -1204,11 +1204,6 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
         if (_fresh?.transfer case final transfer?)
           SureListRow(
             key: const ValueKey('transaction-transfer-row'),
-            leading: SureIcon(
-              SureIcons.arrowLeftRight,
-              size: 18,
-              color: palette.textSecondary,
-            ),
             title: l.dsTransfer,
             value: transferLabel(l, _fresh!, transfer),
           ),
@@ -1233,10 +1228,8 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
       rows.add(SureListRow(
         key: const ValueKey('transaction-recurring-row'),
         title: l.dstRecurring,
-        value: l.txnParityRecurringValue(
-          match.displayName,
-          recurringCadenceLabel(l, match),
-        ),
+        subtitle: recurringCadenceLabel(l, match),
+        value: match.displayName,
         showChevron: true,
         onTap: _openRecurring,
       ));

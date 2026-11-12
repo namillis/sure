@@ -3595,11 +3595,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get txnParityMarkRecurring => 'Markera som återkommande';
 
   @override
-  String txnParityRecurringValue(String name, String cadence) {
-    return '$name · $cadence';
-  }
-
-  @override
   String get txnParityRecurringOffline =>
       'Återkommande kräver en internetanslutning.';
 

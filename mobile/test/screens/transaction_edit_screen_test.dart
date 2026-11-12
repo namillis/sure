@@ -638,9 +638,9 @@ void main() {
       ]);
 
       expect(inRow('transaction-recurring-row', 'Recurring'), findsOneWidget);
-      expect(
-          inRow('transaction-recurring-row', 'Coffee subscription · Monthly'),
+      expect(inRow('transaction-recurring-row', 'Coffee subscription'),
           findsOneWidget);
+      expect(inRow('transaction-recurring-row', 'Monthly'), findsOneWidget);
       expect(find.text('Mark as recurring'), findsNothing);
 
       await tester.ensureVisible(
@@ -718,8 +718,9 @@ void main() {
       expect(find.byType(RecurringFormScreen), findsNothing);
       expect(find.byType(TransactionEditScreen), findsOneWidget);
       expect(inRow('transaction-recurring-row', 'Recurring'), findsOneWidget);
-      expect(inRow('transaction-recurring-row', 'Blue Bottle · Monthly'),
+      expect(inRow('transaction-recurring-row', 'Blue Bottle'),
           findsOneWidget);
+      expect(inRow('transaction-recurring-row', 'Monthly'), findsOneWidget);
       expect(haptics, contains('HapticFeedbackType.lightImpact'));
       // One list fetch; the flip needs no re-read.
       expect(h.recurringRequests.where((r) => r.method == 'GET'), hasLength(1));
