@@ -976,5 +976,17 @@
   "ds3aThinking": "Tänker",
   "ds3aReplyFailed": "Det gick inte att få ett svar.",
   "ds3aRetry": "Försök igen",
-  "ds3aSendFailed": "Det gick inte att skicka meddelandet."
+  "ds3aSendFailed": "Det gick inte att skicka meddelandet.",
+  "ds4aServerRow": "Server",
+  "ds4aApiKeyLink": "Logga in med en API-nyckel",
+  "ds4aShowPassword": "Visa lösenord",
+  "ds4aHidePassword": "Dölj lösenord",
+  "ds4aDismissError": "Stäng",
+  "ds4aCodeLabel": "Kod",
+  "ds4aCodeHint": "6-siffrig kod",
+  "ds4aLockedTitle": "Sure+ är låst",
+  "ds4aUnlockFaceId": "Lås upp med Face ID",
+  "ds4aUnlockTouchId": "Lås upp med Touch ID",
+  "ds4aIntroTitle": "Introduktionen kommer snart",
+  "ds4aIntroBody": "Vi bygger en mer genomarbetad introduktion för att lära oss om dina mål, milstolpar och vardagsbehov. Börja under tiden en konversation med Sure på fliken Assistent och berätta var du befinner dig i din ekonomiska resa."
 }

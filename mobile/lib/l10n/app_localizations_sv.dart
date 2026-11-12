@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -3491,4 +3492,41 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds3aSendFailed => 'Det gick inte att skicka meddelandet.';
+
+  @override
+  String get ds4aServerRow => 'Server';
+
+  @override
+  String get ds4aApiKeyLink => 'Logga in med en API-nyckel';
+
+  @override
+  String get ds4aShowPassword => 'Visa lösenord';
+
+  @override
+  String get ds4aHidePassword => 'Dölj lösenord';
+
+  @override
+  String get ds4aDismissError => 'Stäng';
+
+  @override
+  String get ds4aCodeLabel => 'Kod';
+
+  @override
+  String get ds4aCodeHint => '6-siffrig kod';
+
+  @override
+  String get ds4aLockedTitle => 'Sure+ är låst';
+
+  @override
+  String get ds4aUnlockFaceId => 'Lås upp med Face ID';
+
+  @override
+  String get ds4aUnlockTouchId => 'Lås upp med Touch ID';
+
+  @override
+  String get ds4aIntroTitle => 'Introduktionen kommer snart';
+
+  @override
+  String get ds4aIntroBody =>
+      'Vi bygger en mer genomarbetad introduktion för att lära oss om dina mål, milstolpar och vardagsbehov. Börja under tiden en konversation med Sure på fliken Assistent och berätta var du befinner dig i din ekonomiska resa.';
 }

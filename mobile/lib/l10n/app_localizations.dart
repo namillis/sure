@@ -63,7 +63,7 @@ import 'app_localizations_sv.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('sv')
+    Locale('sv'),
   ];
 
   /// Application title shown in the OS task switcher.
@@ -5911,6 +5911,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t send the message.'**
   String get ds3aSendFailed;
+
+  /// Sign-in screen row that shows the backend URL and opens the backend settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get ds4aServerRow;
+
+  /// Quiet link on the sign-in screen that opens the API-key sign-in sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with an API key'**
+  String get ds4aApiKeyLink;
+
+  /// Tooltip of the eye button in a password field when the password is hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get ds4aShowPassword;
+
+  /// Tooltip of the eye button in a password field when the password is shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get ds4aHidePassword;
+
+  /// Tooltip of the close button on a sign-in error panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get ds4aDismissError;
+
+  /// Label of the two-factor authentication code field on the sign-in screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get ds4aCodeLabel;
+
+  /// Placeholder of the two-factor authentication code field.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get ds4aCodeHint;
+
+  /// Title of the app-lock screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Sure+ is locked'**
+  String get ds4aLockedTitle;
+
+  /// Unlock button on the app-lock screen on devices with Face ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Face ID'**
+  String get ds4aUnlockFaceId;
+
+  /// Unlock button on the app-lock screen on devices with Touch ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Touch ID'**
+  String get ds4aUnlockTouchId;
+
+  /// Title of the Intro tab placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Intro experience coming soon'**
+  String get ds4aIntroTitle;
+
+  /// Body of the Intro tab placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re building a richer onboarding journey to learn about your goals, milestones, and day-to-day needs. For now, start a conversation with Sure in the Assistant tab and tell it where you are in your financial journey.'**
+  String get ds4aIntroBody;
 }
 
 class _AppLocalizationsDelegate
@@ -5940,8 +6012,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

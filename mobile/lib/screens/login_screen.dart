@@ -6,10 +6,18 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../models/sso_provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_config.dart';
+import '../theme/sure_colors.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/sure_button.dart';
 import '../widgets/sure_logo.dart';
+import 'auth_fields.dart';
 import 'backend_config_screen.dart';
 import '../l10n/app_localizations.dart';
+
+/// The server row's value: the backend URL without its scheme.
+@visibleForTesting
+String loginServerLabel(String baseUrl) =>
+    baseUrl.replaceFirst(RegExp(r'^https?://'), '');
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback? onGoToSettings;
@@ -120,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // State.dispose(), so the controller's lifecycle is tied to the dialog's
     // widget tree: no leak on barrier/back dismissal, and it is never disposed
     // out from under a still-mounted TextField during the exit transition.
-    final result = await showDialog<bool>(
+    final result = await showSureSheet<bool>(
       context: context,
       builder: (_) => const ApiKeyLoginDialog(),
     );
@@ -165,323 +173,188 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final palette = SureColors.of(context).palette;
     final l = AppLocalizations.of(context);
 
     return Scaffold(
+      backgroundColor: palette.surface,
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 48),
-                    // Logo/Title
-                    const SureLogo(size: 80),
-                    const SizedBox(height: 24),
-                    Text.rich(
-                      TextSpan(
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                        children: [
-                          TextSpan(text: l.loginDemoOrSignUpPrefix),
-                          TextSpan(
-                            text: l.loginSignUpLink,
-                            style: TextStyle(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            recognizer: _signUpTapRecognizer,
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Center(child: SureLogo(size: 64)),
+                        const SizedBox(height: 20),
+                        Text(
+                          l.loginSignIn,
+                          key: const ValueKey('login-title'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 30,
+                            height: 1.15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.5,
+                            color: palette.textPrimary,
                           ),
-                          TextSpan(text: l.loginSignUpSuffix),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 48),
-
-                    // Error Message
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, _) {
-                        if (authProvider.errorMessage != null) {
-                          return Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: colorScheme.errorContainer,
-                              borderRadius: BorderRadius.circular(12),
+                        ),
+                        const SizedBox(height: 8),
+                        Text.rich(
+                          TextSpan(
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.35,
+                              color: palette.textSecondary,
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  color: colorScheme.error,
+                            children: [
+                              TextSpan(text: l.loginDemoOrSignUpPrefix),
+                              TextSpan(
+                                text: l.loginSignUpLink,
+                                style: TextStyle(
+                                  color: palette.link,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    authProvider.errorMessage!,
-                                    style: TextStyle(
-                                        color: colorScheme.onErrorContainer),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () => authProvider.clearError(),
-                                  iconSize: 20,
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-
-                    // Email Field
-                    TextFormField(
-                      controller: _emailController,
-                      focusNode: _emailFocus,
-                      keyboardType: TextInputType.emailAddress,
-                      autocorrect: false,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: l.loginEmailLabel,
-                        prefixIcon: const Icon(Icons.email_outlined),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return l.loginEmailRequired;
-                        }
-                        if (!value.contains('@')) {
-                          return l.loginEmailInvalid;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password and OTP Fields with Consumer
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, _) {
-                        final showOtp = authProvider.showMfaInput;
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Password Field
-                            TextFormField(
-                              controller: _passwordController,
-                              focusNode: _passwordFocus,
-                              obscureText: _obscurePassword,
-                              textInputAction: showOtp
-                                  ? TextInputAction.next
-                                  : TextInputAction.done,
-                              decoration: InputDecoration(
-                                labelText: l.loginPasswordLabel,
-                                prefixIcon: const Icon(Icons.lock_outlined),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                ),
+                                recognizer: _signUpTapRecognizer,
                               ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return l.loginPasswordRequired;
-                                }
-                                return null;
-                              },
-                              onFieldSubmitted:
-                                  showOtp ? null : (_) => _handleLogin(),
-                            ),
+                              TextSpan(text: l.loginSignUpSuffix),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 28),
 
-                            // OTP Field (shown when MFA is required)
-                            if (showOtp) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primaryContainer
-                                      .withValues(alpha: 0.3),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
+                        // Error message
+                        Consumer<AuthProvider>(
+                          builder: (context, authProvider, _) {
+                            final message = authProvider.errorMessage;
+                            if (message == null) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: AuthErrorPanel(
+                                message: message,
+                                dismissLabel: l.ds4aDismissError,
+                                onDismiss: authProvider.clearError,
+                              ),
+                            );
+                          },
+                        ),
+
+                        // Email, password and (when required) MFA code
+                        Consumer<AuthProvider>(
+                          builder: (context, authProvider, _) =>
+                              _buildFields(l, authProvider.showMfaInput),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Sign-in button
+                        Consumer<AuthProvider>(
+                          builder: (context, authProvider, _) {
+                            return SureButton(
+                              key: const ValueKey('login-submit'),
+                              label: l.loginSignIn,
+                              size: SureButtonSize.lg,
+                              fullWidth: true,
+                              loading: authProvider.isLoading,
+                              onPressed: _handleLogin,
+                            );
+                          },
+                        ),
+
+                        FutureBuilder<List<SsoProvider>?>(
+                          future: _ssoProviders(
+                              Provider.of<AuthProvider>(context, listen: false)),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState !=
+                                ConnectionState.done) {
+                              return const SizedBox.shrink();
+                            }
+                            // Servers without the providers endpoint only
+                            // supported Google on mobile.
+                            final providers = snapshot.data ?? _legacyProviders;
+                            if (providers.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(height: 16),
+                                Row(
                                   children: [
-                                    Icon(
-                                      Icons.security,
-                                      color: colorScheme.primary,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
+                                    const Expanded(child: SureHairline()),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
                                       child: Text(
-                                        l.loginMfaInfo,
+                                        l.loginOrDivider,
                                         style: TextStyle(
-                                            color: colorScheme.onSurface),
+                                          fontSize: 13,
+                                          color: palette.textSubdued,
+                                        ),
                                       ),
                                     ),
+                                    const Expanded(child: SureHairline()),
                                   ],
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _otpController,
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.done,
-                                decoration: InputDecoration(
-                                  labelText: l.loginMfaLabel,
-                                  prefixIcon: const Icon(Icons.pin_outlined),
-                                ),
-                                validator: (value) {
-                                  if (showOtp &&
-                                      (value == null || value.isEmpty)) {
-                                    return l.loginMfaCodeRequired;
-                                  }
-                                  return null;
-                                },
-                                onFieldSubmitted: (_) => _handleLogin(),
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Login Button
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, _) {
-                        return SureButton(
-                          label: l.loginSignIn,
-                          size: SureButtonSize.lg,
-                          fullWidth: true,
-                          loading: authProvider.isLoading,
-                          onPressed: _handleLogin,
-                        );
-                      },
-                    ),
-
-                    FutureBuilder<List<SsoProvider>?>(
-                      future: _ssoProviders(
-                          Provider.of<AuthProvider>(context, listen: false)),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState != ConnectionState.done) {
-                          return const SizedBox.shrink();
-                        }
-                        // Servers without the providers endpoint only
-                        // supported Google on mobile.
-                        final providers = snapshot.data ?? _legacyProviders;
-                        if (providers.isEmpty) return const SizedBox.shrink();
-
-                        return Column(
-                          children: [
-                            const SizedBox(height: 16),
-                            // Divider with "or"
-                            Row(
-                              children: [
-                                Expanded(
-                                    child: Divider(
-                                        color: colorScheme.outlineVariant)),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  child: Text(
-                                    l.loginOrDivider,
-                                    style: TextStyle(
-                                        color: colorScheme.onSurfaceVariant),
-                                  ),
-                                ),
-                                Expanded(
-                                    child: Divider(
-                                        color: colorScheme.outlineVariant)),
+                                for (final provider in providers) ...[
+                                  const SizedBox(height: 12),
+                                  _SsoButton(provider: provider),
+                                ],
                               ],
-                            ),
-                            for (final provider in providers) ...[
-                              const SizedBox(height: 16),
-                              _SsoButton(provider: provider),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Backend URL info
-                    InkWell(
-                      onTap: () => _openSettings(),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(8),
+                            );
+                          },
                         ),
-                        child: Column(
+
+                        const SizedBox(height: 28),
+
+                        // Server URL
+                        SurePanel.rows(
                           children: [
-                            Text(
-                              l.loginServerUrlHeading,
-                              style:
-                                  Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              ApiConfig.baseUrl,
-                              style:
-                                  Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.primary,
-                                        fontFamily: 'monospace',
-                                      ),
-                              textAlign: TextAlign.center,
+                            SureListRow(
+                              key: const ValueKey('login-server-row'),
+                              title: l.ds4aServerRow,
+                              value: loginServerLabel(ApiConfig.baseUrl),
+                              showChevron: true,
+                              onTap: _openSettings,
                             ),
                           ],
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
-                    // API Key Login Button
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, _) {
-                        return SureButton(
-                          label: l.loginApiKeyLoginButton,
-                          variant: SureButtonVariant.ghost,
-                          onPressed:
-                              authProvider.isLoading ? null : _showApiKeyDialog,
-                          leading:
-                              const Icon(Icons.vpn_key_outlined, size: 18),
-                        );
-                      },
+                        // API-key login
+                        Consumer<AuthProvider>(
+                          builder: (context, authProvider, _) {
+                            return AuthQuietLink(
+                              key: const ValueKey('login-api-key'),
+                              label: l.ds4aApiKeyLink,
+                              onPressed: authProvider.isLoading
+                                  ? null
+                                  : _showApiKeyDialog,
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: IconButton(
-                icon: const Icon(Icons.settings_outlined),
-                tooltip: l.loginBackendSettingsTooltip,
-                onPressed: () => _openSettings(),
+            PositionedDirectional(
+              end: 4,
+              top: 0,
+              child: SureNavIconButton(
+                icon: SureIcons.settings,
+                semanticLabel: l.loginBackendSettingsTooltip,
+                onPressed: _openSettings,
               ),
             ),
           ],
@@ -489,18 +362,101 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  Widget _buildFields(AppLocalizations l, bool showOtp) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SurePanel.rows(
+          children: [
+            AuthFieldRow(
+              fieldKey: const ValueKey('login-email'),
+              label: l.loginEmailLabel,
+              controller: _emailController,
+              focusNode: _emailFocus,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              autofillHints: const [AutofillHints.email],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return l.loginEmailRequired;
+                }
+                if (!value.contains('@')) {
+                  return l.loginEmailInvalid;
+                }
+                return null;
+              },
+            ),
+            AuthFieldRow(
+              fieldKey: const ValueKey('login-password'),
+              label: l.loginPasswordLabel,
+              controller: _passwordController,
+              focusNode: _passwordFocus,
+              obscureText: _obscurePassword,
+              autofillHints: const [AutofillHints.password],
+              textInputAction:
+                  showOtp ? TextInputAction.next : TextInputAction.done,
+              trailing: AuthPasswordToggle(
+                obscured: _obscurePassword,
+                showLabel: l.ds4aShowPassword,
+                hideLabel: l.ds4aHidePassword,
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return l.loginPasswordRequired;
+                }
+                return null;
+              },
+              onFieldSubmitted: showOtp ? null : (_) => _handleLogin(),
+            ),
+          ],
+        ),
+
+        // MFA step: shown when the server asks for a code.
+        if (showOtp) ...[
+          const SizedBox(height: 12),
+          AuthNotePanel(icon: AuthIcons.shield, message: l.loginMfaInfo),
+          const SizedBox(height: 12),
+          SurePanel.rows(
+            children: [
+              AuthFieldRow(
+                fieldKey: const ValueKey('login-otp'),
+                label: l.ds4aCodeLabel,
+                controller: _otpController,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                autocorrect: false,
+                mono: true,
+                autofillHints: const [AutofillHints.oneTimeCode],
+                hint: l.loginMfaLabel,
+                validator: (value) {
+                  if (showOtp && (value == null || value.isEmpty)) {
+                    return l.loginMfaCodeRequired;
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (_) => _handleLogin(),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
 }
 
-/// API-key login dialog. Owns its [TextEditingController] so it is disposed
-/// with the dialog's State — never leaked (barrier/back dismissal) and never
+/// API-key login sheet. Owns its [TextEditingController] so it is disposed
+/// with the sheet's State — never leaked (barrier/back dismissal) and never
 /// disposed while the field is still mounted. Pops `true` on a successful
 /// sign-in, `false` on a failed attempt, and `null` when dismissed.
 @visibleForTesting
 class ApiKeyLoginDialog extends StatefulWidget {
   const ApiKeyLoginDialog({super.key, this.controller});
 
-  /// Test seam: a controller the dialog will adopt and dispose, so a test can
-  /// assert disposal. Production passes none and the dialog creates its own.
+  /// Test seam: a controller the sheet will adopt and dispose, so a test can
+  /// assert disposal. Production passes none and the sheet creates its own.
   @visibleForTesting
   final TextEditingController? controller;
 
@@ -530,7 +486,7 @@ class _ApiKeyLoginDialogState extends State<ApiKeyLoginDialog> {
 
   Future<void> _submit() async {
     final apiKey = _apiKeyController.text.trim();
-    if (apiKey.isEmpty) return;
+    if (apiKey.isEmpty || _isLoading) return;
 
     setState(() => _isLoading = true);
 
@@ -544,47 +500,47 @@ class _ApiKeyLoginDialogState extends State<ApiKeyLoginDialog> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(l.loginApiKeyDialogTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l.loginApiKeyDialogBody,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _apiKeyController,
-            decoration: InputDecoration(
-              labelText: l.loginApiKeyLabel,
-              prefixIcon: const Icon(Icons.vpn_key_outlined),
+    final palette = SureColors.of(context).palette;
+    return SureSheet(
+      title: l.loginApiKeyDialogTitle,
+      actionLabel: l.loginApiKeySignIn,
+      actionKey: const ValueKey('api-key-submit'),
+      onAction: _submit,
+      actionEnabled: _apiKeyController.text.trim().isNotEmpty,
+      busy: _isLoading,
+      // Cancel does nothing while the sign-in request is in flight.
+      onCancel: _isLoading ? () {} : null,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l.loginApiKeyDialogBody,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.35,
+                color: palette.textSecondary,
+              ),
             ),
-            obscureText: true,
-            maxLines: 1,
-            enabled: !_isLoading,
-            onSubmitted: (_) => _submit(),
-          ),
-        ],
+            const SizedBox(height: 12),
+            SurePanel.rows(
+              children: [
+                AuthFieldRow(
+                  fieldKey: const ValueKey('api-key-field'),
+                  label: l.loginApiKeyLabel,
+                  controller: _apiKeyController,
+                  obscureText: true,
+                  autocorrect: false,
+                  enabled: !_isLoading,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: Text(l.commonCancel),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading || _apiKeyController.text.trim().isEmpty ? null : _submit,
-          child: _isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l.loginApiKeySignIn),
-        ),
-      ],
     );
   }
 }
@@ -610,7 +566,7 @@ class _SsoButton extends StatelessWidget {
                   width: 18,
                   height: 18,
                 )
-              : const Icon(Icons.login, size: 18),
+              : const SureIcon(AuthIcons.logIn, size: 18),
           onPressed: authProvider.isLoading
               ? null
               : () => authProvider.startSsoLogin(provider.name),

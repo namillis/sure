@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -3459,4 +3460,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds3aSendFailed => 'Couldn\'t send the message.';
+
+  @override
+  String get ds4aServerRow => 'Server';
+
+  @override
+  String get ds4aApiKeyLink => 'Sign in with an API key';
+
+  @override
+  String get ds4aShowPassword => 'Show password';
+
+  @override
+  String get ds4aHidePassword => 'Hide password';
+
+  @override
+  String get ds4aDismissError => 'Dismiss';
+
+  @override
+  String get ds4aCodeLabel => 'Code';
+
+  @override
+  String get ds4aCodeHint => '6-digit code';
+
+  @override
+  String get ds4aLockedTitle => 'Sure+ is locked';
+
+  @override
+  String get ds4aUnlockFaceId => 'Unlock with Face ID';
+
+  @override
+  String get ds4aUnlockTouchId => 'Unlock with Touch ID';
+
+  @override
+  String get ds4aIntroTitle => 'Intro experience coming soon';
+
+  @override
+  String get ds4aIntroBody =>
+      'We\'re building a richer onboarding journey to learn about your goals, milestones, and day-to-day needs. For now, start a conversation with Sure in the Assistant tab and tell it where you are in your financial journey.';
 }
