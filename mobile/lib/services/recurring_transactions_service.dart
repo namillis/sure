@@ -70,7 +70,7 @@ class RecurringTransactionsService {
   }
 
   /// Creates one from [attributes] (keys as the API's create params:
-  /// name, amount, currency, account_id, expected_day_of_month,
+  /// name, amount, currency, account_id, merchant_id, expected_day_of_month,
   /// last_occurrence_date, next_expected_date, status, autopay, payment_url,
   /// notes).
   Future<Map<String, dynamic>> create({

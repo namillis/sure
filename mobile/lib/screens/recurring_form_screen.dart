@@ -13,6 +13,39 @@ import '../widgets/ds/ds.dart';
 import '../widgets/sure_text_field.dart';
 import 'recurring_screen.dart' show confirmRecurringDelete;
 
+/// Starting values for a new recurring transaction, e.g. one made from a
+/// transaction ("Mark as recurring").
+class RecurringPrefill {
+  const RecurringPrefill({
+    required this.name,
+    required this.amount,
+    this.currency,
+    required this.lastOccurrenceDate,
+    required this.nextExpectedDate,
+    required this.expectedDayOfMonth,
+    this.income = false,
+    this.accountId,
+    this.merchantId,
+  });
+
+  final String name;
+
+  /// Unsigned, in major units; [income] gives the direction.
+  final double amount;
+  final bool income;
+
+  /// Null keeps the form's default (the first account's currency).
+  final String? currency;
+  final String? accountId;
+  final String? merchantId;
+  final DateTime lastOccurrenceDate;
+  final DateTime nextExpectedDate;
+
+  /// Sent as `expected_day_of_month` unless the next date is changed, so a
+  /// series from the 31st keeps the 31st after a short month.
+  final int expectedDayOfMonth;
+}
+
 /// Adds a recurring transaction, or edits [existing]. Pops `true` after a
 /// save or delete so the list reloads.
 ///
@@ -24,6 +57,8 @@ class RecurringFormScreen extends StatefulWidget {
   const RecurringFormScreen({
     super.key,
     this.existing,
+    this.prefill,
+    this.onCreated,
     required this.accounts,
     required this.service,
     required this.accessTokenLoader,
@@ -32,6 +67,13 @@ class RecurringFormScreen extends StatefulWidget {
   });
 
   final RecurringTransaction? existing;
+
+  /// Starting values for a new item; ignored with [existing].
+  final RecurringPrefill? prefill;
+
+  /// Called with the created item after a successful create, before the
+  /// sheet pops `true`.
+  final ValueChanged<RecurringTransaction>? onCreated;
   final List<Account> accounts;
   final RecurringTransactionsService service;
   final Future<String?> Function() accessTokenLoader;
@@ -53,6 +95,8 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
   late bool _active;
   late bool _autopay;
   String? _accountId;
+  String? _merchantId;
+  int? _expectedDay;
   late DateTime _nextDate;
   late DateTime _lastDate;
   bool _saving = false;
@@ -64,26 +108,33 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
   void initState() {
     super.initState();
     final e = widget.existing;
+    final p = e == null ? widget.prefill : null;
     final today = (widget.clock ?? DateTime.now)();
     final todayDate = DateTime(today.year, today.month, today.day);
-    _name = TextEditingController(text: e?.displayName ?? '');
+    _name = TextEditingController(text: e?.displayName ?? p?.name ?? '');
     _amount = TextEditingController(
-      text: e == null
-          ? ''
-          : RecurringGrouping.amountOf(e).abs().toStringAsFixed(2),
+      text: e != null
+          ? RecurringGrouping.amountOf(e).abs().toStringAsFixed(2)
+          : p != null
+              ? p.amount.abs().toStringAsFixed(2)
+              : '',
     );
-    _accountId = e?.accountId;
+    _accountId = e?.accountId ?? p?.accountId;
+    _merchantId = p?.merchantId;
+    _expectedDay = p?.expectedDayOfMonth;
     _currency = TextEditingController(
       text: e?.currency ??
+          p?.currency ??
           (widget.accounts.isNotEmpty ? widget.accounts.first.currency : 'USD'),
     );
     _paymentUrl = TextEditingController(text: e?.paymentUrl ?? '');
     _notes = TextEditingController(text: e?.notes ?? '');
-    _income = e?.isInflow ?? false;
+    _income = e?.isInflow ?? p?.income ?? false;
     _active = e == null || e.isActive;
     _autopay = e?.autopay ?? false;
-    _nextDate = e?.nextExpectedDate ?? todayDate;
+    _nextDate = e?.nextExpectedDate ?? p?.nextExpectedDate ?? todayDate;
     _lastDate = e?.lastOccurrenceDate ??
+        p?.lastOccurrenceDate ??
         DateTime(_nextDate.year, _nextDate.month - 1, _nextDate.day);
   }
 
@@ -114,7 +165,14 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
       lastDate: DateTime(2100),
     );
     if (picked == null || !mounted) return;
-    setState(() => next ? _nextDate = picked : _lastDate = picked);
+    setState(() {
+      if (next) {
+        _nextDate = picked;
+        _expectedDay = null;
+      } else {
+        _lastDate = picked;
+      }
+    });
     _formKey.currentState?.validate();
   }
 
@@ -126,7 +184,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
     final common = <String, dynamic>{
       'status': _active ? 'active' : 'inactive',
       'next_expected_date': _iso(_nextDate),
-      'expected_day_of_month': _nextDate.day,
+      'expected_day_of_month': _expectedDay ?? _nextDate.day,
       'autopay': _autopay,
       'payment_url': url.isEmpty ? null : url,
       'notes': notes.isEmpty ? null : notes,
@@ -139,6 +197,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
       'amount': _income ? -amount : amount,
       'currency': _currency.text.trim().toUpperCase(),
       if (_accountId != null) 'account_id': _accountId,
+      if (_merchantId != null) 'merchant_id': _merchantId,
       'last_occurrence_date': _iso(_lastDate),
       ...common,
     };
@@ -164,6 +223,10 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
     if (!mounted) return;
     if (result['error'] == 'unauthorized') return widget.onUnauthorized();
     if (result['success'] == true) {
+      final created = result['recurring_transaction'];
+      if (!_editing && created is RecurringTransaction) {
+        widget.onCreated?.call(created);
+      }
       Navigator.of(context).pop(true);
       return;
     }
@@ -259,8 +322,8 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
                       label: l.recurringFieldAmount,
                       readOnly: locked,
                       enabled: !locked,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       validator: locked
                           ? null
                           : (_) {
@@ -282,10 +345,10 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
                       maxLength: 3,
                       validator: locked
                           ? null
-                          : (v) => RegExp(r'^[A-Za-z]{3}$')
-                                  .hasMatch(v?.trim() ?? '')
-                              ? null
-                              : l.recurringErrorCurrencyInvalid,
+                          : (v) =>
+                              RegExp(r'^[A-Za-z]{3}$').hasMatch(v?.trim() ?? '')
+                                  ? null
+                                  : l.recurringErrorCurrencyInvalid,
                     ),
                   ),
                 ],
