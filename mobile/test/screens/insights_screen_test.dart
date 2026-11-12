@@ -8,6 +8,8 @@ import 'package:http/testing.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
 import 'package:sure_mobile/screens/insights_screen.dart';
 import 'package:sure_mobile/services/insights_service.dart';
+import 'package:sure_mobile/theme/sure_colors.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/l10n_harness.dart';
 
@@ -57,6 +59,58 @@ void main() {
     expect(find.textContaining('High priority'), findsOneWidget);
     expect(find.text('Fourth'), findsOneWidget);
     expect(find.text('Dismiss'), findsNWidgets(4));
+  });
+
+  testWidgets('panels tint the icon by priority and show a short date',
+      (tester) async {
+    await pump(
+      tester,
+      MockClient((_) async => http.Response(
+          index([
+            insight('i1', 'High one', priority: 'high'),
+            insight('i2', 'Low one', priority: 'low'),
+          ]),
+          200)),
+    );
+
+    final palette = SureColors.of(tester.element(find.text('High one'))).palette;
+    Color fill(String id) => ((tester
+            .widget<Container>(find.byKey(ValueKey('insightIcon-$id')))
+            .decoration!) as BoxDecoration)
+        .color!;
+    expect(fill('i1'), palette.warning.withValues(alpha: 0.15));
+    expect(fill('i2'), palette.surfaceInset);
+
+    final day = SureDates.short(
+        DateTime.parse('2026-11-09T08:00:00Z').toLocal(),
+        locale: 'en');
+    expect(find.text('High priority · $day'), findsOneWidget);
+    expect(find.text(day), findsOneWidget);
+    expect(find.byType(SurePanel), findsNWidgets(2));
+    expect(find.byType(Card), findsNothing);
+  });
+
+  testWidgets('opened from Home, the back link says Home', (tester) async {
+    await pumpLocalized(
+      tester,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => InsightsScreen(
+              service: InsightsService(
+                  client:
+                      MockClient((_) async => http.Response(index([]), 200))),
+              accessTokenLoader: () async => 'token',
+              onUnauthorized: () async {},
+            ),
+          )),
+          child: const Text('open'),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(SureBackButton, 'Home'), findsOneWidget);
   });
 
   testWidgets('dismiss removes at once and stays gone on success',
