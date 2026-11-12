@@ -1,3 +1,45 @@
+/// The `transfer` block of a transaction that is one side of a transfer:
+/// the transfer's id and the account on the other side.
+class TransactionTransfer {
+  const TransactionTransfer({
+    required this.id,
+    this.amount,
+    this.currency,
+    this.otherAccountId,
+    this.otherAccountName,
+    this.otherAccountType,
+  });
+
+  final String id;
+
+  /// The transferred amount, formatted by the server and unsigned.
+  final String? amount;
+  final String? currency;
+  final String? otherAccountId;
+  final String? otherAccountName;
+
+  /// The other account's `accountable_type` in snake case.
+  final String? otherAccountType;
+
+  /// Null when [json] is not a transfer block.
+  static TransactionTransfer? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final other = json['other_account'];
+    return TransactionTransfer(
+      id: json['id']?.toString() ?? '',
+      amount: Transaction._nonEmptyString(json['amount']),
+      currency: Transaction._nonEmptyString(json['currency']),
+      otherAccountId:
+          other is Map ? Transaction._nonEmptyString(other['id']) : null,
+      otherAccountName:
+          other is Map ? Transaction._nonEmptyString(other['name']) : null,
+      otherAccountType: other is Map
+          ? Transaction._nonEmptyString(other['account_type'])
+          : null,
+    );
+  }
+}
+
 class Transaction {
   final String? id;
   final String accountId;
@@ -40,6 +82,10 @@ class Transaction {
   /// predates the field or the row came from the local cache.
   final String? entryId;
 
+  /// The transfer this transaction is one side of, or null. Read-only in
+  /// the API.
+  final TransactionTransfer? transfer;
+
   Transaction({
     this.id,
     required this.accountId,
@@ -63,6 +109,7 @@ class Transaction {
     this.excluded,
     this.splitParent,
     this.entryId,
+    this.transfer,
   })  : tagIds = List.unmodifiable(tagIds),
         tagNames = List.unmodifiable(tagNames),
         categoryProvided =
@@ -176,6 +223,7 @@ class Transaction {
       splitParent:
           json['split_parent'] is bool ? json['split_parent'] as bool : null,
       entryId: _nonEmptyString(json['entry_id']),
+      transfer: TransactionTransfer.fromJson(json['transfer']),
     );
   }
 

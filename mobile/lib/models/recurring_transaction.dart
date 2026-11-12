@@ -41,6 +41,7 @@ class RecurringTransaction {
     this.amountCents,
     this.name,
     this.merchantName,
+    this.merchantId,
     this.accountId,
     this.accountName,
     this.expectedDayOfMonth,
@@ -52,6 +53,8 @@ class RecurringTransaction {
     this.notes,
     this.billType,
     this.categoryId,
+    this.expectedAmountMinCents,
+    this.expectedAmountMaxCents,
   });
 
   final String id;
@@ -66,6 +69,7 @@ class RecurringTransaction {
   final String status;
   final String? name;
   final String? merchantName;
+  final String? merchantId;
   final String? accountId;
   final String? accountName;
   final int? expectedDayOfMonth;
@@ -81,6 +85,11 @@ class RecurringTransaction {
   /// against the category list.
   final String? categoryId;
 
+  /// The range detection expects, in minor units with [amountCents]' sign.
+  /// Null for manual items without one.
+  final int? expectedAmountMinCents;
+  final int? expectedAmountMaxCents;
+
   static const writableStatuses = ['active', 'inactive'];
 
   factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
@@ -94,6 +103,7 @@ class RecurringTransaction {
       status: json['status']?.toString() ?? 'active',
       name: _blankToNull(json['name']),
       merchantName: _blankToNull(merchant?['name']),
+      merchantId: _blankToNull(merchant?['id']),
       accountId: account?['id']?.toString(),
       accountName: _blankToNull(account?['name']),
       expectedDayOfMonth: JsonParsing.parseInt(json['expected_day_of_month']),
@@ -107,6 +117,10 @@ class RecurringTransaction {
       notes: _blankToNull(json['notes']),
       billType: _blankToNull(json['bill_type']),
       categoryId: _blankToNull(json['category_id']),
+      expectedAmountMinCents:
+          JsonParsing.parseInt(json['expected_amount_min_cents']),
+      expectedAmountMaxCents:
+          JsonParsing.parseInt(json['expected_amount_max_cents']),
     );
   }
 
