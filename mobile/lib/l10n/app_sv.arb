@@ -978,5 +978,7 @@
   "ds3aRetry": "Försök igen",
   "ds3aSendFailed": "Det gick inte att skicka meddelandet.",
   "ds4tLogShare": "Dela loggar",
-  "ds4tLogAutoScroll": "Rulla automatiskt"
+  "ds4tLogAutoScroll": "Rulla automatiskt",
+  "ds4tCalendarMonthlyChange": "Förändring under månaden",
+  "ds4tCalendarNoAccounts": "Inga konton av den här typen"
 }

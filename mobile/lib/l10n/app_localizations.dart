@@ -5923,6 +5923,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-scroll'**
   String get ds4tLogAutoScroll;
+
+  /// Row on the account calendar showing the selected month's net change.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly change'**
+  String get ds4tCalendarMonthlyChange;
+
+  /// Empty state on the account calendar when there is no asset (or liability) account.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts of this type'**
+  String get ds4tCalendarNoAccounts;
 }
 
 class _AppLocalizationsDelegate

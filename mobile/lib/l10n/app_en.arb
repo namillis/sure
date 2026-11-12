@@ -2438,5 +2438,9 @@
   "ds4tLogShare": "Share logs",
   "@ds4tLogShare": {"description": "Nav-bar action on the debug log screen that opens the share sheet with the logs."},
   "ds4tLogAutoScroll": "Auto-scroll",
-  "@ds4tLogAutoScroll": {"description": "Chip on the debug log screen that keeps the list scrolled to the newest entry."}
+  "@ds4tLogAutoScroll": {"description": "Chip on the debug log screen that keeps the list scrolled to the newest entry."},
+  "ds4tCalendarMonthlyChange": "Monthly change",
+  "@ds4tCalendarMonthlyChange": {"description": "Row on the account calendar showing the selected month's net change."},
+  "ds4tCalendarNoAccounts": "No accounts of this type",
+  "@ds4tCalendarNoAccounts": {"description": "Empty state on the account calendar when there is no asset (or liability) account."}
 }

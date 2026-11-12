@@ -3497,4 +3497,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds4tLogAutoScroll => 'Rulla automatiskt';
+
+  @override
+  String get ds4tCalendarMonthlyChange => 'Förändring under månaden';
+
+  @override
+  String get ds4tCalendarNoAccounts => 'Inga konton av den här typen';
 }

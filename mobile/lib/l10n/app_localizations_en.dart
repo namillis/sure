@@ -3465,4 +3465,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds4tLogAutoScroll => 'Auto-scroll';
+
+  @override
+  String get ds4tCalendarMonthlyChange => 'Monthly change';
+
+  @override
+  String get ds4tCalendarNoAccounts => 'No accounts of this type';
 }
