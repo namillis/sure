@@ -19,7 +19,6 @@ abstract final class ManageIcons {
   static const String package = 'package';
   static const String shield = 'shield';
   static const String receiptText = 'receipt-text';
-  static const String globe = 'globe';
 }
 
 /// The "‹ Settings" back link for a screen opened from Settings, or null

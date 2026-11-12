@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -12,12 +11,11 @@ import '../services/file_pick.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
 import '../utils/data_import_logic.dart';
-import '../widgets/form_error_text.dart';
+import '../widgets/ds/ds.dart';
+import '../widgets/manage_widgets.dart';
 import '../widgets/open_on_web_action.dart';
 import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
-import '../widgets/sure_list_group.dart';
-import 'import_screen.dart' show DataInLinkButton;
+import 'import_screen.dart' show DataInFileRow;
 
 /// Settings -> Upload statement: pick a PDF, CSV or XLSX statement and an
 /// account, upload it to the Statement Vault, and see that account's recent
@@ -205,9 +203,24 @@ class _StatementUploadScreenState extends State<StatementUploadScreen> {
     if (result['success'] == true) _loadStatements();
   }
 
-  String _date(DateTime date) =>
-      DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
-          .format(date.toLocal());
+  Future<void> _pickAccount() async {
+    final l = AppLocalizations.of(context);
+    final picked = await showManageOptionSheet<String?>(
+      context,
+      title: l.dataInAccountLabel,
+      selected: _accountId,
+      options: [for (final a in _accounts) (a.id, a.name)],
+    );
+    if (picked == null || !mounted || picked.value == _accountId) return;
+    setState(() {
+      _accountId = picked.value;
+      _statements = null;
+      _outcome = null;
+    });
+    _loadStatements();
+  }
+
+  static const _hMargin = EdgeInsets.symmetric(horizontal: 16);
 
   @override
   Widget build(BuildContext context) {
@@ -215,104 +228,86 @@ class _StatementUploadScreenState extends State<StatementUploadScreen> {
     final palette = SureColors.of(context).palette;
     final accounts = _accounts;
     final file = _file;
+    final account = accounts.where((a) => a.id == _accountId).firstOrNull;
     final canUpload =
         file != null && _fileError == null && _accountId != null && !_uploading;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.dataInStatementTitle),
-        actions: const [OpenOnWebAction(path: StatementUploadScreen.webPath)],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadStatements,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-              SureSpacing.xl, SureSpacing.lg, SureSpacing.xl, SureSpacing.huge),
-          children: [
-            SureCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return SureLargeTitleScaffold(
+      title: l.dataInStatementTitle,
+      leading: manageBackLink(context),
+      actions: [
+        SureNavIconButton(
+          icon: SureIcons.externalLink,
+          semanticLabel: l.shellOpenOnWeb,
+          onPressed: () => openWebFallback(context,
+              title: l.dataInStatementTitle,
+              path: StatementUploadScreen.webPath),
+        ),
+      ],
+      onRefresh: _loadStatements,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+                child: Text(
+                  l.dataInStatementHelp(formatByteSize(maxStatementBytes)),
+                  style: TextStyle(
+                      fontSize: 13, height: 1.35, color: palette.textSecondary),
+                ),
+              ),
+              if (accounts.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: ManageErrorText(l.dataInNoAccounts),
+                ),
+              SurePanel.rows(
+                margin: _hMargin,
                 children: [
-                  Text(
-                    l.dataInStatementHelp(formatByteSize(maxStatementBytes)),
-                    style: TextStyle(color: palette.textSubdued),
-                  ),
-                  const SizedBox(height: SureSpacing.lg),
-                  if (accounts.isEmpty)
-                    FormErrorText(l.dataInNoAccounts)
-                  else
-                    DropdownButtonFormField<String>(
-                      key: ValueKey('account-$_accountId'),
-                      initialValue: _accountId,
-                      isExpanded: true,
-                      decoration: InputDecoration(labelText: l.dataInAccountLabel),
-                      items: [
-                        for (final a in accounts)
-                          DropdownMenuItem(
-                              value: a.id,
-                              child: Text(a.name, overflow: TextOverflow.ellipsis)),
-                      ],
-                      onChanged: _uploading
-                          ? null
-                          : (v) {
-                              setState(() {
-                                _accountId = v;
-                                _statements = null;
-                                _outcome = null;
-                              });
-                              _loadStatements();
-                            },
+                  if (accounts.isNotEmpty)
+                    SureListRow(
+                      key: const ValueKey('statementAccountRow'),
+                      title: l.dataInAccountLabel,
+                      value: account?.name ?? l.ds4dChoose,
+                      showChevron: true,
+                      onTap: _uploading ? null : _pickAccount,
                     ),
-                  const SizedBox(height: SureSpacing.lg),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 44),
-                      child: SureButton(
-                        label: file == null ? l.dataInChooseFile : l.dataInChooseAnother,
-                        variant: SureButtonVariant.outline,
-                        leading: const Icon(Icons.upload_file, size: 16),
-                        onPressed: _uploading ? null : _chooseFile,
-                      ),
-                    ),
+                  DataInFileRow(
+                    file: file,
+                    chooseLabel: l.dataInChooseFile,
+                    onTap: _uploading ? null : _chooseFile,
                   ),
-                  if (file != null) ...[
-                    const SizedBox(height: SureSpacing.md),
-                    Row(children: [
-                      const Icon(Icons.description_outlined, size: 20),
-                      const SizedBox(width: SureSpacing.md),
-                      Expanded(child: Text(file.name, overflow: TextOverflow.ellipsis)),
-                      Text(formatByteSize(file.size),
-                          style: TextStyle(color: palette.textSubdued)),
-                    ]),
-                  ],
-                  if (_fileError != null) ...[
-                    const SizedBox(height: SureSpacing.md),
-                    FormErrorText(_fileError!),
-                  ],
-                  const SizedBox(height: SureSpacing.xl),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 44),
-                    child: SureButton(
-                      label: l.dataInUpload,
-                      fullWidth: true,
-                      loading: _uploading,
-                      onPressed: canUpload ? _upload : null,
-                    ),
-                  ),
-                  if (_outcome != null) ...[
-                    const SizedBox(height: SureSpacing.lg),
-                    _outcomeView(context),
-                  ],
                 ],
               ),
-            ),
-            const SizedBox(height: SureSpacing.xl),
-            _recent(context),
-          ],
+              if (_fileError != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  child: ManageErrorText(_fileError!),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  child: SureButton(
+                    label: l.dataInUpload,
+                    fullWidth: true,
+                    loading: _uploading,
+                    onPressed: canUpload ? _upload : null,
+                  ),
+                ),
+              ),
+              if (_outcome != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: _outcomeView(context),
+                ),
+              _recent(context),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -321,43 +316,41 @@ class _StatementUploadScreenState extends State<StatementUploadScreen> {
     final palette = SureColors.of(context).palette;
     switch (_outcome!) {
       case _Outcome.error:
-        return FormErrorText(_message ?? l.dataInStatementFailed);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: ManageErrorText(_message ?? l.dataInStatementFailed),
+        );
       case _Outcome.duplicate:
         final created = _result?.createdAt;
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.info_outline, size: 20, color: palette.info),
-            const SizedBox(width: SureSpacing.md),
-            Expanded(
-              child: Semantics(
-                liveRegion: true,
-                child: Text(created != null
-                    ? l.dataInStatementDuplicate(_date(created))
-                    : (_message ?? l.dataInStatementDuplicateHidden)),
-              ),
-            ),
-          ],
+        return Semantics(
+          liveRegion: true,
+          child: ManageNotice(
+            created != null
+                ? l.dataInStatementDuplicate(
+                    SureDates.fullOf(context, created.toLocal()))
+                : (_message ?? l.dataInStatementDuplicateHidden),
+            info: true,
+          ),
         );
       case _Outcome.uploaded:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return SurePanel.rows(
           children: [
-            Row(children: [
-              Icon(Icons.check_circle_outline, size: 20, color: palette.success),
-              const SizedBox(width: SureSpacing.md),
-              Expanded(
-                child: Semantics(
-                  liveRegion: true,
-                  child: Text(l.dataInStatementUploaded(_result?.filename ?? '')),
-                ),
+            Semantics(
+              liveRegion: true,
+              child: SureListRow(
+                leading: ManageIconBadge(
+                    icon: SureIcons.circleCheck, color: palette.success),
+                title: l.dataInStatementUploaded(_result?.filename ?? ''),
               ),
-            ]),
-            DataInLinkButton(
-              label: l.dataInStatementViewOnWeb,
-              icon: Icons.language,
-              onPressed: () => openWebFallback(context,
-                  title: l.dataInStatementTitle, path: StatementUploadScreen.webPath),
+            ),
+            SureListRow(
+              title: l.dataInStatementViewOnWeb,
+              titleColor: palette.link,
+              trailing: SureIcon(SureIcons.arrowUpRight,
+                  size: 16, color: palette.link),
+              onTap: () => openWebFallback(context,
+                  title: l.dataInStatementTitle,
+                  path: StatementUploadScreen.webPath),
             ),
           ],
         );
@@ -366,56 +359,78 @@ class _StatementUploadScreenState extends State<StatementUploadScreen> {
 
   Widget _recent(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final palette = SureColors.of(context).palette;
     final statements = _statements;
+    const compact = EdgeInsets.symmetric(horizontal: 20, vertical: 20);
+    final Widget panel;
     if (_accountId == null) {
-      return Text(l.dataInStatementPickAccount,
-          style: TextStyle(color: palette.textSubdued));
-    }
-    if (statements == null && _listLoading) {
-      return const Padding(
+      panel = SurePanel(
+        margin: _hMargin,
+        child: SureEmptyState(
+          key: const ValueKey('statementsPickAccount'),
+          icon: SureIcons.landmark,
+          title: l.dataInStatementPickAccount,
+          padding: compact,
+        ),
+      );
+    } else if (statements == null && _listLoading) {
+      panel = const Padding(
         padding: EdgeInsets.all(SureSpacing.xxxl),
         child: Center(child: CircularProgressIndicator()),
       );
-    }
-    if (statements == null || (_listFailed && statements.isEmpty)) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    } else if (statements == null || (_listFailed && statements.isEmpty)) {
+      panel = SurePanel(
+        margin: _hMargin,
+        child: SureEmptyState(
+          key: const ValueKey('statementsError'),
+          icon: SureIcons.circleAlert,
+          title: l.dataInStatementListFailed,
+          primaryLabel: l.dataInRetry,
+          onPrimary: _loadStatements,
+          padding: compact,
+        ),
+      );
+    } else if (statements.isEmpty) {
+      panel = SurePanel(
+        margin: _hMargin,
+        child: SureEmptyState(
+          key: const ValueKey('statementsEmpty'),
+          icon: SureIcons.inbox,
+          title: l.dataInStatementListEmpty,
+          padding: compact,
+        ),
+      );
+    } else {
+      panel = SurePanel.rows(
+        margin: _hMargin,
+        dividerIndent: SurePanel.iconRowDividerIndent,
         children: [
-          FormErrorText(l.dataInStatementListFailed),
-          const SizedBox(height: SureSpacing.md),
-          ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: SureButton(
-              label: l.dataInRetry,
-              variant: SureButtonVariant.outline,
-              onPressed: _loadStatements,
+          for (final s in statements)
+            SureListRow(
+              leading: const ManageIconBadge(icon: ManageIcons.receiptText),
+              title: s.filename,
+              subtitle: [
+                if (s.periodStart != null && s.periodEnd != null)
+                  l.dataInStatementPeriod(
+                      SureDates.shortOf(context, s.periodStart!),
+                      SureDates.shortOf(context, s.periodEnd!)),
+                if (s.createdAt != null)
+                  l.dataInStatementAdded(
+                      SureDates.shortOf(context, s.createdAt!.toLocal())),
+              ].join(' · '),
+              showChevron: true,
+              onTap: () => openWebFallback(context,
+                  title: s.filename,
+                  path:
+                      '${StatementUploadScreen.webPath}/${Uri.encodeComponent(s.id)}'),
             ),
-          ),
         ],
       );
     }
-    if (statements.isEmpty) {
-      return Text(l.dataInStatementListEmpty,
-          style: TextStyle(color: palette.textSubdued));
-    }
-    return SureListGroup(
-      header: l.dataInStatementRecent,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final s in statements)
-          SureListRow(
-            leading: const Icon(Icons.description_outlined),
-            title: s.filename,
-            subtitle: [
-              if (s.periodStart != null && s.periodEnd != null)
-                l.dataInStatementPeriod(_date(s.periodStart!), _date(s.periodEnd!)),
-              if (s.createdAt != null) l.dataInStatementAdded(_date(s.createdAt!)),
-            ].join(' · '),
-            showChevron: true,
-            onTap: () => openWebFallback(context,
-                title: s.filename,
-                path: '${StatementUploadScreen.webPath}/${Uri.encodeComponent(s.id)}'),
-          ),
+        SureSectionHeader(label: l.dataInStatementRecent),
+        panel,
       ],
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -7,6 +8,7 @@ import 'package:sure_mobile/models/account.dart';
 import 'package:sure_mobile/screens/import_screen.dart';
 import 'package:sure_mobile/services/file_pick.dart';
 import 'package:sure_mobile/services/imports_service.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 import 'package:sure_mobile/widgets/sure_button.dart';
 
 import '../support/l10n_harness.dart';
@@ -188,6 +190,96 @@ void main() {
 
     await tester.tap(find.text('Transactions'));
     await tester.pumpAndSettle();
-    expect(find.text('Status: Complete'), findsOneWidget);
+    // The status sheet lists the status as a row with its value.
+    final statusRow = find.byKey(const ValueKey('importStatusRow'));
+    expect(statusRow, findsOneWidget);
+    expect(find.descendant(of: statusRow, matching: find.text('Complete')),
+        findsOneWidget);
+    expect(find.text('Refresh'), findsOneWidget);
+  });
+
+  testWidgets('history load failure shows an error state that retries',
+      (tester) async {
+    var calls = 0;
+    final client = MockClient((request) async {
+      calls++;
+      return http.Response('{}', 500);
+    });
+    await pumpLocalized(
+      tester,
+      ImportScreen(
+        service: ImportsService(client: client),
+        accessTokenLoader: () async => 'token',
+        onUnauthorized: () async {},
+        accounts: _accounts,
+      ),
+    );
+    final error = find.byKey(const ValueKey('importHistoryError'));
+    expect(error, findsOneWidget);
+    expect(find.byType(SureEmptyState), findsOneWidget);
+    expect(find.text("Couldn't load import history."), findsOneWidget);
+    final before = calls;
+    await tester.tap(find.descendant(of: error, matching: find.text('Try again')));
+    await tester.pumpAndSettle();
+    expect(calls, greaterThan(before));
+  });
+
+  testWidgets('step indicator fills one bar per step and mapping uses sheets',
+      (tester) async {
+    await _pump(tester, _server(headers: ['Col A', 'Col B']), 'Col A,Col B\n2026-11-01,5\n');
+
+    Color bar(int i) => (tester
+            .widget<Container>(find.byKey(ValueKey('importStepBar-$i')))
+            .decoration as BoxDecoration)
+        .color!;
+    expect(find.text('Step 1 of 4: Choose file'), findsOneWidget);
+    expect(bar(0), isNot(bar(1)));
+
+    await tester.tap(find.text('Choose CSV file'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(bar(1), bar(0));
+    expect(bar(2), isNot(bar(1)));
+
+    // The date column row opens a picker sheet; picking sets its value.
+    final dateRow = find.byKey(const ValueKey('importMap-date_col_label'));
+    expect(find.descendant(of: dateRow, matching: find.text('None')),
+        findsOneWidget);
+    await tester.tap(dateRow);
+    await tester.pumpAndSettle();
+    expect(find.byType(SureSheet), findsOneWidget);
+    await tester.tap(find.descendant(
+        of: find.byType(SureSheet), matching: find.text('Col A')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SureSheet), findsNothing);
+    expect(find.descendant(of: dateRow, matching: find.text('Col A')),
+        findsOneWidget);
+  });
+
+  testWidgets('opened from Settings, the back link reads Settings',
+      (tester) async {
+    await pumpLocalized(
+      tester,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => ImportScreen(
+              service: ImportsService(client: _server(headers: const [])),
+              accessTokenLoader: () async => 'token',
+              onUnauthorized: () async {},
+              accounts: _accounts,
+            ),
+          )),
+          child: const Text('open'),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(
+        find.descendant(
+            of: find.byType(SureBackButton), matching: find.text('Settings')),
+        findsOneWidget);
   });
 }
