@@ -3459,4 +3459,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ds3aSendFailed => 'Couldn\'t send the message.';
+
+  @override
+  String get ds4dExportEmptyTitle => 'No exports yet';
+
+  @override
+  String get ds4dExportEmptyBody => 'Create one to get a copy of your data.';
+
+  @override
+  String get ds4dFormatsHeader => 'Formats';
+
+  @override
+  String get ds4dChoose => 'Choose';
 }

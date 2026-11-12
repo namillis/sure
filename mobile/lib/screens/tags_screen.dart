@@ -9,11 +9,9 @@ import '../services/metadata_create_service.dart';
 import '../services/metadata_manage_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
-import '../widgets/form_error_text.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/manage_widgets.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_list_group.dart';
-import '../widgets/sure_text_field.dart';
+import 'form_sheet_fields.dart';
 
 /// Lists, creates, renames, recolors and deletes the family's tags.
 class TagsScreen extends StatefulWidget {
@@ -185,21 +183,23 @@ class _TagsScreenState extends State<TagsScreen> {
 
     final Widget content;
     if (tags == null && _loading) {
-      content = const Padding(
-        padding: EdgeInsets.only(top: 96),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      content = const ManageLoading();
     } else if (tags == null || (_failed && tags.isEmpty)) {
-      content = ManageMessage(
-        icon: Icons.error_outline,
+      content = SureEmptyState(
+        key: const ValueKey('tagsError'),
+        icon: SureIcons.circleAlert,
         title: l.manageTagsLoadFailed,
-        onRetry: _load,
+        primaryLabel: l.commonTryAgain,
+        onPrimary: _load,
       );
     } else if (tags.isEmpty) {
-      content = ManageMessage(
-        icon: Icons.sell_outlined,
+      content = SureEmptyState(
+        key: const ValueKey('tagsEmpty'),
+        icon: SureIcons.tag,
         title: l.manageTagsEmpty,
         body: l.manageTagsEmptyBody,
+        primaryLabel: l.manageTagAdd,
+        onPrimary: () => _openForm(),
       );
     } else {
       final q = _query.trim().toLowerCase();
@@ -207,15 +207,27 @@ class _TagsScreenState extends State<TagsScreen> {
           ? tags
           : tags.where((t) => t.name.toLowerCase().contains(q)).toList();
       content = visible.isEmpty
-          ? ManageMessage(
-              icon: Icons.search_off, title: l.manageNoMatches(_query.trim()))
-          : SureListGroup(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          ? SureEmptyState(
+              icon: SureIcons.search,
+              title: l.manageNoMatches(_query.trim()),
+              secondaryLabel: l.manageClearSearch,
+              onSecondary: () {
+                _search.clear();
+                setState(() => _query = '');
+              },
+            )
+          : SurePanel.rows(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              dividerIndent: SurePanel.iconRowDividerIndent,
               children: [
                 for (final tag in visible)
                   SureListRow(
                     title: tag.name,
-                    leading: ManageColorDot(hex: tag.color, size: 14),
+                    leading: SureCategoryIcon(
+                      name: tag.name,
+                      color: tag.color,
+                      icon: SureIcons.tag,
+                    ),
                     showChevron: true,
                     onTap: () => _openForm(tag),
                   ),
@@ -223,32 +235,32 @@ class _TagsScreenState extends State<TagsScreen> {
             );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.manageTagsTitle),
-        actions: [
-          IconButton(
-            tooltip: l.manageTagAdd,
-            icon: const Icon(Icons.add),
-            onPressed: tags == null ? null : () => _openForm(),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: SureSpacing.huge),
-          children: [
-            if (tags != null && tags.isNotEmpty)
-              ManageSearchField(
-                controller: _search,
-                onChanged: (value) => setState(() => _query = value),
-              ),
-            content,
-          ],
+    return SureLargeTitleScaffold(
+      title: l.manageTagsTitle,
+      leading: manageBackLink(context),
+      actions: [
+        SureNavIconButton(
+          icon: SureIcons.plus,
+          semanticLabel: l.manageTagAdd,
+          onPressed: tags == null ? null : () => _openForm(),
         ),
-      ),
+      ],
+      onRefresh: _load,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (tags != null && tags.isNotEmpty)
+                ManageSearchField(
+                  controller: _search,
+                  onChanged: (value) => setState(() => _query = value),
+                ),
+              content,
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -300,6 +312,7 @@ class TagForm extends StatefulWidget {
 class _TagFormState extends State<TagForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _name;
+  final _nameFocus = FocusNode();
   late String _color;
   bool _busy = false;
   String? _error;
@@ -312,11 +325,16 @@ class _TagFormState extends State<TagForm> {
     _color = existingColor != null && existingColor.isNotEmpty
         ? existingColor
         : kMetadataColors.first;
+    if (widget.existing == null) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _nameFocus.requestFocus());
+    }
   }
 
   @override
   void dispose() {
     _name.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
@@ -336,65 +354,66 @@ class _TagFormState extends State<TagForm> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(widget.existing == null ? l.manageTagNew : l.manageTagEdit,
-              style: theme.textTheme.titleLarge),
-          const SizedBox(height: SureSpacing.xl),
-          SureTextField(
-            controller: _name,
-            label: l.manageNameLabel,
-            autofocus: widget.existing == null,
-            validator: (value) => (value ?? '').trim().isEmpty
-                ? l.manageNameRequired
-                : null,
+    return SureSheet(
+      title: widget.existing == null ? l.manageTagNew : l.manageTagEdit,
+      actionLabel: l.commonSave,
+      actionKey: const ValueKey('tagFormSave'),
+      busy: _busy,
+      onAction: () {
+        if (!_formKey.currentState!.validate()) return;
+        _guard(() => widget.onSubmit(_name.text.trim(), _color));
+      },
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SurePanel.rows(
+                children: [
+                  FormSheetFieldRow(
+                    label: l.manageNameLabel,
+                    controller: _name,
+                    focusNode: _nameFocus,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.done,
+                    validator: (value) => (value ?? '').trim().isEmpty
+                        ? l.manageNameRequired
+                        : null,
+                  ),
+                ],
+              ),
+              ManageColorPicker(
+                value: _color,
+                onChanged: (value) =>
+                    setState(() => _color = value ?? kMetadataColors.first),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: SureSpacing.lg),
+                ManageErrorText(_error!),
+              ],
+              if (widget.onDelete != null)
+                SureButtonPanel(
+                  label: l.manageTagDelete,
+                  destructive: true,
+                  margin: const EdgeInsets.only(top: SureSpacing.xxxl),
+                  onPressed: _busy
+                      ? null
+                      : () async {
+                          final existing = widget.existing;
+                          if (existing != null &&
+                              !await confirmTagDelete(context, existing)) {
+                            return;
+                          }
+                          if (mounted) _guard(widget.onDelete!);
+                        },
+                ),
+            ],
           ),
-          const SizedBox(height: SureSpacing.xl),
-          ManageColorPicker(
-            value: _color,
-            onChanged: (value) =>
-                setState(() => _color = value ?? kMetadataColors.first),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: SureSpacing.lg),
-            FormErrorText(_error!),
-          ],
-          const SizedBox(height: SureSpacing.xl),
-          SureButton(
-            label: l.commonSave,
-            fullWidth: true,
-            loading: _busy,
-            onPressed: _busy
-                ? null
-                : () {
-                    if (!_formKey.currentState!.validate()) return;
-                    _guard(() => widget.onSubmit(_name.text.trim(), _color));
-                  },
-          ),
-          if (widget.onDelete != null) ...[
-            const SizedBox(height: SureSpacing.md),
-            SureButton(
-              label: l.manageTagDelete,
-              variant: SureButtonVariant.destructive,
-              fullWidth: true,
-              onPressed: _busy
-                  ? null
-                  : () async {
-                      final existing = widget.existing;
-                      if (existing != null &&
-                          !await confirmTagDelete(context, existing)) {
-                        return;
-                      }
-                      if (mounted) _guard(widget.onDelete!);
-                    },
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

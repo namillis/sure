@@ -3491,4 +3491,17 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get ds3aSendFailed => 'Det gick inte att skicka meddelandet.';
+
+  @override
+  String get ds4dExportEmptyTitle => 'Inga exporter än';
+
+  @override
+  String get ds4dExportEmptyBody =>
+      'Skapa en för att få en kopia av dina data.';
+
+  @override
+  String get ds4dFormatsHeader => 'Format';
+
+  @override
+  String get ds4dChoose => 'Välj';
 }

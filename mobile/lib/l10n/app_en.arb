@@ -2434,5 +2434,13 @@
   "ds3aRetry": "Retry",
   "@ds3aRetry": {"description": "Link in the reply error panel that asks for the reply again."},
   "ds3aSendFailed": "Couldn't send the message.",
-  "@ds3aSendFailed": {"description": "Snackbar when a message could not be sent; the text is put back in the field."}
+  "@ds3aSendFailed": {"description": "Snackbar when a message could not be sent; the text is put back in the field."},
+  "ds4dExportEmptyTitle": "No exports yet",
+  "@ds4dExportEmptyTitle": {"description": "Title of the empty state on the Export data screen."},
+  "ds4dExportEmptyBody": "Create one to get a copy of your data.",
+  "@ds4dExportEmptyBody": {"description": "Body of the empty state on the Export data screen."},
+  "ds4dFormatsHeader": "Formats",
+  "@ds4dFormatsHeader": {"description": "Section header above the date, number, sign and separator format rows in the CSV import's column-mapping step."},
+  "ds4dChoose": "Choose",
+  "@ds4dChoose": {"description": "Value of a picker row (e.g. Account) when nothing is chosen yet."}
 }

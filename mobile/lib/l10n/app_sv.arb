@@ -976,5 +976,9 @@
   "ds3aThinking": "Tänker",
   "ds3aReplyFailed": "Det gick inte att få ett svar.",
   "ds3aRetry": "Försök igen",
-  "ds3aSendFailed": "Det gick inte att skicka meddelandet."
+  "ds3aSendFailed": "Det gick inte att skicka meddelandet.",
+  "ds4dExportEmptyTitle": "Inga exporter än",
+  "ds4dExportEmptyBody": "Skapa en för att få en kopia av dina data.",
+  "ds4dFormatsHeader": "Format",
+  "ds4dChoose": "Välj"
 }

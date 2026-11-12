@@ -10,11 +10,9 @@ import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../services/family_exports_service.dart';
 import '../theme/sure_colors.dart';
-import '../theme/sure_spacing.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/manage_widgets.dart';
 import '../widgets/sure_button.dart';
-import '../widgets/sure_card.dart';
-import '../widgets/sure_list_group.dart';
 
 /// Hands a downloaded file to the system share sheet. [origin] anchors the
 /// popover on iPad.
@@ -201,30 +199,31 @@ class _ExportScreenState extends State<ExportScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
     final exports = _exports;
 
     final Widget history;
     if (exports == null && _loading) {
-      history = const Padding(
-        padding: EdgeInsets.only(top: 48),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      history = const ManageLoading();
     } else if (_forbidden) {
-      history = ManageMessage(
-          icon: Icons.lock_outline, title: l.manageExportAdminOnly);
+      history = SureEmptyState(
+        key: const ValueKey('exportForbidden'),
+        icon: ManageIcons.shield,
+        title: l.manageExportAdminOnly,
+      );
     } else if (exports == null || (_failed && exports.isEmpty)) {
-      history = ManageMessage(
-        icon: Icons.error_outline,
+      history = SureEmptyState(
+        key: const ValueKey('exportError'),
+        icon: SureIcons.circleAlert,
         title: l.manageExportLoadFailed,
-        onRetry: _refresh,
+        primaryLabel: l.commonTryAgain,
+        onPrimary: _refresh,
       );
     } else if (exports.isEmpty) {
-      history = Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-        child: Text(l.manageExportEmpty,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: palette.textSecondary)),
+      history = SureEmptyState(
+        key: const ValueKey('exportEmpty'),
+        icon: ManageIcons.package,
+        title: l.ds4dExportEmptyTitle,
+        body: l.ds4dExportEmptyBody,
       );
     } else {
       final stalled =
@@ -232,89 +231,116 @@ class _ExportScreenState extends State<ExportScreen> {
       history = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SureListGroup(
-            header: l.manageExportHistory,
-            margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+          SureSectionHeader(label: l.manageExportHistory),
+          SurePanel.rows(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            dividerIndent: SurePanel.iconRowDividerIndent,
             children: [
-              for (final export in exports)
-                SureListRow(
-                  title: _dateLabel(context, export),
-                  subtitle: _subtitle(l, export),
-                  leading: _StatusIcon(status: export.status),
-                  trailing: export.downloadable
-                      ? Builder(
-                          builder: (buttonContext) => ConstrainedBox(
-                            constraints: const BoxConstraints(minHeight: 44),
-                            child: SureButton(
-                              label: l.manageExportDownload,
-                              size: SureButtonSize.sm,
-                              variant: SureButtonVariant.outline,
-                              loading: _downloadingId == export.id,
-                              onPressed: _downloadingId != null
-                                  ? null
-                                  : () => _download(export, buttonContext),
-                            ),
-                          ),
-                        )
-                      : (export.inProgress
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2))
-                          : null),
-                ),
+              for (final export in exports) _row(context, export),
             ],
           ),
           if (stalled)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: Text(l.manageExportStillPreparing,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: palette.textSecondary)),
+                  style:
+                      TextStyle(fontSize: 13, color: palette.textSecondary)),
             ),
         ],
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l.manageExportTitle)),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: SureSpacing.huge),
-          children: [
-            SureCard(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              padding: const EdgeInsets.all(SureSpacing.xl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(l.manageExportIntro, style: theme.textTheme.bodyMedium),
-                  const SizedBox(height: SureSpacing.xl),
-                  SureButton(
-                    label: l.manageExportCreate,
-                    leading: const Icon(Icons.archive_outlined, size: 16),
-                    fullWidth: true,
-                    loading: _creating,
-                    onPressed: _creating || _forbidden ? null : _create,
-                  ),
-                ],
+    return SureLargeTitleScaffold(
+      title: l.manageExportTitle,
+      leading: manageBackLink(context),
+      onRefresh: _refresh,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SurePanel(
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l.manageExportIntro,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: palette.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SureButton(
+                      label: l.manageExportCreate,
+                      leading: SureIcon(ManageIcons.package,
+                          size: 16, color: palette.textInverse),
+                      fullWidth: true,
+                      loading: _creating,
+                      onPressed: _creating || _forbidden ? null : _create,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            history,
-          ],
+              history,
+            ],
+          ),
         ),
+      ],
+    );
+  }
+
+  Widget _row(BuildContext context, FamilyExport export) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final downloading = _downloadingId == export.id;
+    Widget? trailing;
+    if (export.downloadable) {
+      trailing = downloading
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Text(
+              l.manageExportDownload,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: _downloadingId == null
+                    ? palette.link
+                    : palette.textSubdued,
+              ),
+            );
+    } else if (export.inProgress) {
+      trailing = const SizedBox.square(
+        dimension: 18,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    // The row is the download button; Builder gives the share popover an
+    // anchor on iPad.
+    return Builder(
+      builder: (rowContext) => SureListRow(
+        title: _dateLabel(context, export),
+        subtitle: _subtitle(l, export),
+        leading: _StatusIcon(status: export.status),
+        trailing: trailing,
+        onTap: export.downloadable && _downloadingId == null
+            ? () => _download(export, rowContext)
+            : null,
       ),
     );
   }
 
   String _dateLabel(BuildContext context, FamilyExport export) {
-    final created = export.createdAt;
+    final created = export.createdAt?.toLocal();
     if (created == null) return export.filename;
     final locale = Localizations.localeOf(context).toString();
-    return DateFormat.yMMMd(locale).add_jm().format(created);
+    return '${SureDates.relativeDayOf(context, created)} · '
+        '${DateFormat.jm(locale).format(created)}';
   }
 
   String _subtitle(AppLocalizations l, FamilyExport export) {
@@ -345,11 +371,11 @@ class _StatusIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = SureColors.of(context).palette;
     final (icon, color) = switch (status) {
-      'completed' => (Icons.check_circle_outline, palette.success),
-      'failed' => (Icons.error_outline, palette.destructive),
-      _ => (Icons.schedule, palette.textSecondary),
+      'completed' => (SureIcons.circleCheck, palette.success),
+      'failed' => (SureIcons.circleAlert, palette.destructive),
+      _ => (SureIcons.clock, null),
     };
     // Decorative: the row subtitle states the status in words.
-    return ExcludeSemantics(child: Icon(icon, color: color));
+    return ManageIconBadge(icon: icon, color: color);
   }
 }

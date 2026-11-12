@@ -5911,6 +5911,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t send the message.'**
   String get ds3aSendFailed;
+
+  /// Title of the empty state on the Export data screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No exports yet'**
+  String get ds4dExportEmptyTitle;
+
+  /// Body of the empty state on the Export data screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create one to get a copy of your data.'**
+  String get ds4dExportEmptyBody;
+
+  /// Section header above the date, number, sign and separator format rows in the CSV import's column-mapping step.
+  ///
+  /// In en, this message translates to:
+  /// **'Formats'**
+  String get ds4dFormatsHeader;
+
+  /// Value of a picker row (e.g. Account) when nothing is chosen yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get ds4dChoose;
 }
 
 class _AppLocalizationsDelegate

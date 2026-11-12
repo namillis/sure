@@ -9,12 +9,10 @@ import '../services/metadata_create_service.dart';
 import '../services/metadata_manage_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
-import '../widgets/form_error_text.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/manage_widgets.dart';
 import '../widgets/open_on_web_action.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_list_group.dart';
-import '../widgets/sure_text_field.dart';
+import 'form_sheet_fields.dart';
 
 /// Lists the merchants the user can see and creates family merchants. The
 /// API has no merchant edit or delete, so a row opens an info sheet that
@@ -154,7 +152,8 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
     showManageSheet<void>(
       context,
       (sheetContext) => ManageInfoSheet(
-        leading: _MerchantBadge(merchant: merchant, size: 40),
+        leading: _MerchantBadge(
+            merchant: merchant, size: SureCategoryIcon.heroSize),
         title: merchant.name,
         lines: [
           family ? l.manageMerchantFamily : l.manageMerchantProvider,
@@ -182,21 +181,23 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 
     final Widget content;
     if (merchants == null && _loading) {
-      content = const Padding(
-        padding: EdgeInsets.only(top: 96),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      content = const ManageLoading();
     } else if (merchants == null || (_failed && merchants.isEmpty)) {
-      content = ManageMessage(
-        icon: Icons.error_outline,
+      content = SureEmptyState(
+        key: const ValueKey('merchantsError'),
+        icon: SureIcons.circleAlert,
         title: l.manageMerchantsLoadFailed,
-        onRetry: _load,
+        primaryLabel: l.commonTryAgain,
+        onPrimary: _load,
       );
     } else if (merchants.isEmpty) {
-      content = ManageMessage(
-        icon: Icons.storefront_outlined,
+      content = SureEmptyState(
+        key: const ValueKey('merchantsEmpty'),
+        icon: SureIcons.store,
         title: l.manageMerchantsEmpty,
         body: l.manageMerchantsEmptyBody,
+        primaryLabel: l.manageMerchantAdd,
+        onPrimary: _create,
       );
     } else {
       final q = _query.trim().toLowerCase();
@@ -204,10 +205,18 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
           ? merchants
           : merchants.where((m) => m.name.toLowerCase().contains(q)).toList();
       content = visible.isEmpty
-          ? ManageMessage(
-              icon: Icons.search_off, title: l.manageNoMatches(_query.trim()))
-          : SureListGroup(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          ? SureEmptyState(
+              icon: SureIcons.search,
+              title: l.manageNoMatches(_query.trim()),
+              secondaryLabel: l.manageClearSearch,
+              onSecondary: () {
+                _search.clear();
+                setState(() => _query = '');
+              },
+            )
+          : SurePanel.rows(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              dividerIndent: SurePanel.iconRowDividerIndent,
               children: [
                 for (final merchant in visible)
                   SureListRow(
@@ -223,32 +232,32 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
             );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.manageMerchantsTitle),
-        actions: [
-          IconButton(
-            tooltip: l.manageMerchantAdd,
-            icon: const Icon(Icons.add),
-            onPressed: merchants == null ? null : _create,
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: SureSpacing.huge),
-          children: [
-            if (merchants != null && merchants.isNotEmpty)
-              ManageSearchField(
-                controller: _search,
-                onChanged: (value) => setState(() => _query = value),
-              ),
-            content,
-          ],
+    return SureLargeTitleScaffold(
+      title: l.manageMerchantsTitle,
+      leading: manageBackLink(context),
+      actions: [
+        SureNavIconButton(
+          icon: SureIcons.plus,
+          semanticLabel: l.manageMerchantAdd,
+          onPressed: merchants == null ? null : _create,
         ),
-      ),
+      ],
+      onRefresh: _load,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (merchants != null && merchants.isNotEmpty)
+                ManageSearchField(
+                  controller: _search,
+                  onChanged: (value) => setState(() => _query = value),
+                ),
+              content,
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -256,7 +265,8 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 /// The API sends no merchant color, so the badge is a neutral circle with
 /// the first letter.
 class _MerchantBadge extends StatelessWidget {
-  const _MerchantBadge({required this.merchant, this.size = 28});
+  const _MerchantBadge(
+      {required this.merchant, this.size = SureCategoryIcon.rowSize});
 
   final Merchant merchant;
   final double size;
@@ -267,18 +277,22 @@ class _MerchantBadge extends StatelessWidget {
     final letter = merchant.name.isEmpty
         ? '?'
         : merchant.name.characters.first.toUpperCase();
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration:
-          BoxDecoration(color: palette.surfaceInset, shape: BoxShape.circle),
-      child: Text(
-        letter,
-        style: TextStyle(
-          color: palette.textSecondary,
-          fontSize: size * 0.45,
-          fontWeight: FontWeight.w600,
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration:
+            BoxDecoration(color: palette.surfaceInset, shape: BoxShape.circle),
+        child: Text(
+          letter,
+          textScaler: TextScaler.noScaling,
+          style: TextStyle(
+            color: palette.textSecondary,
+            fontSize: (size * 0.46).roundToDouble(),
+            height: 1,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -315,14 +329,23 @@ class _MerchantFormState extends State<MerchantForm> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _website = TextEditingController();
+  final _nameFocus = FocusNode();
   String? _color;
   bool _saving = false;
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _nameFocus.requestFocus());
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     _website.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
@@ -345,54 +368,58 @@ class _MerchantFormState extends State<MerchantForm> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(l.manageMerchantNew, style: theme.textTheme.titleLarge),
-          const SizedBox(height: SureSpacing.xl),
-          SureTextField(
-            controller: _name,
-            label: l.manageNameLabel,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            validator: (value) => (value ?? '').trim().isEmpty
-                ? l.manageNameRequired
-                : null,
+    return SureSheet(
+      title: l.manageMerchantNew,
+      actionLabel: l.commonSave,
+      actionKey: const ValueKey('merchantFormSave'),
+      busy: _saving,
+      onAction: _submit,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SurePanel.rows(
+                children: [
+                  FormSheetFieldRow(
+                    label: l.manageNameLabel,
+                    controller: _name,
+                    focusNode: _nameFocus,
+                    textCapitalization: TextCapitalization.words,
+                    validator: (value) => (value ?? '').trim().isEmpty
+                        ? l.manageNameRequired
+                        : null,
+                  ),
+                  FormSheetFieldRow(
+                    label: l.manageMerchantWebsite,
+                    controller: _website,
+                    hint: 'example.com',
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.done,
+                    validator: (value) {
+                      final text = (value ?? '').trim();
+                      if (text.isEmpty || isPlausibleWebsite(text)) return null;
+                      return l.manageMerchantWebsiteInvalid;
+                    },
+                  ),
+                ],
+              ),
+              ManageColorPicker(
+                value: _color,
+                allowAutomatic: true,
+                onChanged: (value) => setState(() => _color = value),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: SureSpacing.lg),
+                ManageErrorText(_error!),
+              ],
+            ],
           ),
-          const SizedBox(height: SureSpacing.xl),
-          SureTextField(
-            controller: _website,
-            label: l.manageMerchantWebsite,
-            hint: 'example.com',
-            keyboardType: TextInputType.url,
-            validator: (value) {
-              final text = (value ?? '').trim();
-              if (text.isEmpty || isPlausibleWebsite(text)) return null;
-              return l.manageMerchantWebsiteInvalid;
-            },
-          ),
-          const SizedBox(height: SureSpacing.xl),
-          ManageColorPicker(
-            value: _color,
-            allowAutomatic: true,
-            onChanged: (value) => setState(() => _color = value),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: SureSpacing.lg),
-            FormErrorText(_error!),
-          ],
-          const SizedBox(height: SureSpacing.xl),
-          SureButton(
-            label: l.commonSave,
-            fullWidth: true,
-            loading: _saving,
-            onPressed: _saving ? null : _submit,
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -4,9 +4,30 @@ import '../l10n/app_localizations.dart';
 import '../services/metadata_manage_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_spacing.dart';
+import '../theme/sure_tokens.dart';
 import 'budget_progress_bar.dart' show parseCategoryColor;
+import 'ds/ds.dart';
 import 'sure_button.dart';
-import 'sure_text_field.dart';
+
+/// Shared pieces of the Settings -> Data screens (import, statements,
+/// categories, tags, merchants, export).
+
+/// Lucide icons the Data screens use that ship as category icons but have no
+/// [SureIcons] constant (they are in [SureIcons.category], so the SVGs are
+/// bundled).
+abstract final class ManageIcons {
+  static const String package = 'package';
+  static const String shield = 'shield';
+  static const String receiptText = 'receipt-text';
+  static const String globe = 'globe';
+}
+
+/// The "‹ Settings" back link for a screen opened from Settings, or null
+/// when the route cannot pop (e.g. a test host).
+Widget? manageBackLink(BuildContext context) {
+  if (!(ModalRoute.of(context)?.canPop ?? false)) return null;
+  return SureBackButton(label: AppLocalizations.of(context).shellSettingsTitle);
+}
 
 /// A round color dot for a category, tag or merchant row. Falls back to the
 /// subdued text color when [hex] is missing or invalid.
@@ -33,10 +54,136 @@ class ManageColorDot extends StatelessWidget {
   }
 }
 
-/// A row of the web's color swatches ([kMetadataColors]). Each swatch is a
-/// 44pt button with a label and a check mark when selected, so the choice
-/// doesn't rest on color alone. With [allowAutomatic], a leading swatch
-/// stands for "let the server pick" (value null).
+/// A 28 px circle with a Lucide [icon] in [color] on a ~14% fill of the same
+/// color (like a category icon), for status and file rows.
+class ManageIconBadge extends StatelessWidget {
+  const ManageIconBadge({
+    super.key,
+    required this.icon,
+    this.color,
+    this.size = SureCategoryIcon.rowSize,
+  });
+
+  /// Lucide icon name.
+  final String icon;
+
+  /// Defaults to `textSecondary` on the neutral inset fill.
+  final Color? color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SureColors.of(context);
+    final tint = color;
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: tint == null
+              ? colors.palette.surfaceInset
+              : tint.withValues(alpha: colors.isDark ? 0.18 : 0.14),
+        ),
+        child: SureIcon(icon,
+            size: (size * 0.54).roundToDouble(),
+            color: tint ?? colors.palette.textSecondary),
+      ),
+    );
+  }
+}
+
+/// A server or validation error under a form or step: a Lucide alert icon
+/// plus text in `destructive`, so it does not rely on color alone.
+class ManageErrorText extends StatelessWidget {
+  const ManageErrorText(this.message, {super.key, this.compact = false});
+
+  final String message;
+
+  /// 12 pt text and a 14 px icon, for errors inside a row.
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = SureColors.of(context).palette.destructive;
+    return Semantics(
+      liveRegion: !compact,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: compact ? 1 : 2),
+            child: SureIcon(SureIcons.circleAlert,
+                size: compact ? 14 : 16, color: color),
+          ),
+          SizedBox(width: compact ? 6 : 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: compact ? 12 : 13,
+                height: 1.35,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A multi-line notice on a ~15% fill of `warning` (or `info` with [info])
+/// with a Lucide icon: the wrapping sibling of [SureBanner] for messages that
+/// may not fit one line.
+class ManageNotice extends StatelessWidget {
+  const ManageNotice(this.message, {super.key, this.info = false});
+
+  final String message;
+  final bool info;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    final color = info ? palette.info : palette.warning;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(SureTokens.radiusLg),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: SureIcon(info ? SureIcons.info : SureIcons.triangleAlert,
+                size: 16, color: color),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                fontWeight: SureTokens.weightMedium,
+                color: palette.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The web's color swatches ([kMetadataColors]) in a panel under a "Color"
+/// header. Each swatch is a 44 pt button with a label and a check mark when
+/// selected, so the choice doesn't rest on color alone. With
+/// [allowAutomatic], a leading swatch stands for "let the server pick"
+/// (value null).
 class ManageColorPicker extends StatelessWidget {
   const ManageColorPicker({
     super.key,
@@ -53,7 +200,6 @@ class ManageColorPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
 
     Widget swatch({
       required String? hex,
@@ -66,9 +212,12 @@ class ManageColorPicker extends StatelessWidget {
         selected: selected,
         label: label,
         excludeSemantics: true,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: () => onChanged(hex),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            if (!selected) SureHaptics.selection();
+            onChanged(hex);
+          },
           child: SizedBox(
             width: 44,
             height: 44,
@@ -76,24 +225,22 @@ class ManageColorPicker extends StatelessWidget {
               child: Container(
                 width: 32,
                 height: 32,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: color ?? palette.surfaceInset,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: selected
-                        ? palette.textPrimary
-                        : palette.borderSecondary,
-                    width: selected ? 2.5 : 1,
-                  ),
+                  border: selected
+                      ? Border.all(color: palette.textPrimary, width: 2)
+                      : null,
                 ),
                 child: selected
-                    ? Icon(Icons.check,
-                        size: 18,
+                    ? SureIcon(SureIcons.check,
+                        size: 16,
                         color: color == null
                             ? palette.textPrimary
                             : Colors.white)
                     : (color == null
-                        ? Icon(Icons.auto_awesome,
+                        ? SureIcon(SureIcons.sparkles,
                             size: 16, color: palette.textSecondary)
                         : null),
               ),
@@ -104,21 +251,25 @@ class ManageColorPicker extends StatelessWidget {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l.manageColor,
-            style: theme.textTheme.labelLarge
-                ?.copyWith(color: palette.textSecondary)),
-        const SizedBox(height: SureSpacing.sm),
-        Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: [
-            if (allowAutomatic)
-              swatch(hex: null, label: l.manageColorAutomatic),
-            for (var i = 0; i < kMetadataColors.length; i++)
-              swatch(hex: kMetadataColors[i], label: l.manageColorOption(i + 1)),
-          ],
+        SureSectionHeader(
+          label: l.manageColor,
+          padding: const EdgeInsets.fromLTRB(4, 16, 4, 6),
+        ),
+        SurePanel(
+          padding: const EdgeInsets.all(6),
+          child: Wrap(
+            spacing: 2,
+            runSpacing: 2,
+            children: [
+              if (allowAutomatic)
+                swatch(hex: null, label: l.manageColorAutomatic),
+              for (var i = 0; i < kMetadataColors.length; i++)
+                swatch(
+                    hex: kMetadataColors[i], label: l.manageColorOption(i + 1)),
+            ],
+          ),
         ),
       ],
     );
@@ -140,32 +291,21 @@ class ManageSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: ValueListenableBuilder<TextEditingValue>(
-        valueListenable: controller,
-        builder: (context, value, _) => SureTextField(
-          controller: controller,
-          hint: l.manageSearch,
-          prefixIcon: const Icon(Icons.search),
-          textInputAction: TextInputAction.search,
-          onChanged: onChanged,
-          suffixIcon: value.text.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: l.manageClearSearch,
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                ),
-        ),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: SureSearchField(
+        controller: controller,
+        hintText: l.manageSearch,
+        clearSemanticLabel: l.manageClearSearch,
+        onChanged: onChanged,
       ),
     );
   }
 }
 
 /// A centered empty, error or info state.
+///
+/// Kept for the Rules, Connections and Insights screens; the Data screens
+/// use [SureEmptyState].
 class ManageMessage extends StatelessWidget {
   const ManageMessage({
     super.key,
@@ -217,26 +357,70 @@ class ManageMessage extends StatelessWidget {
   }
 }
 
-/// Shows [child] as a scrollable bottom sheet that rises with the keyboard.
-Future<T?> showManageSheet<T>(BuildContext context, WidgetBuilder builder) {
-  return showModalBottomSheet<T>(
+/// The loading spinner of a Data screen, below the large title.
+class ManageLoading extends StatelessWidget {
+  const ManageLoading({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+        padding: EdgeInsets.only(top: 96),
+        child: Center(child: CircularProgressIndicator()),
+      );
+}
+
+/// Opens a Sure sheet; build its content with a [SureSheet].
+Future<T?> showManageSheet<T>(BuildContext context, WidgetBuilder builder) =>
+    showSureSheet<T>(context: context, builder: builder);
+
+/// One choice of [showManageOptionSheet].
+typedef ManageOption<T> = (T value, String label);
+
+/// A picker sheet: [title] in the toolbar, one row per option with a check
+/// mark on [selected]. Tapping a row closes the sheet. Returns the picked
+/// value wrapped in a record (so a null option can be told apart from
+/// dismissing the sheet), or null when dismissed.
+Future<({T value})?> showManageOptionSheet<T>(
+  BuildContext context, {
+  required String title,
+  required List<ManageOption<T>> options,
+  required T selected,
+}) {
+  return showSureSheet<({T value})>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: builder(sheetContext),
-      ),
-    ),
+    builder: (sheetContext) {
+      final palette = SureColors.of(sheetContext).palette;
+      return SureSheet(
+        title: title,
+        child: SafeArea(
+          top: false,
+          child: SurePanel.rows(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            children: [
+              for (final (value, label) in options)
+                Semantics(
+                  selected: value == selected,
+                  child: SureListRow(
+                    title: label,
+                    trailing: value == selected
+                        ? SureIcon(SureIcons.check,
+                            size: 18, color: palette.link)
+                        : null,
+                    onTap: () {
+                      if (value != selected) SureHaptics.selection();
+                      Navigator.of(sheetContext).pop((value: value));
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    },
   );
 }
 
-/// The info sheet a read-only row opens: a title, details, and an
-/// "Edit on the web" button.
+/// The info sheet a read-only row opens: a centered badge and title, the
+/// detail lines, and an "Edit on the web ↗" row.
 class ManageInfoSheet extends StatelessWidget {
   const ManageInfoSheet({
     super.key,
@@ -255,39 +439,56 @@ class ManageInfoSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
+    return SureSheet(
+      showCancel: false,
+      actionLabel: l.dsDone,
+      onAction: () => Navigator.of(context).maybePop(),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            leading,
-            const SizedBox(width: SureSpacing.lg),
-            Expanded(
-              child: Text(title, style: theme.textTheme.titleLarge),
+            Center(child: leading),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: palette.textPrimary,
+              ),
             ),
+            const SizedBox(height: 6),
+            for (final line in lines)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  line,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 13, height: 1.35, color: palette.textSecondary),
+                ),
+              ),
+            if (onEditOnWeb != null) ...[
+              const SizedBox(height: 16),
+              SurePanel.rows(
+                children: [
+                  SureListRow(
+                    title: l.manageEditOnWeb,
+                    titleColor: palette.link,
+                    trailing: SureIcon(SureIcons.arrowUpRight,
+                        size: 16, color: palette.link),
+                    onTap: onEditOnWeb,
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
-        const SizedBox(height: SureSpacing.lg),
-        for (final line in lines)
-          Padding(
-            padding: const EdgeInsets.only(bottom: SureSpacing.sm),
-            child: Text(line,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: palette.textSecondary)),
-          ),
-        if (onEditOnWeb != null) ...[
-          const SizedBox(height: SureSpacing.lg),
-          SureButton(
-            label: l.manageEditOnWeb,
-            leading: const Icon(Icons.language, size: 16),
-            variant: SureButtonVariant.outline,
-            fullWidth: true,
-            onPressed: onEditOnWeb,
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
