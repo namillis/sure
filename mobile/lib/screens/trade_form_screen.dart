@@ -8,12 +8,12 @@ import '../models/account_trade.dart';
 import '../models/trade_security.dart';
 import '../providers/auth_provider.dart';
 import '../services/trades_service.dart';
+import '../theme/sure_colors.dart';
 import '../utils/amount_parser.dart';
 import '../utils/investment_math.dart';
+import '../widgets/ds/ds.dart';
 import '../widgets/form_error_text.dart';
-import '../widgets/sure_button.dart';
-import '../widgets/sure_segmented_control.dart';
-import '../widgets/sure_text_field.dart';
+import 'form_sheet_fields.dart';
 
 enum TradeSide { buy, sell }
 
@@ -40,14 +40,11 @@ Future<bool> openTradeEditor(
   TradesService? tradesService,
 }) async {
   if (TradeFormScreen.canEdit(trade)) {
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => TradeFormScreen(
-          account: account,
-          trade: trade,
-          tradesService: tradesService,
-        ),
-      ),
+    final changed = await showTradeFormSheet(
+      context,
+      account: account,
+      trade: trade,
+      tradesService: tradesService,
     );
     return changed == true;
   }
@@ -106,8 +103,28 @@ Future<bool> _confirmAndDelete(
   return ok;
 }
 
-/// Adds a buy or sell to [account], or edits [trade] when given. Pops `true`
-/// when the server saved (or deleted) the trade.
+/// Opens [TradeFormScreen] as a Sure sheet: adds a buy or sell to [account],
+/// or edits [trade] when given. Resolves `true` when the server saved (or
+/// deleted) the trade; otherwise null.
+Future<bool?> showTradeFormSheet(
+  BuildContext context, {
+  required Account account,
+  AccountTrade? trade,
+  TradesService? tradesService,
+}) {
+  return showSureSheet<bool>(
+    context: context,
+    builder: (_) => TradeFormScreen(
+      account: account,
+      trade: trade,
+      tradesService: tradesService,
+    ),
+  );
+}
+
+/// Adds a buy or sell to [account], or edits [trade] when given, as sheet
+/// content. Pops `true` when the server saved (or deleted) the trade. Open it
+/// with [showTradeFormSheet].
 class TradeFormScreen extends StatefulWidget {
   const TradeFormScreen({
     super.key,
@@ -138,7 +155,6 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
   final _qtyController = TextEditingController();
   final _priceController = TextEditingController();
   final _feeController = TextEditingController();
-  final _dateController = TextEditingController();
   late final TradesService _service =
       widget.tradesService ?? TradesService();
 
@@ -173,19 +189,12 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _dateController.text = DateFormat.yMMMd(_locale).format(_date);
-  }
-
-  @override
   void dispose() {
     for (final c in [
       _tickerController,
       _qtyController,
       _priceController,
       _feeController,
-      _dateController,
     ]) {
       c.dispose();
     }
@@ -255,10 +264,7 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
       lastDate: DateTime.now(),
     );
     if (picked == null || !mounted) return;
-    setState(() {
-      _date = picked;
-      _dateController.text = DateFormat.yMMMd(_locale).format(picked);
-    });
+    setState(() => _date = picked);
   }
 
   String _canonical(TextEditingController c) =>
@@ -344,7 +350,7 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final palette = SureColors.of(context).palette;
 
     final qty = _number(_qtyController);
     final price = _number(_priceController);
@@ -352,25 +358,21 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
     final total = qty == null || price == null
         ? null
         : tradeTotal(qty: qty, price: price, fee: fee, side: _side);
+    const amountKeyboard = TextInputType.numberWithOptions(decimal: true);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-            _isEdit ? l.accountActionsEditTrade : l.accountActionsAddTrade),
-        actions: [
-          if (_isEdit)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: l.accountActionsDeleteTrade,
-              onPressed: _submitting ? null : _delete,
-            ),
-        ],
-      ),
-      body: SafeArea(
+    return SureSheet(
+      title: _isEdit ? l.accountActionsEditTrade : l.accountActionsAddTrade,
+      actionLabel: l.accountActionsSave,
+      actionKey: const ValueKey('tradeSave'),
+      onAction: _submit,
+      busy: _submitting,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         child: Form(
           key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SureSegmentedControl<TradeSide>(
                 selected: _side,
@@ -379,84 +381,95 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
                   SureSegment(
                     value: TradeSide.buy,
                     label: l.accountActionsBuy,
-                    icon: const Icon(Icons.add),
+                    icon: const SureIcon(SureIcons.plus, size: 16),
                   ),
                   SureSegment(
                     value: TradeSide.sell,
                     label: l.accountActionsSell,
-                    icon: const Icon(Icons.remove),
+                    icon: const SureIcon(SureIcons.minus, size: 16),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              if (_isEdit)
-                SureTextField(
-                  controller: _tickerController,
-                  label: l.accountActionsSecurity,
-                  readOnly: true,
-                  enabled: false,
-                  helperText: l.accountActionsEditTradeNote,
-                )
-              else
-                _securityField(l),
-              const SizedBox(height: 16),
-              SureTextField(
-                key: const ValueKey('tradeQuantity'),
-                controller: _qtyController,
-                label: l.accountActionsQuantity,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                validator: _validatePositive,
-              ),
-              const SizedBox(height: 16),
-              SureTextField(
-                key: const ValueKey('tradePrice'),
-                controller: _priceController,
-                label: l.accountActionsPrice,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Text(widget.account.currency),
-                ),
-                validator: _validatePositive,
-              ),
-              const SizedBox(height: 16),
-              if (!_isEdit) ...[
-                SureTextField(
-                  key: const ValueKey('tradeFee'),
-                  controller: _feeController,
-                  label: l.accountActionsFee,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  suffixIcon: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Text(widget.account.currency),
+              SurePanel.rows(
+                children: [
+                  if (_isEdit)
+                    SureListRow(
+                      key: const ValueKey('tradeSecurityLocked'),
+                      title: l.accountActionsSecurity,
+                      value: _tickerController.text,
+                    )
+                  else
+                    _securityField(l),
+                  FormSheetFieldRow(
+                    fieldKey: const ValueKey('tradeQuantity'),
+                    label: l.accountActionsQuantity,
+                    controller: _qtyController,
+                    hint: formSheetAmountHint(context),
+                    keyboardType: amountKeyboard,
+                    mono: true,
+                    validator: _validatePositive,
                   ),
-                  validator: _validateFee,
-                ),
-                const SizedBox(height: 16),
-              ],
-              SureTextField(
-                controller: _dateController,
-                label: l.accountActionsDate,
-                readOnly: true,
-                prefixIcon: const Icon(Icons.calendar_today),
-                onTap: _pickDate,
+                  FormSheetFieldRow(
+                    fieldKey: const ValueKey('tradePrice'),
+                    label: l.ds3fPrice,
+                    controller: _priceController,
+                    hint: formSheetAmountHint(context),
+                    keyboardType: amountKeyboard,
+                    suffix: widget.account.currency,
+                    mono: true,
+                    validator: _validatePositive,
+                  ),
+                  if (!_isEdit)
+                    FormSheetFieldRow(
+                      fieldKey: const ValueKey('tradeFee'),
+                      label: l.ds3fFee,
+                      controller: _feeController,
+                      hint: l.ds3fOptional,
+                      keyboardType: amountKeyboard,
+                      suffix: widget.account.currency,
+                      mono: true,
+                      textInputAction: TextInputAction.done,
+                      validator: _validateFee,
+                    ),
+                  SureListRow(
+                    key: const ValueKey('tradeDate'),
+                    title: l.accountActionsDate,
+                    value: SureDates.relativeDayOf(context, _date),
+                    showChevron: true,
+                    onTap: _submitting ? null : _pickDate,
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+              if (_isEdit)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                  child: Text(
+                    l.accountActionsEditTradeNote,
+                    style:
+                        TextStyle(fontSize: 13, color: palette.textSecondary),
+                  ),
+                ),
+              const SizedBox(height: 12),
               Semantics(
                 liveRegion: true,
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Expanded(
+                    Flexible(
                       child: Text(
                         _side == TradeSide.buy
                             ? l.accountActionsTotalCost
                             : l.accountActionsTotalProceeds,
-                        style: theme.textTheme.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 15, color: palette.textSecondary),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       total == null
                           ? '—'
@@ -466,8 +479,11 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
                               locale: _locale,
                             ),
                       key: const ValueKey('tradeTotal'),
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: SureMoney.tabular(TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: palette.textPrimary,
+                      )),
                     ),
                   ],
                 ),
@@ -476,14 +492,15 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
                 const SizedBox(height: 16),
                 FormErrorText(_error!),
               ],
-              const SizedBox(height: 24),
-              SureButton(
-                label: l.accountActionsSave,
-                onPressed: _submitting ? null : _submit,
-                loading: _submitting,
-                fullWidth: true,
-                size: SureButtonSize.lg,
-              ),
+              if (_isEdit) ...[
+                const SizedBox(height: 32),
+                SureButtonPanel(
+                  key: const ValueKey('tradeDelete'),
+                  label: l.accountActionsDeleteTrade,
+                  destructive: true,
+                  onPressed: _submitting ? null : _delete,
+                ),
+              ],
             ],
           ),
         ),
@@ -492,6 +509,7 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
   }
 
   Widget _securityField(AppLocalizations l) {
+    final palette = SureColors.of(context).palette;
     return RawAutocomplete<TradeSecurity>(
       textEditingController: _tickerController,
       focusNode: _tickerFocus,
@@ -501,11 +519,11 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
           : _securities.where((s) => s.matches(value.text)).take(8),
       onSelected: (s) => setState(() => _selectedSecurity = s),
       fieldViewBuilder: (context, controller, focusNode, onSubmitted) =>
-          SureTextField(
-        key: const ValueKey('tradeTicker'),
+          FormSheetFieldRow(
+        fieldKey: const ValueKey('tradeTicker'),
+        label: l.accountActionsSecurity,
         controller: controller,
         focusNode: focusNode,
-        label: l.accountActionsSecurity,
         hint: l.accountActionsSecurityHint,
         textCapitalization: TextCapitalization.characters,
         validator: (v) => v == null || v.trim().isEmpty
@@ -514,20 +532,22 @@ class _TradeFormScreenState extends State<TradeFormScreen> {
         onFieldSubmitted: (_) => onSubmitted(),
       ),
       optionsViewBuilder: (context, onSelected, options) => Align(
-        alignment: Alignment.topLeft,
+        alignment: AlignmentDirectional.topEnd,
         child: Material(
+          color: palette.container,
           elevation: 4,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+          clipBehavior: Clip.antiAlias,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 280, maxWidth: 360),
+            constraints: const BoxConstraints(maxHeight: 280, maxWidth: 320),
             child: ListView(
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               children: [
                 for (final option in options)
-                  ListTile(
-                    title: Text(option.ticker),
-                    subtitle: option.name == null ? null : Text(option.name!),
+                  SureListRow(
+                    title: option.ticker,
+                    subtitle: option.name,
                     onTap: () => onSelected(option),
                   ),
               ],

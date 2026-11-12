@@ -31,19 +31,13 @@ class AccountActionsMenu extends StatelessWidget {
       (account.accountType == 'crypto' && account.subtype != 'wallet');
 
   Future<void> _select(BuildContext context, _AccountAction action) async {
-    final navigator = Navigator.of(context);
     final bool changed;
     switch (action) {
       case _AccountAction.updateBalance:
-        changed = await navigator.push<bool>(MaterialPageRoute(
-              builder: (_) => UpdateBalanceScreen(account: account),
-            )) ==
-            true;
+        changed =
+            await showUpdateBalanceSheet(context, account: account) == true;
       case _AccountAction.addTrade:
-        changed = await navigator.push<bool>(MaterialPageRoute(
-              builder: (_) => TradeFormScreen(account: account),
-            )) ==
-            true;
+        changed = await showTradeFormSheet(context, account: account) == true;
       case _AccountAction.syncNow:
         changed = await showSyncNowDialog(context);
     }

@@ -9,11 +9,31 @@ import '../providers/privacy_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../services/log_service.dart';
 import '../services/connectivity_service.dart';
+import '../theme/sure_colors.dart';
+import '../theme/sure_tokens.dart';
 import '../utils/amount_parser.dart';
-import '../utils/money_masker.dart';
-import '../widgets/sure_segmented_control.dart';
+import '../widgets/category_picker_sheet.dart';
+import '../widgets/ds/ds.dart';
 import '../l10n/app_localizations.dart';
+import 'form_sheet_fields.dart';
 
+/// Opens [TransactionFormScreen] for [account] as a Sure sheet. Resolves
+/// `true` when the transaction was created (online or saved for sync);
+/// otherwise null.
+Future<bool?> showTransactionFormSheet(
+  BuildContext context, {
+  required Account account,
+}) {
+  return showSureSheet<bool>(
+    context: context,
+    builder: (_) => TransactionFormScreen(account: account),
+  );
+}
+
+/// The new-transaction form as sheet content: "Cancel · New transaction ·
+/// Add", Expense | Income, a large amount field focused on open, the account
+/// under it, then Name, Category and Date rows. Pops `true` once the
+/// transaction is created. Open it with [showTransactionFormSheet].
 class TransactionFormScreen extends StatefulWidget {
   final Account account;
 
@@ -24,25 +44,22 @@ class TransactionFormScreen extends StatefulWidget {
 }
 
 class _TransactionFormScreenState extends State<TransactionFormScreen> {
+  /// Sent when the name is left empty, as the old form's default name.
+  static const _defaultName = 'SureApp';
+
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
-  final _dateController = TextEditingController();
   final _nameController = TextEditingController();
   final _log = LogService.instance;
 
   String _nature = 'expense';
-  bool _showMoreFields = false;
+  DateTime _date = DateUtils.dateOnly(DateTime.now());
   bool _isSubmitting = false;
   models.Category? _selectedCategory;
 
   @override
   void initState() {
     super.initState();
-    // Set default values
-    final now = DateTime.now();
-    final formattedDate = DateFormat('yyyy/MM/dd').format(now);
-    _dateController.text = formattedDate;
-    _nameController.text = 'SureApp';
     _fetchCategories();
   }
 
@@ -61,7 +78,6 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   @override
   void dispose() {
     _amountController.dispose();
-    _dateController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -94,16 +110,30 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _date,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
 
     if (picked != null && mounted) {
-      setState(() {
-        _dateController.text = DateFormat('yyyy/MM/dd').format(picked);
-      });
+      setState(() => _date = DateUtils.dateOnly(picked));
     }
+  }
+
+  Future<void> _selectCategory() async {
+    final provider = context.read<CategoriesProvider>();
+    final picked = await CategoryPickerSheet.show(
+      context,
+      categories: provider.categories,
+      selectedId: _selectedCategory?.id,
+      loading: provider.isLoading,
+    );
+    if (picked == null || !mounted) return;
+    final categories = context.read<CategoriesProvider>().categories;
+    setState(() {
+      _selectedCategory =
+          categories.where((c) => c.id == picked.id).firstOrNull;
+    });
   }
 
   Future<void> _handleSubmit() async {
@@ -118,6 +148,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     _log.info('TransactionForm', 'Starting transaction creation...');
 
     final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -136,7 +167,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l.transactionFormSessionExpired),
-              backgroundColor: Colors.red,
+              backgroundColor: palette.destructive,
             ),
           );
           await authProvider.logout();
@@ -144,9 +175,8 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
         return;
       }
 
-      // Convert date format from yyyy/MM/dd to yyyy-MM-dd
-      final parsedDate = DateFormat('yyyy/MM/dd').parse(_dateController.text);
-      final apiDate = DateFormat('yyyy-MM-dd').format(parsedDate);
+      final apiDate = DateFormat('yyyy-MM-dd').format(_date);
+      final name = _nameController.text.trim();
       final canonicalAmount = AmountParser.canonicalize(
         _amountController.text,
         locale: _currentLocaleName(),
@@ -161,7 +191,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       final success = await transactionsProvider.createTransaction(
         accessToken: accessToken,
         accountId: widget.account.id,
-        name: _nameController.text.trim(),
+        name: name.isEmpty ? _defaultName : name,
         date: apiDate,
         amount: canonicalAmount,
         currency: widget.account.currency,
@@ -192,7 +222,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                     ? l.transactionFormCreateSuccessOnline
                     : l.transactionFormCreateSuccessOffline,
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: palette.success,
             ),
           );
           Navigator.pop(context, true); // Return true to indicate success
@@ -201,7 +231,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l.transactionFormCreateFailed),
-              backgroundColor: Colors.red,
+              backgroundColor: palette.destructive,
             ),
           );
         }
@@ -215,7 +245,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l.transactionFormGenericError(e.toString())),
-            backgroundColor: Colors.red,
+            backgroundColor: palette.destructive,
           ),
         );
       }
@@ -228,290 +258,151 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
-    final hideAmounts = context.watch<PrivacyProvider>().hidden;
+    final palette = SureColors.of(context).palette;
+    final hidden = context.watch<PrivacyProvider>().hidden;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) {
-          return Column(
+    return SureSheet(
+      title: l.ds3fNewTransaction,
+      actionLabel: l.ds3fAdd,
+      actionKey: const ValueKey('transactionFormAdd'),
+      onAction: _handleSubmit,
+      busy: _isSubmitting,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l.transactionFormNewTitle,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              // Form content
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: EdgeInsets.only(
-                    left: 24,
-                    right: 24,
-                    top: 16,
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              SureSegmentedControl<String>(
+                selected: _nature,
+                onChanged: (value) => setState(() => _nature = value),
+                segments: [
+                  SureSegment<String>(
+                    value: 'expense',
+                    label: l.transactionFormTypeExpense,
                   ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Account info card
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.account_balance_wallet,
-                                  color: colorScheme.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.account.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${MoneyMasker.mask(widget.account.balance, hidden: hideAmounts)} ${widget.account.currency}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color:
-                                                  colorScheme.onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Transaction type selection
-                        Text(
-                          l.transactionFormTypeLabel,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        SureSegmentedControl<String>(
-                          selected: _nature,
-                          onChanged: (value) {
-                            setState(() {
-                              _nature = value;
-                            });
-                          },
-                          segments: [
-                            SureSegment<String>(
-                              value: 'expense',
-                              label: l.transactionFormTypeExpense,
-                              icon: const Icon(Icons.arrow_downward),
-                            ),
-                            SureSegment<String>(
-                              value: 'income',
-                              label: l.transactionFormTypeIncome,
-                              icon: const Icon(Icons.arrow_upward),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Amount field
-                        TextFormField(
-                          controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: '${l.transactionFormAmountLabel} *',
-                            prefixIcon: const Icon(Icons.attach_money),
-                            suffixText: widget.account.currency,
-                            helperText: l.transactionFormAmountHelper,
-                          ),
-                          validator: _validateAmount,
-                        ),
-                        const SizedBox(height: 24),
-
-                        // More button
-                        TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _showMoreFields = !_showMoreFields;
-                            });
-                          },
-                          icon: Icon(
-                            _showMoreFields
-                                ? Icons.expand_less
-                                : Icons.expand_more,
-                          ),
-                          label: Text(
-                            _showMoreFields
-                                ? l.transactionFormLess
-                                : l.transactionFormMore,
-                          ),
-                        ),
-
-                        // Optional fields (shown when More is clicked)
-                        if (_showMoreFields) ...[
-                          const SizedBox(height: 16),
-
-                          // Date field
-                          TextFormField(
-                            controller: _dateController,
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              labelText: l.transactionFormDateLabel,
-                              prefixIcon: const Icon(Icons.calendar_today),
-                              helperText: l.transactionFormDateHelper,
-                            ),
-                            onTap: _selectDate,
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Name field
-                          TextFormField(
-                            controller: _nameController,
-                            decoration: InputDecoration(
-                              labelText: l.transactionFormNameLabel,
-                              prefixIcon: const Icon(Icons.label),
-                              helperText: l.transactionFormNameHelper,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Category picker
-                          Consumer<CategoriesProvider>(
-                            builder: (context, categoriesProvider, _) {
-                              if (categoriesProvider.isLoading) {
-                                return InputDecorator(
-                                  decoration: InputDecoration(
-                                    labelText: l.transactionFormCategoryLabel,
-                                    prefixIcon: const Icon(Icons.category),
-                                  ),
-                                  child: Text(
-                                    l.transactionFormCategoryLoading,
-                                  ),
-                                );
-                              }
-
-                              final categories = categoriesProvider.categories;
-
-                              return DropdownButtonFormField<String?>(
-                                value: _selectedCategory?.id,
-                                decoration: InputDecoration(
-                                  labelText: l.transactionFormCategoryLabel,
-                                  prefixIcon: const Icon(Icons.category),
-                                  helperText: l.transactionFormCategoryHelper,
-                                ),
-                                isExpanded: true,
-                                items: [
-                                  DropdownMenuItem<String?>(
-                                    value: null,
-                                    child: Text(l.transactionFormNoCategory),
-                                  ),
-                                  ...categories.map((category) {
-                                    return DropdownMenuItem<String?>(
-                                      value: category.id,
-                                      child: Text(category.displayName),
-                                    );
-                                  }),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    if (value == null) {
-                                      _selectedCategory = null;
-                                    } else {
-                                      _selectedCategory = categories.firstWhere(
-                                        (c) => c.id == value,
-                                      );
-                                    }
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                        ],
-
-                        const SizedBox(height: 32),
-
-                        // Submit button
-                        ElevatedButton(
-                          onPressed: _isSubmitting ? null : _handleSubmit,
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(l.transactionFormCreateButton),
-                        ),
-                      ],
-                    ),
+                  SureSegment<String>(
+                    value: 'income',
+                    label: l.transactionFormTypeIncome,
                   ),
-                ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              FormSheetAmountField(
+                key: const ValueKey('transactionFormAmount'),
+                controller: _amountController,
+                validator: _validateAmount,
+                suffix: widget.account.currency,
+                obscure: hidden,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.account.name,
+                key: const ValueKey('transactionFormAccount'),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: palette.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              SurePanel.rows(
+                children: [
+                  FormSheetFieldRow(
+                    fieldKey: const ValueKey('transactionFormName'),
+                    label: l.transactionFormNameLabel,
+                    controller: _nameController,
+                    hint: _defaultName,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.done,
+                  ),
+                  _categoryRow(l, palette),
+                  SureListRow(
+                    key: const ValueKey('transactionFormDate'),
+                    title: l.transactionFormDateLabel,
+                    value: SureDates.relativeDayOf(context, _date),
+                    showChevron: true,
+                    onTap: _isSubmitting ? null : _selectDate,
+                  ),
+                ],
               ),
             ],
-          );
-        },
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _categoryRow(AppLocalizations l, SureTokenPalette palette) {
+    final categories = context.watch<CategoriesProvider>();
+    final category = _selectedCategory;
+    final Widget value;
+    if (category != null) {
+      value = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SureCategoryIcon(
+            name: category.name,
+            color: category.color,
+            icon: category.icon,
+            size: SureCategoryIcon.dotSize,
+          ),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.sizeOf(context).width * 0.4,
+            ),
+            child: Text(
+              category.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 15, color: palette.textSecondary),
+            ),
+          ),
+          SizedBox.square(
+            dimension: 32,
+            child: IconButton(
+              key: const ValueKey('transactionFormClearCategory'),
+              padding: EdgeInsets.zero,
+              tooltip: l.ds3fClearCategory,
+              onPressed: _isSubmitting
+                  ? null
+                  : () => setState(() => _selectedCategory = null),
+              icon: SureIcon(SureIcons.x, size: 16, color: palette.textSubdued),
+            ),
+          ),
+        ],
+      );
+    } else {
+      value = Text(
+        categories.isLoading
+            ? l.transactionFormCategoryLoading
+            : l.transactionFormNoCategory,
+        style: TextStyle(fontSize: 15, color: palette.textSubdued),
+      );
+    }
+
+    return SureListRow(
+      key: const ValueKey('transactionFormCategory'),
+      title: l.transactionFormCategoryLabel,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          value,
+          const SizedBox(width: 4),
+          SureIcon(
+            SureIcons.chevronRight,
+            size: 18,
+            color: palette.textSubdued,
+          ),
+        ],
+      ),
+      onTap: _isSubmitting ? null : _selectCategory,
     );
   }
 }

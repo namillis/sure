@@ -41,13 +41,13 @@ final _account = Account(
   accountType: 'investment',
 );
 
-Future<void> _pump(WidgetTester tester, Widget home) {
+Future<void> _pump(WidgetTester tester, Widget home, {bool hidden = false}) {
   return tester.pumpWidget(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>(create: (_) => _FakeAuthProvider()),
         ChangeNotifierProvider<PrivacyProvider>(
-          create: (_) => PrivacyProvider(initialHidden: false),
+          create: (_) => PrivacyProvider(initialHidden: hidden),
         ),
       ],
       child: MaterialApp(
@@ -64,6 +64,42 @@ Future<void> _pump(WidgetTester tester, Widget home) {
       ),
     ),
   );
+}
+
+/// What a sheet opened by [_openSheet] resolved to.
+class _SheetResult {
+  bool closed = false;
+  bool? value;
+}
+
+/// Pumps a page with a button that opens a sheet with [open], taps it and
+/// waits for the sheet. The returned holder fills in once the sheet closes.
+Future<_SheetResult> _openSheet(
+  WidgetTester tester,
+  Future<bool?> Function(BuildContext context) open, {
+  bool hidden = false,
+}) async {
+  final result = _SheetResult();
+  await _pump(
+    tester,
+    Scaffold(
+      body: Builder(
+        builder: (context) => Center(
+          child: TextButton(
+            onPressed: () async {
+              result.value = await open(context);
+              result.closed = true;
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    ),
+    hidden: hidden,
+  );
+  await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+  return result;
 }
 
 TradesService _securitiesOnly() => TradesService(
@@ -88,10 +124,21 @@ void main() {
           return http.Response('{"id":"val_1"}', 201);
         }),
       );
-      await _pump(
+      await _openSheet(
         tester,
-        UpdateBalanceScreen(account: _account, valuationsService: service),
+        (context) => showUpdateBalanceSheet(context,
+            account: _account, valuationsService: service),
       );
+
+      // The toolbar shows Cancel, the title and Save; the amount field is
+      // focused on open.
+      expect(find.text(l.dsCancel), findsOneWidget);
+      expect(find.text(l.accountActionsUpdateBalance), findsOneWidget);
+      final amount = tester.widget<EditableText>(find.descendant(
+        of: find.byKey(const ValueKey('updateBalanceAmount')),
+        matching: find.byType(EditableText),
+      ));
+      expect(amount.focusNode.hasFocus, isTrue);
 
       await tester.tap(find.text(l.accountActionsSave));
       await tester.pumpAndSettle();
@@ -121,9 +168,10 @@ void main() {
               422,
             )),
       );
-      await _pump(
+      await _openSheet(
         tester,
-        UpdateBalanceScreen(account: _account, valuationsService: service),
+        (context) => showUpdateBalanceSheet(context,
+            account: _account, valuationsService: service),
       );
 
       await tester.enterText(
@@ -133,6 +181,76 @@ void main() {
       expect(find.text('Valuation could not be created: Balance is locked'),
           findsOneWidget);
     });
+
+    testWidgets('resolves true to the caller once saved', (tester) async {
+      final service = ValuationsService(
+        client: MockClient((_) async => http.Response('{"id":"val_1"}', 201)),
+      );
+      final result = await _openSheet(
+        tester,
+        (context) => showUpdateBalanceSheet(context,
+            account: _account, valuationsService: service),
+      );
+
+      await tester.enterText(
+          find.byKey(const ValueKey('updateBalanceAmount')), '-25');
+      await tester.tap(find.byKey(const ValueKey('updateBalanceSave')));
+      await tester.pumpAndSettle();
+      expect(result.closed, isTrue);
+      expect(result.value, isTrue);
+      expect(find.byType(UpdateBalanceScreen), findsNothing);
+    });
+
+    testWidgets('Cancel closes with no result', (tester) async {
+      final result = await _openSheet(
+        tester,
+        (context) => showUpdateBalanceSheet(context, account: _account),
+      );
+      await tester.tap(find.text(l.dsCancel));
+      await tester.pumpAndSettle();
+      expect(result.closed, isTrue);
+      expect(result.value, isNull);
+    });
+
+    testWidgets('shows the current balance and the As of date',
+        (tester) async {
+      await _openSheet(
+        tester,
+        (context) => showUpdateBalanceSheet(context, account: _account),
+      );
+      String was() => tester
+          .widget<Text>(find.byKey(const ValueKey('updateBalanceWas')))
+          .textSpan!
+          .toPlainText();
+      expect(was(), r'Was $10,000.00');
+      expect(find.text(l.ds3fAsOf), findsOneWidget);
+      expect(find.text(l.dsToday), findsOneWidget);
+    });
+
+    testWidgets('masks the current balance in privacy mode', (tester) async {
+      await _openSheet(
+        tester,
+        (context) => showUpdateBalanceSheet(context, account: _account),
+        hidden: true,
+      );
+      final was = tester
+          .widget<Text>(find.byKey(const ValueKey('updateBalanceWas')))
+          .textSpan!
+          .toPlainText();
+      expect(was, startsWith('Was '));
+      expect(was, isNot(contains('10,000')));
+    });
+
+    testWidgets('fits a 320 px screen', (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await _openSheet(
+        tester,
+        (context) => showUpdateBalanceSheet(context, account: _account),
+      );
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('TradeFormScreen', () {
@@ -141,12 +259,14 @@ void main() {
       tester.view.physicalSize = const Size(800, 1600);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await _pump(
+      await _openSheet(
         tester,
-        TradeFormScreen(account: _account, tradesService: _securitiesOnly()),
+        (context) => showTradeFormSheet(context,
+            account: _account, tradesService: _securitiesOnly()),
       );
-      await tester.pumpAndSettle();
 
+      expect(find.text(l.accountActionsAddTrade), findsOneWidget);
+      expect(find.byKey(const ValueKey('tradeDelete')), findsNothing);
       await tester.tap(find.text(l.accountActionsSave));
       await tester.pumpAndSettle();
       expect(find.text(l.accountActionsSecurityRequired), findsOneWidget);
@@ -161,11 +281,11 @@ void main() {
     });
 
     testWidgets('shows a live total for buys and sells', (tester) async {
-      await _pump(
+      await _openSheet(
         tester,
-        TradeFormScreen(account: _account, tradesService: _securitiesOnly()),
+        (context) => showTradeFormSheet(context,
+            account: _account, tradesService: _securitiesOnly()),
       );
-      await tester.pumpAndSettle();
       String total() =>
           tester.widget<Text>(find.byKey(const ValueKey('tradeTotal'))).data!;
 
@@ -214,12 +334,16 @@ void main() {
         activityLabel: 'Sell',
         ticker: 'AAPL',
       );
-      await _pump(
+      final result = await _openSheet(
         tester,
-        TradeFormScreen(account: _account, trade: trade, tradesService: service),
+        (context) => showTradeFormSheet(context,
+            account: _account, trade: trade, tradesService: service),
       );
 
+      expect(find.text(l.accountActionsEditTrade), findsOneWidget);
       expect(find.text('AAPL'), findsOneWidget);
+      expect(find.text(l.accountActionsEditTradeNote), findsOneWidget);
+      expect(find.byKey(const ValueKey('tradeDelete')), findsOneWidget);
       expect(find.byKey(const ValueKey('tradeFee')), findsNothing);
       expect(find.text(l.accountActionsTotalProceeds), findsOneWidget);
       expect(
@@ -238,6 +362,55 @@ void main() {
           'price': '150',
         },
       });
+      expect(result.value, isTrue);
+    });
+
+    testWidgets('edit mode deletes after the confirm', (tester) async {
+      String? method;
+      final service = TradesService(
+        client: MockClient((request) async {
+          method = request.method;
+          return http.Response('{"message":"Trade deleted"}', 200);
+        }),
+      );
+      final trade = AccountTrade(
+        id: 'trade_1',
+        date: DateTime(2026, 11, 1),
+        name: 'Buy 2 shares of AAPL',
+        amount: r'$300.00',
+        currency: 'USD',
+        quantity: '2.0',
+        price: r'$150.00',
+        activityLabel: 'Buy',
+        ticker: 'AAPL',
+      );
+      final result = await _openSheet(
+        tester,
+        (context) => openTradeEditor(context,
+            account: _account, trade: trade, tradesService: service),
+      );
+
+      await tester.ensureVisible(find.byKey(const ValueKey('tradeDelete')));
+      await tester.tap(find.text(l.accountActionsDeleteTrade));
+      await tester.pumpAndSettle();
+      expect(find.text(l.accountActionsDeleteTradeConfirm), findsOneWidget);
+      await tester.tap(find.text(l.commonDelete));
+      await tester.pumpAndSettle();
+      expect(method, 'DELETE');
+      expect(result.value, isTrue);
+      expect(find.byType(TradeFormScreen), findsNothing);
+    });
+
+    testWidgets('fits a 320 px screen', (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await _openSheet(
+        tester,
+        (context) => showTradeFormSheet(context,
+            account: _account, tradesService: _securitiesOnly()),
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 

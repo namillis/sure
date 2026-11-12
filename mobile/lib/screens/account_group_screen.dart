@@ -158,12 +158,7 @@ class _AccountGroupScreenState extends State<AccountGroupScreen> {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
     final messenger = ScaffoldMessenger.of(context);
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => TransactionFormScreen(account: account),
-    );
+    final result = await showTransactionFormSheet(context, account: account);
     if (result != true || !mounted) return;
 
     messenger.showSnackBar(

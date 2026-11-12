@@ -463,12 +463,7 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
   }
 
   void _showAddTransactionForm() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => TransactionFormScreen(account: widget.account),
-    ).then((_) {
+    showTransactionFormSheet(context, account: widget.account).then((_) {
       if (mounted) {
         _loadTransactions();
       }
