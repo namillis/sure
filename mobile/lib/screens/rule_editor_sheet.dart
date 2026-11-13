@@ -243,7 +243,7 @@ class _ActionDraft {
   String splitMode = 'percentage';
 
   void _loadSplit() {
-    splitRows = RuleSplitRow.parseValue(value);
+    splitRows = List.of(RuleSplitRow.parseValue(value));
     if (splitRows.isNotEmpty && splitRows.every((r) => r.isFixed)) {
       splitMode = 'fixed';
     }
@@ -378,9 +378,16 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     ];
   }
 
+  /// The type "Add action" starts with: never a split next to other
+  /// actions.
+  String get _nextActionType => _offeredActions.firstWhere(
+      (key) => _catalog.action(key)?.input != RuleValueInput.split,
+      orElse: () => _offeredActions.first);
+
   /// A split must be the rule's only action (`Rule#split_is_only_action`).
   bool get _canAddAction =>
-      _offeredActions.isNotEmpty &&
+      _offeredActions.any(
+          (key) => _catalog.action(key)?.input != RuleValueInput.split) &&
       !_actions.any((a) => a.type == 'split_transaction');
 
   _ActionDraft? get _splitDraft =>
@@ -448,10 +455,13 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
   double _splitTotal(_ActionDraft split) => split.splitRows
       .fold(0.0, (sum, r) => sum + (double.tryParse(r.share) ?? 0));
 
-  String _formatShare(double value) {
+  /// An amount with 2 decimals, or a percentage with up to 2.
+  String _formatShare(double value, {bool percent = false}) {
     final locale = Localizations.localeOf(context).toString();
-    return NumberFormat.decimalPatternDigits(locale: locale, decimalDigits: 2)
-        .format(value);
+    final format = percent
+        ? (NumberFormat.decimalPattern(locale)..maximumFractionDigits = 2)
+        : NumberFormat.decimalPatternDigits(locale: locale, decimalDigits: 2);
+    return format.format(value);
   }
 
   Future<void> _save() async {
@@ -996,7 +1006,7 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     final exact = percentage ? null : _exactAmount();
     final problem = _splitProblem(l, split);
     final totalText = percentage
-        ? l.sr2SplitTotalPercent(_formatShare(total))
+        ? l.sr2SplitTotalPercent(_formatShare(total, percent: true))
         : exact == null
             ? l.sr2SplitTotalAmount(_formatShare(total))
             : l.sr2SplitTotalOf(_formatShare(total), _formatShare(exact));
@@ -1062,7 +1072,7 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     final shareText = share == null
         ? row.share
         : split.splitMode == 'percentage'
-            ? '${_formatShare(share)}%'
+            ? '${_formatShare(share, percent: true)}%'
             : _formatShare(share);
     final details = [
       _optionLabel('category', row.categoryId),
@@ -1194,8 +1204,8 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
                   _AddRow(
                     key: const ValueKey('ruleAddAction'),
                     label: l.sprRuleAddAction,
-                    onTap: () => _edit(() => _actions.add(
-                        _ActionDraft(_catalog, type: _offeredActions.first))),
+                    onTap: () => _edit(() => _actions
+                        .add(_ActionDraft(_catalog, type: _nextActionType))),
                   ),
               ],
             ),
