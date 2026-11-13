@@ -842,6 +842,7 @@ Rails.application.routes.draw do
       resources :budget_categories, only: :update, controller: :budget_category_writes
       resources :categories, only: [ :index, :show, :create, :update, :destroy ]
       resources :goals, only: [ :index, :show, :create, :update, :destroy ] do
+        get :summary, on: :collection
         member do
           %i[pause resume complete archive unarchive reopen].each { |event| patch event, to: "goal_actions##{event}" }
           post :consume, to: "goal_actions#consume"

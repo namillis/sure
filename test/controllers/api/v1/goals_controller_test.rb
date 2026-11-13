@@ -263,6 +263,51 @@ class Api::V1::GoalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Goal deleted successfully", response.parsed_body["message"]
   end
 
+  test "summary returns the goals index KPI figures and the active totals" do
+    get summary_api_v1_goals_url, headers: api_headers(@read_only_api_key)
+
+    assert_response :success
+    body = response.parsed_body
+    active_goals = Goal.active_prepared_for(@user.family)
+    kpi = Goal::KpiSummary.new(@user.family, active_goals).to_h
+    totals = Goal.summary_for(active_goals, currency: "USD")
+
+    assert_equal "USD", body["currency"]
+    assert_equal 3, body["active_total"]
+    assert_equal 1, body["paused_count"]
+    %w[on_track_count tracked_total reached_count behind_count no_date_count].each do |key|
+      assert_equal kpi[key.to_sym], body[key], key
+    end
+    assert_equal money_cents(kpi[:velocity_30d_signed_money]), body["velocity_30d_cents"]
+    assert_equal money_cents(kpi[:velocity_prior_30d_signed_money]), body["velocity_prior_30d_cents"]
+    assert_equal kpi[:velocity_direction].to_s, body["velocity_direction"]
+    assert_equal money_cents(kpi[:needs_this_month_money]), body["needs_this_month_cents"]
+    assert_equal money_cents(totals[:saved_money]), body["saved_cents"]
+    assert_equal 2_300_000, body["target_cents"]
+    assert_equal 1, body["pending_pledges_count"]
+  end
+
+  test "summary leaves out completed and archived goals" do
+    goals(:emergency_fund).complete!
+    goals(:car_paydown).archive!
+
+    get summary_api_v1_goals_url, headers: api_headers(@api_key)
+
+    assert_response :success
+    assert_equal 1, response.parsed_body["active_total"]
+    assert_equal 500_000, response.parsed_body["target_cents"]
+  end
+
+  test "summary requires authentication and preview features" do
+    get summary_api_v1_goals_url
+    assert_response :unauthorized
+
+    @user.update!(preferences: @user.preferences.merge("preview_features_enabled" => false))
+    get summary_api_v1_goals_url, headers: api_headers(@api_key)
+    assert_response :forbidden
+    assert_equal "feature_disabled", response.parsed_body["error"]
+  end
+
   private
     def member_private_account
       Account.create!(

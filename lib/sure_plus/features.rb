@@ -12,6 +12,7 @@ module SurePlus
       goals
       goals.lifecycle
       goals.pledges
+      goals.summary
       holdings.stable_order
       merchants.write
       profile.write

@@ -215,6 +215,61 @@ RSpec.describe "API V1 Goals", type: :request do
     end
   end
 
+  path "/api/v1/goals/summary" do
+    get "Goals summary" do
+      tags "Goals"
+      description "The figures the web goals index shows in its KPI header, over active and paused goals (completed and " \
+                  "archived are left out), plus the Plan hub's saved and target totals. velocity_* is the net inflow into " \
+                  "goal-linked accounts over the last 30 days and the 30 days before, signed. on_track_count is out of " \
+                  "tracked_total, which leaves out paused, reached, reserve and no-target-date goals. saved and target only " \
+                  "include goals in the family currency."
+      security [ { apiKeyAuth: [] } ]
+      produces "application/json"
+
+      response "200", "summary" do
+        schema type: :object,
+               required: %w[currency velocity_30d velocity_30d_cents needs_this_month needs_this_month_cents on_track_count
+                            tracked_total active_total saved saved_cents target target_cents],
+               properties: {
+                 currency: { type: :string },
+                 velocity_30d: money.call("Contributed in the last 30 days (net inflow; negative for a net outflow)"),
+                 velocity_30d_cents: cents,
+                 velocity_prior_30d: money.call("The same figure for the 30 days before"),
+                 velocity_prior_30d_cents: cents,
+                 velocity_delta_percent: { type: :number, nullable: true, description: "Change against the prior 30 days; null when that was zero" },
+                 velocity_direction: { type: :string, enum: %w[up down flat] },
+                 needs_this_month: money.call("Sum of the monthly target of goals behind pace"),
+                 needs_this_month_cents: cents,
+                 on_track_count: { type: :integer },
+                 tracked_total: { type: :integer, description: "Goals with a pace to compare against" },
+                 reached_count: { type: :integer },
+                 behind_count: { type: :integer },
+                 no_date_count: { type: :integer },
+                 paused_count: { type: :integer },
+                 active_total: { type: :integer, description: "Active and paused goals" },
+                 saved: money.call("Total held for the goals"),
+                 saved_cents: cents,
+                 target: money.call("Total of the goals' targets"),
+                 target_cents: cents,
+                 pending_pledges_count: { type: :integer }
+               }
+        run_test!
+      end
+
+      response "401", "unauthorized" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        let(:"X-Api-Key") { nil }
+        run_test!
+      end
+
+      response "403", "preview features disabled" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        before { user.update!(preferences: { "preview_features_enabled" => false }) }
+        run_test!
+      end
+    end
+  end
+
   path "/api/v1/goals/{id}" do
     parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
     let(:id) { goal.id }

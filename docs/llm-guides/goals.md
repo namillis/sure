@@ -270,7 +270,7 @@ state means touching:
 3. `Goals::StatusPillComponent::VARIANTS` to add the chip styling
    (classes + icon).
 4. `Goals::CardComponent#footer_line` if the footer copy depends.
-5. `GoalsController#kpi_payload` if the KPI strip counts it.
+5. `Goal::KpiSummary#to_h` if the KPI strip counts it (web index and `GET /api/v1/goals/summary`).
 6. `config/locales/views/goals/en.yml` under `goals.status.*` for the
    pill label, plus chip and subtitle keys if the new status filters
    on the index.

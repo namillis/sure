@@ -3,7 +3,7 @@
 class Api::V1::GoalsController < Api::V1::BaseController
   STATE_FILTERS = %w[active paused completed archived].freeze
 
-  before_action :ensure_read_scope, only: %i[index show]
+  before_action :ensure_read_scope, only: %i[index show summary]
   before_action :ensure_write_scope, only: %i[create update destroy]
   before_action :require_preview_features_for_api
   before_action :set_goal, only: %i[show update destroy]
@@ -21,6 +21,16 @@ class Api::V1::GoalsController < Api::V1::BaseController
     @accessible_account_ids = accessible_account_ids_for(@goals)
 
     render :index
+  end
+
+  # The goals index KPI strip, plus the Plan hub's saved / target totals.
+  def summary
+    family = current_resource_owner.family
+    active_goals = Goal.active_prepared_for(family)
+    @kpi = Goal::KpiSummary.new(family, active_goals).to_h
+    @totals = Goal.summary_for(active_goals, currency: @kpi[:currency])
+
+    render :summary
   end
 
   def show
