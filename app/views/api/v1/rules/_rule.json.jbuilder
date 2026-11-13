@@ -8,6 +8,14 @@ json.effective_date rule.effective_date&.iso8601
 json.position rule.position
 json.stop_processing rule.stop_processing
 json.rule_group_id rule.rule_group_id
+if rule.rule_group
+  json.rule_group do
+    json.id rule.rule_group.id
+    json.name rule.rule_group.name
+  end
+else
+  json.rule_group nil
+end
 json.conditions rule.conditions.select { |condition| condition.parent_id.nil? } do |condition|
   json.partial! "api/v1/rules/condition", condition: condition
 end

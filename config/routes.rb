@@ -859,8 +859,11 @@ Rails.application.routes.draw do
       end
       resources :merchants, only: [ :index, :show, :create, :update, :destroy ]
       resources :rules, only: [ :index, :show, :create, :update, :destroy ] do
+        patch :reorder, on: :collection
+        post :apply_all, on: :collection
         post :apply, on: :member
       end
+      resources :rule_groups, only: [ :index, :create, :update, :destroy ]
       resources :rule_runs, only: [ :index, :show ]
       resources :securities, only: [ :index, :show ]
       resources :security_prices, only: [ :index, :show, :create ]
