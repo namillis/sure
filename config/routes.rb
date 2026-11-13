@@ -849,6 +849,7 @@ Rails.application.routes.draw do
       resources :merchants, only: [ :index, :show, :create, :update, :destroy ]
       resources :rules, only: [ :index, :show, :create, :update, :destroy ] do
         post :apply, on: :member
+        get :catalog, on: :collection, to: "rule_catalogs#show"
       end
       resources :rule_runs, only: [ :index, :show ]
       resources :securities, only: [ :index, :show ]

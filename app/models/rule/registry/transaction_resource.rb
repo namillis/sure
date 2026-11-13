@@ -30,6 +30,8 @@ class Rule::Registry::TransactionResource < Rule::Registry
     Rule::ActionExecutor::AutoDetectMerchants
   ].freeze
 
+  AI_ACTION_KEYS = %w[auto_categorize auto_detect_merchants].freeze
+
   def self.condition_filter_keys
     CONDITION_FILTER_CLASSES.map(&:key)
   end
@@ -50,6 +52,12 @@ class Rule::Registry::TransactionResource < Rule::Registry
     ACTION_EXECUTOR_CLASSES.filter_map do |executor_class|
       executor_class.new(rule) if offered?(executor_class)
     end
+  end
+
+  # Every action, including AI ones not offered right now; #action_executors
+  # is the subset a new action may pick.
+  def known_action_executors
+    ACTION_EXECUTOR_CLASSES.map { |executor_class| executor_class.new(rule) }
   end
 
   # Single lookups build only the class asked for, once per registry: listing

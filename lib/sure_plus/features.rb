@@ -15,6 +15,7 @@ module SurePlus
       merchants.write
       profile.write
       recurring.category
+      rules.catalog
       rules.write
     ].freeze
   end
