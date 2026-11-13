@@ -1098,5 +1098,16 @@
   "spmPeriodLast365Days": "Senaste 365 dagarna",
   "spmPeriodLast5Years": "Senaste 5 åren",
   "spmPeriodLast10Years": "Senaste 10 åren",
-  "spmPeriodAllTime": "All tid"
+  "spmPeriodAllTime": "All tid",
+  "spbEditTotals": "Ändra totaler",
+  "spbTotalBudget": "Total budget",
+  "spbExpectedIncome": "Förväntad inkomst",
+  "spbSpentThisMonth": "{amount} spenderat den här månaden",
+  "spbSpentInPeriod": "{amount} spenderat",
+  "spbRollover": "För över det som blir kvar",
+  "spbTransactions": "Transaktioner",
+  "spbSharedReadOnly": "Den här budgeten är delad med dig med läsbehörighet.",
+  "spbInvalidAmount": "Ange ett belopp på 0 eller mer.",
+  "spbSaveFailed": "Det gick inte att spara budgeten.",
+  "spbSaved": "Budgeten har sparats"
 }

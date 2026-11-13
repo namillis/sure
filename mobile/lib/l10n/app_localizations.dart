@@ -6643,6 +6643,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All time'**
   String get spmPeriodAllTime;
+
+  /// Link under the budget hero that opens the sheet for the month's total budget and expected income.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit totals'**
+  String get spbEditTotals;
+
+  /// Row label in the Edit totals sheet: the month's total spending budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Total budget'**
+  String get spbTotalBudget;
+
+  /// Row label in the Edit totals sheet: the income expected this month.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected income'**
+  String get spbExpectedIncome;
+
+  /// Line under the amount in the budget category sheet for the current month.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {amount} this month'**
+  String spbSpentThisMonth(String amount);
+
+  /// Line under the amount in the budget category sheet for a past or future month.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {amount}'**
+  String spbSpentInPeriod(String amount);
+
+  /// Switch row in the budget category sheet: carry what is left to next month.
+  ///
+  /// In en, this message translates to:
+  /// **'Roll over unused amount'**
+  String get spbRollover;
+
+  /// Row in the budget category sheet that opens the category's transactions for the month.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get spbTransactions;
+
+  /// Shown when the server refuses a budget change because the budget is shared with the user read-only (403 forbidden).
+  ///
+  /// In en, this message translates to:
+  /// **'This budget is shared with you read-only.'**
+  String get spbSharedReadOnly;
+
+  /// Validation error for a budget amount that is not a number or is negative.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount of 0 or more.'**
+  String get spbInvalidAmount;
+
+  /// Generic error when saving a budget or budget category failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the budget.'**
+  String get spbSaveFailed;
+
+  /// Snackbar after a budget or budget category was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget saved'**
+  String get spbSaved;
 }
 
 class _AppLocalizationsDelegate

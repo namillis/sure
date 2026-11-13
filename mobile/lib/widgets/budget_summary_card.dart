@@ -18,6 +18,7 @@ class BudgetSummaryCard extends StatelessWidget {
     required this.budget,
     required this.hideAmounts,
     this.now,
+    this.onEditTotals,
   });
 
   final Budget budget;
@@ -25,6 +26,9 @@ class BudgetSummaryCard extends StatelessWidget {
 
   /// Today, for the days-left count. Defaults to [DateTime.now].
   final DateTime? now;
+
+  /// Shows an "Edit totals" link under the bar (Sure+ `budgets.write`).
+  final VoidCallback? onEditTotals;
 
   String _money(String? formatted) =>
       MoneyMasker.mask(formatted ?? '--', hidden: hideAmounts);
@@ -107,6 +111,27 @@ class BudgetSummaryCard extends StatelessWidget {
               hidden: hideAmounts,
             ),
           ],
+          if (onEditTotals != null)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                key: const ValueKey('budgetEditTotals'),
+                onPressed: onEditTotals,
+                style: TextButton.styleFrom(
+                  foregroundColor: palette.link,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 36),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                ),
+                child: Text(
+                  l.spbEditTotals,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: SureTokens.weightMedium,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

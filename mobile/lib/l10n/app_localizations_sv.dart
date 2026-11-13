@@ -3923,4 +3923,42 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get spmPeriodAllTime => 'All tid';
+
+  @override
+  String get spbEditTotals => 'Ändra totaler';
+
+  @override
+  String get spbTotalBudget => 'Total budget';
+
+  @override
+  String get spbExpectedIncome => 'Förväntad inkomst';
+
+  @override
+  String spbSpentThisMonth(String amount) {
+    return '$amount spenderat den här månaden';
+  }
+
+  @override
+  String spbSpentInPeriod(String amount) {
+    return '$amount spenderat';
+  }
+
+  @override
+  String get spbRollover => 'För över det som blir kvar';
+
+  @override
+  String get spbTransactions => 'Transaktioner';
+
+  @override
+  String get spbSharedReadOnly =>
+      'Den här budgeten är delad med dig med läsbehörighet.';
+
+  @override
+  String get spbInvalidAmount => 'Ange ett belopp på 0 eller mer.';
+
+  @override
+  String get spbSaveFailed => 'Det gick inte att spara budgeten.';
+
+  @override
+  String get spbSaved => 'Budgeten har sparats';
 }

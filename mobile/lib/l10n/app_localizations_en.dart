@@ -3890,4 +3890,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spmPeriodAllTime => 'All time';
+
+  @override
+  String get spbEditTotals => 'Edit totals';
+
+  @override
+  String get spbTotalBudget => 'Total budget';
+
+  @override
+  String get spbExpectedIncome => 'Expected income';
+
+  @override
+  String spbSpentThisMonth(String amount) {
+    return 'Spent $amount this month';
+  }
+
+  @override
+  String spbSpentInPeriod(String amount) {
+    return 'Spent $amount';
+  }
+
+  @override
+  String get spbRollover => 'Roll over unused amount';
+
+  @override
+  String get spbTransactions => 'Transactions';
+
+  @override
+  String get spbSharedReadOnly => 'This budget is shared with you read-only.';
+
+  @override
+  String get spbInvalidAmount => 'Enter an amount of 0 or more.';
+
+  @override
+  String get spbSaveFailed => 'Couldn\'t save the budget.';
+
+  @override
+  String get spbSaved => 'Budget saved';
 }
