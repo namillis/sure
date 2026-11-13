@@ -6643,6 +6643,516 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All time'**
   String get spmPeriodAllTime;
+
+  /// Goals list section header for active goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Active · {count}'**
+  String spgSectionActive(int count);
+
+  /// Collapsed goals row for paused goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused · {count}'**
+  String spgSectionPaused(int count);
+
+  /// Collapsed goals row for completed goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed · {count}'**
+  String spgSectionCompleted(int count);
+
+  /// Collapsed goals row for archived goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived · {count}'**
+  String spgSectionArchived(int count);
+
+  /// Title of the new goal sheet and label of the + button.
+  ///
+  /// In en, this message translates to:
+  /// **'New goal'**
+  String get spgNewGoal;
+
+  /// Title of the edit goal sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goal'**
+  String get spgEditGoal;
+
+  /// Action of the new goal sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get spgCreate;
+
+  /// Goals empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No goals yet'**
+  String get spgEmptyTitle;
+
+  /// Goals empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a target, link the accounts you save into, and watch your progress add up.'**
+  String get spgEmptyBody;
+
+  /// Goals empty state button.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first goal'**
+  String get spgCreateFirst;
+
+  /// Shown when the server answers 403 feature_disabled for goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals are a preview feature'**
+  String get spgPreviewTitle;
+
+  /// Body of the goals preview-feature empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals need preview features, which are turned off for your account.'**
+  String get spgPreviewBody;
+
+  /// Button opening the web preferences to turn on preview features.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on preview features on the web'**
+  String get spgPreviewAction;
+
+  /// Goals load error.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your goals'**
+  String get spgLoadFailed;
+
+  /// Goal card due date, e.g. Due Apr 2027.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String spgDue(String date);
+
+  /// A goal without a target date.
+  ///
+  /// In en, this message translates to:
+  /// **'No date'**
+  String get spgNoDate;
+
+  /// Goal card sub line for a reserve (maintained goal), which has no date.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve'**
+  String get spgReserve;
+
+  /// A goal whose target date has passed.
+  ///
+  /// In en, this message translates to:
+  /// **'Past due'**
+  String get spgPastDue;
+
+  /// Days until a goal's target date.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day left} other{{count} days left}}'**
+  String spgDaysLeft(int count);
+
+  /// Months until a goal's target date.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 month left} other{{count} months left}}'**
+  String spgMonthsLeft(int count);
+
+  /// Goal card progress amounts, e.g. $3,100 of $5,000.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {target}'**
+  String spgAmountOf(String current, String target);
+
+  /// Goal behind pace: extra per month needed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {amount}/mo to catch up'**
+  String spgCatchUp(String amount);
+
+  /// Chip on a goal card with open pledges.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 pending pledge} other{{count} pending pledges}}'**
+  String spgPendingPledges(int count);
+
+  /// Goal status.
+  ///
+  /// In en, this message translates to:
+  /// **'On track'**
+  String get spgStatusOnTrack;
+
+  /// Goal status.
+  ///
+  /// In en, this message translates to:
+  /// **'Behind'**
+  String get spgStatusBehind;
+
+  /// Goal status.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached'**
+  String get spgStatusReached;
+
+  /// Goal status for a goal without a target date.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get spgStatusOpen;
+
+  /// Goal status for a reserve at its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve intact'**
+  String get spgStatusFunded;
+
+  /// Goal status for a reserve below its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs topping up'**
+  String get spgStatusDepleted;
+
+  /// Goal status.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get spgStatusPaused;
+
+  /// Goal status.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get spgStatusCompleted;
+
+  /// Goal status.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get spgStatusArchived;
+
+  /// Goal detail hero under the amount.
+  ///
+  /// In en, this message translates to:
+  /// **'of {target}'**
+  String spgOfTarget(String target);
+
+  /// Goal detail hero under the amount, with the target date.
+  ///
+  /// In en, this message translates to:
+  /// **'of {target} · due {date}'**
+  String spgOfTargetDue(String target, String date);
+
+  /// Button and sheet title for recording a pledge on a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'I saved toward this'**
+  String get spgSavedToward;
+
+  /// Action of the pledge sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get spgPledgeRecord;
+
+  /// Pledge sheet account row.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get spgPledgeFrom;
+
+  /// Note under the pledge sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sure confirms it once the money shows up in that account.'**
+  String get spgPledgeHint;
+
+  /// Goal detail section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending pledges'**
+  String get spgPendingHeader;
+
+  /// Pending pledge row title.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {account}'**
+  String spgPledgeFromAccount(String amount, String account);
+
+  /// Pending pledge row title when the account is not visible.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} pledged'**
+  String spgPledgeAmount(String amount);
+
+  /// Pending transfer pledge sub line.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirms when it shows up'**
+  String get spgPledgeConfirmsTransfer;
+
+  /// Pending manual-save pledge sub line.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirms on your next balance update'**
+  String get spgPledgeConfirmsManual;
+
+  /// Pending pledge sub line with its expiry date.
+  ///
+  /// In en, this message translates to:
+  /// **'{confirm} · expires {date}'**
+  String spgPledgeExpires(String confirm, String date);
+
+  /// Extends a pending pledge by 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'Extend'**
+  String get spgPledgeExtend;
+
+  /// Snackbar after extending a pledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pledge extended by 7 days'**
+  String get spgPledgeExtended;
+
+  /// Confirm dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this pledge?'**
+  String get spgPledgeCancelTitle;
+
+  /// Confirm dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'The {amount} pledge will be removed. You can record a new one anytime.'**
+  String spgPledgeCancelBody(String amount);
+
+  /// Confirm dialog action and the cancel button's tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel pledge'**
+  String get spgPledgeCancelConfirm;
+
+  /// Dismisses the cancel pledge dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get spgPledgeKeep;
+
+  /// Snackbar after cancelling a pledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pledge cancelled'**
+  String get spgPledgeCancelled;
+
+  /// Snackbar after recording a pledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pledge recorded'**
+  String get spgPledgeSaved;
+
+  /// Goal detail section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Funding accounts'**
+  String get spgFundingHeader;
+
+  /// A funding account the goal claims in full; placeholder of the earmark field.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole balance'**
+  String get spgWholeBalance;
+
+  /// Goal detail section header for the pace figures.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get spgPlanHeader;
+
+  /// Goal detail row.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly target'**
+  String get spgMonthlyTarget;
+
+  /// Goal detail row: average monthly savings.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace'**
+  String get spgPace;
+
+  /// An amount per month.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}/mo'**
+  String spgPerMonth(String amount);
+
+  /// Goal detail row.
+  ///
+  /// In en, this message translates to:
+  /// **'Projected completion'**
+  String get spgProjected;
+
+  /// Goal detail row.
+  ///
+  /// In en, this message translates to:
+  /// **'Time left'**
+  String get spgTimeLeft;
+
+  /// Goal notes field and section.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get spgNotes;
+
+  /// Goal detail footer link.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get spgEdit;
+
+  /// Goal detail footer link to the web goal page.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause or archive on the web'**
+  String get spgLifecycleOnWeb;
+
+  /// Destructive button on the goal detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete goal'**
+  String get spgDelete;
+
+  /// Confirm dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete goal?'**
+  String get spgDeleteTitle;
+
+  /// Confirm dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? Its pledges are removed too. This can\'t be undone.'**
+  String spgDeleteBody(String name);
+
+  /// Snackbar after deleting a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal deleted'**
+  String get spgDeleted;
+
+  /// Snackbar after editing a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal saved'**
+  String get spgSaved;
+
+  /// Snackbar after creating a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal created'**
+  String get spgCreated;
+
+  /// Goal form row and sheet title for picking the icon and color.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon and color'**
+  String get spgIconAndColor;
+
+  /// Goal icon picker header.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get spgIcon;
+
+  /// Goal kind one_off.
+  ///
+  /// In en, this message translates to:
+  /// **'One-off goal'**
+  String get spgKindOneOff;
+
+  /// Hint for the one-off goal kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Save toward something, then close it when you spend it.'**
+  String get spgKindOneOffHint;
+
+  /// Goal kind maintained.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve'**
+  String get spgKindReserve;
+
+  /// Hint for the reserve goal kind.
+  ///
+  /// In en, this message translates to:
+  /// **'A balance to keep, like an emergency fund. It has no due date.'**
+  String get spgKindReserveHint;
+
+  /// Goal form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get spgName;
+
+  /// Goal name placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency fund'**
+  String get spgNameHint;
+
+  /// Goal form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get spgNameRequired;
+
+  /// Goal form target amount field.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get spgTarget;
+
+  /// Amount validation in the goal and pledge forms.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount above zero'**
+  String get spgTargetInvalid;
+
+  /// Goal form target date row.
+  ///
+  /// In en, this message translates to:
+  /// **'By'**
+  String get spgBy;
+
+  /// Goal form section of funding accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Fund from'**
+  String get spgFundFrom;
+
+  /// Hint above the funding accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave an amount blank to use the account\'s whole balance.'**
+  String get spgFundFromHint;
+
+  /// Shown when the user has no account that can fund a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a cash, investment or crypto account to fund a goal.'**
+  String get spgNoFundable;
+
+  /// Goal form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one account to fund this goal.'**
+  String get spgAccountsRequired;
 }
 
 class _AppLocalizationsDelegate
