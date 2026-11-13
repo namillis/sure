@@ -32,18 +32,8 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "admin", body["role"]
     assert_equal @admin.theme, body["theme"]
     assert_equal @admin.default_period, body["default_period"]
-    assert_equal true, body["can_edit_family"]
     assert_equal({ "id" => @family.id, "name" => @family.name, "currency" => "USD", "country" => "US",
                    "timezone" => "America/New_York", "date_format" => "%m-%d-%Y", "locale" => "en" }, body["family"])
-  end
-
-  test "show reports non-admins cannot edit family" do
-    get "/api/v1/users/me", headers: api_headers(@member_key)
-
-    assert_response :ok
-    body = JSON.parse(response.body)
-    assert_equal @member.id, body["id"]
-    assert_equal false, body["can_edit_family"]
   end
 
   test "update requires authentication" do
@@ -91,15 +81,14 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Jake", @member.reload.first_name
   end
 
-  test "member cannot update family fields" do
+  test "member can update household preferences, as on the web" do
     patch "/api/v1/users/me",
           params: { user: { first_name: "Jake", family_attributes: { currency: "EUR" } } },
           headers: api_headers(@member_key), as: :json
 
-    assert_response :forbidden
-    assert_equal "forbidden", JSON.parse(response.body)["error"]
-    assert_equal "USD", @family.reload.currency
-    assert_equal "Jakob", @member.reload.first_name
+    assert_response :ok
+    assert_equal "EUR", @family.reload.currency
+    assert_equal "Jake", @member.reload.first_name
   end
 
   test "security fields are ignored" do

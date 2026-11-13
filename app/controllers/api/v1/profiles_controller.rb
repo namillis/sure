@@ -7,7 +7,6 @@ class Api::V1::ProfilesController < Api::V1::BaseController
 
   before_action :ensure_read_scope, only: :show
   before_action :ensure_write_scope, only: :update
-  before_action :ensure_admin_for_family_changes, only: :update
 
   def show
     @user = current_resource_owner
@@ -37,13 +36,6 @@ class Api::V1::ProfilesController < Api::V1::BaseController
 
     def ensure_write_scope
       authorize_scope!(:write)
-    end
-
-    def ensure_admin_for_family_changes
-      return true if params.dig(:user, :family_attributes).blank? || current_resource_owner.admin?
-
-      render_json({ error: "forbidden", message: "Only admins can change household settings" }, status: :forbidden)
-      false
     end
 
     def profile_params

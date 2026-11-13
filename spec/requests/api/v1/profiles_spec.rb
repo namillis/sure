@@ -5,7 +5,7 @@ require 'swagger_helper'
 RSpec.describe 'API V1 Profile', type: :request do
   profile_schema = {
     type: :object,
-    required: %w[id email first_name last_name role theme default_period can_edit_family family],
+    required: %w[id email first_name last_name role theme default_period family],
     properties: {
       id: { type: :string, format: :uuid },
       email: { type: :string },
@@ -16,7 +16,6 @@ RSpec.describe 'API V1 Profile', type: :request do
       locale: { type: :string, nullable: true, description: 'User language; null follows the household locale' },
       theme: { type: :string, enum: %w[light dark system] },
       default_period: { type: :string, example: 'last_30_days' },
-      can_edit_family: { type: :boolean, description: 'Whether family fields can be changed through PATCH' },
       family: {
         type: :object,
         required: %w[id name currency country timezone date_format locale],
@@ -101,9 +100,9 @@ RSpec.describe 'API V1 Profile', type: :request do
     end
 
     patch 'Update the current user profile' do
-      description 'Updates the signed-in user\'s name, language, theme and default period. Household fields in ' \
-                  '`family_attributes` require the admin role. Email, password, MFA and profile image are not ' \
-                  'accepted here. Requires the read_write scope.'
+      description 'Updates the signed-in user\'s name, language, theme and default period, and the household ' \
+                  'preferences in `family_attributes` (any member can change these, as on the web). Email, ' \
+                  'password, MFA and profile image are not accepted here. Requires the read_write scope.'
       tags 'Users'
       security [ { apiKeyAuth: [] } ]
       consumes 'application/json'
@@ -159,10 +158,10 @@ RSpec.describe 'API V1 Profile', type: :request do
         run_test!
       end
 
-      response '403', 'read-only key, or a non-admin changing family fields' do
+      response '403', 'read-only key' do
         schema '$ref' => '#/components/schemas/ErrorResponse'
 
-        let(:role) { :member }
+        let(:scopes) { %w[read] }
 
         run_test!
       end

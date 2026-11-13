@@ -9,7 +9,6 @@ json.role @user.role
 json.locale @user.locale
 json.theme @user.theme
 json.default_period @user.default_period
-json.can_edit_family @user.admin?
 
 json.family do
   family = @user.family
