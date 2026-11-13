@@ -7,6 +7,7 @@ module SurePlus
     NAMES = %w[
       accounts.write
       budgets.allocations
+      budgets.permissions
       budgets.write
       categories.write
       connections.manage

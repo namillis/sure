@@ -28,6 +28,12 @@ if include_derived_amounts
   json.rolled_over_amount_cents money_to_minor_units.call(displayed_rollover)
   json.available_to_spend budget_category.available_to_spend_money.format
   json.available_to_spend_cents money_to_minor_units.call(budget_category.available_to_spend_money)
+  # Monthly figures across every month the category has spending, as the web shows them:
+  # the median is its "/m avg" line on the budget page, the mean its "Monthly average spending".
+  json.average_spent budget_category.avg_monthly_expense_money.format
+  json.average_spent_cents money_to_minor_units.call(budget_category.avg_monthly_expense_money)
+  json.median_spent budget_category.median_monthly_expense_money.format
+  json.median_spent_cents money_to_minor_units.call(budget_category.median_monthly_expense_money)
 end
 
 json.category do
