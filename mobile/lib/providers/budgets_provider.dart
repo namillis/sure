@@ -203,13 +203,66 @@ class BudgetsProvider with ChangeNotifier {
   }
 
   /// Budgets the server refused to change with 403 `forbidden` (shared with
-  /// this user read-only). The API has no field that says so up front.
+  /// this user read-only), for servers without `budgets.permissions`, whose
+  /// budget JSON has no `can_edit`.
   final Set<String> _readOnlyBudgetIds = {};
 
-  /// The shown budget is shared with the user read-only.
+  /// The shown budget is shared with the user read-only: its `can_edit` is
+  /// false, or a write was refused with 403 `forbidden`.
   bool get isReadOnly {
-    final id = budget?.id;
-    return id != null && _readOnlyBudgetIds.contains(id);
+    final b = budget;
+    if (b == null) return false;
+    return b.canEdit == false || _readOnlyBudgetIds.contains(b.id);
+  }
+
+  /// Moves [amount] of [from]'s allocation to [to] (Sure+
+  /// `budgets.allocations`), then reloads the month. Returns the service
+  /// result.
+  Future<Map<String, dynamic>> moveAllocation({
+    required String accessToken,
+    required BudgetCategory from,
+    required BudgetCategory to,
+    required String amount,
+  }) async {
+    final result = await _service.moveAllocation(
+      accessToken: accessToken,
+      budgetId: from.budgetId,
+      fromId: from.id,
+      toId: to.id,
+      amount: amount,
+    );
+    _afterWrite(result, accessToken: accessToken, budgetId: from.budgetId);
+    return result;
+  }
+
+  /// Copies the most recent set-up month into the shown month (Sure+
+  /// `budgets.allocations`). Reloads the month on success and on 409
+  /// `already_set_up`. Returns the service result.
+  Future<Map<String, dynamic>> copyPreviousMonth({
+    required String accessToken,
+    required String monthParam,
+  }) async {
+    final result = await _service.copyPreviousMonth(
+      accessToken: accessToken,
+      monthParam: monthParam,
+    );
+    final reload =
+        result['success'] == true || result['code'] == 'already_set_up';
+    if (!_isDisposed && reload) {
+      await loadMonth(accessToken: accessToken, forceRefresh: true);
+    }
+    return result;
+  }
+
+  /// Sets up the shown month with empty amounts (Sure+
+  /// `budgets.allocations`), then loads it. Returns the service result.
+  Future<Map<String, dynamic>> startMonth({required String accessToken}) async {
+    final result =
+        await _service.startMonth(accessToken: accessToken, month: _month);
+    if (!_isDisposed && result['success'] == true) {
+      await loadMonth(accessToken: accessToken, forceRefresh: true);
+    }
+    return result;
   }
 
   /// Saves the totals of the shown budget (Sure+ `budgets.write`), then

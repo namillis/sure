@@ -32,6 +32,7 @@ class OfflineCacheCodecs {
         'currency': b.currency,
         'initialized': b.initialized,
         'current': b.current,
+        if (b.canEdit != null) 'can_edit': b.canEdit,
         'budgeted_spending': b.budgetedSpending,
         'budgeted_spending_cents': b.budgetedSpendingCents,
         'expected_income': b.expectedIncome,
@@ -72,6 +73,8 @@ class OfflineCacheCodecs {
         'rolled_over_amount_cents': c.rolledOverAmountCents,
         'available_to_spend': c.availableToSpend,
         'available_to_spend_cents': c.availableToSpendCents,
+        'median_spent': c.medianSpent,
+        'median_spent_cents': c.medianSpentCents,
       };
 
   static String _date(DateTime d) =>

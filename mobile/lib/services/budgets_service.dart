@@ -8,7 +8,8 @@ import 'response_list_parser.dart';
 
 /// Client for the budgets API (`/api/v1/budgets` and
 /// `/api/v1/budget_categories`). Stock Sure is read-only; the PATCH calls
-/// need a Sure+ server with `budgets.write`.
+/// need a Sure+ server with `budgets.write`, the POST calls one with
+/// `budgets.allocations`.
 ///
 /// Results use the same `{'success': bool, ...}` map shape as the other
 /// services so providers can treat them uniformly, with `'unauthorized'` as
@@ -187,29 +188,104 @@ class BudgetsService {
     };
   }
 
-  /// PATCHes [body]. Failures carry the server's `message` as `'error'` and,
-  /// where the screen reacts differently, a `'code'`: `insufficient_scope`
-  /// (read-only sign-in), `forbidden` (budget shared read-only),
-  /// `validation_failed` (422).
+  /// `POST /api/v1/budgets/:budget_id/budget_categories/move` (Sure+
+  /// `budgets.allocations`): moves [amount] (a canonical decimal string) of
+  /// [fromId]'s allocation to [toId]. On success `'from'` / `'to'` hold the
+  /// updated [BudgetCategory]s and `'budget'` the [Budget]. A 422 carries the
+  /// server's `'reason'` (`insufficient_funds`, `same_category`, ...).
+  Future<Map<String, dynamic>> moveAllocation({
+    required String accessToken,
+    required String budgetId,
+    required String fromId,
+    required String toId,
+    required String amount,
+  }) async {
+    final result = await _write(
+      accessToken,
+      '/api/v1/budgets/${Uri.encodeComponent(budgetId)}'
+          '/budget_categories/move',
+      {
+        'move': {'from_id': fromId, 'to_id': toId, 'amount': amount},
+      },
+      'Failed to move budget',
+      post: true,
+    );
+    if (result['success'] != true) return result;
+    final data = result['data'] as Map<String, dynamic>;
+    Map<String, dynamic> map(Object? o) =>
+        o is Map ? o.cast<String, dynamic>() : const {};
+    return {
+      'success': true,
+      'from': BudgetCategory.fromJson(map(data['from'])),
+      'to': BudgetCategory.fromJson(map(data['to'])),
+      'budget': Budget.fromJson(map(data['budget'])),
+    };
+  }
+
+  /// `POST /api/v1/budgets/:month_year/copy_previous` (Sure+
+  /// `budgets.allocations`). [monthParam] is the web's month format
+  /// (`nov-2026`). Fails with code `already_set_up` (409) when the month
+  /// already has amounts, `no_source` (422) when there is nothing to copy.
+  Future<Map<String, dynamic>> copyPreviousMonth({
+    required String accessToken,
+    required String monthParam,
+  }) async {
+    final result = await _write(
+      accessToken,
+      '/api/v1/budgets/${Uri.encodeComponent(monthParam)}/copy_previous',
+      null,
+      'Failed to copy the previous budget',
+      post: true,
+    );
+    if (result['success'] != true) return result;
+    return {'success': true, 'budget': Budget.fromJson(result['data'])};
+  }
+
+  /// `POST /api/v1/budgets` (Sure+ `budgets.allocations`): sets up the
+  /// budget for [month] (first of the month) the way opening it on the web
+  /// does. Succeeds also when the month already existed.
+  Future<Map<String, dynamic>> startMonth({
+    required String accessToken,
+    required DateTime month,
+  }) async {
+    final y = month.year.toString().padLeft(4, '0');
+    final m = month.month.toString().padLeft(2, '0');
+    final result = await _write(
+      accessToken,
+      '/api/v1/budgets',
+      {
+        'budget': {'month': '$y-$m'},
+      },
+      'Failed to set up the budget',
+      post: true,
+    );
+    if (result['success'] != true) return result;
+    return {'success': true, 'budget': Budget.fromJson(result['data'])};
+  }
+
+  /// PATCHes (or with [post], POSTs) [body]. Failures carry the server's `message` as `'error'` and,
+  /// where the screen reacts differently, a `'code'` (see [_errorCode]) and
+  /// the 422's `'reason'`.
   Future<Map<String, dynamic>> _write(
     String accessToken,
     String path,
-    Map<String, dynamic> body,
-    String failureMessage,
-  ) async {
+    Map<String, dynamic>? body,
+    String failureMessage, {
+    bool post = false,
+  }) async {
     try {
-      final response = await _client
-          .patch(
-            Uri.parse('${ApiConfig.baseUrl}$path'),
-            headers: {
-              ...ApiConfig.getAuthHeaders(accessToken),
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode(body),
-          )
+      final url = Uri.parse('${ApiConfig.baseUrl}$path');
+      final headers = {
+        ...ApiConfig.getAuthHeaders(accessToken),
+        'Content-Type': 'application/json',
+      };
+      final encoded = body == null ? null : jsonEncode(body);
+      final response = await (post
+              ? _client.post(url, headers: headers, body: encoded)
+              : _client.patch(url, headers: headers, body: encoded))
           .timeout(_timeout);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         if (data is Map) {
           return {'success': true, 'data': data.cast<String, dynamic>()};
@@ -219,27 +295,46 @@ class BudgetsService {
       if (response.statusCode == 401) {
         return {'success': false, 'error': 'unauthorized'};
       }
+      final errorBody = _errorBody(response);
+      final reason = errorBody?['reason']?.toString();
       return {
         'success': false,
         'error': extractErrorMessage(response.body, fallback: failureMessage),
-        if (_errorCode(response) case final code?) 'code': code,
+        if (_errorCode(response.statusCode, errorBody) case final code?)
+          'code': code,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
       };
     } catch (e) {
       return {'success': false, 'error': 'Network error: ${e.toString()}'};
     }
   }
 
-  static String? _errorCode(http.Response response) {
-    if (response.statusCode == 422) return 'validation_failed';
-    if (response.statusCode != 403) return null;
+  static Map<String, dynamic>? _errorBody(http.Response response) {
     try {
       final data = jsonDecode(response.body);
-      final error = data is Map ? data['error']?.toString() : null;
-      if (error == 'insufficient_scope') return 'insufficient_scope';
+      return data is Map ? data.cast<String, dynamic>() : null;
     } on FormatException {
-      // A non-JSON 403 is still a refusal of this budget.
+      return null;
     }
-    return 'forbidden';
+  }
+
+  /// `insufficient_scope` / `forbidden` for a 403, the body's `error` for a
+  /// 409 (`already_set_up`), `no_source` for that 422 and
+  /// `validation_failed` for any other 422.
+  static String? _errorCode(int status, Map<String, dynamic>? body) {
+    final error = body?['error']?.toString();
+    switch (status) {
+      case 403:
+        // A non-JSON 403 is still a refusal of this budget.
+        return error == 'insufficient_scope' ? 'insufficient_scope' : 'forbidden';
+      case 404:
+        return 'not_found';
+      case 409:
+        return error ?? 'conflict';
+      case 422:
+        return error == 'no_source' ? 'no_source' : 'validation_failed';
+    }
+    return null;
   }
 
   Future<Map<String, dynamic>> _get(
