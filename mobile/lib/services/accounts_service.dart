@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/account.dart';
 import 'api_config.dart';
+import 'log_service.dart';
+import 'response_list_parser.dart';
 
 class AccountsService {
   AccountsService({http.Client? client}) : _client = client ?? http.Client();
@@ -59,6 +61,113 @@ class AccountsService {
       'accounts': accounts,
       'pagination': pagination,
     };
+  }
+
+  /// `POST /api/v1/accounts` (Sure+ `accounts.write`). [account] is the body
+  /// inside the `account` key: `accountable_type`, `name`, `balance`, ... and
+  /// the type's `accountable_attributes`. `'account'` holds the new
+  /// [Account] on 201.
+  Future<Map<String, dynamic>> createAccount({
+    required String accessToken,
+    required Map<String, dynamic> account,
+  }) {
+    return _write(
+      'POST',
+      Uri.parse('${ApiConfig.baseUrl}/api/v1/accounts'),
+      accessToken,
+      body: {'account': account},
+      okStatus: 201,
+      fallback: 'Failed to create account',
+    );
+  }
+
+  /// `PATCH /api/v1/accounts/:id` (Sure+ `accounts.write`). Send only the
+  /// fields that changed: linked accounts reject balance and currency (422).
+  Future<Map<String, dynamic>> updateAccount({
+    required String accessToken,
+    required String id,
+    required Map<String, dynamic> account,
+  }) {
+    return _write(
+      'PATCH',
+      _accountUri(id),
+      accessToken,
+      body: {'account': account},
+      okStatus: 200,
+      fallback: 'Failed to update account',
+    );
+  }
+
+  /// `DELETE /api/v1/accounts/:id` (Sure+ `accounts.write`): 202, the
+  /// server deletes it in the background. Linked accounts get 422.
+  Future<Map<String, dynamic>> deleteAccount({
+    required String accessToken,
+    required String id,
+  }) {
+    return _write(
+      'DELETE',
+      _accountUri(id),
+      accessToken,
+      okStatus: 202,
+      fallback: 'Failed to delete account',
+    );
+  }
+
+  Uri _accountUri(String id) => Uri.parse(
+      '${ApiConfig.baseUrl}/api/v1/accounts/${Uri.encodeComponent(id)}');
+
+  /// Sends a write and maps the reply: success with `'account'` (when the
+  /// body is an account), `'unauthorized'` on 401, otherwise the server's
+  /// `message` as `'error'` and its `error` code (`insufficient_scope`,
+  /// `forbidden`, `validation_failed`) as `'code'`.
+  Future<Map<String, dynamic>> _write(
+    String method,
+    Uri url,
+    String accessToken, {
+    Map<String, dynamic>? body,
+    required int okStatus,
+    required String fallback,
+  }) async {
+    try {
+      final request = http.Request(method, url)
+        ..headers.addAll({
+          ...ApiConfig.getAuthHeaders(accessToken),
+          'Content-Type': 'application/json',
+        });
+      if (body != null) request.body = jsonEncode(body);
+      final response = await http.Response.fromStream(
+        await _client.send(request).timeout(const Duration(seconds: 30)),
+      );
+
+      if (response.statusCode == okStatus) {
+        final data = response.body.isEmpty ? null : jsonDecode(response.body);
+        return {
+          'success': true,
+          if (data is Map<String, dynamic> && data['account_type'] != null)
+            'account': Account.fromJson(data),
+          if (data is Map && data['message'] != null)
+            'message': data['message'].toString(),
+        };
+      }
+      if (response.statusCode == 401) {
+        return {'success': false, 'error': 'unauthorized'};
+      }
+      String? code;
+      try {
+        final data = jsonDecode(response.body);
+        if (data is Map && data['error'] is String) code = data['error'];
+      } catch (_) {}
+      return {
+        'success': false,
+        'error': extractErrorMessage(response.body, fallback: fallback),
+        'status': response.statusCode,
+        if (code != null) 'code': code,
+      };
+    } catch (e) {
+      LogService.instance.error(
+          'AccountsService', '$method account failed with ${e.runtimeType}');
+      return {'success': false, 'error': fallback};
+    }
   }
 
   Future<Map<String, dynamic>> getAccounts({
