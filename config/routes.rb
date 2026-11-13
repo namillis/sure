@@ -892,6 +892,9 @@ Rails.application.routes.draw do
         get :latest, on: :collection
       end
       resources :provider_connections, only: [ :index ]
+      resources :provider_connections, only: [ :destroy ], controller: "provider_connection_management" do
+        post :sync, on: :member
+      end
 
       resources :chats, only: [ :index, :show, :create, :update, :destroy ] do
         resources :messages, only: [ :create ] do
