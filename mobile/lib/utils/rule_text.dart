@@ -86,6 +86,47 @@ class RuleText {
   String compoundHeading(RuleCondition c) =>
       c.operator == 'or' ? l.p3roRuleMatchAny : l.p3roRuleMatchAll;
 
+  /// The editor's operator pill ("contains", "is more than").
+  String operatorLabel(String operator) => switch (operator) {
+        'like' => l.sprOpLike,
+        'not_like' => l.sprOpNotLike,
+        'starts_with' => l.sprOpStartsWith,
+        'ends_with' => l.sprOpEndsWith,
+        'matches_regex' => l.sprOpRegex,
+        '=' => l.sprOpEquals,
+        '!=' => l.sprOpNotEquals,
+        'is_null' => l.sprOpEmpty,
+        'is_not_null' => l.sprOpNotEmpty,
+        '>' => l.sprOpGreater,
+        '>=' => l.sprOpAtLeast,
+        '<' => l.sprOpLess,
+        '<=' => l.sprOpAtMost,
+        _ => operator,
+      };
+
+  /// The editor's action pill ("Set category", "Exclude from budgets and
+  /// reports").
+  String actionLabel(String actionType) => switch (actionType) {
+        'set_transaction_category' => l.sprActSetCategory,
+        'set_transaction_tags' => l.sprActAddTags,
+        'set_transaction_merchant' => l.sprActSetMerchant,
+        'set_transaction_name' => l.sprActRename,
+        'set_investment_activity_label' => l.sprActActivity,
+        'set_as_transfer_or_payment' => l.sprActTransfer,
+        _ => action(RuleAction(actionType: actionType)),
+      };
+
+  /// `income` / `expense` / `transfer` as words.
+  String transactionType(String value) => switch (value) {
+        'income' => l.p3roRuleTypeIncome,
+        'expense' => l.p3roRuleTypeExpense,
+        'transfer' => l.p3roRuleTypeTransfer,
+        _ => value,
+      };
+
+  /// The name of a [kind] record, or null when the app doesn't know [id].
+  String? nameOf(RuleValueKind kind, String id) => _lookup(kind, id);
+
   String action(RuleAction a) {
     final v = _actionValue(a);
     return switch (a.actionType) {
@@ -110,20 +151,21 @@ class RuleText {
     final raw = c.value?.trim() ?? '';
     final kind = _conditionKinds[c.conditionType];
     if (kind != null) return _named(kind, raw);
-    if (c.conditionType == 'transaction_type') {
-      return switch (raw) {
-        'income' => l.p3roRuleTypeIncome,
-        'expense' => l.p3roRuleTypeExpense,
-        'transfer' => l.p3roRuleTypeTransfer,
-        _ => raw,
-      };
-    }
+    if (c.conditionType == 'transaction_type') return transactionType(raw);
     if (c.conditionType == 'transaction_amount') return raw;
     return l.p3roRuleQuoted(raw);
   }
 
   String _actionValue(RuleAction a) {
     final raw = a.value?.trim() ?? '';
+    if (a.actionType == 'set_transaction_tags' && raw.contains(',')) {
+      return raw
+          .split(',')
+          .map((id) => id.trim())
+          .where((id) => id.isNotEmpty)
+          .map((id) => _named(RuleValueKind.tag, id))
+          .join(', ');
+    }
     final kind = _actionKinds[a.actionType];
     if (kind != null) return _named(kind, raw);
     if (a.actionType == 'set_transaction_name') return l.p3roRuleQuoted(raw);

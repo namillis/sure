@@ -6643,6 +6643,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All time'**
   String get spmPeriodAllTime;
+
+  /// Rules list row that opens the web rules page, on servers where rules can be created in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder rules on the web'**
+  String get sprRulesReorderOnWeb;
+
+  /// Rules list empty state body when rules can be created in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules categorize, tag and rename transactions automatically. Tap + to create one.'**
+  String get sprRulesEmptyBody;
+
+  /// Rule editor sheet title for a new rule; also the + button label.
+  ///
+  /// In en, this message translates to:
+  /// **'New rule'**
+  String get sprRuleNew;
+
+  /// Rule editor sheet title for an existing rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit rule'**
+  String get sprRuleEdit;
+
+  /// Rule editor row label for the rule name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sprRuleName;
+
+  /// Placeholder of the optional rule name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get sprRuleNameHint;
+
+  /// Rule editor section header above the conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'If a transaction'**
+  String get sprRuleIfHeader;
+
+  /// Rule editor section header above the actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Then'**
+  String get sprRuleThenHeader;
+
+  /// Rule editor row that adds a condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Add condition'**
+  String get sprRuleAddCondition;
+
+  /// Rule editor row that adds a group of conditions matched with all/any.
+  ///
+  /// In en, this message translates to:
+  /// **'Add condition group'**
+  String get sprRuleAddGroup;
+
+  /// Rule editor row that adds an action.
+  ///
+  /// In en, this message translates to:
+  /// **'Add action'**
+  String get sprRuleAddAction;
+
+  /// Rule editor note when the rule has no conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'No conditions: the rule applies to every transaction.'**
+  String get sprRuleNoConditions;
+
+  /// Accessibility label of the remove button on a condition, group or action.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get sprRuleRemove;
+
+  /// Title of the sheet that picks what a condition looks at (name, amount, category...).
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get sprRulePickField;
+
+  /// Title of the sheet that picks a condition's operator (contains, is, more than...).
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison'**
+  String get sprRulePickOperator;
+
+  /// Title of the sheet that edits a condition or action value.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get sprRulePickValue;
+
+  /// Title of the sheet that picks an action type.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get sprRulePickAction;
+
+  /// Title of the sheet that picks all/any for a condition group.
+  ///
+  /// In en, this message translates to:
+  /// **'Match'**
+  String get sprRulePickGroup;
+
+  /// Placeholder pill for a condition or action value not set yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose…'**
+  String get sprRuleChooseValue;
+
+  /// Placeholder of the text value field.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value'**
+  String get sprRuleEnterValue;
+
+  /// Value pill of an add-tags action with several tags.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 tag} other{{count} tags}}'**
+  String sprRuleTagsCount(int count);
+
+  /// Condition operator pill: like (contains).
+  ///
+  /// In en, this message translates to:
+  /// **'contains'**
+  String get sprOpLike;
+
+  /// Condition operator pill: not_like.
+  ///
+  /// In en, this message translates to:
+  /// **'doesn\'t contain'**
+  String get sprOpNotLike;
+
+  /// Condition operator pill: starts_with.
+  ///
+  /// In en, this message translates to:
+  /// **'starts with'**
+  String get sprOpStartsWith;
+
+  /// Condition operator pill: ends_with.
+  ///
+  /// In en, this message translates to:
+  /// **'ends with'**
+  String get sprOpEndsWith;
+
+  /// Condition operator pill: matches_regex.
+  ///
+  /// In en, this message translates to:
+  /// **'matches the pattern'**
+  String get sprOpRegex;
+
+  /// Condition operator pill: = (equal to).
+  ///
+  /// In en, this message translates to:
+  /// **'is'**
+  String get sprOpEquals;
+
+  /// Condition operator pill: != (not equal to).
+  ///
+  /// In en, this message translates to:
+  /// **'is not'**
+  String get sprOpNotEquals;
+
+  /// Condition operator pill: is_null.
+  ///
+  /// In en, this message translates to:
+  /// **'is empty'**
+  String get sprOpEmpty;
+
+  /// Condition operator pill: is_not_null.
+  ///
+  /// In en, this message translates to:
+  /// **'is not empty'**
+  String get sprOpNotEmpty;
+
+  /// Condition operator pill: >.
+  ///
+  /// In en, this message translates to:
+  /// **'is more than'**
+  String get sprOpGreater;
+
+  /// Condition operator pill: >=.
+  ///
+  /// In en, this message translates to:
+  /// **'is at least'**
+  String get sprOpAtLeast;
+
+  /// Condition operator pill: <.
+  ///
+  /// In en, this message translates to:
+  /// **'is less than'**
+  String get sprOpLess;
+
+  /// Condition operator pill: <=.
+  ///
+  /// In en, this message translates to:
+  /// **'is at most'**
+  String get sprOpAtMost;
+
+  /// Action pill: set_transaction_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Set category'**
+  String get sprActSetCategory;
+
+  /// Action pill: set_transaction_tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tags'**
+  String get sprActAddTags;
+
+  /// Action pill: set_transaction_merchant.
+  ///
+  /// In en, this message translates to:
+  /// **'Set merchant'**
+  String get sprActSetMerchant;
+
+  /// Action pill: set_transaction_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename to'**
+  String get sprActRename;
+
+  /// Action pill: set_investment_activity_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Set investment activity'**
+  String get sprActActivity;
+
+  /// Action pill: set_as_transfer_or_payment (value is an account).
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as transfer or payment to'**
+  String get sprActTransfer;
+
+  /// Note on a split action in the rule editor; the split is kept as is.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the split on the web'**
+  String get sprRuleSplitOnWeb;
+
+  /// Rule editor error when saving without actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one action.'**
+  String get sprRuleNeedsAction;
+
+  /// Rule editor error when a condition or action has no value.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in every value, or remove the row.'**
+  String get sprRuleMissingValue;
+
+  /// Rule editor error when a condition group is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a condition to each group, or remove the group.'**
+  String get sprRuleEmptyGroup;
+
+  /// Error under the amount value field.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number.'**
+  String get sprRuleAmountInvalid;
+
+  /// Snackbar after saving a rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule saved'**
+  String get sprRuleSaved;
+
+  /// Snackbar after deleting a rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule deleted'**
+  String get sprRuleDeleted;
+
+  /// Primary button on the rule detail that runs the rule on existing transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to past transactions'**
+  String get sprRuleApply;
+
+  /// Shown while the server applies the rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying… this can take a few seconds.'**
+  String get sprRuleApplying;
+
+  /// Title of the apply confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply this rule?'**
+  String get sprRuleApplyTitle;
+
+  /// Apply dialog: how many transactions the rule matches.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{It will change 1 transaction.} other{It will change {count} transactions.}}'**
+  String sprRuleApplyCount(int count);
+
+  /// Apply dialog: active rules above this one run first.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 active rule runs before it.} other{{count} active rules run before it.}}'**
+  String sprRuleApplyAbove(int count);
+
+  /// Apply dialog line for an AI categorize action with the server's cost estimate (USD).
+  ///
+  /// In en, this message translates to:
+  /// **'Uses AI categorization · about {cost}'**
+  String sprRuleApplyAiCost(String cost);
+
+  /// Apply dialog line for an AI categorize action when the server has no cost estimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses AI categorization · cost unknown'**
+  String get sprRuleApplyAiNoCost;
+
+  /// Confirm button of the apply dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get sprRuleApplyConfirm;
+
+  /// Result after applying a rule.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Changed 1 transaction} other{Changed {count} transactions}}'**
+  String sprRuleApplied(int count);
+
+  /// Apply failed with 409 rules_running.
+  ///
+  /// In en, this message translates to:
+  /// **'Another rule is running. Try again in a moment.'**
+  String get sprRuleApplyRunning;
+
+  /// Rule detail footer link that opens the editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get sprRuleEditLink;
+
+  /// Rule detail footer link that opens the editor prefilled as a new rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get sprRuleDuplicate;
+
+  /// Rule detail footer link that deletes the rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get sprRuleDelete;
+
+  /// Delete rule confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this rule?'**
+  String get sprRuleDeleteTitle;
+
+  /// Delete rule confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions it already changed stay as they are.'**
+  String get sprRuleDeleteBody;
+
+  /// Name prefilled when duplicating a named rule.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (copy)'**
+  String sprRuleCopyName(String name);
 }
 
 class _AppLocalizationsDelegate

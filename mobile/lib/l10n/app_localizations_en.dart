@@ -3890,4 +3890,234 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spmPeriodAllTime => 'All time';
+
+  @override
+  String get sprRulesReorderOnWeb => 'Reorder rules on the web';
+
+  @override
+  String get sprRulesEmptyBody =>
+      'Rules categorize, tag and rename transactions automatically. Tap + to create one.';
+
+  @override
+  String get sprRuleNew => 'New rule';
+
+  @override
+  String get sprRuleEdit => 'Edit rule';
+
+  @override
+  String get sprRuleName => 'Name';
+
+  @override
+  String get sprRuleNameHint => 'Optional';
+
+  @override
+  String get sprRuleIfHeader => 'If a transaction';
+
+  @override
+  String get sprRuleThenHeader => 'Then';
+
+  @override
+  String get sprRuleAddCondition => 'Add condition';
+
+  @override
+  String get sprRuleAddGroup => 'Add condition group';
+
+  @override
+  String get sprRuleAddAction => 'Add action';
+
+  @override
+  String get sprRuleNoConditions =>
+      'No conditions: the rule applies to every transaction.';
+
+  @override
+  String get sprRuleRemove => 'Remove';
+
+  @override
+  String get sprRulePickField => 'Field';
+
+  @override
+  String get sprRulePickOperator => 'Comparison';
+
+  @override
+  String get sprRulePickValue => 'Value';
+
+  @override
+  String get sprRulePickAction => 'Action';
+
+  @override
+  String get sprRulePickGroup => 'Match';
+
+  @override
+  String get sprRuleChooseValue => 'Choose…';
+
+  @override
+  String get sprRuleEnterValue => 'Enter a value';
+
+  @override
+  String sprRuleTagsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tags',
+      one: '1 tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sprOpLike => 'contains';
+
+  @override
+  String get sprOpNotLike => 'doesn\'t contain';
+
+  @override
+  String get sprOpStartsWith => 'starts with';
+
+  @override
+  String get sprOpEndsWith => 'ends with';
+
+  @override
+  String get sprOpRegex => 'matches the pattern';
+
+  @override
+  String get sprOpEquals => 'is';
+
+  @override
+  String get sprOpNotEquals => 'is not';
+
+  @override
+  String get sprOpEmpty => 'is empty';
+
+  @override
+  String get sprOpNotEmpty => 'is not empty';
+
+  @override
+  String get sprOpGreater => 'is more than';
+
+  @override
+  String get sprOpAtLeast => 'is at least';
+
+  @override
+  String get sprOpLess => 'is less than';
+
+  @override
+  String get sprOpAtMost => 'is at most';
+
+  @override
+  String get sprActSetCategory => 'Set category';
+
+  @override
+  String get sprActAddTags => 'Add tags';
+
+  @override
+  String get sprActSetMerchant => 'Set merchant';
+
+  @override
+  String get sprActRename => 'Rename to';
+
+  @override
+  String get sprActActivity => 'Set investment activity';
+
+  @override
+  String get sprActTransfer => 'Mark as transfer or payment to';
+
+  @override
+  String get sprRuleSplitOnWeb => 'Edit the split on the web';
+
+  @override
+  String get sprRuleNeedsAction => 'Add at least one action.';
+
+  @override
+  String get sprRuleMissingValue => 'Fill in every value, or remove the row.';
+
+  @override
+  String get sprRuleEmptyGroup =>
+      'Add a condition to each group, or remove the group.';
+
+  @override
+  String get sprRuleAmountInvalid => 'Enter a number.';
+
+  @override
+  String get sprRuleSaved => 'Rule saved';
+
+  @override
+  String get sprRuleDeleted => 'Rule deleted';
+
+  @override
+  String get sprRuleApply => 'Apply to past transactions';
+
+  @override
+  String get sprRuleApplying => 'Applying… this can take a few seconds.';
+
+  @override
+  String get sprRuleApplyTitle => 'Apply this rule?';
+
+  @override
+  String sprRuleApplyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'It will change $count transactions.',
+      one: 'It will change 1 transaction.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sprRuleApplyAbove(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active rules run before it.',
+      one: '1 active rule runs before it.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sprRuleApplyAiCost(String cost) {
+    return 'Uses AI categorization · about $cost';
+  }
+
+  @override
+  String get sprRuleApplyAiNoCost => 'Uses AI categorization · cost unknown';
+
+  @override
+  String get sprRuleApplyConfirm => 'Apply';
+
+  @override
+  String sprRuleApplied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Changed $count transactions',
+      one: 'Changed 1 transaction',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sprRuleApplyRunning =>
+      'Another rule is running. Try again in a moment.';
+
+  @override
+  String get sprRuleEditLink => 'Edit';
+
+  @override
+  String get sprRuleDuplicate => 'Duplicate';
+
+  @override
+  String get sprRuleDelete => 'Delete';
+
+  @override
+  String get sprRuleDeleteTitle => 'Delete this rule?';
+
+  @override
+  String get sprRuleDeleteBody =>
+      'Transactions it already changed stay as they are.';
+
+  @override
+  String sprRuleCopyName(String name) {
+    return '$name (copy)';
+  }
 }
