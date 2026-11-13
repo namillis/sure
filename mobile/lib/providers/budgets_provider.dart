@@ -14,7 +14,7 @@ enum BudgetsLoadError { offline, unauthorized, failed }
 /// State for the Budgets screen: the selected month, the budget(s) the server
 /// has for it, and each category line with its actual spending.
 ///
-/// The budgets API is read-only and its list endpoints leave out actual
+/// The budgets API's list endpoints leave out actual
 /// amounts, so a month is assembled from the budget list (to find the month's
 /// budget), the budget's show endpoint (totals) and one show request per
 /// budget category (actual / remaining). Months already loaded in this session
@@ -200,6 +200,71 @@ class BudgetsProvider with ChangeNotifier {
     _error = BudgetsLoadError.unauthorized;
     _showingCachedWhileOffline = false;
     notifyListeners();
+  }
+
+  /// Budgets the server refused to change with 403 `forbidden` (shared with
+  /// this user read-only). The API has no field that says so up front.
+  final Set<String> _readOnlyBudgetIds = {};
+
+  /// The shown budget is shared with the user read-only.
+  bool get isReadOnly {
+    final id = budget?.id;
+    return id != null && _readOnlyBudgetIds.contains(id);
+  }
+
+  /// Saves the totals of the shown budget (Sure+ `budgets.write`), then
+  /// reloads the month. Returns the service result.
+  Future<Map<String, dynamic>> updateBudget({
+    required String accessToken,
+    required String budgetId,
+    String? budgetedSpending,
+    String? expectedIncome,
+  }) async {
+    final result = await _service.updateBudget(
+      accessToken: accessToken,
+      id: budgetId,
+      budgetedSpending: budgetedSpending,
+      expectedIncome: expectedIncome,
+    );
+    _afterWrite(result, accessToken: accessToken, budgetId: budgetId);
+    return result;
+  }
+
+  /// Saves one category line (Sure+ `budgets.write`), then reloads the month
+  /// so a re-synced parent and recomputed rollover show. Returns the service
+  /// result.
+  Future<Map<String, dynamic>> updateBudgetCategory({
+    required String accessToken,
+    required BudgetCategory budgetCategory,
+    String? budgetedSpending,
+    bool? rolloverEnabled,
+  }) async {
+    final result = await _service.updateBudgetCategory(
+      accessToken: accessToken,
+      id: budgetCategory.id,
+      budgetedSpending: budgetedSpending,
+      rolloverEnabled: rolloverEnabled,
+    );
+    _afterWrite(
+      result,
+      accessToken: accessToken,
+      budgetId: budgetCategory.budgetId,
+    );
+    return result;
+  }
+
+  void _afterWrite(
+    Map<String, dynamic> result, {
+    required String accessToken,
+    required String budgetId,
+  }) {
+    if (_isDisposed) return;
+    if (result['success'] == true) {
+      unawaited(loadMonth(accessToken: accessToken, forceRefresh: true));
+    } else if (result['code'] == 'forbidden') {
+      _readOnlyBudgetIds.add(budgetId);
+      notifyListeners();
+    }
   }
 
   /// Loads the selected month. Uses the in-memory copy unless [forceRefresh].

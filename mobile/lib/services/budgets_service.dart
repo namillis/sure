@@ -6,8 +6,9 @@ import '../models/budget.dart';
 import 'api_config.dart';
 import 'response_list_parser.dart';
 
-/// Read-only client for the budgets API (`/api/v1/budgets` and
-/// `/api/v1/budget_categories`).
+/// Client for the budgets API (`/api/v1/budgets` and
+/// `/api/v1/budget_categories`). Stock Sure is read-only; the PATCH calls
+/// need a Sure+ server with `budgets.write`.
 ///
 /// Results use the same `{'success': bool, ...}` map shape as the other
 /// services so providers can treat them uniformly, with `'unauthorized'` as
@@ -132,6 +133,113 @@ class BudgetsService {
       'success': true,
       'budget_category': BudgetCategory.fromJson(data.cast<String, dynamic>()),
     };
+  }
+
+  /// `PATCH /api/v1/budgets/:id` (Sure+ `budgets.write`). Amounts are
+  /// canonical decimal strings ("3500.50"); a null field is left unchanged.
+  /// `'budget'` holds the updated [Budget]. See [_write] for the errors.
+  Future<Map<String, dynamic>> updateBudget({
+    required String accessToken,
+    required String id,
+    String? budgetedSpending,
+    String? expectedIncome,
+  }) async {
+    final result = await _write(
+      accessToken,
+      '/api/v1/budgets/${Uri.encodeComponent(id)}',
+      {
+        'budget': {
+          if (budgetedSpending != null) 'budgeted_spending': budgetedSpending,
+          if (expectedIncome != null) 'expected_income': expectedIncome,
+        },
+      },
+      'Failed to update budget',
+    );
+    if (result['success'] != true) return result;
+    return {'success': true, 'budget': Budget.fromJson(result['data'])};
+  }
+
+  /// `PATCH /api/v1/budget_categories/:id` (Sure+ `budgets.write`). A null
+  /// field is left unchanged. The server re-syncs a subcategory's parent and
+  /// recomputes rollover, so reload the month afterwards.
+  /// `'budget_category'` holds the updated [BudgetCategory].
+  Future<Map<String, dynamic>> updateBudgetCategory({
+    required String accessToken,
+    required String id,
+    String? budgetedSpending,
+    bool? rolloverEnabled,
+  }) async {
+    final result = await _write(
+      accessToken,
+      '/api/v1/budget_categories/${Uri.encodeComponent(id)}',
+      {
+        'budget_category': {
+          if (budgetedSpending != null) 'budgeted_spending': budgetedSpending,
+          if (rolloverEnabled != null) 'rollover_enabled': rolloverEnabled,
+        },
+      },
+      'Failed to update budget category',
+    );
+    if (result['success'] != true) return result;
+    return {
+      'success': true,
+      'budget_category': BudgetCategory.fromJson(result['data']),
+    };
+  }
+
+  /// PATCHes [body]. Failures carry the server's `message` as `'error'` and,
+  /// where the screen reacts differently, a `'code'`: `insufficient_scope`
+  /// (read-only sign-in), `forbidden` (budget shared read-only),
+  /// `validation_failed` (422).
+  Future<Map<String, dynamic>> _write(
+    String accessToken,
+    String path,
+    Map<String, dynamic> body,
+    String failureMessage,
+  ) async {
+    try {
+      final response = await _client
+          .patch(
+            Uri.parse('${ApiConfig.baseUrl}$path'),
+            headers: {
+              ...ApiConfig.getAuthHeaders(accessToken),
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map) {
+          return {'success': true, 'data': data.cast<String, dynamic>()};
+        }
+        return {'success': false, 'error': failureMessage};
+      }
+      if (response.statusCode == 401) {
+        return {'success': false, 'error': 'unauthorized'};
+      }
+      return {
+        'success': false,
+        'error': extractErrorMessage(response.body, fallback: failureMessage),
+        if (_errorCode(response) case final code?) 'code': code,
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  static String? _errorCode(http.Response response) {
+    if (response.statusCode == 422) return 'validation_failed';
+    if (response.statusCode != 403) return null;
+    try {
+      final data = jsonDecode(response.body);
+      final error = data is Map ? data['error']?.toString() : null;
+      if (error == 'insufficient_scope') return 'insufficient_scope';
+    } on FormatException {
+      // A non-JSON 403 is still a refusal of this budget.
+    }
+    return 'forbidden';
   }
 
   Future<Map<String, dynamic>> _get(
