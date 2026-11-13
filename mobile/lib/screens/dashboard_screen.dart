@@ -34,6 +34,7 @@ import '../widgets/open_on_web_action.dart';
 import '../widgets/spending_vs_normal_card.dart';
 import '../widgets/sync_now_dialog.dart';
 import '../widgets/sync_status_chip.dart';
+import 'account_form_sheet.dart';
 import 'account_group_screen.dart';
 import 'connections_screen.dart';
 import 'reports_screen.dart';
@@ -494,8 +495,7 @@ class DashboardScreenState extends State<DashboardScreen> {
               onPrimary: () =>
                   _openWeb(l.shellConnections, ConnectionsScreen.webPath),
               secondaryLabel: l.dshAddManualAccount,
-              onSecondary: () =>
-                  _openWeb(l.dshAddAccount, _newAccountPath),
+              onSecondary: () => openAddAccount(context, onReload: reloadData),
             ),
           ),
         ),
@@ -512,9 +512,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       slivers: body,
     );
   }
-
-  /// The web's new account flow (choose a type, or connect a provider).
-  static const _newAccountPath = '/accounts/new';
 
   List<Widget> _content(
     AppLocalizations l,
@@ -635,7 +632,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           label: l.dshAccounts,
           actionIcon: SureIcons.plus,
           actionSemanticLabel: l.dshAddAccount,
-          onAction: () => _openWeb(l.dshAddAccount, _newAccountPath),
+          onAction: () => openAddAccount(context, onReload: reloadData),
         ),
       ),
       SliverToBoxAdapter(

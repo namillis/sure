@@ -4,19 +4,16 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../utils/portfolio_math.dart';
 import '../widgets/ds/ds.dart';
-import '../widgets/open_on_web_action.dart';
+import 'account_form_sheet.dart';
 import 'portfolio_screen.dart';
 
 /// The Invest tab: the [PortfolioScreen] over the investment and crypto
 /// accounts in [AccountsProvider] (loaded by the dashboard).
 class InvestScreen extends StatelessWidget {
   const InvestScreen({super.key});
-
-  /// The web's new account flow, where a brokerage or an investment account
-  /// is added.
-  static const newAccountPath = '/accounts/new';
 
   Future<void> _reload(BuildContext context) async {
     final authProvider = context.read<AuthProvider>();
@@ -72,17 +69,21 @@ class InvestScreen extends StatelessWidget {
           onPrimary: () => _reload(context),
         ));
       }
+      bool native;
+      try {
+        native = context
+            .watch<ServerFeaturesProvider>()
+            .has(ServerFeaturesProvider.accountsWrite);
+      } on ProviderNotFoundException {
+        native = false;
+      }
       return titled(SureEmptyState(
         key: const ValueKey('investEmpty'),
         icon: SureIcons.trendingUp,
         title: l.ds2iEmptyTitle,
-        body: l.ds2iEmptyBody,
-        secondaryLabel: l.shellOpenOnWeb,
-        onSecondary: () => openWebFallback(
-          context,
-          title: l.dshAddAccount,
-          path: newAccountPath,
-        ),
+        body: native ? l.spaInvestEmptyBody : l.ds2iEmptyBody,
+        secondaryLabel: native ? l.dshAddAccount : l.shellOpenOnWeb,
+        onSecondary: () => openAddAccount(context),
       ));
     }
 

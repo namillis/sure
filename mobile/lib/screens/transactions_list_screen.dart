@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'account_form_sheet.dart';
 import 'transaction_sheet.dart';
 import 'package:provider/provider.dart';
 import '../models/account.dart';
@@ -115,6 +118,13 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
   }
 
   void _reloadHeader() => setState(() => _headerReloads++);
+
+  /// The account was deleted from the edit sheet: back to Home, whose
+  /// account list reloads without it.
+  void _onAccountDeleted() {
+    unawaited(reloadAccounts(context));
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
 
   bool get _hasInvestmentSections =>
       widget.account.accountType == 'investment' ||
@@ -498,6 +508,7 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
       AccountActionsMenu(
         account: _account,
         onChanged: _onAccountChanged,
+        onDeleted: _onAccountDeleted,
       ),
     ];
 
