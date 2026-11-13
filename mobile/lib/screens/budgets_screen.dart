@@ -7,6 +7,7 @@ import '../models/budget.dart';
 import '../providers/auth_provider.dart';
 import '../providers/budgets_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/connectivity_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_tokens.dart';
@@ -15,12 +16,15 @@ import '../widgets/budget_summary_card.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
 import 'budget_category_transactions_screen.dart';
+import 'budget_edit_sheets.dart';
 
 /// Monthly budget overview, matching the web Budgets page: month switcher,
 /// a "left to spend" hero with a progress bar, then one panel of category
 /// rows (subcategories nested under their parent) and the month's income.
-/// Tapping a category opens its transactions for that budget period.
-/// Read-only: budgets are edited on web.
+/// Tapping a category opens its transactions for that budget period. On a
+/// Sure+ server with `budgets.write` it opens an edit sheet instead (with a
+/// row to the transactions), and "Edit totals" under the hero edits the
+/// month's budget and expected income; otherwise budgets are edited on web.
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({
     super.key,
@@ -135,6 +139,35 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       context,
       title: AppLocalizations.of(context).budgetsTitle,
       path: BudgetsScreen.webPath(month),
+    );
+  }
+
+  /// Sure+ `budgets.write`: rows and totals edit natively.
+  bool _canEdit(BuildContext context) =>
+      context
+          .watch<ServerFeaturesProvider?>()
+          ?.has(ServerFeaturesProvider.budgetsWrite) ??
+      false;
+
+  void _editCategory(Budget budget, BudgetCategory bc, List<String> ids) {
+    showBudgetCategorySheet(
+      context,
+      provider: _provider,
+      budget: budget,
+      budgetCategory: bc,
+      accessToken: _accessToken,
+      onOpenTransactions: () => _openCategory(budget, bc, ids),
+      onUnauthorized: _provider.markUnauthorized,
+    );
+  }
+
+  void _editTotals(Budget budget) {
+    showBudgetTotalsSheet(
+      context,
+      provider: _provider,
+      budget: budget,
+      accessToken: _accessToken,
+      onUnauthorized: _provider.markUnauthorized,
     );
   }
 
@@ -353,10 +386,22 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       ));
     }
 
+    final canEdit = _canEdit(context);
+    final editable = canEdit && !provider.isReadOnly;
+    if (canEdit && provider.isReadOnly) {
+      widgets.add(SureBanner(
+        key: const ValueKey('budgetReadOnlyBanner'),
+        icon: SureIcons.info,
+        message: l.spbSharedReadOnly,
+        margin: bannerMargin,
+      ));
+    }
+
     widgets.add(BudgetSummaryCard(
       budget: budget,
       hideAmounts: hideAmounts,
       now: provider.today,
+      onEditTotals: editable ? () => _editTotals(budget) : null,
     ));
 
     if (!budget.initialized) {
@@ -401,6 +446,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     final groups = provider.visibleGroups;
     final overCount = provider.overBudgetCount;
     final filter = overCount == 0 ? _CategoryFilter.all : _filter;
+    final canEdit = _canEdit(context);
+    final editable = canEdit && !provider.isReadOnly;
 
     final rows = <Widget>[];
     void addRow(BudgetCategory bc, List<String> ids, {bool indented = false}) {
@@ -410,7 +457,9 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           budgetCategory: bc,
           hideAmounts: hideAmounts,
           indented: indented,
-          onTap: () => _openCategory(budget, bc, ids),
+          onTap: editable
+              ? () => _editCategory(budget, bc, ids)
+              : () => _openCategory(budget, bc, ids),
         ),
       );
     }
@@ -441,9 +490,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     return [
       SureSectionHeader(
         label: l.budgetsCategoriesTitle,
-        actionLabel: l.ds2pEditOnWeb,
-        actionIcon: SureIcons.arrowUpRight,
-        onAction: () => _openWeb(budget.startDate),
+        // Native editing replaces the web link; allocation moves and new
+        // months stay on the web (the empty state still links there).
+        actionLabel: canEdit ? null : l.ds2pEditOnWeb,
+        actionIcon: canEdit ? null : SureIcons.arrowUpRight,
+        onAction: canEdit ? null : () => _openWeb(budget.startDate),
       ),
       if (overCount > 0)
         Padding(

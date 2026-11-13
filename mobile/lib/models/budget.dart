@@ -147,6 +147,7 @@ class BudgetCategory {
     required this.inheritsParentBudget,
     required this.rolloverEnabled,
     required this.category,
+    this.hasRolloverSetting = true,
     this.budgetedSpending,
     this.budgetedSpendingCents,
     this.displayBudgetedSpending,
@@ -166,6 +167,10 @@ class BudgetCategory {
   final bool subcategory;
   final bool inheritsParentBudget;
   final bool rolloverEnabled;
+
+  /// Whether the payload had `rollover_enabled` at all, so the edit sheet
+  /// only offers the switch when the server knows about rollover.
+  final bool hasRolloverSetting;
   final BudgetCategoryInfo category;
 
   final String? budgetedSpending;
@@ -193,6 +198,7 @@ class BudgetCategory {
         subcategory: subcategory,
         inheritsParentBudget: inheritsParentBudget,
         rolloverEnabled: rolloverEnabled,
+        hasRolloverSetting: hasRolloverSetting,
         category: category,
         budgetedSpending: budgetedSpending,
         budgetedSpendingCents: budgetedSpendingCents,
@@ -270,6 +276,7 @@ class BudgetCategory {
       subcategory: json['subcategory'] == true,
       inheritsParentBudget: json['inherits_parent_budget'] == true,
       rolloverEnabled: json['rollover_enabled'] == true,
+      hasRolloverSetting: json.containsKey('rollover_enabled'),
       category: categoryJson is Map
           ? BudgetCategoryInfo.fromJson(categoryJson.cast<String, dynamic>())
           : const BudgetCategoryInfo(id: '', name: ''),
