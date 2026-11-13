@@ -11,6 +11,7 @@ import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/categories_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/connectivity_service.dart';
 import '../services/recurring_transactions_service.dart';
 import '../theme/sure_colors.dart';
@@ -118,15 +119,31 @@ class _BillsScreenState extends State<BillsScreen> {
       await _unauthorized();
       return;
     }
-    context.read<CategoriesProvider?>()?.fetchCategories(accessToken: token);
+    // Rows show their category's icon. Sure+ servers embed it in each row
+    // (`recurring.category`), so the shared list is fetched only for rows
+    // that lack it; stock Sure needs the list, fetched alongside.
+    final embedsCategory = context
+            .read<ServerFeaturesProvider?>()
+            ?.has(ServerFeaturesProvider.recurringCategory) ??
+        false;
+    final categories = context.read<CategoriesProvider?>();
+    if (!embedsCategory) categories?.fetchCategories(accessToken: token);
     final result = await _service.getAll(accessToken: token);
     if (!mounted) return;
     if (result['error'] == 'unauthorized') {
       await _unauthorized();
       return;
     }
+    if (embedsCategory &&
+        result['success'] == true &&
+        (result['recurring_transactions'] as List<dynamic>)
+            .cast<RecurringTransaction>()
+            .any((item) => item.needsCategoryLookup)) {
+      categories?.fetchCategories(accessToken: token);
+    }
     final ok = result['success'] == true;
-    final offline = !ok && (_maybeRead<ConnectivityService>()?.isOffline ?? false);
+    final offline =
+        !ok && (_maybeRead<ConnectivityService>()?.isOffline ?? false);
     if (!ok && _items != null && !offline) {
       // Keep the list on a failed refresh; say so instead of blanking it.
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -280,7 +297,7 @@ class _BillsScreenState extends State<BillsScreen> {
                   key: ValueKey('bill-${item.id}'),
                   item: item,
                   section: section,
-                  category: categories[item.categoryId],
+                  category: item.resolveCategory(categories),
                   now: now,
                   onTap: () => _openEditor(item),
                   onPay: item.paymentUrl != null &&
@@ -606,8 +623,8 @@ class BillRow extends StatelessWidget {
         color: palette.surfaceInset,
         shape: BoxShape.circle,
       ),
-      child: SureIcon(SureIcons.receipt,
-          size: 15, color: palette.textSecondary),
+      child:
+          SureIcon(SureIcons.receipt, size: 15, color: palette.textSecondary),
     );
   }
 }

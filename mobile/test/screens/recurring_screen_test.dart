@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:sure_mobile/models/account.dart';
 import 'package:sure_mobile/models/category.dart';
 import 'package:sure_mobile/providers/categories_provider.dart';
+import 'package:sure_mobile/providers/server_features_provider.dart';
 import 'package:sure_mobile/screens/recurring_screen.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/services/recurring_transactions_service.dart';
@@ -168,8 +169,7 @@ void main() {
     expect(icon.icon, 'dumbbell');
     for (final id in ['rt_2', 'rt_3']) {
       final row = find.byKey(ValueKey('recurring-$id'));
-      expect(
-          find.descendant(of: row, matching: find.byType(SureCategoryIcon)),
+      expect(find.descendant(of: row, matching: find.byType(SureCategoryIcon)),
           findsNothing);
       expect(
         tester
@@ -179,6 +179,71 @@ void main() {
         SureIcons.repeat,
       );
     }
+  });
+
+  group('with recurring.category', () {
+    Future<_Categories> pumpWithFeature(
+        WidgetTester tester, List<Map<String, dynamic>> items) async {
+      final categories = _Categories();
+      final features = ServerFeaturesProvider()
+        ..debugSet({ServerFeaturesProvider.recurringCategory});
+      await pumpLocalized(
+        tester,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<CategoriesProvider>.value(value: categories),
+            ChangeNotifierProvider<ServerFeaturesProvider>.value(
+                value: features),
+          ],
+          child: RecurringScreen(
+            service: RecurringTransactionsService(client: server(items)),
+            accessTokenLoader: () async => 'token',
+            onUnauthorized: () async {},
+            accounts: accounts,
+            clock: () => DateTime(2026, 11, 10),
+          ),
+        ),
+      );
+      return categories;
+    }
+
+    testWidgets('uses the embedded category and skips the category list',
+        (tester) async {
+      final categories = await pumpWithFeature(tester, [
+        recurringJson(categoryId: 'cat_rent', category: {
+          'id': 'cat_rent',
+          'name': 'Housing',
+          'color': '#4da568',
+          'icon': 'house',
+        }),
+        recurringJson(id: 'rt_2', name: 'Unfiled', embedCategory: true),
+      ]);
+
+      expect(categories.fetches, 0);
+      final icon = tester.widget<SureCategoryIcon>(find.descendant(
+          of: find.byKey(const ValueKey('recurring-rt_1')),
+          matching: find.byType(SureCategoryIcon)));
+      expect(icon.color, '#4da568');
+      expect(icon.icon, 'house');
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('recurring-rt_2')),
+              matching: find.byType(SureCategoryIcon)),
+          findsNothing);
+    });
+
+    testWidgets('falls back to the category list for a row without it',
+        (tester) async {
+      final categories = await pumpWithFeature(tester, [
+        recurringJson(categoryId: 'cat_gym'),
+      ]);
+
+      expect(categories.fetches, 1);
+      final icon = tester.widget<SureCategoryIcon>(find.descendant(
+          of: find.byKey(const ValueKey('recurring-rt_1')),
+          matching: find.byType(SureCategoryIcon)));
+      expect(icon.icon, 'dumbbell');
+    });
   });
 
   testWidgets('the + on the first section opens the new-item sheet',
@@ -221,20 +286,16 @@ void main() {
     expect(find.text('Enter an amount greater than zero'), findsOneWidget);
     expect(writes, isEmpty);
 
-    await tester.enterText(
-        field('Name'), 'Gym Membership');
-    await tester.enterText(
-        field('Amount'), '49.99');
-    await tester.enterText(
-        field('Payment link'), 'ftp://x');
+    await tester.enterText(field('Name'), 'Gym Membership');
+    await tester.enterText(field('Amount'), '49.99');
+    await tester.enterText(field('Payment link'), 'ftp://x');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     expect(find.text('Enter a link starting with http:// or https://'),
         findsOneWidget);
     expect(writes, isEmpty);
 
-    await tester.enterText(
-        field('Payment link'), '');
+    await tester.enterText(field('Payment link'), '');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
@@ -262,8 +323,7 @@ void main() {
 
     await tester.tap(find.text('Income'));
     await tester.enterText(field('Name'), 'Pay');
-    await tester.enterText(
-        field('Amount'), '3000');
+    await tester.enterText(field('Amount'), '3000');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
@@ -280,8 +340,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Edit recurring'), findsOneWidget);
 
-    await tester.enterText(
-        field('Notes'), 'Cancel in March');
+    await tester.enterText(field('Notes'), 'Cancel in March');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
@@ -308,8 +367,8 @@ void main() {
 
   testWidgets('swiping a paused row offers Resume', (tester) async {
     final writes = <http.Request>[];
-    await pump(tester,
-        server([recurringJson(status: 'inactive')], writes: writes));
+    await pump(
+        tester, server([recurringJson(status: 'inactive')], writes: writes));
 
     await swipe(tester, 'Gym Membership');
     await tester.tap(find.text('Resume'));
@@ -335,8 +394,7 @@ void main() {
     expect(find.text('Gym Membership paused'), findsOneWidget);
   });
 
-  testWidgets('delete asks first and only deletes on confirm',
-      (tester) async {
+  testWidgets('delete asks first and only deletes on confirm', (tester) async {
     final writes = <http.Request>[];
     await pump(tester, server([recurringJson()], writes: writes));
 

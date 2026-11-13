@@ -20,6 +20,11 @@ Map<String, dynamic> recurringJson({
   },
   Map<String, dynamic>? merchant,
   String? categoryId,
+
+  /// Sure+ (`recurring.category`) embeds the category; stock Sure has no
+  /// `category` key. Pass [embedCategory] to render the Sure+ shape.
+  Map<String, dynamic>? category,
+  bool embedCategory = false,
 }) =>
     {
       'id': id,
@@ -44,6 +49,7 @@ Map<String, dynamic> recurringJson({
       'expected_amount_avg_cents': null,
       'bill_type': 'bill',
       'category_id': categoryId,
+      if (embedCategory || category != null) 'category': category,
       'anchor_date': null,
       'weekend_adjust': 'none',
       'end_mode': 'never',

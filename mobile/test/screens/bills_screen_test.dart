@@ -6,6 +6,9 @@ import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
+import 'package:sure_mobile/models/category.dart';
+import 'package:sure_mobile/providers/categories_provider.dart';
+import 'package:sure_mobile/providers/server_features_provider.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
 import 'package:sure_mobile/screens/bills_screen.dart';
 import 'package:sure_mobile/screens/recurring_form_screen.dart';
@@ -13,10 +16,25 @@ import 'package:sure_mobile/services/connectivity_service.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/services/recurring_transactions_service.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
+import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/home_fixtures.dart';
 import '../support/l10n_harness.dart';
 import '../support/recurring_fixtures.dart';
+
+class _Categories extends CategoriesProvider {
+  int fetches = 0;
+  @override
+  List<Category> get categories => [
+        Category(
+            id: 'cat_util', name: 'Utilities', color: '#6471eb', icon: 'plug'),
+      ];
+  @override
+  bool get isLoading => false;
+  @override
+  Future<void> fetchCategories({required String accessToken}) async =>
+      fetches++;
+}
 
 Map<String, dynamic> billJson({
   required String id,
@@ -113,8 +131,8 @@ void main() {
   });
 
   MockClient server(List<Map<String, dynamic>> items, {int status = 200}) =>
-      MockClient((request) async =>
-          http.Response(recurringIndexBody(items), status));
+      MockClient(
+          (request) async => http.Response(recurringIndexBody(items), status));
 
   Future<void> pump(
     WidgetTester tester,
@@ -137,10 +155,8 @@ void main() {
         ),
       );
 
-  String richText(WidgetTester tester, String key) => tester
-      .widget<Text>(find.byKey(ValueKey(key)))
-      .textSpan!
-      .toPlainText();
+  String richText(WidgetTester tester, String key) =>
+      tester.widget<Text>(find.byKey(ValueKey(key))).textSpan!.toPlainText();
 
   testWidgets('summary shows the month, left to pay and paid progress',
       (tester) async {
@@ -219,8 +235,7 @@ void main() {
     await pump(
       tester,
       server([
-        billJson(
-            id: 'a', name: 'A', amountCents: 2500, next: '2026-11-25'),
+        billJson(id: 'a', name: 'A', amountCents: 2500, next: '2026-11-25'),
         billJson(
             id: 'b',
             name: 'B',
@@ -295,6 +310,82 @@ void main() {
 
     expect(find.text("You're offline"), findsOneWidget);
     expect(find.text('Try Again'), findsOneWidget);
+  });
+
+  group('row category', () {
+    Future<_Categories> pumpWith(WidgetTester tester,
+        List<Map<String, dynamic>> items, Set<String> features) async {
+      final categories = _Categories();
+      await pumpLocalized(
+        tester,
+        logicalHeight: 1600,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ConnectivityService>(
+                create: (_) => FakeConnectivity()),
+            ChangeNotifierProvider<CategoriesProvider>.value(value: categories),
+            ChangeNotifierProvider<ServerFeaturesProvider>(
+                create: (_) => ServerFeaturesProvider()..debugSet(features)),
+          ],
+          child: BillsScreen(
+            service: RecurringTransactionsService(client: server(items)),
+            accessTokenLoader: () async => 'token',
+            onUnauthorized: () async {},
+            accounts: const [],
+            familyCurrency: 'USD',
+            clock: () => DateTime(2026, 11, 10),
+          ),
+        ),
+      );
+      return categories;
+    }
+
+    SureCategoryIcon iconOf(WidgetTester tester, String id) =>
+        tester.widget<SureCategoryIcon>(find.descendant(
+            of: find.byKey(ValueKey('bill-$id')),
+            matching: find.byType(SureCategoryIcon)));
+
+    testWidgets('with recurring.category, uses the embedded one',
+        (tester) async {
+      final categories = await pumpWith(tester, [
+        {
+          ...billJson(
+              id: 'electric',
+              name: 'Electric',
+              amountCents: 12000,
+              next: '2026-11-20'),
+          'category_id': 'cat_util',
+          'category': {
+            'id': 'cat_util',
+            'name': 'Utilities',
+            'color': '#6471eb',
+            'icon': 'zap',
+          },
+        },
+      ], {
+        ServerFeaturesProvider.recurringCategory
+      });
+
+      expect(categories.fetches, 0);
+      expect(iconOf(tester, 'electric').icon, 'zap');
+    });
+
+    testWidgets('without the feature, looks the id up in the list',
+        (tester) async {
+      final categories = await pumpWith(tester, [
+        {
+          ...billJson(
+              id: 'electric',
+              name: 'Electric',
+              amountCents: 12000,
+              next: '2026-11-20'),
+          'category_id': 'cat_util',
+        },
+      ], const {});
+
+      expect(categories.fetches, 1);
+      expect(iconOf(tester, 'electric').icon, 'plug');
+    });
   });
 
   testWidgets('Swedish fits a 320 px wide screen', (tester) async {

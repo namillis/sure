@@ -10,6 +10,7 @@ import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/categories_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/recurring_transactions_service.dart';
 import '../theme/sure_colors.dart';
 import '../utils/investment_math.dart';
@@ -100,13 +101,27 @@ class _RecurringScreenState extends State<RecurringScreen> {
       await _unauthorized();
       return;
     }
-    // Rows show their category's icon; the list is shared and fetched once.
-    context.read<CategoriesProvider?>()?.fetchCategories(accessToken: token);
+    // Rows show their category's icon. Sure+ servers embed it in each row
+    // (`recurring.category`), so the shared list is fetched only for rows
+    // that lack it; stock Sure needs the list, fetched alongside.
+    final embedsCategory = context
+            .read<ServerFeaturesProvider?>()
+            ?.has(ServerFeaturesProvider.recurringCategory) ??
+        false;
+    final categories = context.read<CategoriesProvider?>();
+    if (!embedsCategory) categories?.fetchCategories(accessToken: token);
     final result = await _service.getAll(accessToken: token);
     if (!mounted) return;
     if (result['error'] == 'unauthorized') {
       await _unauthorized();
       return;
+    }
+    if (embedsCategory &&
+        result['success'] == true &&
+        (result['recurring_transactions'] as List<dynamic>)
+            .cast<RecurringTransaction>()
+            .any((item) => item.needsCategoryLookup)) {
+      categories?.fetchCategories(accessToken: token);
     }
     if (result['success'] != true && _items != null) {
       // Keep the list on a failed refresh; say so instead of blanking it.
@@ -277,7 +292,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
                   _RecurringRow(
                     key: ValueKey('recurring-${item.id}'),
                     item: item,
-                    category: categories[item.categoryId],
+                    category: item.resolveCategory(categories),
                     now: now,
                     onLiability: accounts.any((account) =>
                         account.id == item.accountId && account.isLiability),

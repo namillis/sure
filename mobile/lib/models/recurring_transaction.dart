@@ -1,4 +1,5 @@
 import '../utils/json_parsing.dart';
+import 'category.dart';
 
 /// One rule of a recurring series' cadence, as `recurrence_rules` in
 /// `GET /api/v1/recurring_transactions`.
@@ -53,6 +54,7 @@ class RecurringTransaction {
     this.notes,
     this.billType,
     this.categoryId,
+    this.category,
     this.expectedAmountMinCents,
     this.expectedAmountMaxCents,
     this.renewsOn,
@@ -83,9 +85,14 @@ class RecurringTransaction {
   final String? notes;
   final String? billType;
 
-  /// The server sends only the id (no name, color or icon); resolve it
-  /// against the category list.
+  /// Stock Sure sends only this id; resolve it against the category list
+  /// when [category] is null.
   final String? categoryId;
+
+  /// The embedded category (id, name, color, icon), sent by Sure+ servers
+  /// with the `recurring.category` feature. Null on stock Sure or when the
+  /// item has no category.
+  final Category? category;
 
   /// The range detection expects, in minor units with [amountCents]' sign.
   /// Null for manual items without one.
@@ -103,6 +110,7 @@ class RecurringTransaction {
   factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
     final account = json['account'] as Map<String, dynamic>?;
     final merchant = json['merchant'] as Map<String, dynamic>?;
+    final category = json['category'];
     return RecurringTransaction(
       id: JsonParsing.parseRequiredString(json['id'], 'id'),
       amount: json['amount']?.toString() ?? '',
@@ -125,6 +133,9 @@ class RecurringTransaction {
       notes: _blankToNull(json['notes']),
       billType: _blankToNull(json['bill_type']),
       categoryId: _blankToNull(json['category_id']),
+      category: category is Map<String, dynamic> && category['id'] != null
+          ? Category.fromJson(category)
+          : null,
       expectedAmountMinCents:
           JsonParsing.parseInt(json['expected_amount_min_cents']),
       expectedAmountMaxCents:
@@ -139,6 +150,14 @@ class RecurringTransaction {
   String get displayName => name ?? merchantName ?? '';
 
   bool get isActive => status == 'active';
+
+  /// True when the row names a category the server did not embed, so the
+  /// category list is needed to show it.
+  bool get needsCategoryLookup => categoryId != null && category == null;
+
+  /// The embedded [category], else [categoryId] looked up in [byId].
+  Category? resolveCategory(Map<String, Category> byId) =>
+      category ?? byId[categoryId];
 
   /// Money in (negative amounts, per Sure's sign convention).
   bool get isInflow =>
