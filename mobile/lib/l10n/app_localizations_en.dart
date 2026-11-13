@@ -4926,4 +4926,312 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sg2Consumed => 'Spend recorded';
+
+  @override
+  String get sb2Move => 'Move';
+
+  @override
+  String get sb2MoveTitle => 'Move budget';
+
+  @override
+  String get sb2From => 'From';
+
+  @override
+  String get sb2To => 'To';
+
+  @override
+  String get sb2Choose => 'Choose';
+
+  @override
+  String sb2AmountLeft(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String get sb2Moved => 'Budget moved';
+
+  @override
+  String get sb2MoveFailed => 'Couldn\'t move the budget. Try again.';
+
+  @override
+  String get sb2ErrInsufficientFunds =>
+      'This category doesn\'t have that much budget to move.';
+
+  @override
+  String get sb2ErrDifferentBudgets =>
+      'Both categories must be in the same budget.';
+
+  @override
+  String get sb2ErrNonPositive => 'Enter an amount greater than 0.';
+
+  @override
+  String get sb2ErrSameCategory => 'Pick a different category to move to.';
+
+  @override
+  String get sb2ErrParentChild =>
+      'You can\'t move budget between a category and its own subcategory.';
+
+  @override
+  String get sb2ErrUncategorized => 'Uncategorized can\'t hold a budget.';
+
+  @override
+  String sb2AvgSuffix(String amount) {
+    return ' · avg $amount';
+  }
+
+  @override
+  String get sb2NoBudgetBody =>
+      'Copy an earlier month\'s amounts or start with an empty budget.';
+
+  @override
+  String sb2CopyMonth(String month) {
+    return 'Copy $month';
+  }
+
+  @override
+  String get sb2StartFromScratch => 'Start from scratch';
+
+  @override
+  String get sb2NothingToCopy => 'There\'s no earlier budget to copy.';
+
+  @override
+  String get sb2SetupFailed => 'Couldn\'t set up the budget. Try again.';
+
+  @override
+  String get sr2Ungrouped => 'Ungrouped';
+
+  @override
+  String get sr2GroupUnnamed => 'Group';
+
+  @override
+  String get sr2ManageGroups => 'Manage groups';
+
+  @override
+  String get sr2GroupsTitle => 'Groups';
+
+  @override
+  String get sr2GroupsLoadFailed => 'Couldn\'t load groups';
+
+  @override
+  String get sr2GroupsEmpty => 'No groups yet';
+
+  @override
+  String get sr2GroupsEmptyBody =>
+      'Groups keep related rules together. Tap + to add one.';
+
+  @override
+  String sr2GroupRuleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rules',
+      one: '1 rule',
+      zero: 'No rules',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sr2GroupNew => 'New group';
+
+  @override
+  String get sr2GroupRename => 'Rename group';
+
+  @override
+  String get sr2GroupName => 'Name';
+
+  @override
+  String get sr2GroupNameHint => 'e.g. Subscriptions';
+
+  @override
+  String get sr2GroupNameRequired => 'Enter a name.';
+
+  @override
+  String sr2GroupDeleteTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get sr2GroupDeleteBody => 'Its rules stay, without a group.';
+
+  @override
+  String get sr2GroupDeleted => 'Group deleted';
+
+  @override
+  String get sr2RuleGroup => 'Group';
+
+  @override
+  String get sr2RuleGroupNone => 'None';
+
+  @override
+  String get sr2RuleGroupNew => 'New group…';
+
+  @override
+  String get sr2RulesEdit => 'Edit';
+
+  @override
+  String sr2MoveGroup(String name) {
+    return 'Move $name';
+  }
+
+  @override
+  String sr2MoveRule(String name) {
+    return 'Move $name';
+  }
+
+  @override
+  String get sr2ApplyAll => 'Apply all rules';
+
+  @override
+  String get sr2ApplyAllTitle => 'Apply all rules?';
+
+  @override
+  String sr2ApplyAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Runs all $count rules on existing transactions.',
+      one: 'Runs your 1 rule on existing transactions.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sr2ApplyAllQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Queued $count rules',
+      one: 'Queued 1 rule',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sr2SplitFixed => 'Fixed';
+
+  @override
+  String get sr2SplitPercentage => 'Percentage';
+
+  @override
+  String get sr2SplitAdd => 'Add split';
+
+  @override
+  String get sr2SplitNew => 'New split';
+
+  @override
+  String get sr2SplitEdit => 'Edit split';
+
+  @override
+  String get sr2SplitName => 'Name';
+
+  @override
+  String get sr2SplitNameHint => 'e.g. Rent';
+
+  @override
+  String get sr2SplitNameRequired => 'Enter a name.';
+
+  @override
+  String get sr2SplitSharePercent => 'Percent';
+
+  @override
+  String get sr2SplitShareAmount => 'Amount';
+
+  @override
+  String get sr2SplitShareInvalid => 'Enter a number above zero.';
+
+  @override
+  String get sr2SplitUnnamed => 'Unnamed split';
+
+  @override
+  String get sr2SplitNoCategory => 'No category';
+
+  @override
+  String sr2SplitTotalPercent(String total) {
+    return 'Total $total%';
+  }
+
+  @override
+  String sr2SplitTotalAmount(String total) {
+    return 'Total $total';
+  }
+
+  @override
+  String sr2SplitTotalOf(String total, String amount) {
+    return 'Total $total of $amount';
+  }
+
+  @override
+  String get sr2SplitFixedHelp =>
+      'Fixed splits need an \"Amount is\" condition (not inside an \"any\" group), and the splits must add up to that amount.';
+
+  @override
+  String get sr2SplitCount => 'Add 2 to 20 splits.';
+
+  @override
+  String get sr2SplitPercentTotal => 'The percentages must add up to 100%.';
+
+  @override
+  String get sr2SplitFixedNeedsAmount =>
+      'Add an \"Amount is\" condition to save fixed splits.';
+
+  @override
+  String sr2SplitFixedMustMatch(String amount) {
+    return 'The splits must add up to $amount.';
+  }
+
+  @override
+  String get sr2SplitOnlyAction =>
+      'A split must be the rule\'s only action, so the other actions were removed.';
+
+  @override
+  String get sa2RateChanges => 'Rate changes';
+
+  @override
+  String get sa2AddRateChange => 'Add rate change';
+
+  @override
+  String get sa2RateChange => 'Rate change';
+
+  @override
+  String get sa2EffectiveDate => 'Effective date';
+
+  @override
+  String get sa2Rate => 'Rate';
+
+  @override
+  String get sa2RateRequired => 'Enter a rate';
+
+  @override
+  String get sa2RateOutOfRange => 'Enter a rate from 0 to 100';
+
+  @override
+  String get sa2InsuranceRate => 'Insurance rate';
+
+  @override
+  String get sa2InsuranceType => 'Insurance type';
+
+  @override
+  String get sa2InsuranceLevelTerm => 'Level term';
+
+  @override
+  String get sa2InsuranceDecreasing => 'Decreasing';
+
+  @override
+  String get sa2DayCount => 'Day count convention';
+
+  @override
+  String get sa2DayCountThirty360 => '30/360';
+
+  @override
+  String get sa2DayCountActual365 => 'Actual/365';
+
+  @override
+  String get sa2DayCountActualActual => 'Actual/actual';
+
+  @override
+  String get sa2PrincipalOnly => 'Principal-only transfers';
+
+  @override
+  String get sa2PrincipalOnlySub => 'Interest is recorded separately';
 }

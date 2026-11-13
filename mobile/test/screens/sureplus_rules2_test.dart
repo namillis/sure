@@ -729,6 +729,48 @@ void main() {
       expect(_saveEnabled(tester), isFalse);
       expect(sent, isNull);
     });
+
+    testWidgets('an untouched mixed split is saved back unchanged',
+        (tester) async {
+      final value = jsonEncode({
+        'splits': [
+          {'name': 'Rent', 'type': 'fixed', 'share': '100'},
+          {'name': 'Rest', 'type': 'percentage', 'share': '100'},
+        ],
+      });
+      final split = Rule(id: 'r6', name: 'Mixed', actions: [
+        RuleAction(id: 'a6', actionType: 'split_transaction', value: value),
+      ]);
+      Map<String, dynamic>? sent;
+      await pumpLocalized(
+        tester,
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showRuleEditorSheet(
+              context,
+              existing: split,
+              catalog: RuleEditorCatalog.fromJson(
+                  jsonDecode(jsonEncode(_catalog)) as Map<String, dynamic>),
+              choices: const RuleEditorChoices(),
+              save: (body) async {
+                sent = body;
+                return {'success': false, 'error': 'nope'};
+              },
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(_saveEnabled(tester), isTrue);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      final body = (sent!['rule'] as Map?) ?? sent!;
+      final action = (body['actions'] as List).single as Map;
+      expect(action['value'], value);
+      expect(action.containsKey('split_rows'), isFalse);
+    });
   });
 
   testWidgets('the split editor and reorder mode fit 320 pt',

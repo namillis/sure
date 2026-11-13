@@ -242,12 +242,35 @@ class _ActionDraft {
   List<RuleSplitRow> splitRows = [];
   String splitMode = 'percentage';
 
+  /// A saved split mixing fixed and percentage rows: the editor has one
+  /// mode for the whole split, so an untouched mixed split is sent back as
+  /// its original value instead of being converted.
+  bool _splitMixed = false;
+  List<RuleSplitRow> _loadedRows = const [];
+  String _loadedMode = 'percentage';
+
   void _loadSplit() {
     splitRows = List.of(RuleSplitRow.parseValue(value));
     if (splitRows.isNotEmpty && splitRows.every((r) => r.isFixed)) {
       splitMode = 'fixed';
     }
+    _splitMixed = splitRows.any((r) => r.isFixed) &&
+        splitRows.any((r) => !r.isFixed);
+    _loadedRows = List.of(splitRows);
+    _loadedMode = splitMode;
   }
+
+  bool get _splitUntouched =>
+      splitMode == _loadedMode &&
+      splitRows.length == _loadedRows.length &&
+      [
+        for (var i = 0; i < splitRows.length; i++)
+          identical(splitRows[i], _loadedRows[i])
+      ].every((same) => same);
+
+  /// True for a saved mixed split nobody has edited yet.
+  bool get keepsSavedSplit =>
+      input == RuleValueInput.split && _splitMixed && _splitUntouched;
 
   /// Switches to [newType], clearing the value when its kind changes.
   void changeType(String newType) {
@@ -260,7 +283,9 @@ class _ActionDraft {
   RuleValueInput get input =>
       catalog.action(type)?.input ?? RuleValueInput.unsupported;
 
-  RuleAction toAction() => input == RuleValueInput.split
+  RuleAction toAction() => keepsSavedSplit
+      ? RuleAction(id: id, actionType: type, value: value)
+      : input == RuleValueInput.split
       ? RuleAction(
           id: id,
           actionType: type,
@@ -437,6 +462,8 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
 
   /// Why the split can't be saved yet, or null.
   String? _splitProblem(AppLocalizations l, _ActionDraft split) {
+    // An untouched mixed split goes back as saved; the server validated it.
+    if (split.keepsSavedSplit) return null;
     final rows = split.splitRows;
     if (rows.length < 2 || rows.length > 20) return l.sr2SplitCount;
     final total = _splitTotal(split);

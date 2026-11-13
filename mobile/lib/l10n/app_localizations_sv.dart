@@ -4960,4 +4960,313 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get sg2Consumed => 'Uttaget har registrerats';
+
+  @override
+  String get sb2Move => 'Flytta';
+
+  @override
+  String get sb2MoveTitle => 'Flytta budget';
+
+  @override
+  String get sb2From => 'Från';
+
+  @override
+  String get sb2To => 'Till';
+
+  @override
+  String get sb2Choose => 'Välj';
+
+  @override
+  String sb2AmountLeft(String amount) {
+    return '$amount kvar';
+  }
+
+  @override
+  String get sb2Moved => 'Budgeten flyttades';
+
+  @override
+  String get sb2MoveFailed => 'Det gick inte att flytta budgeten. Försök igen.';
+
+  @override
+  String get sb2ErrInsufficientFunds =>
+      'Kategorin har inte så mycket budget att flytta.';
+
+  @override
+  String get sb2ErrDifferentBudgets =>
+      'Båda kategorierna måste finnas i samma budget.';
+
+  @override
+  String get sb2ErrNonPositive => 'Ange ett belopp större än 0.';
+
+  @override
+  String get sb2ErrSameCategory => 'Välj en annan kategori att flytta till.';
+
+  @override
+  String get sb2ErrParentChild =>
+      'Du kan inte flytta budget mellan en kategori och dess egen underkategori.';
+
+  @override
+  String get sb2ErrUncategorized => 'Okategoriserat kan inte ha någon budget.';
+
+  @override
+  String sb2AvgSuffix(String amount) {
+    return ' · snitt $amount';
+  }
+
+  @override
+  String get sb2NoBudgetBody =>
+      'Kopiera beloppen från en tidigare månad eller börja med en tom budget.';
+
+  @override
+  String sb2CopyMonth(String month) {
+    return 'Kopiera $month';
+  }
+
+  @override
+  String get sb2StartFromScratch => 'Börja från noll';
+
+  @override
+  String get sb2NothingToCopy => 'Det finns ingen tidigare budget att kopiera.';
+
+  @override
+  String get sb2SetupFailed => 'Det gick inte att skapa budgeten. Försök igen.';
+
+  @override
+  String get sr2Ungrouped => 'Utan grupp';
+
+  @override
+  String get sr2GroupUnnamed => 'Grupp';
+
+  @override
+  String get sr2ManageGroups => 'Hantera grupper';
+
+  @override
+  String get sr2GroupsTitle => 'Grupper';
+
+  @override
+  String get sr2GroupsLoadFailed => 'Det gick inte att läsa in grupperna';
+
+  @override
+  String get sr2GroupsEmpty => 'Inga grupper än';
+
+  @override
+  String get sr2GroupsEmptyBody =>
+      'Grupper håller ihop regler som hör ihop. Tryck på + för att lägga till en.';
+
+  @override
+  String sr2GroupRuleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count regler',
+      one: '1 regel',
+      zero: 'Inga regler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sr2GroupNew => 'Ny grupp';
+
+  @override
+  String get sr2GroupRename => 'Byt namn på grupp';
+
+  @override
+  String get sr2GroupName => 'Namn';
+
+  @override
+  String get sr2GroupNameHint => 't.ex. Prenumerationer';
+
+  @override
+  String get sr2GroupNameRequired => 'Ange ett namn.';
+
+  @override
+  String sr2GroupDeleteTitle(String name) {
+    return 'Ta bort $name?';
+  }
+
+  @override
+  String get sr2GroupDeleteBody => 'Reglerna finns kvar, utan grupp.';
+
+  @override
+  String get sr2GroupDeleted => 'Gruppen togs bort';
+
+  @override
+  String get sr2RuleGroup => 'Grupp';
+
+  @override
+  String get sr2RuleGroupNone => 'Ingen';
+
+  @override
+  String get sr2RuleGroupNew => 'Ny grupp…';
+
+  @override
+  String get sr2RulesEdit => 'Redigera';
+
+  @override
+  String sr2MoveGroup(String name) {
+    return 'Flytta $name';
+  }
+
+  @override
+  String sr2MoveRule(String name) {
+    return 'Flytta $name';
+  }
+
+  @override
+  String get sr2ApplyAll => 'Tillämpa alla regler';
+
+  @override
+  String get sr2ApplyAllTitle => 'Tillämpa alla regler?';
+
+  @override
+  String sr2ApplyAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kör alla $count regler på befintliga transaktioner.',
+      one: 'Kör din enda regel på befintliga transaktioner.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sr2ApplyAllQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count regler köade',
+      one: '1 regel köad',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sr2SplitFixed => 'Fast belopp';
+
+  @override
+  String get sr2SplitPercentage => 'Procent';
+
+  @override
+  String get sr2SplitAdd => 'Lägg till del';
+
+  @override
+  String get sr2SplitNew => 'Ny del';
+
+  @override
+  String get sr2SplitEdit => 'Redigera del';
+
+  @override
+  String get sr2SplitName => 'Namn';
+
+  @override
+  String get sr2SplitNameHint => 't.ex. Hyra';
+
+  @override
+  String get sr2SplitNameRequired => 'Ange ett namn.';
+
+  @override
+  String get sr2SplitSharePercent => 'Procent';
+
+  @override
+  String get sr2SplitShareAmount => 'Belopp';
+
+  @override
+  String get sr2SplitShareInvalid => 'Ange ett tal större än noll.';
+
+  @override
+  String get sr2SplitUnnamed => 'Namnlös del';
+
+  @override
+  String get sr2SplitNoCategory => 'Ingen kategori';
+
+  @override
+  String sr2SplitTotalPercent(String total) {
+    return 'Totalt $total %';
+  }
+
+  @override
+  String sr2SplitTotalAmount(String total) {
+    return 'Totalt $total';
+  }
+
+  @override
+  String sr2SplitTotalOf(String total, String amount) {
+    return 'Totalt $total av $amount';
+  }
+
+  @override
+  String get sr2SplitFixedHelp =>
+      'Fasta delar kräver villkoret \"Belopp är\" (inte i en \"någon\"-grupp), och delarna måste summera till det beloppet.';
+
+  @override
+  String get sr2SplitCount => 'Lägg till 2 till 20 delar.';
+
+  @override
+  String get sr2SplitPercentTotal =>
+      'Procentsatserna måste bli 100 % tillsammans.';
+
+  @override
+  String get sr2SplitFixedNeedsAmount =>
+      'Lägg till villkoret \"Belopp är\" för att spara fasta delar.';
+
+  @override
+  String sr2SplitFixedMustMatch(String amount) {
+    return 'Delarna måste summera till $amount.';
+  }
+
+  @override
+  String get sr2SplitOnlyAction =>
+      'En delning måste vara regelns enda åtgärd, så de andra åtgärderna togs bort.';
+
+  @override
+  String get sa2RateChanges => 'Ränteändringar';
+
+  @override
+  String get sa2AddRateChange => 'Lägg till ränteändring';
+
+  @override
+  String get sa2RateChange => 'Ränteändring';
+
+  @override
+  String get sa2EffectiveDate => 'Gäller från';
+
+  @override
+  String get sa2Rate => 'Ränta';
+
+  @override
+  String get sa2RateRequired => 'Ange en ränta';
+
+  @override
+  String get sa2RateOutOfRange => 'Ange en ränta mellan 0 och 100';
+
+  @override
+  String get sa2InsuranceRate => 'Försäkringssats';
+
+  @override
+  String get sa2InsuranceType => 'Försäkringstyp';
+
+  @override
+  String get sa2InsuranceLevelTerm => 'Fast premie';
+
+  @override
+  String get sa2InsuranceDecreasing => 'Minskande';
+
+  @override
+  String get sa2DayCount => 'Dagberäkningsmetod';
+
+  @override
+  String get sa2DayCountThirty360 => '30/360';
+
+  @override
+  String get sa2DayCountActual365 => 'Faktisk/365';
+
+  @override
+  String get sa2DayCountActualActual => 'Faktisk/faktisk';
+
+  @override
+  String get sa2PrincipalOnly => 'Överföringar endast amortering';
+
+  @override
+  String get sa2PrincipalOnlySub => 'Räntan bokförs separat';
 }

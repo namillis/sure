@@ -8461,6 +8461,516 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Spend recorded'**
   String get sg2Consumed;
+
+  /// Swipe action on a budget category row and the action of the move sheet: moves part of its budget to another category.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get sb2Move;
+
+  /// Title of the sheet that moves budget from one category to another.
+  ///
+  /// In en, this message translates to:
+  /// **'Move budget'**
+  String get sb2MoveTitle;
+
+  /// Row label in the move-budget sheet for the category the money leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get sb2From;
+
+  /// Row label in the move-budget sheet for the category the money goes to.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get sb2To;
+
+  /// Value of the To row before a category is picked.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get sb2Choose;
+
+  /// Subtitle of the From row: what is left to spend in the category.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left'**
+  String sb2AmountLeft(String amount);
+
+  /// Snackbar after a budget move succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget moved'**
+  String get sb2Moved;
+
+  /// Generic error when a budget move fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t move the budget. Try again.'**
+  String get sb2MoveFailed;
+
+  /// Move refused: the amount is more than the source category can give.
+  ///
+  /// In en, this message translates to:
+  /// **'This category doesn\'t have that much budget to move.'**
+  String get sb2ErrInsufficientFunds;
+
+  /// Move refused: the categories belong to different budgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Both categories must be in the same budget.'**
+  String get sb2ErrDifferentBudgets;
+
+  /// Move refused or blocked: the amount is zero, negative or not a number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than 0.'**
+  String get sb2ErrNonPositive;
+
+  /// Move refused: source and destination are the same category.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a different category to move to.'**
+  String get sb2ErrSameCategory;
+
+  /// Move refused: one category is the parent of the other.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t move budget between a category and its own subcategory.'**
+  String get sb2ErrParentChild;
+
+  /// Move refused: one side is Uncategorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncategorized can\'t hold a budget.'**
+  String get sb2ErrUncategorized;
+
+  /// Appended to the Spent line in the budget category sheet: the median monthly spending.
+  ///
+  /// In en, this message translates to:
+  /// **' · avg {amount}'**
+  String sb2AvgSuffix(String amount);
+
+  /// Body of the empty state for a month without a budget, when it can be set up in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy an earlier month\'s amounts or start with an empty budget.'**
+  String get sb2NoBudgetBody;
+
+  /// Primary button of the empty budget month: copies the previous month's budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy {month}'**
+  String sb2CopyMonth(String month);
+
+  /// Secondary button of the empty budget month: sets up an empty budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from scratch'**
+  String get sb2StartFromScratch;
+
+  /// Shown when copying the previous month fails because no earlier month is set up.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no earlier budget to copy.'**
+  String get sb2NothingToCopy;
+
+  /// Generic error when copying or starting a budget month fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t set up the budget. Try again.'**
+  String get sb2SetupFailed;
+
+  /// Rules list section header for rules without a group.
+  ///
+  /// In en, this message translates to:
+  /// **'Ungrouped'**
+  String get sr2Ungrouped;
+
+  /// Fallback name of a rule group the app has no name for.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get sr2GroupUnnamed;
+
+  /// Row at the bottom of the rules list that opens the rule groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage groups'**
+  String get sr2ManageGroups;
+
+  /// Title of the rule groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get sr2GroupsTitle;
+
+  /// Rule groups screen error state and snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load groups'**
+  String get sr2GroupsLoadFailed;
+
+  /// Rule groups screen empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet'**
+  String get sr2GroupsEmpty;
+
+  /// Rule groups screen empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups keep related rules together. Tap + to add one.'**
+  String get sr2GroupsEmptyBody;
+
+  /// Subtitle of a rule group row: how many rules it holds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No rules} one{1 rule} other{{count} rules}}'**
+  String sr2GroupRuleCount(int count);
+
+  /// Title of the add rule group sheet and the + button label.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get sr2GroupNew;
+
+  /// Title of the rename rule group sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename group'**
+  String get sr2GroupRename;
+
+  /// Name field label on the rule group sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sr2GroupName;
+
+  /// Name field placeholder on the rule group sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Subscriptions'**
+  String get sr2GroupNameHint;
+
+  /// Error when saving a rule group without a name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name.'**
+  String get sr2GroupNameRequired;
+
+  /// Delete rule group confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String sr2GroupDeleteTitle(String name);
+
+  /// Delete rule group confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Its rules stay, without a group.'**
+  String get sr2GroupDeleteBody;
+
+  /// Snackbar after deleting a rule group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get sr2GroupDeleted;
+
+  /// Rule editor row and picker title for the rule's group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get sr2RuleGroup;
+
+  /// Picker choice and row value for no group, category or merchant.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get sr2RuleGroupNone;
+
+  /// Rule editor group picker choice that names a new group.
+  ///
+  /// In en, this message translates to:
+  /// **'New group…'**
+  String get sr2RuleGroupNew;
+
+  /// Rules list nav bar button that turns on reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get sr2RulesEdit;
+
+  /// Screen reader label of a rule group's drag handle in reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {name}'**
+  String sr2MoveGroup(String name);
+
+  /// Screen reader label of a rule's drag handle in reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {name}'**
+  String sr2MoveRule(String name);
+
+  /// Row at the top of the rules list that runs every rule on existing transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply all rules'**
+  String get sr2ApplyAll;
+
+  /// Title of the apply all rules confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply all rules?'**
+  String get sr2ApplyAllTitle;
+
+  /// Apply all dialog: how many rules run.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Runs your 1 rule on existing transactions.} other{Runs all {count} rules on existing transactions.}}'**
+  String sr2ApplyAllBody(int count);
+
+  /// Snackbar after apply all rules was queued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Queued 1 rule} other{Queued {count} rules}}'**
+  String sr2ApplyAllQueued(int count);
+
+  /// Split editor choice: each split is a fixed amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get sr2SplitFixed;
+
+  /// Split editor choice: each split is a percentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get sr2SplitPercentage;
+
+  /// Split editor row that adds a split.
+  ///
+  /// In en, this message translates to:
+  /// **'Add split'**
+  String get sr2SplitAdd;
+
+  /// Title of the sheet that adds a split row.
+  ///
+  /// In en, this message translates to:
+  /// **'New split'**
+  String get sr2SplitNew;
+
+  /// Title of the sheet that edits a split row.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit split'**
+  String get sr2SplitEdit;
+
+  /// Split row name field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sr2SplitName;
+
+  /// Split row name field placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Rent'**
+  String get sr2SplitNameHint;
+
+  /// Error for a split row without a name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name.'**
+  String get sr2SplitNameRequired;
+
+  /// Split row share field label for a percentage split.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent'**
+  String get sr2SplitSharePercent;
+
+  /// Split row share field label for a fixed split.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get sr2SplitShareAmount;
+
+  /// Error for a split share that isn't a positive number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number above zero.'**
+  String get sr2SplitShareInvalid;
+
+  /// Split row title when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed split'**
+  String get sr2SplitUnnamed;
+
+  /// Split row subtitle when it has no category or merchant.
+  ///
+  /// In en, this message translates to:
+  /// **'No category'**
+  String get sr2SplitNoCategory;
+
+  /// Running total of a percentage split.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {total}%'**
+  String sr2SplitTotalPercent(String total);
+
+  /// Running total of a fixed split.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {total}'**
+  String sr2SplitTotalAmount(String total);
+
+  /// Running total of a fixed split against the rule's exact amount condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {total} of {amount}'**
+  String sr2SplitTotalOf(String total, String amount);
+
+  /// Explains what an all-fixed split needs.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed splits need an \"Amount is\" condition (not inside an \"any\" group), and the splits must add up to that amount.'**
+  String get sr2SplitFixedHelp;
+
+  /// Split editor error: wrong number of rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2 to 20 splits.'**
+  String get sr2SplitCount;
+
+  /// Split editor error: percentages don't total 100.
+  ///
+  /// In en, this message translates to:
+  /// **'The percentages must add up to 100%.'**
+  String get sr2SplitPercentTotal;
+
+  /// Split editor error: fixed splits without an exact amount condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an \"Amount is\" condition to save fixed splits.'**
+  String get sr2SplitFixedNeedsAmount;
+
+  /// Split editor error: fixed shares don't sum to the condition amount.
+  ///
+  /// In en, this message translates to:
+  /// **'The splits must add up to {amount}.'**
+  String sr2SplitFixedMustMatch(String amount);
+
+  /// Note after picking a split removed the rule's other actions.
+  ///
+  /// In en, this message translates to:
+  /// **'A split must be the rule\'s only action, so the other actions were removed.'**
+  String get sr2SplitOnlyAction;
+
+  /// Section header for a loan's rate changes in the edit account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate changes'**
+  String get sa2RateChanges;
+
+  /// Row that adds a rate change to a loan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rate change'**
+  String get sa2AddRateChange;
+
+  /// Title of the sheet that adds or edits one loan rate change.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate change'**
+  String get sa2RateChange;
+
+  /// Date a loan rate change applies from.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective date'**
+  String get sa2EffectiveDate;
+
+  /// Annual interest rate of a loan rate change.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get sa2Rate;
+
+  /// Validation error when a rate change has no rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a rate'**
+  String get sa2RateRequired;
+
+  /// Validation error when a rate change is below 0 or above 100 percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a rate from 0 to 100'**
+  String get sa2RateOutOfRange;
+
+  /// Loan field: annual insurance rate in percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance rate'**
+  String get sa2InsuranceRate;
+
+  /// Loan field: how the insurance premium is charged.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance type'**
+  String get sa2InsuranceType;
+
+  /// Insurance type: charged on the original balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Level term'**
+  String get sa2InsuranceLevelTerm;
+
+  /// Insurance type: charged on what is still owed.
+  ///
+  /// In en, this message translates to:
+  /// **'Decreasing'**
+  String get sa2InsuranceDecreasing;
+
+  /// Loan field: how the lender measures each period against a year.
+  ///
+  /// In en, this message translates to:
+  /// **'Day count convention'**
+  String get sa2DayCount;
+
+  /// Day count convention option.
+  ///
+  /// In en, this message translates to:
+  /// **'30/360'**
+  String get sa2DayCountThirty360;
+
+  /// Day count convention option.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual/365'**
+  String get sa2DayCountActual365;
+
+  /// Day count convention option.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual/actual'**
+  String get sa2DayCountActualActual;
+
+  /// Loan switch: linked transfers repay only principal.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal-only transfers'**
+  String get sa2PrincipalOnly;
+
+  /// Subtitle of the principal-only transfers switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest is recorded separately'**
+  String get sa2PrincipalOnlySub;
 }
 
 class _AppLocalizationsDelegate
