@@ -58,6 +58,11 @@ goal_schema = {
     progress_basis: { type: :string, enum: %w[balance contributions] },
     months_of_runway: { type: :number, nullable: true },
     projected_completion_date: { type: :string, format: :date, nullable: true },
+    available_actions: {
+      type: :array,
+      items: { type: :string, enum: %w[pause resume complete archive unarchive reopen consume] },
+      description: "Lifecycle actions valid in the goal's current state, plus consume when the caller can record a spend"
+    },
     behind_pace: { type: :boolean },
     needs_attention: { type: :boolean },
     status_callout: { type: :string, nullable: true, description: "Localized one-line status, as on the web goal page" },
@@ -272,6 +277,105 @@ RSpec.describe "API V1 Goals", type: :request do
       response "404", "not found" do
         schema "$ref" => "#/components/schemas/ErrorResponse"
         let(:id) { SecureRandom.uuid }
+        run_test!
+      end
+    end
+  end
+
+  %w[pause resume complete archive unarchive reopen].each do |event|
+    path "/api/v1/goals/{id}/#{event}" do
+      parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
+      let(:id) { goal.id }
+
+      patch "#{event.capitalize} goal" do
+        tags "Goals"
+        description "Fires the goal's #{event} transition, as on the web goal page. No body. " \
+                    "Returns 422 invalid_transition, with a message to show as-is, when the goal's state does not allow it."
+        security [ { apiKeyAuth: [] } ]
+        produces "application/json"
+
+        allowed_from = {
+          "pause" => nil, "resume" => :pause!, "complete" => nil,
+          "archive" => nil, "unarchive" => :archive!, "reopen" => :complete!
+        }.fetch(event)
+        refused_from = {
+          "pause" => :pause!, "resume" => nil, "complete" => :archive!,
+          "archive" => :archive!, "unarchive" => nil, "reopen" => nil
+        }.fetch(event)
+
+        response "200", "transition applied" do
+          schema goal_schema
+          before { goal.public_send(allowed_from) if allowed_from }
+          run_test!
+        end
+
+        response "422", "transition not allowed in the current state" do
+          schema "$ref" => "#/components/schemas/ErrorResponse"
+          before { goal.public_send(refused_from) if refused_from }
+          run_test!
+        end
+
+        response "404", "not found" do
+          schema "$ref" => "#/components/schemas/ErrorResponse"
+          let(:id) { SecureRandom.uuid }
+          run_test!
+        end
+      end
+    end
+  end
+
+  path "/api/v1/goals/{id}/consume" do
+    parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
+    let(:id) { goal.id }
+
+    post "Record a spend against a goal" do
+      tags "Goals"
+      description "The web's \"I used some of this money\" flow. Adds to consumed_amount and releases the same amount " \
+                  "from the account's earmark. Pass either amount (plus account_id when the caller can see more than one " \
+                  "linked account) or transaction_id to attribute a detected outflow, whose amount and account are used. " \
+                  "Only one-off active goals can be spent from; refusals return 422 consumption_refused with a reason."
+      security [ { apiKeyAuth: [] } ]
+      consumes "application/json"
+      produces "application/json"
+      parameter name: :body, in: :body, required: true, schema: {
+        type: :object,
+        required: %w[consumption],
+        properties: {
+          consumption: {
+            type: :object,
+            properties: {
+              amount: { type: :number, description: "In goal currency; ignored when transaction_id is given" },
+              account_id: { type: :string, format: :uuid, description: "Linked account the money came out of" },
+              transaction_id: { type: :string, format: :uuid, description: "An unattributed outflow on a linked account" }
+            }
+          }
+        }
+      }
+
+      response "201", "spend recorded" do
+        schema goal_schema
+        let(:body) { { consumption: { amount: 200 } } }
+        run_test!
+      end
+
+      response "422", "spend refused" do
+        schema type: :object, required: %w[error message],
+               properties: {
+                 error: { type: :string, enum: %w[consumption_refused validation_failed] },
+                 reason: { type: :string, enum: %w[non_positive maintained exceeds_target account_required account_not_linked
+                                                   not_active exceeds_earmark transaction_already_claimed transaction_not_found
+                                                   no_linked_account missing_exchange_rate] },
+                 message: { type: :string },
+                 errors: { type: :array, items: { type: :string } }
+               }
+        let(:body) { { consumption: { amount: 0 } } }
+        run_test!
+      end
+
+      response "404", "not found" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        let(:id) { SecureRandom.uuid }
+        let(:body) { { consumption: { amount: 200 } } }
         run_test!
       end
     end

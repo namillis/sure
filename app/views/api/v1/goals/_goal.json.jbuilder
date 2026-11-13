@@ -43,6 +43,12 @@ json.projected_completion_date(
     Date.current >> (goal.remaining_amount.to_d / goal.pace.to_d).ceil.to_i
   end
 )
+# What the web goal page offers this viewer: the permitted AASM events, plus
+# consume when there is something the viewer can spend (as on the web menu).
+json.available_actions(
+  goal.aasm.events(permitted: true).map { |event| event.name.to_s } +
+    (goal.spendable_within?(accessible_account_ids) ? [ "consume" ] : [])
+)
 json.behind_pace goal.behind_pace?
 json.needs_attention goal.needs_attention?
 json.status_callout goal.status_callout_context

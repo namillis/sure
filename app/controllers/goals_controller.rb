@@ -173,14 +173,11 @@ class GoalsController < ApplicationController
   end
 
   def record_consumption
-    txn = consumption_transaction
-    amount = txn ? @goal.convert_money!(txn.entry.amount_money, date: txn.entry.date).amount : params[:amount].to_d
-
-    @goal.consume!(amount, account: consumption_account(txn), transaction: txn)
+    amount = goal_consumption.record!(
+      amount: params[:amount], account_id: params[:account_id], transaction_id: params[:transaction_id]
+    )
     redirect_to goal_path(@goal),
                 notice: t("goals.consume.success", amount: Money.new(amount, @goal.currency).format)
-  rescue Money::ConversionError
-    redirect_to goal_path(@goal), alert: t("goals.consume.errors.missing_exchange_rate")
   rescue Goal::ConsumptionRefused => e
     redirect_to goal_path(@goal), alert: t("goals.consume.errors.#{e.reason}")
   rescue ActiveRecord::RecordInvalid => e
@@ -341,57 +338,16 @@ class GoalsController < ApplicationController
       }
     end
 
-    # A blank id means "the goal has one link, use it" and the model decides
-    # whether that is true. An id that resolves to nothing is refused here
-    # rather than falling back to nil: on a single-link goal, nil would consume
-    # from that link and the user would see a spend recorded against an account
-    # they did not name.
-    # Attributing a detected outflow: the transaction says both how much and
-    # from where, so neither is taken from the form.
-    def consumption_transaction
-      return nil if params[:transaction_id].blank?
-
-      withdrawal_detector.unattributed_outflows(limit: 50)
-                         .find_by(entryable_id: params[:transaction_id])
-                         &.entryable ||
-        raise(Goal::ConsumptionRefused.new(:transaction_not_found))
+    def goal_consumption
+      @goal_consumption ||= Goal::Consumption.new(@goal, user: Current.user)
     end
 
-    # The goal's links narrowed to what the VIEWER may see. A goal can be
-    # backed by a private account, and every half of that leak matters: the
-    # dialog would name an account the reader is not allowed to know exists,
-    # the outflow panel would list its transactions, and a POST would reduce
-    # its earmark — the figures moving afterwards saying how much was in it.
     def eligible_consumption_accounts
-      @eligible_consumption_accounts ||= begin
-        linked = @goal.linked_accounts
-        visible_ids = Current.user.accessible_accounts.where(id: linked.map(&:id)).pluck(:id).to_set
-        linked.select { |account| visible_ids.include?(account.id) }
-      end
+      goal_consumption.eligible_accounts
     end
 
     def withdrawal_detector
-      Goal::WithdrawalDetector.new(@goal, accounts: eligible_consumption_accounts)
-    end
-
-    def consumption_account(txn = nil)
-      eligible = eligible_consumption_accounts
-      raise Goal::ConsumptionRefused.new(:account_not_linked) if eligible.empty?
-
-      # An attributed outflow names its own account; a typed spend names one
-      # only when the goal has a choice to offer.
-      account_id = txn ? txn.entry.account_id : params[:account_id]
-
-      if account_id.present?
-        return eligible.find { |account| account.id.to_s == account_id.to_s } ||
-          raise(Goal::ConsumptionRefused.new(:account_not_linked))
-      end
-
-      # Named explicitly even when the goal has several links, because the one
-      # the viewer can reach is not necessarily the one the model would pick on
-      # its own. With more than one eligible link it stays nil, and the model
-      # refuses rather than guessing.
-      eligible.size == 1 ? eligible.first : nil
+      goal_consumption.withdrawal_detector
     end
 
     def perform_transition!(event)

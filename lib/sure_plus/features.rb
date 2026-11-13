@@ -10,6 +10,7 @@ module SurePlus
       categories.write
       connections.manage
       goals
+      goals.lifecycle
       goals.pledges
       holdings.stable_order
       merchants.write
