@@ -65,6 +65,45 @@ RSpec.configure do |config|
                                        'and on unauthenticated requests.' }
             }
           },
+          ChartSeries: {
+            type: :object,
+            required: %w[period start_date end_date interval currency trend values],
+            properties: {
+              period: { type: :string, description: 'Period key, or "custom" when start_date/end_date were given.' },
+              start_date: { type: :string, format: :date },
+              end_date: { type: :string, format: :date },
+              interval: { type: :string, example: '1 day', description: '1 day up to a year, 1 week up to 5 years, 1 month beyond.' },
+              currency: { type: :string, example: 'USD' },
+              account_id: { type: :string, format: :uuid, description: 'Account series only.' },
+              view: { type: :string, enum: %w[balance cash_balance holdings_balance], description: 'Account series only.' },
+              trend: {
+                type: :object,
+                nullable: true,
+                description: 'Change from the first to the last point. Null when there are no points.',
+                properties: {
+                  value: { type: :string },
+                  value_cents: { type: :integer },
+                  percent: { type: :number, nullable: true, description: 'Null when the first value is zero.' },
+                  percent_formatted: { type: :string },
+                  direction: { type: :string, enum: %w[up down flat] },
+                  favorable_direction: { type: :string, enum: %w[up down] }
+                }
+              },
+              values: {
+                type: :array,
+                description: 'Oldest first, one point per interval.',
+                items: {
+                  type: :object,
+                  required: %w[date value value_cents],
+                  properties: {
+                    date: { type: :string, format: :date },
+                    value: { type: :string },
+                    value_cents: { type: :integer }
+                  }
+                }
+              }
+            }
+          },
           SplitRequest: {
             type: :object,
             required: %w[split],

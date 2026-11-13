@@ -12,6 +12,7 @@ module SurePlus
       budgets.permissions
       budgets.write
       categories.write
+      charts.series
       connections.manage
       goals
       goals.lifecycle

@@ -52,6 +52,88 @@ components:
             type: string
           description: Sure+ API additions this server supports. Absent on a stock
             Sure server and on unauthenticated requests.
+    ChartSeries:
+      type: object
+      required:
+      - period
+      - start_date
+      - end_date
+      - interval
+      - currency
+      - trend
+      - values
+      properties:
+        period:
+          type: string
+          description: Period key, or "custom" when start_date/end_date were given.
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        interval:
+          type: string
+          example: 1 day
+          description: 1 day up to a year, 1 week up to 5 years, 1 month beyond.
+        currency:
+          type: string
+          example: USD
+        account_id:
+          type: string
+          format: uuid
+          description: Account series only.
+        view:
+          type: string
+          enum:
+          - balance
+          - cash_balance
+          - holdings_balance
+          description: Account series only.
+        trend:
+          type: object
+          nullable: true
+          description: Change from the first to the last point. Null when there are
+            no points.
+          properties:
+            value:
+              type: string
+            value_cents:
+              type: integer
+            percent:
+              type: number
+              nullable: true
+              description: Null when the first value is zero.
+            percent_formatted:
+              type: string
+            direction:
+              type: string
+              enum:
+              - up
+              - down
+              - flat
+            favorable_direction:
+              type: string
+              enum:
+              - up
+              - down
+        values:
+          type: array
+          description: Oldest first, one point per interval.
+          items:
+            type: object
+            required:
+            - date
+            - value
+            - value_cents
+            properties:
+              date:
+                type: string
+                format: date
+              value:
+                type: string
+              value_cents:
+                type: integer
     SplitRequest:
       type: object
       required:
@@ -7182,6 +7264,124 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
         '404':
           description: category not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/net_worth_series":
+    get:
+      summary: Net worth chart series
+      tags:
+      - Charts
+      description: 'The family net worth series the web dashboard draws, from the
+        same cached query. Supports If-None-Match: a matching ETag returns 304 with
+        no body. Requires the read scope.'
+      security:
+      - apiKeyAuth: []
+      parameters:
+      - name: period
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Period key (last_day, current_week, last_7_days, current_month,
+          last_month, last_30_days, last_90_days, current_year, last_365_days, last_5_years,
+          last_10_years, all_time). Defaults to last_30_days. Ignored when start_date
+          and end_date are given.
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: series returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ChartSeries"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: invalid period or dates
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/accounts/{id}/balance_series":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      summary: Account balance chart series
+      tags:
+      - Charts
+      description: One account's balance series, as on the web account page (linked
+        investment series normalized). Disabled accounts are included. Supports If-None-Match.
+        Requires the read scope.
+      security:
+      - apiKeyAuth: []
+      parameters:
+      - name: period
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Period key (last_day, current_week, last_7_days, current_month,
+          last_month, last_30_days, last_90_days, current_year, last_365_days, last_5_years,
+          last_10_years, all_time). Defaults to last_30_days. Ignored when start_date
+          and end_date are given.
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: view
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - balance
+          - cash_balance
+          - holdings_balance
+      responses:
+        '200':
+          description: series returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ChartSeries"
+        '404':
+          description: account not found or not accessible
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: invalid view, period or dates
           content:
             application/json:
               schema:

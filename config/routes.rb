@@ -834,6 +834,8 @@ Rails.application.routes.draw do
       # Production API endpoints
       resources :accounts, only: [ :index, :show ]
       resources :accounts, only: [ :create, :update, :destroy ], controller: "account_writes"
+      get "accounts/:id/balance_series", to: "account_balance_series#show", as: :account_balance_series
+      resource :net_worth_series, only: :show, controller: :net_worth_series
       resources :account_statements, only: [ :index, :show, :create ]
       resources :balances, only: [ :index, :show ]
       resources :budgets, only: [ :index, :show ]

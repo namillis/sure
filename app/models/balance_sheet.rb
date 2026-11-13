@@ -42,6 +42,14 @@ class BalanceSheet
     net_worth_series_builder.net_worth_series(period: period)
   end
 
+  def net_worth_series_cache_key(period:)
+    net_worth_series_builder.cache_key(period)
+  end
+
+  def any_net_worth_accounts?
+    net_worth_series_builder.any_accounts?
+  end
+
   def currency
     family.currency
   end
