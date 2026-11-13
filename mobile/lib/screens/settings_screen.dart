@@ -12,6 +12,7 @@ import '../providers/merchants_provider.dart';
 import '../providers/tags_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/offline_storage_service.dart';
 import '../services/log_service.dart';
 import '../services/biometric_service.dart';
@@ -23,6 +24,7 @@ import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
 import 'backend_config_screen.dart';
 import 'log_viewer_screen.dart';
+import 'profile_screen.dart';
 import 'settings_links.dart';
 import '../models/custom_proxy_header.dart';
 import '../services/api_config.dart';
@@ -66,6 +68,18 @@ String profileInitials(User? user) {
 String serverHost(String baseUrl) {
   final host = Uri.tryParse(baseUrl)?.host ?? '';
   return host.isEmpty ? baseUrl : host;
+}
+
+/// True when the server edits the profile through the API (Sure+
+/// `profile.write`). Off when the app's providers aren't mounted (tests).
+bool _hasNativeProfile(BuildContext context) {
+  try {
+    return context
+        .watch<ServerFeaturesProvider>()
+        .has(ServerFeaturesProvider.profileWrite);
+  } on ProviderNotFoundException {
+    return false;
+  }
 }
 
 class SettingsScreen extends StatefulWidget {
@@ -668,6 +682,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final user = authProvider.user;
     final host = serverHost(ApiConfig.baseUrl);
     final busy = _activeDestructiveAction != null;
+    final nativeProfile = _hasNativeProfile(context);
+    void openProfile() => Navigator.push(context,
+        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()));
 
     return SureLargeTitleScaffold(
       title: l.shellSettingsTitle,
@@ -682,11 +699,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               initials: profileInitials(user),
               name: user?.displayName ?? l.settingsUserFallback,
               host: host,
-              onTap: () => openWebFallback(
-                context,
-                title: l.shellProfile,
-                path: '/settings/profile',
-              ),
+              onTap: nativeProfile
+                  ? openProfile
+                  : () => openWebFallback(
+                        context,
+                        title: l.shellProfile,
+                        path: '/settings/profile',
+                      ),
             ),
             const SettingsLinkGroups(),
             SureSectionHeader(label: l.settingsSectionDisplay),
@@ -729,6 +748,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SettingsWebRow(
                   title: l.shellPreferences,
                   path: '/settings/preferences',
+                  onTap: nativeProfile ? openProfile : null,
                 ),
               ],
             ),

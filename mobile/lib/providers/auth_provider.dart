@@ -63,6 +63,24 @@ class AuthProvider with ChangeNotifier {
     _loadStoredAuth();
   }
 
+  /// Shows a name changed on the Profile screen (Sure+ `profile.write`)
+  /// everywhere the app shows the user, and keeps it for the next launch.
+  Future<void> updateUserName({String? firstName, String? lastName}) async {
+    final user = _user;
+    if (user == null) return;
+    String? clean(String? s) => (s?.trim().isEmpty ?? true) ? null : s!.trim();
+    _user = User(
+      id: user.id,
+      email: user.email,
+      firstName: clean(firstName),
+      lastName: clean(lastName),
+      uiLayout: user.uiLayout,
+      aiEnabled: user.aiEnabled,
+    );
+    notifyListeners();
+    await _authService.saveUser(_user!);
+  }
+
   void _logAuthException(String operation, Object error) {
     LogService.instance.error(
       'AuthProvider',

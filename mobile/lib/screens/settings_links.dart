@@ -130,11 +130,16 @@ class SettingsWebRow extends StatelessWidget {
     required this.title,
     required this.path,
     this.subtitle,
+    this.onTap,
   });
 
   final String title;
   final String path;
   final String? subtitle;
+
+  /// Replaces opening [path] on the web (a native screen on servers that
+  /// support it).
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +147,7 @@ class SettingsWebRow extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       trailing: const SettingsWebMark(),
-      onTap: () => openWebFallback(context, title: title, path: path),
+      onTap: onTap ?? () => openWebFallback(context, title: title, path: path),
     );
   }
 }
