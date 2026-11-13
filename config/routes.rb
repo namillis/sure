@@ -837,7 +837,13 @@ Rails.application.routes.draw do
       resources :account_statements, only: [ :index, :show, :create ]
       resources :balances, only: [ :index, :show ]
       resources :budgets, only: [ :index, :show ]
-      resources :budgets, only: :update, controller: :budget_writes
+      resources :budgets, only: [ :create, :update ], controller: :budget_writes do
+        # :id here is the web's month param (nov-2026), not a budget id.
+        post :copy_previous, on: :member
+        resources :budget_categories, only: [], controller: :budget_category_writes do
+          post :move, on: :collection
+        end
+      end
       resources :budget_categories, only: [ :index, :show ]
       resources :budget_categories, only: :update, controller: :budget_category_writes
       resources :categories, only: [ :index, :show, :create, :update, :destroy ]

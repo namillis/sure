@@ -157,6 +157,35 @@ class Api::V1::BudgetsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "says whether each budget can be edited by the caller" do
+    @family.update!(personal_budgets: true)
+    owner = users(:family_member)
+    shared_budget = @family.budgets.create!(
+      user: owner,
+      start_date: 5.months.ago.beginning_of_month.to_date,
+      end_date: 5.months.ago.end_of_month.to_date,
+      budgeted_spending: 800,
+      currency: "USD"
+    )
+    share = BudgetShare.create!(owner: owner, viewer: @user, permission: "read_only")
+
+    get api_v1_budgets_url, headers: api_headers(@api_key)
+    assert_response :success
+    can_edit_by_id = JSON.parse(response.body)["budgets"].to_h { |budget| [ budget["id"], budget["can_edit"] ] }
+    assert_equal true, can_edit_by_id[@budget.id]
+    assert_equal false, can_edit_by_id[shared_budget.id]
+
+    get api_v1_budget_url(shared_budget.id), headers: api_headers(@api_key)
+    assert_equal false, JSON.parse(response.body)["can_edit"]
+
+    share.update!(permission: "read_write")
+    get api_v1_budget_url(shared_budget.id), headers: api_headers(@api_key)
+    assert_equal true, JSON.parse(response.body)["can_edit"]
+
+    get api_v1_budget_url(@budget.id), headers: api_headers(@api_key)
+    assert_equal true, JSON.parse(response.body)["can_edit"]
+  end
+
   test "requires authentication" do
     get api_v1_budgets_url
 

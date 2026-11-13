@@ -83,6 +83,21 @@ class Api::V1::BudgetCategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_kind_of Integer, response_data["available_to_spend_cents"]
   end
 
+  test "show includes the category's monthly average and median spending as the web computes them" do
+    expected_average = @budget_category.avg_monthly_expense_money
+    expected_median = @budget_category.median_monthly_expense_money
+
+    get api_v1_budget_category_url(@budget_category), headers: api_headers(@api_key)
+
+    assert_response :success
+    response_data = JSON.parse(response.body)
+    assert_equal expected_average.format, response_data["average_spent"]
+    assert_equal (expected_average.amount * 100).round.to_i, response_data["average_spent_cents"]
+    assert_equal expected_median.format, response_data["median_spent"]
+    assert_equal (expected_median.amount * 100).round.to_i, response_data["median_spent_cents"]
+    assert response_data["average_spent_cents"].positive?
+  end
+
   test "show exposes the carry that makes available_to_spend exceed the allocation" do
     previous_budget = @family.budgets.create!(
       start_date: 6.months.ago.beginning_of_month.to_date,
