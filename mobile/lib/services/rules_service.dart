@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/rule.dart';
+import '../utils/rule_catalog.dart';
 import 'api_config.dart';
 import 'log_service.dart';
 import 'response_list_parser.dart';
@@ -10,13 +11,18 @@ import 'response_list_parser.dart';
 /// The `rule` body of `POST`/`PATCH /api/v1/rules`: the read shape of
 /// `GET /api/v1/rules/:id` with full `conditions` and `actions` lists.
 /// [copyOf] carries the fields the editor doesn't show (effective date,
-/// stop processing, group) onto a duplicate.
+/// stop processing, group) onto a duplicate. With [sendGroup] (Sure+
+/// `rules.groups`) the editor's Group row decides the group instead:
+/// [newGroupName] creates one, else [groupId] (null for none).
 Map<String, dynamic> ruleWriteBody({
   required String? name,
   required bool active,
   required List<RuleCondition> conditions,
   required List<RuleAction> actions,
   Rule? copyOf,
+  bool sendGroup = false,
+  String? groupId,
+  String? newGroupName,
 }) =>
     {
       'name': (name?.trim().isEmpty ?? true) ? null : name!.trim(),
@@ -29,8 +35,14 @@ Map<String, dynamic> ruleWriteBody({
                 '${copyOf.effectiveDate!.month.toString().padLeft(2, '0')}-'
                 '${copyOf.effectiveDate!.day.toString().padLeft(2, '0')}',
         'stop_processing': copyOf.stopProcessing,
-        if (copyOf.ruleGroupId != null) 'rule_group_id': copyOf.ruleGroupId,
+        if (!sendGroup && copyOf.ruleGroupId != null)
+          'rule_group_id': copyOf.ruleGroupId,
       },
+      if (sendGroup)
+        if (newGroupName != null && newGroupName.trim().isNotEmpty)
+          'new_rule_group_name': newGroupName.trim()
+        else
+          'rule_group_id': groupId,
       'conditions': [for (final c in conditions) c.toJson()],
       'actions': [for (final a in actions) a.toJson()],
     };
@@ -242,6 +254,188 @@ class RulesService {
       return failure;
     } catch (e) {
       _log('applyRule', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  /// `PATCH /api/v1/rules/reorder` (Sure+ `rules.reorder`) with every rule
+  /// id, top to bottom; a group's rules must be next to each other. `'rules'`
+  /// holds the `List<Rule>` in the new order.
+  Future<Map<String, dynamic>> reorderRules({
+    required String accessToken,
+    required List<String> ruleIds,
+  }) async {
+    const fallback = 'Failed to reorder rules';
+    try {
+      final response = await _client
+          .patch(_uri('/api/v1/rules/reorder'),
+              headers: _jsonHeaders(accessToken),
+              body: jsonEncode({'rule_ids': ruleIds}))
+          .timeout(_timeout);
+      if (response.statusCode != 200) return _failure(response, fallback);
+      return {
+        'success': true,
+        'rules': extractJsonObjectList(_decode(response.body), key: 'rules')
+            .map(Rule.fromJson)
+            .toList(),
+      };
+    } catch (e) {
+      _log('reorderRules', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  /// `POST /api/v1/rules/apply_all` (Sure+ `rules.apply_all`). Without
+  /// [confirm] the server answers 422 `confirmation_required` with a
+  /// [RuleApplyConfirmation] in `'confirmation'`. With it the job is queued
+  /// (202) and `'ruleCount'` says how many rules it runs.
+  Future<Map<String, dynamic>> applyAllRules({
+    required String accessToken,
+    bool confirm = false,
+  }) async {
+    const fallback = 'Failed to apply rules';
+    try {
+      final response = await _client
+          .post(_uri('/api/v1/rules/apply_all'),
+              headers: _jsonHeaders(accessToken),
+              body: jsonEncode(confirm ? {'confirm': true} : const {}))
+          .timeout(_timeout);
+      final data = _decode(response.body);
+      if (response.statusCode == 202 || response.statusCode == 200) {
+        final queued = data is Map ? data['data'] : null;
+        return {
+          'success': true,
+          'ruleCount': queued is Map && queued['rule_count'] is num
+              ? (queued['rule_count'] as num).toInt()
+              : 0,
+        };
+      }
+      final failure = _failure(response, fallback);
+      final confirmation = data is Map ? data['confirmation'] : null;
+      if (failure['code'] == 'confirmation_required' && confirmation is Map) {
+        failure['confirmation'] = RuleApplyConfirmation.fromJson(
+            confirmation.cast<String, dynamic>());
+      }
+      return failure;
+    } catch (e) {
+      _log('applyAllRules', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  static final Map<String, RuleEditorCatalog> _catalogCache = {};
+
+  /// Forgets the cached catalogs (tests).
+  static void clearCatalogCache() => _catalogCache.clear();
+
+  /// `GET /api/v1/rules/catalog?resource_type=transaction&locale=` (Sure+
+  /// `rules.catalog`), cached for the app session per server, sign-in and
+  /// locale. `'catalog'` holds the [RuleEditorCatalog].
+  Future<Map<String, dynamic>> getCatalog({
+    required String accessToken,
+    required String locale,
+  }) async {
+    const fallback = 'Failed to load the rule options';
+    final key = '${ApiConfig.baseUrl}|$locale|${accessToken.hashCode}';
+    final cached = _catalogCache[key];
+    if (cached != null) return {'success': true, 'catalog': cached};
+    try {
+      final response = await _client
+          .get(
+              _uri('/api/v1/rules/catalog',
+                  {'resource_type': 'transaction', 'locale': locale}),
+              headers: ApiConfig.getAuthHeaders(accessToken))
+          .timeout(_timeout);
+      if (response.statusCode != 200) return _failure(response, fallback);
+      final data = _decode(response.body);
+      if (data is! Map) return {'success': false, 'error': fallback};
+      final catalog =
+          RuleEditorCatalog.fromJson(data.cast<String, dynamic>());
+      _catalogCache[key] = catalog;
+      return {'success': true, 'catalog': catalog};
+    } catch (e) {
+      _log('getCatalog', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  /// `GET /api/v1/rule_groups` (Sure+ `rules.groups`), in the rules page's
+  /// order. `'groups'` holds a `List<RuleGroup>`.
+  Future<Map<String, dynamic>> listRuleGroups(
+      {required String accessToken}) async {
+    const fallback = 'Failed to load rule groups';
+    try {
+      final response = await _client
+          .get(_uri('/api/v1/rule_groups'),
+              headers: ApiConfig.getAuthHeaders(accessToken))
+          .timeout(_timeout);
+      if (response.statusCode != 200) return _failure(response, fallback);
+      return {
+        'success': true,
+        'groups': extractJsonObjectList(_decode(response.body), key: 'data')
+            .map(RuleGroup.fromJson)
+            .toList(),
+      };
+    } catch (e) {
+      _log('listRuleGroups', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  /// `POST /api/v1/rule_groups`, or `PATCH /api/v1/rule_groups/:id` with
+  /// [id]. `'group'` holds the saved [RuleGroup].
+  Future<Map<String, dynamic>> saveRuleGroup({
+    required String accessToken,
+    String? id,
+    required String name,
+  }) async {
+    const fallback = 'Failed to save the group';
+    try {
+      final headers = _jsonHeaders(accessToken);
+      final body = jsonEncode({
+        'rule_group': {'name': name.trim()},
+      });
+      final response = await (id == null
+              ? _client.post(_uri('/api/v1/rule_groups'),
+                  headers: headers, body: body)
+              : _client.patch(
+                  _uri('/api/v1/rule_groups/${Uri.encodeComponent(id)}'),
+                  headers: headers,
+                  body: body))
+          .timeout(_timeout);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return _failure(response, fallback);
+      }
+      final data = _decode(response.body);
+      final json = data is Map ? data['data'] : null;
+      if (json is! Map) return {'success': false, 'error': fallback};
+      return {
+        'success': true,
+        'group': RuleGroup.fromJson(json.cast<String, dynamic>()),
+      };
+    } catch (e) {
+      _log('saveRuleGroup', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  /// `DELETE /api/v1/rule_groups/:id` (204). Its rules stay, ungrouped.
+  Future<Map<String, dynamic>> deleteRuleGroup({
+    required String accessToken,
+    required String id,
+  }) async {
+    const fallback = 'Failed to delete the group';
+    try {
+      final response = await _client
+          .delete(_uri('/api/v1/rule_groups/${Uri.encodeComponent(id)}'),
+              headers: ApiConfig.getAuthHeaders(accessToken))
+          .timeout(_timeout);
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        return {'success': true};
+      }
+      return _failure(response, fallback);
+    } catch (e) {
+      _log('deleteRuleGroup', e);
       return {'success': false, 'error': fallback};
     }
   }

@@ -112,6 +112,7 @@ void main() {
       SureIcons.info,
       SureIcons.lightbulb,
       SureIcons.listChecks,
+      SureIcons.gripVertical,
       SureIcons.messageCircle,
       SureIcons.minus,
       SureIcons.pencil,
