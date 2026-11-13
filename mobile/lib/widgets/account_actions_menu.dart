@@ -66,9 +66,10 @@ class AccountActionsMenu extends StatelessWidget {
     final palette = SureColors.of(context).palette;
     bool canEdit;
     try {
-      canEdit = context
-          .watch<ServerFeaturesProvider>()
-          .has(ServerFeaturesProvider.accountsWrite);
+      final features = context.watch<ServerFeaturesProvider>();
+      canEdit = features.has(ServerFeaturesProvider.accountsWrite) &&
+          !(features.has(ServerFeaturesProvider.accountsPermissions) &&
+              account.canEdit == false);
     } on ProviderNotFoundException {
       canEdit = false;
     }

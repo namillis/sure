@@ -17,6 +17,25 @@ class Account {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  /// Synced from a provider (Sure+ `accounts.permissions`); null on servers
+  /// without it, as are [canEdit], [canDelete] and [lockedFields].
+  final bool? linked;
+
+  /// `permissions.edit`: the owner or a full-control share.
+  final bool? canEdit;
+
+  /// `permissions.delete`: [canEdit] and not linked.
+  final bool? canDelete;
+
+  /// Fields a PATCH may not send: top-level keys (`balance`), then
+  /// `accountable_attributes.<key>`.
+  final List<String>? lockedFields;
+
+  /// The type's own fields, keyed as PATCH takes them in
+  /// `accountable_attributes` (Sure+ `accounts.loan_rates`; show and write
+  /// responses only). Decimals are strings.
+  final Map<String, dynamic>? accountable;
+
   Account({
     required this.id,
     required this.name,
@@ -33,9 +52,17 @@ class Account {
     this.institutionDomain,
     this.createdAt,
     this.updatedAt,
+    this.linked,
+    this.canEdit,
+    this.canDelete,
+    this.lockedFields,
+    this.accountable,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) {
+    final permissions = json['permissions'];
+    final locked = json['locked_fields'];
+    final accountable = json['accountable'];
     return Account(
       id: json['id'].toString(),
       name: JsonParsing.parseRequiredString(json['name'], 'account name'),
@@ -61,6 +88,18 @@ class Account {
       institutionDomain: JsonParsing.parseString(json['institution_domain']),
       createdAt: JsonParsing.parseDateTime(json['created_at']),
       updatedAt: JsonParsing.parseDateTime(json['updated_at']),
+      linked: json['linked'] is bool ? json['linked'] as bool : null,
+      canEdit: permissions is Map && permissions['edit'] is bool
+          ? permissions['edit'] as bool
+          : null,
+      canDelete: permissions is Map && permissions['delete'] is bool
+          ? permissions['delete'] as bool
+          : null,
+      lockedFields:
+          locked is List ? [for (final f in locked) f.toString()] : null,
+      accountable: accountable is Map
+          ? Map<String, dynamic>.from(accountable)
+          : null,
     );
   }
 

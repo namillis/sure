@@ -116,6 +116,37 @@ class AccountsService {
   Uri _accountUri(String id) => Uri.parse(
       '${ApiConfig.baseUrl}/api/v1/accounts/${Uri.encodeComponent(id)}');
 
+  /// `GET /api/v1/accounts/:id`. On Sure+ `accounts.loan_rates` servers the
+  /// [Account] in `'account'` carries the type's `accountable` block.
+  Future<Map<String, dynamic>> getAccount({
+    required String accessToken,
+    required String id,
+  }) async {
+    try {
+      final response = await _client
+          .get(_accountUri(id), headers: ApiConfig.getAuthHeaders(accessToken))
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic>) {
+          return {'success': true, 'account': Account.fromJson(data)};
+        }
+      } else if (response.statusCode == 401) {
+        return {'success': false, 'error': 'unauthorized'};
+      }
+      return {
+        'success': false,
+        'error': extractErrorMessage(response.body,
+            fallback: 'Failed to load account'),
+        'status': response.statusCode,
+      };
+    } catch (e) {
+      LogService.instance.error(
+          'AccountsService', 'GET account failed with ${e.runtimeType}');
+      return {'success': false, 'error': 'Failed to load account'};
+    }
+  }
+
   /// Sends a write and maps the reply: success with `'account'` (when the
   /// body is an account), `'unauthorized'` on 401, otherwise the server's
   /// `message` as `'error'` and its `error` code (`insufficient_scope`,

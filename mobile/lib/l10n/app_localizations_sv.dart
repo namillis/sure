@@ -4860,4 +4860,55 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get spaInvestEmptyBody =>
       'Lägg till ett investerings- eller kryptokonto, eller anslut en mäklare.';
+
+  @override
+  String get sa2RateChanges => 'Ränteändringar';
+
+  @override
+  String get sa2AddRateChange => 'Lägg till ränteändring';
+
+  @override
+  String get sa2RateChange => 'Ränteändring';
+
+  @override
+  String get sa2EffectiveDate => 'Gäller från';
+
+  @override
+  String get sa2Rate => 'Ränta';
+
+  @override
+  String get sa2RateRequired => 'Ange en ränta';
+
+  @override
+  String get sa2RateOutOfRange => 'Ange en ränta mellan 0 och 100';
+
+  @override
+  String get sa2InsuranceRate => 'Försäkringssats';
+
+  @override
+  String get sa2InsuranceType => 'Försäkringstyp';
+
+  @override
+  String get sa2InsuranceLevelTerm => 'Fast premie';
+
+  @override
+  String get sa2InsuranceDecreasing => 'Minskande';
+
+  @override
+  String get sa2DayCount => 'Dagberäkningsmetod';
+
+  @override
+  String get sa2DayCountThirty360 => '30/360';
+
+  @override
+  String get sa2DayCountActual365 => 'Faktisk/365';
+
+  @override
+  String get sa2DayCountActualActual => 'Faktisk/faktisk';
+
+  @override
+  String get sa2PrincipalOnly => 'Överföringar endast amortering';
+
+  @override
+  String get sa2PrincipalOnlySub => 'Räntan bokförs separat';
 }

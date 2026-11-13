@@ -29,6 +29,8 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const rulesWrite = 'rules.write';
   static const accountsWrite = 'accounts.write';
   static const connectionsManage = 'connections.manage';
+  static const accountsPermissions = 'accounts.permissions';
+  static const accountsLoanRates = 'accounts.loan_rates';
 
   static const _prefsPrefix = 'server_features:';
 

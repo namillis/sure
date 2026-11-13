@@ -8287,6 +8287,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add an investment or crypto account, or connect a brokerage.'**
   String get spaInvestEmptyBody;
+
+  /// Section header for a loan's rate changes in the edit account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate changes'**
+  String get sa2RateChanges;
+
+  /// Row that adds a rate change to a loan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rate change'**
+  String get sa2AddRateChange;
+
+  /// Title of the sheet that adds or edits one loan rate change.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate change'**
+  String get sa2RateChange;
+
+  /// Date a loan rate change applies from.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective date'**
+  String get sa2EffectiveDate;
+
+  /// Annual interest rate of a loan rate change.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get sa2Rate;
+
+  /// Validation error when a rate change has no rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a rate'**
+  String get sa2RateRequired;
+
+  /// Validation error when a rate change is below 0 or above 100 percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a rate from 0 to 100'**
+  String get sa2RateOutOfRange;
+
+  /// Loan field: annual insurance rate in percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance rate'**
+  String get sa2InsuranceRate;
+
+  /// Loan field: how the insurance premium is charged.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance type'**
+  String get sa2InsuranceType;
+
+  /// Insurance type: charged on the original balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Level term'**
+  String get sa2InsuranceLevelTerm;
+
+  /// Insurance type: charged on what is still owed.
+  ///
+  /// In en, this message translates to:
+  /// **'Decreasing'**
+  String get sa2InsuranceDecreasing;
+
+  /// Loan field: how the lender measures each period against a year.
+  ///
+  /// In en, this message translates to:
+  /// **'Day count convention'**
+  String get sa2DayCount;
+
+  /// Day count convention option.
+  ///
+  /// In en, this message translates to:
+  /// **'30/360'**
+  String get sa2DayCountThirty360;
+
+  /// Day count convention option.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual/365'**
+  String get sa2DayCountActual365;
+
+  /// Day count convention option.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual/actual'**
+  String get sa2DayCountActualActual;
+
+  /// Loan switch: linked transfers repay only principal.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal-only transfers'**
+  String get sa2PrincipalOnly;
+
+  /// Subtitle of the principal-only transfers switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest is recorded separately'**
+  String get sa2PrincipalOnlySub;
 }
 
 class _AppLocalizationsDelegate

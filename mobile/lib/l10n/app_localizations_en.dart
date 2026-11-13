@@ -4826,4 +4826,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get spaInvestEmptyBody =>
       'Add an investment or crypto account, or connect a brokerage.';
+
+  @override
+  String get sa2RateChanges => 'Rate changes';
+
+  @override
+  String get sa2AddRateChange => 'Add rate change';
+
+  @override
+  String get sa2RateChange => 'Rate change';
+
+  @override
+  String get sa2EffectiveDate => 'Effective date';
+
+  @override
+  String get sa2Rate => 'Rate';
+
+  @override
+  String get sa2RateRequired => 'Enter a rate';
+
+  @override
+  String get sa2RateOutOfRange => 'Enter a rate from 0 to 100';
+
+  @override
+  String get sa2InsuranceRate => 'Insurance rate';
+
+  @override
+  String get sa2InsuranceType => 'Insurance type';
+
+  @override
+  String get sa2InsuranceLevelTerm => 'Level term';
+
+  @override
+  String get sa2InsuranceDecreasing => 'Decreasing';
+
+  @override
+  String get sa2DayCount => 'Day count convention';
+
+  @override
+  String get sa2DayCountThirty360 => '30/360';
+
+  @override
+  String get sa2DayCountActual365 => 'Actual/365';
+
+  @override
+  String get sa2DayCountActualActual => 'Actual/actual';
+
+  @override
+  String get sa2PrincipalOnly => 'Principal-only transfers';
+
+  @override
+  String get sa2PrincipalOnlySub => 'Interest is recorded separately';
 }
