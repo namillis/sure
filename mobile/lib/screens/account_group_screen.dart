@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/account.dart';
 import '../providers/accounts_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../theme/sure_colors.dart';
 import '../widgets/account_card.dart';
 import '../widgets/ds/ds.dart';
+import 'account_form_sheet.dart';
 import 'transaction_form_screen.dart';
 import 'transactions_list_screen.dart';
 
@@ -140,6 +142,17 @@ class _AccountGroupScreenState extends State<AccountGroupScreen> {
 
   Future<void> _reload() async => widget.onReload?.call();
 
+  /// The "+" adds an account of this type (Sure+ `accounts.write` only).
+  bool _canAdd(BuildContext context) {
+    try {
+      return context
+          .watch<ServerFeaturesProvider>()
+          .has(ServerFeaturesProvider.accountsWrite);
+    } on ProviderNotFoundException {
+      return false;
+    }
+  }
+
   Future<void> _openAccount(Account account) async {
     await Navigator.push(
       context,
@@ -226,6 +239,19 @@ class _AccountGroupScreenState extends State<AccountGroupScreen> {
 
     return SureLargeTitleScaffold(
       title: accountGroupLabel(l, widget.accountType),
+      actions: [
+        if (_canAdd(context))
+          SureNavIconButton(
+            key: const ValueKey('groupAddAccount'),
+            icon: SureIcons.plus,
+            semanticLabel: l.dshAddAccount,
+            onPressed: () => openAddAccount(
+              context,
+              initialType: widget.accountType,
+              onReload: widget.onReload,
+            ),
+          ),
+      ],
       onRefresh: widget.onReload == null ? null : _reload,
       slivers: [
         if (accounts.isEmpty)
