@@ -937,7 +937,10 @@ class Account < ApplicationRecord
 
   def permission_for(user)
     return :owner if owned_by?(user)
-    account_shares.find_by(user: user)&.permission&.to_sym
+    return nil if user.nil?
+
+    share = account_shares.loaded? ? account_shares.find { |s| s.user_id == user.id } : account_shares.find_by(user: user)
+    share&.permission&.to_sym
   end
 
   def share_with!(user, permission: "read_only", include_in_finances: true)

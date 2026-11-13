@@ -451,6 +451,29 @@ RSpec.configure do |config|
               status: { type: :string, enum: %w[active draft disabled pending_deletion] },
               institution_name: { type: :string, nullable: true },
               institution_domain: { type: :string, nullable: true },
+              linked: { type: :boolean, description: 'Synced from a provider (Sure+ `accounts.permissions`)' },
+              permissions: {
+                type: :object,
+                description: 'What the API user may do through PATCH/DELETE /api/v1/accounts/{id}',
+                properties: { edit: { type: :boolean }, delete: { type: :boolean } }
+              },
+              locked_fields: {
+                type: :array, items: { type: :string },
+                description: 'Fields a PATCH may not send for this linked account; accountable fields are `accountable_attributes.<key>`'
+              },
+              accountable: {
+                type: :object, nullable: true,
+                description: 'Show and write responses only (Sure+ `accounts.loan_rates`). The type\'s own fields, keyed as ' \
+                             'PATCH takes them in `accountable_attributes`. Loan: subtype, rate_type, interest_rate, ' \
+                             'term_months, initial_balance, start_date, down_payment, insurance_rate, insurance_rate_type, ' \
+                             'day_count_convention, principal_only_transfers, rate_changes [{effective_date, rate}]. ' \
+                             'CreditCard: available_credit, minimum_payment, apr, annual_fee, expiration_date, ' \
+                             'statement_close_day, due_day. Investment: subtype. Crypto: subtype, tax_treatment. ' \
+                             'Vehicle: make, model, year, mileage_value, mileage_unit, initial_balance, ' \
+                             'initial_balance_shown, purchase_date. Property: subtype, year_built, area_unit, area_value, ' \
+                             'address_attributes. Other types: empty.',
+                additionalProperties: true
+              },
               created_at: { type: :string, format: :'date-time' },
               updated_at: { type: :string, format: :'date-time' }
             }

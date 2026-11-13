@@ -8,8 +8,6 @@ class Api::V1::AccountWritesController < Api::V1::BaseController
   PROPERTY_ACCOUNT_ATTRIBUTES = %i[name balance subtype currency institution_name institution_domain notes].freeze
   PROPERTY_ACCOUNTABLE_ATTRIBUTES = %i[id subtype year_built area_unit area_value].freeze
   ADDRESS_ATTRIBUTES = %i[line1 line2 locality region country postal_code].freeze
-  LINKED_LOCKED_ACCOUNT_ATTRIBUTES = %w[balance currency].freeze
-  LINKED_LOCKED_ACCOUNTABLE_ATTRIBUTES = %w[initial_balance initial_balance_shown purchase_date].freeze
 
   before_action -> { authorize_scope!(:read_write) }
   before_action :set_writable_account, only: %i[update destroy]
@@ -32,7 +30,7 @@ class Api::V1::AccountWritesController < Api::V1::BaseController
       return render_validation_error("accountable_type cannot be changed")
     end
 
-    if @account.linked? && (locked = locked_linked_fields).any?
+    if (locked = access.locked_fields_in(params.require(:account))).any?
       return render_validation_error("Linked accounts cannot change: #{locked.join(', ')}")
     end
 
@@ -45,7 +43,7 @@ class Api::V1::AccountWritesController < Api::V1::BaseController
   end
 
   def destroy
-    if @account.linked?
+    unless access.can_delete?
       return render_validation_error("Linked accounts cannot be deleted; disconnect the account first")
     end
 
@@ -67,7 +65,7 @@ class Api::V1::AccountWritesController < Api::V1::BaseController
                        .find_by(id: params[:id])
       return render_account_not_found unless @account
 
-      unless @account.permission_for(current_resource_owner).in?([ :owner, :full_control ])
+      unless access.can_edit?
         render_json({ error: "forbidden", message: "You do not have permission to modify this account" }, status: :forbidden)
       end
     end
@@ -208,13 +206,7 @@ class Api::V1::AccountWritesController < Api::V1::BaseController
       "#{type.pluralize}Controller".constantize
     end
 
-    def locked_linked_fields
-      raw = params.require(:account)
-      locked = LINKED_LOCKED_ACCOUNT_ATTRIBUTES.select { |key| raw.key?(key) }
-      accountable = raw[:accountable_attributes]
-      if @account.vehicle? && accountable.respond_to?(:key?)
-        locked += LINKED_LOCKED_ACCOUNTABLE_ATTRIBUTES.select { |key| accountable.key?(key) }.map { |key| "accountable_attributes.#{key}" }
-      end
-      locked
+    def access
+      @access ||= Account::ApiAccess.new(@account, current_resource_owner)
     end
 end
