@@ -5,6 +5,7 @@
 module SurePlus
   module Features
     NAMES = %w[
+      budgets.write
       holdings.stable_order
       recurring.category
     ].freeze
