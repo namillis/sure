@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
 import 'package:sure_mobile/models/rule.dart';
+import 'package:sure_mobile/utils/rule_catalog.dart';
 import 'package:sure_mobile/utils/rule_text.dart';
 
 void main() {
@@ -75,5 +76,29 @@ void main() {
   test('compound headings', () {
     expect(text.compoundHeading(cond('compound', 'or')), 'Any of these match');
     expect(text.compoundHeading(cond('compound', 'and')), 'All of these match');
+  });
+
+  test('several tags read as names; editor pills have labels', () {
+    expect(
+        text.action(const RuleAction(
+            actionType: 'set_transaction_tags', value: 'tag1,t9')),
+        'Add tag Work, a tag');
+    expect(text.operatorLabel('not_like'), "doesn't contain");
+    expect(text.actionLabel('set_transaction_category'), 'Set category');
+    expect(text.actionLabel('exclude_transaction'),
+        'Exclude from budgets and reports');
+  });
+
+  test('every catalog type has a readable label', () {
+    for (final spec in ruleConditionSpecs) {
+      expect(text.field(spec.key), isNot(contains('_')), reason: spec.key);
+      for (final op in spec.operators) {
+        expect(text.operatorLabel(op), isNot(op), reason: '${spec.key} $op');
+      }
+    }
+    for (final spec in ruleActionSpecs) {
+      expect(text.actionLabel(spec.key), isNot(contains('_')),
+          reason: spec.key);
+    }
   });
 }
