@@ -3890,4 +3890,356 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spmPeriodAllTime => 'All time';
+
+  @override
+  String get spaAddAccount => 'Add account';
+
+  @override
+  String get spaEditAccount => 'Edit account';
+
+  @override
+  String get spaConnectBank => 'Connect a bank';
+
+  @override
+  String get spaConnectBankSub => 'Link accounts on the web';
+
+  @override
+  String get spaOrByHand => 'Or add one by hand';
+
+  @override
+  String get spaTypeDepository => 'Cash or bank';
+
+  @override
+  String get spaTypeInvestment => 'Investment';
+
+  @override
+  String get spaTypeCrypto => 'Crypto';
+
+  @override
+  String get spaTypeProperty => 'Property';
+
+  @override
+  String get spaTypeVehicle => 'Vehicle';
+
+  @override
+  String get spaTypeCreditCard => 'Credit card';
+
+  @override
+  String get spaTypeLoan => 'Loan';
+
+  @override
+  String get spaTypeOtherAsset => 'Other asset';
+
+  @override
+  String get spaTypeOtherLiability => 'Other liability';
+
+  @override
+  String get spaBackToType => '‹ Type';
+
+  @override
+  String get spaAdd => 'Add';
+
+  @override
+  String get spaCurrentBalance => 'Current balance';
+
+  @override
+  String get spaCurrentValue => 'Current value';
+
+  @override
+  String get spaAmountOwed => 'Amount owed';
+
+  @override
+  String get spaSyncedFromBank => 'Synced from your bank';
+
+  @override
+  String get spaName => 'Name';
+
+  @override
+  String get spaNameHint => 'Required';
+
+  @override
+  String get spaNameRequired => 'Enter a name';
+
+  @override
+  String get spaBalanceRequired => 'Enter an amount';
+
+  @override
+  String get spaInvalidNumber => 'Enter a number';
+
+  @override
+  String get spaInvalidWholeNumber => 'Enter a whole number';
+
+  @override
+  String get spaCurrency => 'Currency';
+
+  @override
+  String get spaSubtype => 'Subtype';
+
+  @override
+  String get spaPropertyType => 'Property type';
+
+  @override
+  String get spaPropertyTypeRequired => 'Choose a property type';
+
+  @override
+  String get spaNone => 'None';
+
+  @override
+  String get spaOptional => 'Optional';
+
+  @override
+  String get spaUnchanged => 'Unchanged';
+
+  @override
+  String get spaAvailableCredit => 'Available credit';
+
+  @override
+  String get spaApr => 'APR';
+
+  @override
+  String get spaMinimumPayment => 'Minimum payment';
+
+  @override
+  String get spaAnnualFee => 'Annual fee';
+
+  @override
+  String get spaExpirationDate => 'Expiration date';
+
+  @override
+  String get spaStatementCloseDay => 'Statement closes';
+
+  @override
+  String get spaDueDay => 'Payment due';
+
+  @override
+  String spaDayOfMonth(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get spaInterestRate => 'Interest rate';
+
+  @override
+  String get spaRateType => 'Rate type';
+
+  @override
+  String get spaRateFixed => 'Fixed';
+
+  @override
+  String get spaRateVariable => 'Variable';
+
+  @override
+  String get spaRateAdjustable => 'Adjustable';
+
+  @override
+  String get spaTerm => 'Term';
+
+  @override
+  String get spaMonthsSuffix => 'months';
+
+  @override
+  String get spaStartDate => 'Start date';
+
+  @override
+  String get spaOriginalAmount => 'Original amount';
+
+  @override
+  String get spaDownPayment => 'Down payment';
+
+  @override
+  String get spaMake => 'Make';
+
+  @override
+  String get spaModel => 'Model';
+
+  @override
+  String get spaYear => 'Year';
+
+  @override
+  String get spaMileage => 'Mileage';
+
+  @override
+  String get spaMileageUnit => 'Mileage unit';
+
+  @override
+  String get spaMiles => 'Miles';
+
+  @override
+  String get spaKilometers => 'Kilometers';
+
+  @override
+  String get spaPurchasePrice => 'Purchase price';
+
+  @override
+  String get spaPurchaseDate => 'Purchase date';
+
+  @override
+  String get spaYearBuilt => 'Year built';
+
+  @override
+  String get spaArea => 'Area';
+
+  @override
+  String get spaAreaUnit => 'Area unit';
+
+  @override
+  String get spaSquareFeet => 'Square feet';
+
+  @override
+  String get spaSquareMeters => 'Square meters';
+
+  @override
+  String get spaAddress => 'Address';
+
+  @override
+  String get spaStreet => 'Street';
+
+  @override
+  String get spaStreet2 => 'Apt, suite';
+
+  @override
+  String get spaCity => 'City';
+
+  @override
+  String get spaRegion => 'State or region';
+
+  @override
+  String get spaPostalCode => 'Postal code';
+
+  @override
+  String get spaCountry => 'Country';
+
+  @override
+  String get spaTaxTreatment => 'Tax treatment';
+
+  @override
+  String get spaTaxable => 'Taxable';
+
+  @override
+  String get spaTaxDeferred => 'Tax-deferred';
+
+  @override
+  String get spaTaxExempt => 'Tax-exempt';
+
+  @override
+  String get spaMore => 'More';
+
+  @override
+  String get spaInstitution => 'Institution';
+
+  @override
+  String get spaNotes => 'Notes';
+
+  @override
+  String get spaOpeningDate => 'Opening balance date';
+
+  @override
+  String get spaExcludeFromReports => 'Exclude from reports';
+
+  @override
+  String get spaSubCash => 'Cash';
+
+  @override
+  String get spaSubChecking => 'Checking';
+
+  @override
+  String get spaSubSavings => 'Savings';
+
+  @override
+  String get spaSubHsa => 'Health Savings Account';
+
+  @override
+  String get spaSubCd => 'Certificate of Deposit';
+
+  @override
+  String get spaSubMoneyMarket => 'Money Market';
+
+  @override
+  String get spaSubMortgage => 'Mortgage';
+
+  @override
+  String get spaSubStudentLoan => 'Student Loan';
+
+  @override
+  String get spaSubAutoLoan => 'Auto Loan';
+
+  @override
+  String get spaSubHomeEquity => 'Home Equity Loan';
+
+  @override
+  String get spaSubLineOfCredit => 'Line of Credit';
+
+  @override
+  String get spaSubBusinessLoan => 'Business Loan';
+
+  @override
+  String get spaSubOtherLoan => 'Other Loan';
+
+  @override
+  String get spaSubWallet => 'Crypto Wallet';
+
+  @override
+  String get spaSubExchange => 'Crypto Exchange';
+
+  @override
+  String get spaSubSingleFamily => 'Single Family Home';
+
+  @override
+  String get spaSubMultiFamily => 'Multi-Family Home';
+
+  @override
+  String get spaSubCondo => 'Condominium';
+
+  @override
+  String get spaSubTownhouse => 'Townhouse';
+
+  @override
+  String get spaSubInvestmentProperty => 'Investment Property';
+
+  @override
+  String get spaSubSecondHome => 'Second Home';
+
+  @override
+  String get spaSubApartment => 'Apartment';
+
+  @override
+  String get spaSubPlot => 'Plot / Land';
+
+  @override
+  String get spaSubCommercial => 'Commercial Property';
+
+  @override
+  String get spaSubAgriLand => 'Agricultural Land';
+
+  @override
+  String get spaCreated => 'Account added';
+
+  @override
+  String get spaSaved => 'Account saved';
+
+  @override
+  String get spaSaveFailed => 'Couldn\'t save the account';
+
+  @override
+  String get spaDeleteAccount => 'Delete account';
+
+  @override
+  String spaDeleteConfirmTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get spaDeleteConfirmBody =>
+      'Its transactions and history are removed. This can\'t be undone.';
+
+  @override
+  String get spaDeleted => 'Account deleted';
+
+  @override
+  String get spaReadOnlyAccess =>
+      'This sign-in can only view data. Sign in again with full access to change accounts.';
+
+  @override
+  String get spaInvestEmptyBody =>
+      'Add an investment or crypto account, or connect a brokerage.';
 }

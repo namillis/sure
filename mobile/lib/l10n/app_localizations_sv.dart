@@ -3923,4 +3923,356 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get spmPeriodAllTime => 'All tid';
+
+  @override
+  String get spaAddAccount => 'Lägg till konto';
+
+  @override
+  String get spaEditAccount => 'Redigera konto';
+
+  @override
+  String get spaConnectBank => 'Anslut en bank';
+
+  @override
+  String get spaConnectBankSub => 'Länka konton på webben';
+
+  @override
+  String get spaOrByHand => 'Eller lägg till ett manuellt';
+
+  @override
+  String get spaTypeDepository => 'Kontanter eller bank';
+
+  @override
+  String get spaTypeInvestment => 'Investering';
+
+  @override
+  String get spaTypeCrypto => 'Krypto';
+
+  @override
+  String get spaTypeProperty => 'Fastighet';
+
+  @override
+  String get spaTypeVehicle => 'Fordon';
+
+  @override
+  String get spaTypeCreditCard => 'Kreditkort';
+
+  @override
+  String get spaTypeLoan => 'Lån';
+
+  @override
+  String get spaTypeOtherAsset => 'Annan tillgång';
+
+  @override
+  String get spaTypeOtherLiability => 'Annan skuld';
+
+  @override
+  String get spaBackToType => '‹ Typ';
+
+  @override
+  String get spaAdd => 'Lägg till';
+
+  @override
+  String get spaCurrentBalance => 'Nuvarande saldo';
+
+  @override
+  String get spaCurrentValue => 'Nuvarande värde';
+
+  @override
+  String get spaAmountOwed => 'Skuldbelopp';
+
+  @override
+  String get spaSyncedFromBank => 'Synkas från din bank';
+
+  @override
+  String get spaName => 'Namn';
+
+  @override
+  String get spaNameHint => 'Obligatoriskt';
+
+  @override
+  String get spaNameRequired => 'Ange ett namn';
+
+  @override
+  String get spaBalanceRequired => 'Ange ett belopp';
+
+  @override
+  String get spaInvalidNumber => 'Ange ett tal';
+
+  @override
+  String get spaInvalidWholeNumber => 'Ange ett heltal';
+
+  @override
+  String get spaCurrency => 'Valuta';
+
+  @override
+  String get spaSubtype => 'Undertyp';
+
+  @override
+  String get spaPropertyType => 'Fastighetstyp';
+
+  @override
+  String get spaPropertyTypeRequired => 'Välj en fastighetstyp';
+
+  @override
+  String get spaNone => 'Ingen';
+
+  @override
+  String get spaOptional => 'Valfritt';
+
+  @override
+  String get spaUnchanged => 'Oförändrat';
+
+  @override
+  String get spaAvailableCredit => 'Tillgänglig kredit';
+
+  @override
+  String get spaApr => 'Årsränta';
+
+  @override
+  String get spaMinimumPayment => 'Minsta betalning';
+
+  @override
+  String get spaAnnualFee => 'Årsavgift';
+
+  @override
+  String get spaExpirationDate => 'Utgångsdatum';
+
+  @override
+  String get spaStatementCloseDay => 'Fakturan stängs';
+
+  @override
+  String get spaDueDay => 'Förfallodag';
+
+  @override
+  String spaDayOfMonth(int day) {
+    return 'Dag $day';
+  }
+
+  @override
+  String get spaInterestRate => 'Ränta';
+
+  @override
+  String get spaRateType => 'Räntetyp';
+
+  @override
+  String get spaRateFixed => 'Fast';
+
+  @override
+  String get spaRateVariable => 'Rörlig';
+
+  @override
+  String get spaRateAdjustable => 'Justerbar';
+
+  @override
+  String get spaTerm => 'Löptid';
+
+  @override
+  String get spaMonthsSuffix => 'månader';
+
+  @override
+  String get spaStartDate => 'Startdatum';
+
+  @override
+  String get spaOriginalAmount => 'Ursprungligt belopp';
+
+  @override
+  String get spaDownPayment => 'Kontantinsats';
+
+  @override
+  String get spaMake => 'Märke';
+
+  @override
+  String get spaModel => 'Modell';
+
+  @override
+  String get spaYear => 'År';
+
+  @override
+  String get spaMileage => 'Mätarställning';
+
+  @override
+  String get spaMileageUnit => 'Enhet för mätarställning';
+
+  @override
+  String get spaMiles => 'Miles';
+
+  @override
+  String get spaKilometers => 'Kilometer';
+
+  @override
+  String get spaPurchasePrice => 'Inköpspris';
+
+  @override
+  String get spaPurchaseDate => 'Inköpsdatum';
+
+  @override
+  String get spaYearBuilt => 'Byggår';
+
+  @override
+  String get spaArea => 'Yta';
+
+  @override
+  String get spaAreaUnit => 'Enhet för yta';
+
+  @override
+  String get spaSquareFeet => 'Kvadratfot';
+
+  @override
+  String get spaSquareMeters => 'Kvadratmeter';
+
+  @override
+  String get spaAddress => 'Adress';
+
+  @override
+  String get spaStreet => 'Gata';
+
+  @override
+  String get spaStreet2 => 'Lägenhet, våning';
+
+  @override
+  String get spaCity => 'Ort';
+
+  @override
+  String get spaRegion => 'Delstat eller region';
+
+  @override
+  String get spaPostalCode => 'Postnummer';
+
+  @override
+  String get spaCountry => 'Land';
+
+  @override
+  String get spaTaxTreatment => 'Skattebehandling';
+
+  @override
+  String get spaTaxable => 'Skattepliktig';
+
+  @override
+  String get spaTaxDeferred => 'Skatteuppskjuten';
+
+  @override
+  String get spaTaxExempt => 'Skattefri';
+
+  @override
+  String get spaMore => 'Mer';
+
+  @override
+  String get spaInstitution => 'Institution';
+
+  @override
+  String get spaNotes => 'Anteckningar';
+
+  @override
+  String get spaOpeningDate => 'Datum för startsaldo';
+
+  @override
+  String get spaExcludeFromReports => 'Exkludera från rapporter';
+
+  @override
+  String get spaSubCash => 'Kontanter';
+
+  @override
+  String get spaSubChecking => 'Lönekonto';
+
+  @override
+  String get spaSubSavings => 'Sparkonto';
+
+  @override
+  String get spaSubHsa => 'Hälsosparkonto (HSA)';
+
+  @override
+  String get spaSubCd => 'Bunden insättning';
+
+  @override
+  String get spaSubMoneyMarket => 'Penningmarknadskonto';
+
+  @override
+  String get spaSubMortgage => 'Bolån';
+
+  @override
+  String get spaSubStudentLoan => 'Studielån';
+
+  @override
+  String get spaSubAutoLoan => 'Billån';
+
+  @override
+  String get spaSubHomeEquity => 'Lån mot bostaden';
+
+  @override
+  String get spaSubLineOfCredit => 'Kreditlina';
+
+  @override
+  String get spaSubBusinessLoan => 'Företagslån';
+
+  @override
+  String get spaSubOtherLoan => 'Annat lån';
+
+  @override
+  String get spaSubWallet => 'Kryptoplånbok';
+
+  @override
+  String get spaSubExchange => 'Kryptobörs';
+
+  @override
+  String get spaSubSingleFamily => 'Villa';
+
+  @override
+  String get spaSubMultiFamily => 'Flerfamiljshus';
+
+  @override
+  String get spaSubCondo => 'Bostadsrätt';
+
+  @override
+  String get spaSubTownhouse => 'Radhus';
+
+  @override
+  String get spaSubInvestmentProperty => 'Investeringsfastighet';
+
+  @override
+  String get spaSubSecondHome => 'Fritidshus';
+
+  @override
+  String get spaSubApartment => 'Lägenhet';
+
+  @override
+  String get spaSubPlot => 'Tomt / mark';
+
+  @override
+  String get spaSubCommercial => 'Kommersiell fastighet';
+
+  @override
+  String get spaSubAgriLand => 'Jordbruksmark';
+
+  @override
+  String get spaCreated => 'Kontot har lagts till';
+
+  @override
+  String get spaSaved => 'Kontot har sparats';
+
+  @override
+  String get spaSaveFailed => 'Det gick inte att spara kontot';
+
+  @override
+  String get spaDeleteAccount => 'Radera konto';
+
+  @override
+  String spaDeleteConfirmTitle(String name) {
+    return 'Radera $name?';
+  }
+
+  @override
+  String get spaDeleteConfirmBody =>
+      'Dess transaktioner och historik tas bort. Det går inte att ångra.';
+
+  @override
+  String get spaDeleted => 'Kontot har raderats';
+
+  @override
+  String get spaReadOnlyAccess =>
+      'Den här inloggningen kan bara visa data. Logga in igen med full åtkomst för att ändra konton.';
+
+  @override
+  String get spaInvestEmptyBody =>
+      'Lägg till ett investerings- eller kryptokonto, eller anslut en mäklare.';
 }

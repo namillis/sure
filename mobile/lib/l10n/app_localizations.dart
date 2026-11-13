@@ -6643,6 +6643,696 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All time'**
   String get spmPeriodAllTime;
+
+  /// Title of the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get spaAddAccount;
+
+  /// Title of the edit account sheet and the account menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit account'**
+  String get spaEditAccount;
+
+  /// Row on the add account sheet that opens bank connections on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a bank'**
+  String get spaConnectBank;
+
+  /// Subtitle of the Connect a bank row.
+  ///
+  /// In en, this message translates to:
+  /// **'Link accounts on the web'**
+  String get spaConnectBankSub;
+
+  /// Section header above the manual account types.
+  ///
+  /// In en, this message translates to:
+  /// **'Or add one by hand'**
+  String get spaOrByHand;
+
+  /// Account type (Depository) on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash or bank'**
+  String get spaTypeDepository;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment'**
+  String get spaTypeInvestment;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get spaTypeCrypto;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Property'**
+  String get spaTypeProperty;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get spaTypeVehicle;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card'**
+  String get spaTypeCreditCard;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan'**
+  String get spaTypeLoan;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Other asset'**
+  String get spaTypeOtherAsset;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Other liability'**
+  String get spaTypeOtherLiability;
+
+  /// Back link from the account details step to the type step.
+  ///
+  /// In en, this message translates to:
+  /// **'‹ Type'**
+  String get spaBackToType;
+
+  /// Action that creates the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get spaAdd;
+
+  /// Label over the balance field for bank accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance'**
+  String get spaCurrentBalance;
+
+  /// Label over the balance field for assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Current value'**
+  String get spaCurrentValue;
+
+  /// Label over the balance field for liabilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount owed'**
+  String get spaAmountOwed;
+
+  /// Shown under a linked account's read-only balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced from your bank'**
+  String get spaSyncedFromBank;
+
+  /// Account name row.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get spaName;
+
+  /// Placeholder of the account name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get spaNameHint;
+
+  /// Validation error when the account name is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get spaNameRequired;
+
+  /// Validation error when the balance is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount'**
+  String get spaBalanceRequired;
+
+  /// Validation error for a field that is not a number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number'**
+  String get spaInvalidNumber;
+
+  /// Validation error for a field that needs a whole number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number'**
+  String get spaInvalidWholeNumber;
+
+  /// Currency row of the account form.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get spaCurrency;
+
+  /// Subtype row of the account form.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtype'**
+  String get spaSubtype;
+
+  /// Subtype row label for property accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Property type'**
+  String get spaPropertyType;
+
+  /// Error when a property is added without a property type.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a property type'**
+  String get spaPropertyTypeRequired;
+
+  /// Picker option for no value.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get spaNone;
+
+  /// Placeholder of an optional field.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get spaOptional;
+
+  /// Placeholder of a field in the edit form that keeps its current value when left empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Unchanged'**
+  String get spaUnchanged;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Available credit'**
+  String get spaAvailableCredit;
+
+  /// Credit card annual percentage rate field.
+  ///
+  /// In en, this message translates to:
+  /// **'APR'**
+  String get spaApr;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum payment'**
+  String get spaMinimumPayment;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual fee'**
+  String get spaAnnualFee;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiration date'**
+  String get spaExpirationDate;
+
+  /// Credit card statement close day field.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement closes'**
+  String get spaStatementCloseDay;
+
+  /// Credit card payment due day field.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment due'**
+  String get spaDueDay;
+
+  /// A day of the month in the statement day pickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String spaDayOfMonth(int day);
+
+  /// Loan field.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest rate'**
+  String get spaInterestRate;
+
+  /// Loan field.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate type'**
+  String get spaRateType;
+
+  /// Loan rate type.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get spaRateFixed;
+
+  /// Loan rate type.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable'**
+  String get spaRateVariable;
+
+  /// Loan rate type.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustable'**
+  String get spaRateAdjustable;
+
+  /// Loan term field.
+  ///
+  /// In en, this message translates to:
+  /// **'Term'**
+  String get spaTerm;
+
+  /// Unit after the loan term.
+  ///
+  /// In en, this message translates to:
+  /// **'months'**
+  String get spaMonthsSuffix;
+
+  /// Loan origination date field.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get spaStartDate;
+
+  /// Loan initial balance field.
+  ///
+  /// In en, this message translates to:
+  /// **'Original amount'**
+  String get spaOriginalAmount;
+
+  /// Loan field.
+  ///
+  /// In en, this message translates to:
+  /// **'Down payment'**
+  String get spaDownPayment;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Make'**
+  String get spaMake;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get spaModel;
+
+  /// Vehicle model year field.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get spaYear;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Mileage'**
+  String get spaMileage;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Mileage unit'**
+  String get spaMileageUnit;
+
+  /// Mileage unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Miles'**
+  String get spaMiles;
+
+  /// Mileage unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilometers'**
+  String get spaKilometers;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase price'**
+  String get spaPurchasePrice;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date'**
+  String get spaPurchaseDate;
+
+  /// Property field.
+  ///
+  /// In en, this message translates to:
+  /// **'Year built'**
+  String get spaYearBuilt;
+
+  /// Property field.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get spaArea;
+
+  /// Property field.
+  ///
+  /// In en, this message translates to:
+  /// **'Area unit'**
+  String get spaAreaUnit;
+
+  /// Area unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Square feet'**
+  String get spaSquareFeet;
+
+  /// Area unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Square meters'**
+  String get spaSquareMeters;
+
+  /// Section header for the property address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get spaAddress;
+
+  /// Address line 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Street'**
+  String get spaStreet;
+
+  /// Address line 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Apt, suite'**
+  String get spaStreet2;
+
+  /// Address locality.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get spaCity;
+
+  /// Address region.
+  ///
+  /// In en, this message translates to:
+  /// **'State or region'**
+  String get spaRegion;
+
+  /// Address postal code.
+  ///
+  /// In en, this message translates to:
+  /// **'Postal code'**
+  String get spaPostalCode;
+
+  /// Address country.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get spaCountry;
+
+  /// Crypto field.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax treatment'**
+  String get spaTaxTreatment;
+
+  /// Tax treatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxable'**
+  String get spaTaxable;
+
+  /// Tax treatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax-deferred'**
+  String get spaTaxDeferred;
+
+  /// Tax treatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax-exempt'**
+  String get spaTaxExempt;
+
+  /// Section header for rarely used account fields.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get spaMore;
+
+  /// Institution name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Institution'**
+  String get spaInstitution;
+
+  /// Notes field.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get spaNotes;
+
+  /// Opening balance date field.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance date'**
+  String get spaOpeningDate;
+
+  /// Switch row.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude from reports'**
+  String get spaExcludeFromReports;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get spaSubCash;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get spaSubChecking;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get spaSubSavings;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Savings Account'**
+  String get spaSubHsa;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate of Deposit'**
+  String get spaSubCd;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Money Market'**
+  String get spaSubMoneyMarket;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Mortgage'**
+  String get spaSubMortgage;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Student Loan'**
+  String get spaSubStudentLoan;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Loan'**
+  String get spaSubAutoLoan;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Home Equity Loan'**
+  String get spaSubHomeEquity;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Line of Credit'**
+  String get spaSubLineOfCredit;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Loan'**
+  String get spaSubBusinessLoan;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Loan'**
+  String get spaSubOtherLoan;
+
+  /// Crypto subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto Wallet'**
+  String get spaSubWallet;
+
+  /// Crypto subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto Exchange'**
+  String get spaSubExchange;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Single Family Home'**
+  String get spaSubSingleFamily;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Family Home'**
+  String get spaSubMultiFamily;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Condominium'**
+  String get spaSubCondo;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Townhouse'**
+  String get spaSubTownhouse;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment Property'**
+  String get spaSubInvestmentProperty;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Second Home'**
+  String get spaSubSecondHome;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Apartment'**
+  String get spaSubApartment;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Plot / Land'**
+  String get spaSubPlot;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Commercial Property'**
+  String get spaSubCommercial;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Agricultural Land'**
+  String get spaSubAgriLand;
+
+  /// Snackbar after creating an account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account added'**
+  String get spaCreated;
+
+  /// Snackbar after editing an account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account saved'**
+  String get spaSaved;
+
+  /// Fallback error when saving an account fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the account'**
+  String get spaSaveFailed;
+
+  /// Destructive button on the edit account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get spaDeleteAccount;
+
+  /// Delete account confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String spaDeleteConfirmTitle(String name);
+
+  /// Delete account confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Its transactions and history are removed. This can\'t be undone.'**
+  String get spaDeleteConfirmBody;
+
+  /// Snackbar after deleting an account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get spaDeleted;
+
+  /// Error when an account write fails because the sign-in is read-only (403 insufficient_scope).
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in can only view data. Sign in again with full access to change accounts.'**
+  String get spaReadOnlyAccess;
+
+  /// Invest tab empty state body when accounts can be added in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an investment or crypto account, or connect a brokerage.'**
+  String get spaInvestEmptyBody;
 }
 
 class _AppLocalizationsDelegate
