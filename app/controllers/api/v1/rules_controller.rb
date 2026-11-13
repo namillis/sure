@@ -19,8 +19,8 @@ class Api::V1::RulesController < Api::V1::BaseController
   RULE_INCLUDES = [ :actions, :rule_group, { conditions: :sub_conditions } ].freeze
 
   before_action :ensure_read_scope, only: %i[index show]
-  before_action -> { authorize_scope!(:read_write) }, only: %i[create update destroy apply reorder]
-  before_action :reject_guest_writes!, only: %i[create update destroy apply reorder]
+  before_action -> { authorize_scope!(:read_write) }, only: %i[create update destroy apply reorder apply_all]
+  before_action :reject_guest_writes!, only: %i[create update destroy apply reorder apply_all]
   before_action :set_rule, only: %i[show update destroy apply]
 
   def index
@@ -115,6 +115,24 @@ class Api::V1::RulesController < Api::V1::BaseController
     }, status: :conflict)
   end
 
+  # Same two steps as #apply, with what the web's "Apply all" dialog shows.
+  # The web queues ApplyAllRulesJob rather than running every rule inside the
+  # request, so this does too and answers 202; the runs it records show up in
+  # GET /api/v1/rule_runs.
+  def apply_all
+    rules = current_resource_owner.family.rules.includes(:actions)
+    unless ActiveModel::Type::Boolean.new.cast(params[:confirm]) == true
+      return render_apply_all_confirmation_required(rules)
+    end
+
+    unless ApplyAllRulesJob.perform_later(current_resource_owner.family)
+      return render_json({ error: "enqueue_failed", message: "Rules could not be queued. Try again shortly." },
+        status: :service_unavailable)
+    end
+
+    render_json({ data: { status: "queued", rule_count: rules.size } }, status: :accepted)
+  end
+
   private
 
     def set_rule
@@ -188,10 +206,30 @@ class Api::V1::RulesController < Api::V1::BaseController
       }, status: :unprocessable_entity)
     end
 
+    def render_apply_all_confirmation_required(rules)
+      message = "Applying all rules changes existing transactions. Send confirm: true to apply them."
+      affected_count = Rule.total_affected_resource_count(rules)
+      auto_categorize = rules.any? { |rule| rule.actions.any? { |action| action.action_type == "auto_categorize" } }
+      model, cost = auto_categorize ? auto_categorize_estimate(current_resource_owner.family, affected_count) : [ nil, nil ]
+
+      render_json({
+        error: "confirmation_required",
+        message: message,
+        errors: [ message ],
+        confirmation: {
+          rule_count: rules.size,
+          affected_resource_count: affected_count,
+          auto_categorize: auto_categorize,
+          ai_model: model,
+          estimated_ai_cost: cost
+        }
+      }, status: :unprocessable_entity)
+    end
+
     def confirmation_details
       affected_count = @rule.affected_resource_count
       auto_categorize = @rule.actions.any? { |action| action.action_type == "auto_categorize" }
-      model, cost = auto_categorize ? auto_categorize_estimate(affected_count) : [ nil, nil ]
+      model, cost = auto_categorize ? auto_categorize_estimate(@rule.family, affected_count) : [ nil, nil ]
 
       {
         affected_resource_count: affected_count,
@@ -203,9 +241,8 @@ class Api::V1::RulesController < Api::V1::BaseController
       }
     end
 
-    # Same estimate as RulesController#auto_categorize_estimate (the web confirm dialog).
-    def auto_categorize_estimate(transaction_count)
-      family = @rule.family
+    # Same estimate as RulesController#auto_categorize_estimate (the web confirm dialogs).
+    def auto_categorize_estimate(family, transaction_count)
       model = family.categorization_model_name
       return [ nil, nil ] if model.blank?
 
