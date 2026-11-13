@@ -837,7 +837,7 @@ Rails.application.routes.draw do
       resources :balances, only: [ :index, :show ]
       resources :budgets, only: [ :index, :show ]
       resources :budget_categories, only: [ :index, :show ]
-      resources :categories, only: [ :index, :show, :create ]
+      resources :categories, only: [ :index, :show, :create, :update, :destroy ]
       resources :merchants, only: [ :index, :show, :create ]
       resources :rules, only: [ :index, :show ]
       resources :rule_runs, only: [ :index, :show ]
