@@ -3923,4 +3923,320 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get spmPeriodAllTime => 'All tid';
+
+  @override
+  String spgSectionActive(int count) {
+    return 'Aktiva · $count';
+  }
+
+  @override
+  String spgSectionPaused(int count) {
+    return 'Pausade · $count';
+  }
+
+  @override
+  String spgSectionCompleted(int count) {
+    return 'Avklarade · $count';
+  }
+
+  @override
+  String spgSectionArchived(int count) {
+    return 'Arkiverade · $count';
+  }
+
+  @override
+  String get spgNewGoal => 'Nytt mål';
+
+  @override
+  String get spgEditGoal => 'Redigera mål';
+
+  @override
+  String get spgCreate => 'Skapa';
+
+  @override
+  String get spgEmptyTitle => 'Inga mål än';
+
+  @override
+  String get spgEmptyBody =>
+      'Sätt ett mål, koppla kontona du sparar på och se hur det växer.';
+
+  @override
+  String get spgCreateFirst => 'Skapa ditt första mål';
+
+  @override
+  String get spgPreviewTitle => 'Mål är en förhandsfunktion';
+
+  @override
+  String get spgPreviewBody =>
+      'Mål kräver förhandsfunktioner, och de är avstängda för ditt konto.';
+
+  @override
+  String get spgPreviewAction => 'Slå på förhandsfunktioner på webben';
+
+  @override
+  String get spgLoadFailed => 'Det gick inte att läsa in dina mål';
+
+  @override
+  String spgDue(String date) {
+    return 'Klart $date';
+  }
+
+  @override
+  String get spgNoDate => 'Inget datum';
+
+  @override
+  String get spgReserve => 'Buffert';
+
+  @override
+  String get spgPastDue => 'Försenat';
+
+  @override
+  String spgDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dagar kvar',
+      one: '1 dag kvar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String spgMonthsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count månader kvar',
+      one: '1 månad kvar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String spgAmountOf(String current, String target) {
+    return '$current av $target';
+  }
+
+  @override
+  String spgCatchUp(String amount) {
+    return 'Spara $amount/mån för att komma ikapp';
+  }
+
+  @override
+  String spgPendingPledges(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count väntande insättningar',
+      one: '1 väntande insättning',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get spgStatusOnTrack => 'I fas';
+
+  @override
+  String get spgStatusBehind => 'Efter';
+
+  @override
+  String get spgStatusReached => 'Uppnått';
+
+  @override
+  String get spgStatusOpen => 'Öppet';
+
+  @override
+  String get spgStatusFunded => 'Bufferten är full';
+
+  @override
+  String get spgStatusDepleted => 'Behöver fyllas på';
+
+  @override
+  String get spgStatusPaused => 'Pausat';
+
+  @override
+  String get spgStatusCompleted => 'Avklarat';
+
+  @override
+  String get spgStatusArchived => 'Arkiverat';
+
+  @override
+  String spgOfTarget(String target) {
+    return 'av $target';
+  }
+
+  @override
+  String spgOfTargetDue(String target, String date) {
+    return 'av $target · klart $date';
+  }
+
+  @override
+  String get spgSavedToward => 'Jag har sparat till det här';
+
+  @override
+  String get spgPledgeRecord => 'Spara';
+
+  @override
+  String get spgPledgeFrom => 'Från';
+
+  @override
+  String get spgPledgeHint => 'Sure bekräftar det när pengarna syns på kontot.';
+
+  @override
+  String get spgPendingHeader => 'Väntande insättningar';
+
+  @override
+  String spgPledgeFromAccount(String amount, String account) {
+    return '$amount från $account';
+  }
+
+  @override
+  String spgPledgeAmount(String amount) {
+    return '$amount utlovat';
+  }
+
+  @override
+  String get spgPledgeConfirmsTransfer => 'Bekräftas när den syns';
+
+  @override
+  String get spgPledgeConfirmsManual => 'Bekräftas vid nästa saldouppdatering';
+
+  @override
+  String spgPledgeExpires(String confirm, String date) {
+    return '$confirm · går ut $date';
+  }
+
+  @override
+  String get spgPledgeExtend => 'Förläng';
+
+  @override
+  String get spgPledgeExtended => 'Insättningen förlängdes med 7 dagar';
+
+  @override
+  String get spgPledgeCancelTitle => 'Avbryta insättningen?';
+
+  @override
+  String spgPledgeCancelBody(String amount) {
+    return 'Insättningen på $amount tas bort. Du kan registrera en ny när du vill.';
+  }
+
+  @override
+  String get spgPledgeCancelConfirm => 'Avbryt insättning';
+
+  @override
+  String get spgPledgeKeep => 'Behåll';
+
+  @override
+  String get spgPledgeCancelled => 'Insättningen avbröts';
+
+  @override
+  String get spgPledgeSaved => 'Insättningen registrerades';
+
+  @override
+  String get spgFundingHeader => 'Konton som finansierar';
+
+  @override
+  String get spgWholeBalance => 'Hela saldot';
+
+  @override
+  String get spgPlanHeader => 'Plan';
+
+  @override
+  String get spgMonthlyTarget => 'Månadsmål';
+
+  @override
+  String get spgPace => 'Takt';
+
+  @override
+  String spgPerMonth(String amount) {
+    return '$amount/mån';
+  }
+
+  @override
+  String get spgProjected => 'Beräknat klart';
+
+  @override
+  String get spgTimeLeft => 'Tid kvar';
+
+  @override
+  String get spgNotes => 'Anteckningar';
+
+  @override
+  String get spgEdit => 'Redigera';
+
+  @override
+  String get spgLifecycleOnWeb => 'Pausa eller arkivera på webben';
+
+  @override
+  String get spgDelete => 'Ta bort mål';
+
+  @override
+  String get spgDeleteTitle => 'Ta bort mål?';
+
+  @override
+  String spgDeleteBody(String name) {
+    return 'Ta bort \"$name\"? Dess insättningar tas också bort. Det går inte att ångra.';
+  }
+
+  @override
+  String get spgDeleted => 'Målet togs bort';
+
+  @override
+  String get spgSaved => 'Målet sparades';
+
+  @override
+  String get spgCreated => 'Målet skapades';
+
+  @override
+  String get spgIconAndColor => 'Ikon och färg';
+
+  @override
+  String get spgIcon => 'Ikon';
+
+  @override
+  String get spgKindOneOff => 'Engångsmål';
+
+  @override
+  String get spgKindOneOffHint =>
+      'Spara till något och stäng målet när du använder pengarna.';
+
+  @override
+  String get spgKindReserve => 'Buffert';
+
+  @override
+  String get spgKindReserveHint =>
+      'Ett saldo att behålla, till exempel en buffert för oväntade utgifter. Den har inget slutdatum.';
+
+  @override
+  String get spgName => 'Namn';
+
+  @override
+  String get spgNameHint => 'Buffert';
+
+  @override
+  String get spgNameRequired => 'Ange ett namn';
+
+  @override
+  String get spgTarget => 'Mål';
+
+  @override
+  String get spgTargetInvalid => 'Ange ett belopp över noll';
+
+  @override
+  String get spgBy => 'Senast';
+
+  @override
+  String get spgFundFrom => 'Finansiera från';
+
+  @override
+  String get spgFundFromHint =>
+      'Lämna beloppet tomt för att använda kontots hela saldo.';
+
+  @override
+  String get spgNoFundable =>
+      'Lägg till ett kontant-, investerings- eller kryptokonto för att finansiera ett mål.';
+
+  @override
+  String get spgAccountsRequired =>
+      'Välj minst ett konto som finansierar målet.';
 }

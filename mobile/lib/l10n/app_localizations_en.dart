@@ -3890,4 +3890,321 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spmPeriodAllTime => 'All time';
+
+  @override
+  String spgSectionActive(int count) {
+    return 'Active · $count';
+  }
+
+  @override
+  String spgSectionPaused(int count) {
+    return 'Paused · $count';
+  }
+
+  @override
+  String spgSectionCompleted(int count) {
+    return 'Completed · $count';
+  }
+
+  @override
+  String spgSectionArchived(int count) {
+    return 'Archived · $count';
+  }
+
+  @override
+  String get spgNewGoal => 'New goal';
+
+  @override
+  String get spgEditGoal => 'Edit goal';
+
+  @override
+  String get spgCreate => 'Create';
+
+  @override
+  String get spgEmptyTitle => 'No goals yet';
+
+  @override
+  String get spgEmptyBody =>
+      'Set a target, link the accounts you save into, and watch your progress add up.';
+
+  @override
+  String get spgCreateFirst => 'Create your first goal';
+
+  @override
+  String get spgPreviewTitle => 'Goals are a preview feature';
+
+  @override
+  String get spgPreviewBody =>
+      'Goals need preview features, which are turned off for your account.';
+
+  @override
+  String get spgPreviewAction => 'Turn on preview features on the web';
+
+  @override
+  String get spgLoadFailed => 'Couldn\'t load your goals';
+
+  @override
+  String spgDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String get spgNoDate => 'No date';
+
+  @override
+  String get spgReserve => 'Reserve';
+
+  @override
+  String get spgPastDue => 'Past due';
+
+  @override
+  String spgDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String spgMonthsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months left',
+      one: '1 month left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String spgAmountOf(String current, String target) {
+    return '$current of $target';
+  }
+
+  @override
+  String spgCatchUp(String amount) {
+    return 'Save $amount/mo to catch up';
+  }
+
+  @override
+  String spgPendingPledges(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pending pledges',
+      one: '1 pending pledge',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get spgStatusOnTrack => 'On track';
+
+  @override
+  String get spgStatusBehind => 'Behind';
+
+  @override
+  String get spgStatusReached => 'Reached';
+
+  @override
+  String get spgStatusOpen => 'Open';
+
+  @override
+  String get spgStatusFunded => 'Reserve intact';
+
+  @override
+  String get spgStatusDepleted => 'Needs topping up';
+
+  @override
+  String get spgStatusPaused => 'Paused';
+
+  @override
+  String get spgStatusCompleted => 'Completed';
+
+  @override
+  String get spgStatusArchived => 'Archived';
+
+  @override
+  String spgOfTarget(String target) {
+    return 'of $target';
+  }
+
+  @override
+  String spgOfTargetDue(String target, String date) {
+    return 'of $target · due $date';
+  }
+
+  @override
+  String get spgSavedToward => 'I saved toward this';
+
+  @override
+  String get spgPledgeRecord => 'Record';
+
+  @override
+  String get spgPledgeFrom => 'From';
+
+  @override
+  String get spgPledgeHint =>
+      'Sure confirms it once the money shows up in that account.';
+
+  @override
+  String get spgPendingHeader => 'Pending pledges';
+
+  @override
+  String spgPledgeFromAccount(String amount, String account) {
+    return '$amount from $account';
+  }
+
+  @override
+  String spgPledgeAmount(String amount) {
+    return '$amount pledged';
+  }
+
+  @override
+  String get spgPledgeConfirmsTransfer => 'Confirms when it shows up';
+
+  @override
+  String get spgPledgeConfirmsManual => 'Confirms on your next balance update';
+
+  @override
+  String spgPledgeExpires(String confirm, String date) {
+    return '$confirm · expires $date';
+  }
+
+  @override
+  String get spgPledgeExtend => 'Extend';
+
+  @override
+  String get spgPledgeExtended => 'Pledge extended by 7 days';
+
+  @override
+  String get spgPledgeCancelTitle => 'Cancel this pledge?';
+
+  @override
+  String spgPledgeCancelBody(String amount) {
+    return 'The $amount pledge will be removed. You can record a new one anytime.';
+  }
+
+  @override
+  String get spgPledgeCancelConfirm => 'Cancel pledge';
+
+  @override
+  String get spgPledgeKeep => 'Keep';
+
+  @override
+  String get spgPledgeCancelled => 'Pledge cancelled';
+
+  @override
+  String get spgPledgeSaved => 'Pledge recorded';
+
+  @override
+  String get spgFundingHeader => 'Funding accounts';
+
+  @override
+  String get spgWholeBalance => 'Whole balance';
+
+  @override
+  String get spgPlanHeader => 'Plan';
+
+  @override
+  String get spgMonthlyTarget => 'Monthly target';
+
+  @override
+  String get spgPace => 'Pace';
+
+  @override
+  String spgPerMonth(String amount) {
+    return '$amount/mo';
+  }
+
+  @override
+  String get spgProjected => 'Projected completion';
+
+  @override
+  String get spgTimeLeft => 'Time left';
+
+  @override
+  String get spgNotes => 'Notes';
+
+  @override
+  String get spgEdit => 'Edit';
+
+  @override
+  String get spgLifecycleOnWeb => 'Pause or archive on the web';
+
+  @override
+  String get spgDelete => 'Delete goal';
+
+  @override
+  String get spgDeleteTitle => 'Delete goal?';
+
+  @override
+  String spgDeleteBody(String name) {
+    return 'Delete \"$name\"? Its pledges are removed too. This can\'t be undone.';
+  }
+
+  @override
+  String get spgDeleted => 'Goal deleted';
+
+  @override
+  String get spgSaved => 'Goal saved';
+
+  @override
+  String get spgCreated => 'Goal created';
+
+  @override
+  String get spgIconAndColor => 'Icon and color';
+
+  @override
+  String get spgIcon => 'Icon';
+
+  @override
+  String get spgKindOneOff => 'One-off goal';
+
+  @override
+  String get spgKindOneOffHint =>
+      'Save toward something, then close it when you spend it.';
+
+  @override
+  String get spgKindReserve => 'Reserve';
+
+  @override
+  String get spgKindReserveHint =>
+      'A balance to keep, like an emergency fund. It has no due date.';
+
+  @override
+  String get spgName => 'Name';
+
+  @override
+  String get spgNameHint => 'Emergency fund';
+
+  @override
+  String get spgNameRequired => 'Enter a name';
+
+  @override
+  String get spgTarget => 'Target';
+
+  @override
+  String get spgTargetInvalid => 'Enter an amount above zero';
+
+  @override
+  String get spgBy => 'By';
+
+  @override
+  String get spgFundFrom => 'Fund from';
+
+  @override
+  String get spgFundFromHint =>
+      'Leave an amount blank to use the account\'s whole balance.';
+
+  @override
+  String get spgNoFundable =>
+      'Add a cash, investment or crypto account to fund a goal.';
+
+  @override
+  String get spgAccountsRequired =>
+      'Pick at least one account to fund this goal.';
 }

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../providers/server_features_provider.dart';
 import '../theme/sure_colors.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
 import 'app_tabs.dart';
 import 'bills_screen.dart';
 import 'budgets_screen.dart';
+import 'goals_screen.dart';
 
 enum PlanSection { budget, recurring, goals, bills }
 
@@ -14,14 +17,16 @@ enum PlanSection { budget, recurring, goals, bills }
 /// Budget | Recurring | Goals ↗ | Bills.
 ///
 /// The title scrolls away with the active segment's list while the segmented
-/// control stays pinned under the bar, like the account page. Goals has no
-/// API yet, so it points to the web.
+/// control stays pinned under the bar, like the account page. Goals is native
+/// on a Sure+ server with the `goals` feature and points to the web
+/// elsewhere.
 class PlanScreen extends StatefulWidget {
   const PlanScreen({
     super.key,
     this.budgetBuilder = _buildBudget,
     this.recurringBuilder = AppTabs.recurring,
     this.billsBuilder = _buildBills,
+    this.goalsBuilder = _buildGoals,
   });
 
   /// Body of the Budget segment. Injected in tests.
@@ -36,7 +41,13 @@ class PlanScreen extends StatefulWidget {
   static Widget _buildBudget(BuildContext context) =>
       const BudgetsScreen(embedded: true);
 
+  /// Body of the Goals segment on a server with the `goals` feature.
+  /// Defaults to [GoalsScreen].
+  final WidgetBuilder goalsBuilder;
+
   static Widget _buildBills(BuildContext context) => const BillsScreen();
+
+  static Widget _buildGoals(BuildContext context) => const GoalsScreen();
 
   @override
   State<PlanScreen> createState() => _PlanScreenState();
@@ -56,6 +67,7 @@ class _PlanScreenState extends State<PlanScreen> {
       case PlanSection.recurring:
         return widget.recurringBuilder(context);
       case PlanSection.goals:
+        if (_nativeGoals(context)) return widget.goalsBuilder(context);
         return WebOnlyView(
           icon: 'target', // Bundled Lucide icon with no SureIcons constant.
           title: l.shellPlanGoals,
@@ -67,6 +79,12 @@ class _PlanScreenState extends State<PlanScreen> {
     }
   }
 
+  bool _nativeGoals(BuildContext context) =>
+      context
+          .watch<ServerFeaturesProvider?>()
+          ?.has(ServerFeaturesProvider.goals) ??
+      false;
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -76,7 +94,7 @@ class _PlanScreenState extends State<PlanScreen> {
       backgroundColor: palette.surface,
       body: SureCollapsingHeader(
         title: l.shellNavPlan,
-        pinned: _switcher(l),
+        pinned: _switcher(l, native: _nativeGoals(context)),
         pinnedKey: const ValueKey('planSectionSwitcher'),
         pinnedPadding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
         body: Builder(builder: _sections),
@@ -84,7 +102,7 @@ class _PlanScreenState extends State<PlanScreen> {
     );
   }
 
-  Widget _switcher(AppLocalizations l) {
+  Widget _switcher(AppLocalizations l, {required bool native}) {
     const webMark = SureIcon(SureIcons.arrowUpRight, size: 12);
     return SureSegmentedControl<PlanSection>(
       selected: _section,
@@ -98,7 +116,9 @@ class _PlanScreenState extends State<PlanScreen> {
         // Gap: SureSegment only takes a leading icon, so the web mark sits
         // before the label rather than after it.
         SureSegment(
-            value: PlanSection.goals, label: l.shellPlanGoals, icon: webMark),
+            value: PlanSection.goals,
+            label: l.shellPlanGoals,
+            icon: native ? null : webMark),
         SureSegment(value: PlanSection.bills, label: l.shellPlanBills),
       ],
     );
