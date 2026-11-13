@@ -59,7 +59,10 @@ RSpec.configure do |config|
             required: %w[version commit_sha],
             properties: {
               version: { type: :string, description: 'Running Sure version, without a v prefix.' },
-              commit_sha: { type: :string, nullable: true, description: 'Build commit SHA, or null when unavailable.' }
+              commit_sha: { type: :string, nullable: true, description: 'Build commit SHA, or null when unavailable.' },
+              features: { type: :array, items: { type: :string },
+                          description: 'Sure+ API additions this server supports. Absent on a stock Sure server ' \
+                                       'and on unauthenticated requests.' }
             }
           },
           SplitRequest: {
