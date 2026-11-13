@@ -2576,5 +2576,17 @@
   "spmCategoryDeleteMoveTo": "Move transactions to",
   "@spmCategoryDeleteMoveTo": {"description": "Section header above the replacement category list in the delete sheet."},
   "spmCategoryDeleteUncategorized": "Leave uncategorized",
-  "@spmCategoryDeleteUncategorized": {"description": "Delete category sheet option: don't move the transactions to another category."}
+  "@spmCategoryDeleteUncategorized": {"description": "Delete category sheet option: don't move the transactions to another category."},
+  "spmMerchantEdit": "Edit merchant",
+  "@spmMerchantEdit": {"description": "Title of the edit merchant sheet."},
+  "spmMerchantSaved": "Merchant saved",
+  "@spmMerchantSaved": {"description": "Snackbar after a merchant was edited."},
+  "spmMerchantDeleted": "Merchant deleted",
+  "@spmMerchantDeleted": {"description": "Snackbar after a merchant was deleted."},
+  "spmMerchantDelete": "Delete merchant",
+  "@spmMerchantDelete": {"description": "Destructive button in the edit merchant sheet."},
+  "spmMerchantDeleteTitle": "Delete “{name}”?",
+  "@spmMerchantDeleteTitle": {"description": "Title of the delete merchant confirmation.", "placeholders": {"name": {"type": "String"}}},
+  "spmMerchantDeleteBody": "Its transactions keep their details but lose the merchant, and its recurring transactions are removed. This can't be undone.",
+  "@spmMerchantDeleteBody": {"description": "Body of the delete merchant confirmation."}
 }

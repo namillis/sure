@@ -3722,4 +3722,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spmCategoryDeleteUncategorized => 'Leave uncategorized';
+
+  @override
+  String get spmMerchantEdit => 'Edit merchant';
+
+  @override
+  String get spmMerchantSaved => 'Merchant saved';
+
+  @override
+  String get spmMerchantDeleted => 'Merchant deleted';
+
+  @override
+  String get spmMerchantDelete => 'Delete merchant';
+
+  @override
+  String spmMerchantDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get spmMerchantDeleteBody =>
+      'Its transactions keep their details but lose the merchant, and its recurring transactions are removed. This can\'t be undone.';
 }

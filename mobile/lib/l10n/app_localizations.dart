@@ -6337,6 +6337,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave uncategorized'**
   String get spmCategoryDeleteUncategorized;
+
+  /// Title of the edit merchant sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit merchant'**
+  String get spmMerchantEdit;
+
+  /// Snackbar after a merchant was edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant saved'**
+  String get spmMerchantSaved;
+
+  /// Snackbar after a merchant was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant deleted'**
+  String get spmMerchantDeleted;
+
+  /// Destructive button in the edit merchant sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete merchant'**
+  String get spmMerchantDelete;
+
+  /// Title of the delete merchant confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String spmMerchantDeleteTitle(String name);
+
+  /// Body of the delete merchant confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Its transactions keep their details but lose the merchant, and its recurring transactions are removed. This can\'t be undone.'**
+  String get spmMerchantDeleteBody;
 }
 
 class _AppLocalizationsDelegate

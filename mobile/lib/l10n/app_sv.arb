@@ -1047,5 +1047,11 @@
   "spmCategoryDeleteBody": "Transaktionerna flyttas till kategorin du väljer nedan, eller blir okategoriserade. Det går inte att ångra.",
   "spmCategoryDeleteSubcategories": "{count, plural, =1{Dess underkategori blir en huvudkategori.} other{Dess {count} underkategorier blir huvudkategorier.}}",
   "spmCategoryDeleteMoveTo": "Flytta transaktioner till",
-  "spmCategoryDeleteUncategorized": "Lämna okategoriserade"
+  "spmCategoryDeleteUncategorized": "Lämna okategoriserade",
+  "spmMerchantEdit": "Redigera handlare",
+  "spmMerchantSaved": "Handlaren har sparats",
+  "spmMerchantDeleted": "Handlaren har tagits bort",
+  "spmMerchantDelete": "Ta bort handlare",
+  "spmMerchantDeleteTitle": "Ta bort ”{name}”?",
+  "spmMerchantDeleteBody": "Transaktionerna behåller sina uppgifter men förlorar handlaren, och dess återkommande transaktioner tas bort. Det går inte att ångra."
 }

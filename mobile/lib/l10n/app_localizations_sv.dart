@@ -3755,4 +3755,25 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get spmCategoryDeleteUncategorized => 'Lämna okategoriserade';
+
+  @override
+  String get spmMerchantEdit => 'Redigera handlare';
+
+  @override
+  String get spmMerchantSaved => 'Handlaren har sparats';
+
+  @override
+  String get spmMerchantDeleted => 'Handlaren har tagits bort';
+
+  @override
+  String get spmMerchantDelete => 'Ta bort handlare';
+
+  @override
+  String spmMerchantDeleteTitle(String name) {
+    return 'Ta bort ”$name”?';
+  }
+
+  @override
+  String get spmMerchantDeleteBody =>
+      'Transaktionerna behåller sina uppgifter men förlorar handlaren, och dess återkommande transaktioner tas bort. Det går inte att ångra.';
 }

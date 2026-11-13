@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/merchant.dart';
 import '../providers/auth_provider.dart';
 import '../providers/merchants_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/metadata_create_service.dart';
 import '../services/metadata_manage_service.dart';
 import '../theme/sure_colors.dart';
@@ -14,9 +15,10 @@ import '../widgets/manage_widgets.dart';
 import '../widgets/open_on_web_action.dart';
 import 'form_sheet_fields.dart';
 
-/// Lists the merchants the user can see and creates family merchants. The
-/// API has no merchant edit or delete, so a row opens an info sheet that
-/// links to the web.
+/// Lists the merchants the user can see and creates family merchants. On a
+/// Sure+ server with `merchants.write` a family merchant opens the edit sheet
+/// (with delete); provider merchants, and every merchant on other servers,
+/// open a read-only info sheet.
 class MerchantsScreen extends StatefulWidget {
   const MerchantsScreen({
     super.key,
@@ -38,6 +40,9 @@ class MerchantsScreen extends StatefulWidget {
   @override
   State<MerchantsScreen> createState() => _MerchantsScreenState();
 }
+
+/// What the edit merchant sheet ended with.
+enum _EditOutcome { saved, deleted }
 
 class _MerchantsScreenState extends State<MerchantsScreen> {
   late final MetadataManageService _service;
@@ -146,9 +151,92 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
     await _load();
   }
 
+  /// Runs a write with a token; returns an error message, or null on
+  /// success (after refreshing [MerchantsProvider]).
+  Future<String?> _run(
+    Future<Map<String, dynamic>> Function(String token) call,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final token = await _token();
+    if (token == null) {
+      await _unauthorized();
+      return l.manageActionFailed;
+    }
+    final result = await call(token);
+    if (result['error'] == 'unauthorized') {
+      await _unauthorized();
+      return l.manageActionFailed;
+    }
+    if (result['code'] == 'insufficient_scope') return l.spmReadOnlyAccess;
+    if (result['success'] != true) {
+      return result['error']?.toString() ?? l.manageActionFailed;
+    }
+    await _refreshProvider(token);
+    return null;
+  }
+
+  /// The Sure+ edit sheet (`merchants.write`) for a family merchant.
+  Future<void> _openEdit(Merchant merchant) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final outcome = await showManageSheet<_EditOutcome>(
+      context,
+      (sheetContext) {
+        void close(_EditOutcome outcome) {
+          if (sheetContext.mounted) Navigator.of(sheetContext).pop(outcome);
+        }
+
+        return MerchantForm(
+          existing: merchant,
+          onSubmit: (name, color, website) async {
+            final error = await _run((token) => _service.updateMerchant(
+                  accessToken: token,
+                  id: merchant.id,
+                  name: name,
+                  color: color,
+                  // "" clears the website.
+                  websiteUrl: website ?? '',
+                ));
+            if (error == null) close(_EditOutcome.saved);
+            return error;
+          },
+          onDelete: () async {
+            final error = await _run((token) =>
+                _service.deleteMerchant(accessToken: token, id: merchant.id));
+            if (error == null) close(_EditOutcome.deleted);
+            return error;
+          },
+        );
+      },
+    );
+    if (outcome == null || !mounted) return;
+    messenger.showSnackBar(SnackBar(
+      content: Text(outcome == _EditOutcome.saved
+          ? l.spmMerchantSaved
+          : l.spmMerchantDeleted),
+    ));
+    await _load();
+  }
+
+  /// True when the server can edit and delete family merchants. Off when the
+  /// app's providers aren't mounted (tests).
+  bool get _canEdit {
+    try {
+      return context
+          .read<ServerFeaturesProvider>()
+          .has(ServerFeaturesProvider.merchantsWrite);
+    } on ProviderNotFoundException {
+      return false;
+    }
+  }
+
   void _showInfo(Merchant merchant) {
     final l = AppLocalizations.of(context);
     final family = merchant.type == 'FamilyMerchant';
+    if (family && _canEdit) {
+      _openEdit(merchant);
+      return;
+    }
     showManageSheet<void>(
       context,
       (sheetContext) => ManageInfoSheet(
@@ -299,6 +387,32 @@ class _MerchantBadge extends StatelessWidget {
   }
 }
 
+/// Asks before deleting [merchant]; true when the user confirmed.
+Future<bool> confirmMerchantDelete(
+    BuildContext context, Merchant merchant) async {
+  final l = AppLocalizations.of(context);
+  final palette = SureColors.of(context).palette;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l.spmMerchantDeleteTitle(merchant.name)),
+      content: Text(l.spmMerchantDeleteBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l.commonCancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          style: TextButton.styleFrom(foregroundColor: palette.destructive),
+          child: Text(l.commonDelete),
+        ),
+      ],
+    ),
+  );
+  return confirmed == true;
+}
+
 /// True for a plausible website: a host with a dot and no spaces, with or
 /// without an http(s) scheme.
 bool isPlausibleWebsite(String value) {
@@ -313,13 +427,24 @@ bool isPlausibleWebsite(String value) {
   return host.contains('.') && !host.startsWith('.') && !host.endsWith('.');
 }
 
-/// The create merchant form: name, optional color and website. [onSubmit]
-/// returns an error message to show, or null on success.
+/// The create/edit merchant form: name, optional color and website.
+/// [onSubmit] and [onDelete] return an error message to show, or null on
+/// success. [onDelete] runs only after the user confirms.
 class MerchantForm extends StatefulWidget {
-  const MerchantForm({super.key, required this.onSubmit});
+  const MerchantForm({
+    super.key,
+    required this.onSubmit,
+    this.existing,
+    this.onDelete,
+  });
 
   final Future<String?> Function(String name, String? color, String? website)
       onSubmit;
+
+  /// The family merchant being edited (Sure+ `merchants.write`); null
+  /// creates one.
+  final Merchant? existing;
+  final Future<String?> Function()? onDelete;
 
   @override
   State<MerchantForm> createState() => _MerchantFormState();
@@ -327,8 +452,8 @@ class MerchantForm extends StatefulWidget {
 
 class _MerchantFormState extends State<MerchantForm> {
   final _formKey = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  final _website = TextEditingController();
+  late final TextEditingController _name;
+  late final TextEditingController _website;
   final _nameFocus = FocusNode();
   String? _color;
   bool _saving = false;
@@ -337,8 +462,15 @@ class _MerchantFormState extends State<MerchantForm> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _nameFocus.requestFocus());
+    final existing = widget.existing;
+    _name = TextEditingController(text: existing?.name ?? '');
+    _website = TextEditingController(text: existing?.websiteUrl ?? '');
+    final color = existing?.color;
+    _color = color != null && color.isNotEmpty ? color : null;
+    if (existing == null) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _nameFocus.requestFocus());
+    }
   }
 
   @override
@@ -365,11 +497,29 @@ class _MerchantFormState extends State<MerchantForm> {
     });
   }
 
+  Future<void> _delete() async {
+    final existing = widget.existing;
+    final onDelete = widget.onDelete;
+    if (existing == null || onDelete == null) return;
+    if (!await confirmMerchantDelete(context, existing) || !mounted) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    final error = await onDelete();
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      _error = error;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final editing = widget.existing != null;
     return SureSheet(
-      title: l.manageMerchantNew,
+      title: editing ? l.spmMerchantEdit : l.manageMerchantNew,
       actionLabel: l.commonSave,
       actionKey: const ValueKey('merchantFormSave'),
       busy: _saving,
@@ -410,13 +560,23 @@ class _MerchantFormState extends State<MerchantForm> {
               ),
               ManageColorPicker(
                 value: _color,
-                allowAutomatic: true,
+                // An existing merchant always has a color; null would send
+                // no change.
+                allowAutomatic: !editing,
                 onChanged: (value) => setState(() => _color = value),
               ),
               if (_error != null) ...[
                 const SizedBox(height: SureSpacing.lg),
                 ManageErrorText(_error!),
               ],
+              if (editing && widget.onDelete != null)
+                SureButtonPanel(
+                  key: const ValueKey('merchantFormDelete'),
+                  label: l.spmMerchantDelete,
+                  destructive: true,
+                  margin: const EdgeInsets.only(top: SureSpacing.xxxl),
+                  onPressed: _saving ? null : _delete,
+                ),
             ],
           ),
         ),
