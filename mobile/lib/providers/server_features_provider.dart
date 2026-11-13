@@ -37,6 +37,8 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const rulesGroups = 'rules.groups';
   static const rulesCatalog = 'rules.catalog';
   static const rulesApplyAll = 'rules.apply_all';
+  static const accountsPermissions = 'accounts.permissions';
+  static const accountsLoanRates = 'accounts.loan_rates';
 
   static const _prefsPrefix = 'server_features:';
 

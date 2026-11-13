@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -407,14 +409,62 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
   bool _excludeFromReports = false;
   bool _showMore = false;
 
-  /// Known only once the server refuses a balance/currency change (the
-  /// account JSON has no linked flag).
-  bool _linked = false;
+  /// Set once the server refuses a balance/currency change or a delete as
+  /// linked: how servers without Sure+ `accounts.permissions` tell us.
+  bool _linkedRefused = false;
+
+  /// `locked_fields` (Sure+ `accounts.permissions`): read-only rows.
+  Set<String> _lockedFields = const {};
+
+  /// `permissions.delete` (Sure+ `accounts.permissions`); null without it.
+  bool? _canDelete;
+
+  bool _featuresRead = false;
+  bool _permissions = false;
+
+  /// Sure+ `accounts.loan_rates`: the show response's `accountable` block
+  /// prefills the type's fields, and loans get insurance, interest basis,
+  /// principal-only transfers and rate changes.
+  bool _loanRates = false;
+  bool _loadingDetails = false;
+
+  /// The `accountable` block the fields were prefilled from. Without it the
+  /// type's fields start empty and are sent only when filled in; with it,
+  /// whatever differs from the prefill is sent (empty clears).
+  Map<String, dynamic>? _accountable;
+  final Map<String, String> _initialText = {};
+  final Map<String, String?> _initialChoices = {};
+  DateTime? _initialStartDate;
+  DateTime? _initialPurchaseDate;
+  DateTime? _initialExpirationDate;
+  bool _principalOnly = false;
+  bool _initialPrincipalOnly = false;
+  List<_RateChange> _rateChanges = [];
+  List<_RateChange> _initialRateChanges = const [];
+
   bool _submitting = false;
   bool _deleting = false;
   String? _error;
 
   bool get _editing => widget.account != null;
+  bool get _prefilled => _accountable != null;
+
+  /// What a 422 "Linked accounts ..." locks on servers without
+  /// `accounts.permissions` (the fields the web form hides).
+  static const _refusalLocked = {
+    'balance',
+    'currency',
+    'accountable_attributes.initial_balance',
+    'accountable_attributes.purchase_date',
+  };
+
+  bool _isLocked(String field) =>
+      _lockedFields.contains(field) ||
+      (_linkedRefused && _refusalLocked.contains(field));
+
+  /// Rate changes replace the whole list on PATCH, so they are editable only
+  /// once the current list is known.
+  bool get _rateChangesEditable => _loanRates && (!_editing || _prefilled);
 
   @override
   void initState() {
@@ -451,7 +501,166 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
       }
       _currency ??= 'USD';
     }
+    if (!_featuresRead) {
+      _featuresRead = true;
+      _readFeatures();
+    }
   }
+
+  void _readFeatures() {
+    try {
+      final features = context.read<ServerFeaturesProvider>();
+      _permissions = features.has(ServerFeaturesProvider.accountsPermissions);
+      _loanRates = features.has(ServerFeaturesProvider.accountsLoanRates);
+    } on ProviderNotFoundException {
+      return;
+    }
+    final account = widget.account;
+    if (account == null) return;
+    _applyPermissions(account);
+    if (!_loanRates) return;
+    final accountable = account.accountable;
+    if (accountable != null) {
+      _prefill(accountable);
+    } else {
+      _loadingDetails = true;
+      Future.microtask(_loadDetails);
+    }
+  }
+
+  void _applyPermissions(Account account) {
+    if (!_permissions) return;
+    _lockedFields = {...?account.lockedFields};
+    _canDelete = account.canDelete;
+  }
+
+  /// Fetches the show response for its `accountable` block. On failure the
+  /// sheet works as without the feature.
+  Future<void> _loadDetails() async {
+    final token = await _token();
+    if (!mounted) return;
+    final result = token == null
+        ? const <String, dynamic>{}
+        : await _service.getAccount(
+            accessToken: token, id: widget.account!.id);
+    if (!mounted) return;
+    final fresh = result['account'];
+    setState(() {
+      _loadingDetails = false;
+      if (result['success'] == true && fresh is Account) {
+        _applyPermissions(fresh);
+        final accountable = fresh.accountable;
+        if (accountable != null) _prefill(accountable);
+      }
+    });
+  }
+
+  String? _numberText(dynamic value, {bool integer = false}) {
+    if (value == null) return null;
+    final n = value is num ? value : num.tryParse(value.toString());
+    if (n == null) return value.toString();
+    if (integer) return n.round().toString();
+    final format = NumberFormat.decimalPattern(_locale)
+      ..maximumFractionDigits = 6
+      ..turnOffGrouping();
+    return format.format(n);
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    final parsed = DateTime.tryParse(value?.toString() ?? '');
+    return parsed == null ? null : DateUtils.dateOnly(parsed);
+  }
+
+  /// Fills the type's fields from the show response's `accountable` block
+  /// and remembers them, so [_body] sends only what changed.
+  void _prefill(Map<String, dynamic> a) {
+    _accountable = a;
+    void text(String key, dynamic value, {bool number = false, bool integer = false}) {
+      final t = number || integer
+          ? _numberText(value, integer: integer)
+          : value?.toString();
+      if (t == null) return;
+      _field(key).text = t;
+      _initialText[key] = t;
+    }
+
+    void choice(String key, dynamic value) {
+      if (value != null && value.toString().isNotEmpty) {
+        _choices[key] = value.toString();
+      }
+      _initialChoices[key] = _choices[key];
+    }
+
+    switch (_type?.accountType) {
+      case 'credit_card':
+        for (final k in const [
+          'available_credit',
+          'apr',
+          'minimum_payment',
+          'annual_fee',
+        ]) {
+          text(k, a[k], number: true);
+        }
+        choice('statement_close_day', a['statement_close_day']);
+        choice('due_day', a['due_day']);
+        _expirationDate = _initialExpirationDate = _parseDate(a['expiration_date']);
+      case 'loan':
+        for (final k in const [
+          'interest_rate',
+          'initial_balance',
+          'down_payment',
+          'insurance_rate',
+        ]) {
+          text(k, a[k], number: true);
+        }
+        text('term_months', a['term_months'], integer: true);
+        choice('rate_type', a['rate_type']);
+        choice('insurance_rate_type', a['insurance_rate_type']);
+        choice('day_count_convention', a['day_count_convention']);
+        _startDate = _initialStartDate = _parseDate(a['start_date']);
+        _principalOnly =
+            _initialPrincipalOnly = a['principal_only_transfers'] == true;
+        final rows = a['rate_changes'];
+        _rateChanges = [
+          if (rows is List)
+            for (final row in rows)
+              if (row is Map && _parseDate(row['effective_date']) != null)
+                (
+                  date: _parseDate(row['effective_date'])!,
+                  rate: row['rate']?.toString() ?? '',
+                ),
+        ]..sort((x, y) => x.date.compareTo(y.date));
+        _initialRateChanges = List.unmodifiable(_rateChanges);
+      case 'vehicle':
+        text('make', a['make']);
+        text('model', a['model']);
+        text('year', a['year'], integer: true);
+        text('mileage_value', a['mileage_value'], integer: true);
+        choice('mileage_unit', a['mileage_unit']);
+        text('initial_balance', a['initial_balance'], number: true);
+        _purchaseDate = _initialPurchaseDate = _parseDate(a['purchase_date']);
+      case 'property':
+        text('year_built', a['year_built'], integer: true);
+        text('area_value', a['area_value'], integer: true);
+        choice('area_unit', a['area_unit']);
+        final address = a['address_attributes'];
+        final map = address is Map ? address : const {};
+        for (final k in _addressKeys) {
+          text(k, map[k]);
+        }
+        choice('country', map['country']);
+      case 'crypto':
+        choice('tax_treatment', a['tax_treatment']);
+    }
+  }
+
+  static const _addressKeys = [
+    'line1',
+    'line2',
+    'locality',
+    'region',
+    'postal_code',
+  ];
 
   @override
   void dispose() {
@@ -501,7 +710,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
 
   String? _validateBalance(String? value) {
     final l = AppLocalizations.of(context);
-    if (_linked) return null;
+    if (_isLocked('balance')) return null;
     if (value == null || value.trim().isEmpty) return l.spaBalanceRequired;
     try {
       AmountParser.parse(value, locale: _locale);
@@ -552,15 +761,16 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
     final name = _name.text.trim();
     if (account == null || name != account.name) body['name'] = name;
 
-    if (!_linked) {
+    if (!_isLocked('balance')) {
       final balance = _canonical(_balance.text);
       if (account == null ||
           double.parse(balance) != accountBalanceValue(account)) {
         body['balance'] = balance;
       }
-      if (account == null || _currency != account.currency) {
-        body['currency'] = _currency;
-      }
+    }
+    if (!_isLocked('currency') &&
+        (account == null || _currency != account.currency)) {
+      body['currency'] = _currency;
     }
 
     // Depository's subtype is an account field on the web form; the other
@@ -576,24 +786,45 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
       }
     }
 
-    void text(String key) {
+    // With a prefill, a field is sent when it differs from it (emptied
+    // means null); without one, when it is filled in.
+    String? edited(String key) {
       final value = _fields[key]?.text.trim() ?? '';
-      if (value.isNotEmpty) attrs[key] = value;
+      if (_prefilled && value == (_initialText[key] ?? '')) return null;
+      if (value.isEmpty && !_prefilled) return null;
+      return value;
+    }
+
+    void text(String key) {
+      final value = edited(key);
+      if (value != null) attrs[key] = value.isEmpty ? null : value;
     }
 
     void number(String key) {
-      final value = _fields[key]?.text.trim() ?? '';
-      if (value.isNotEmpty) attrs[key] = _canonical(value);
+      final value = edited(key);
+      if (value != null) attrs[key] = value.isEmpty ? null : _canonical(value);
     }
 
     void integer(String key) {
-      final value = int.tryParse(_fields[key]?.text.trim() ?? '');
-      if (value != null) attrs[key] = value;
+      final value = edited(key);
+      if (value == null) return;
+      if (value.isEmpty) {
+        attrs[key] = null;
+      } else if (int.tryParse(value) != null) {
+        attrs[key] = int.parse(value);
+      }
     }
 
     void choice(String key) {
       final value = _choices[key];
+      if (_prefilled && value == _initialChoices[key]) return;
       if (value != null) attrs[key] = value == '' ? null : value;
+    }
+
+    void date(String key, DateTime? value, DateTime? initial) {
+      if (value != null && (!_prefilled || value != initial)) {
+        attrs[key] = _date(value);
+      }
     }
 
     switch (type.accountType) {
@@ -602,9 +833,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
         number('apr');
         number('minimum_payment');
         number('annual_fee');
-        if (_expirationDate != null) {
-          attrs['expiration_date'] = _date(_expirationDate!);
-        }
+        date('expiration_date', _expirationDate, _initialExpirationDate);
         choice('statement_close_day');
         choice('due_day');
       case 'loan':
@@ -613,36 +842,61 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
         integer('term_months');
         number('initial_balance');
         number('down_payment');
-        if (_startDate != null) attrs['start_date'] = _date(_startDate!);
+        date('start_date', _startDate, _initialStartDate);
+        if (_loanRates) {
+          number('insurance_rate');
+          choice('insurance_rate_type');
+          choice('day_count_convention');
+          if (_principalOnly != _initialPrincipalOnly) {
+            attrs['principal_only_transfers'] = _principalOnly;
+          }
+          if (_rateChangesEditable &&
+              !listEquals(_rateChanges, _initialRateChanges)) {
+            attrs['rate_changes'] = [
+              for (final r in _rateChanges)
+                {'effective_date': _date(r.date), 'rate': r.rate},
+            ];
+          }
+        }
       case 'vehicle':
         text('make');
         text('model');
         integer('year');
         integer('mileage_value');
         choice('mileage_unit');
-        if (!_linked) {
+        if (!_isLocked('accountable_attributes.initial_balance')) {
           number('initial_balance');
-          if (_purchaseDate != null) {
-            attrs['purchase_date'] = _date(_purchaseDate!);
-          }
+        }
+        if (!_isLocked('accountable_attributes.purchase_date')) {
+          date('purchase_date', _purchaseDate, _initialPurchaseDate);
+        }
+        // The server tells an edited purchase price from an untouched one by
+        // comparing it with the price the form showed.
+        final accountable = _accountable;
+        if (attrs.isNotEmpty &&
+            accountable != null &&
+            accountable.containsKey('initial_balance_shown') &&
+            !_isLocked('accountable_attributes.initial_balance_shown')) {
+          attrs['initial_balance_shown'] = accountable['initial_balance_shown'];
         }
       case 'property':
         integer('year_built');
         integer('area_value');
         choice('area_unit');
         final address = <String, dynamic>{};
-        for (final key in const [
-          'line1',
-          'line2',
-          'locality',
-          'region',
-          'postal_code',
-        ]) {
+        var addressChanged = !_prefilled;
+        for (final key in _addressKeys) {
           final value = _fields[key]?.text.trim() ?? '';
-          if (value.isNotEmpty) address[key] = value;
+          if (value != (_initialText[key] ?? '')) addressChanged = true;
+          if (value.isNotEmpty || _prefilled) address[key] = value;
+        }
+        if (_choices['country'] != _initialChoices['country']) {
+          addressChanged = true;
         }
         if (_choices['country'] != null) address['country'] = _choices['country'];
-        if (address.isNotEmpty) attrs['address_attributes'] = address;
+        if (addressChanged && address.values.any((v) => v != '')) {
+          attrs['address_attributes'] = address;
+        }
       case 'crypto':
         choice('tax_treatment');
     }
@@ -732,7 +986,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
     }
     setState(() {
       _submitting = false;
-      if (_isLinkedRefusal(result)) _linked = true;
+      if (_isLinkedRefusal(result)) _linkedRefused = true;
       _error = _errorText(result);
     });
   }
@@ -790,7 +1044,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
     }
     setState(() {
       _deleting = false;
-      if (_isLinkedRefusal(result)) _linked = true;
+      if (_isLinkedRefusal(result)) _linkedRefused = true;
       _error = _errorText(result);
     });
   }
@@ -904,7 +1158,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
     final palette = SureColors.of(context).palette;
     final canGoBack = !_editing && widget.initialType == null;
     final busy = _submitting || _deleting;
-    final optional = _editing ? l.spaUnchanged : l.spaOptional;
+    final optional = _editing && !_prefilled ? l.spaUnchanged : l.spaOptional;
 
     final subtypes =
         accountSubtypeOptions(l, type.accountType, currency: _currency);
@@ -913,7 +1167,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
       title: _editing ? l.spaEditAccount : accountFormTypeLabel(l, type.accountType),
       actionLabel: _editing ? l.dsSave : l.spaAdd,
       actionKey: const ValueKey('spaSave'),
-      onAction: busy ? null : _submit,
+      onAction: busy || _loadingDetails ? null : _submit,
       busy: _submitting,
       cancelLabel: canGoBack ? l.spaBackToType : null,
       onCancel: canGoBack
@@ -942,10 +1196,10 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
                 validator: _validateBalance,
                 suffix: _currency,
                 signed: true,
-                enabled: !_linked && !busy,
+                enabled: !_isLocked('balance') && !busy,
                 autofocus: !_editing,
               ),
-              if (_linked)
+              if (_isLocked('balance'))
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
@@ -972,9 +1226,9 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
                     key: const ValueKey('spaCurrency'),
                     title: l.spaCurrency,
                     value: _currency,
-                    showChevron: !_linked,
-                    enabled: !_linked,
-                    onTap: _linked || busy
+                    // Read-only when the provider owns it.
+                    showChevron: !_isLocked('currency'),
+                    onTap: _isLocked('currency') || busy
                         ? null
                         : () => _pick(
                               title: l.spaCurrency,
@@ -1017,7 +1271,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
                 const SizedBox(height: 16),
                 FormErrorText(_error!),
               ],
-              if (_editing && !_linked) ...[
+              if (_editing && !_linkedRefused && _canDelete != false) ...[
                 const SizedBox(height: 24),
                 SureButtonPanel(
                   key: const ValueKey('spaDelete'),
@@ -1186,17 +1440,12 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
               optional,
               enabled: enabled,
             ),
-            if (!_linked) ...[
-              _numberRow('initial_balance', l.spaPurchasePrice, optional,
-                  enabled: enabled),
-              // The web offers the purchase date only once the account
-              // exists (it re-anchors the opening balance).
-              if (_editing)
-                _dateRow('purchase_date', l.spaPurchaseDate, _purchaseDate,
-                    optional, (d) => _purchaseDate = d,
-                    last: DateTime.now(), enabled: enabled),
-            ],
+            ..._vehicleAnchorRows(l, optional, enabled),
           ]),
+          if (_lockedFields
+              .contains('accountable_attributes.initial_balance')) ...[
+            _syncedFootnote(l, const ValueKey('sa2VehicleSynced')),
+          ],
         ];
       case 'property':
         return [
@@ -1275,9 +1524,11 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
             optional, (d) => _expirationDate = d,
             enabled: enabled),
       ],
-      if (type.accountType == 'loan')
+      if (type.accountType == 'loan') ...[
         _numberRow('down_payment', l.spaDownPayment, optional,
             enabled: enabled),
+        if (_loanRates) ..._loanRateRows(l, optional, enabled),
+      ],
       if (!_editing && type.accountType != 'property')
         _dateRow('opening_balance_date', l.spaOpeningDate, _openingDate,
             optional, (d) => _openingDate = d,
@@ -1317,8 +1568,187 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
           padding: _headerPadding,
         ),
         if (_showMore) SurePanel.rows(children: rows),
+        if (_showMore &&
+            type.accountType == 'loan' &&
+            _rateChangesEditable) ...[
+          SureSectionHeader(
+              label: l.sa2RateChanges, padding: _headerPadding),
+          _rateChangesPanel(l, enabled),
+        ],
       ],
     );
+  }
+
+  Widget _syncedFootnote(AppLocalizations l, Key key) {
+    final palette = SureColors.of(context).palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+      child: Text(
+        l.spaSyncedFromBank,
+        key: key,
+        style: TextStyle(fontSize: 13, color: palette.textSecondary),
+      ),
+    );
+  }
+
+  /// Purchase price and date: editable, read-only when `locked_fields`
+  /// names them, or hidden after a linked 422 (servers without
+  /// `accounts.permissions`).
+  List<Widget> _vehicleAnchorRows(
+    AppLocalizations l,
+    String optional,
+    bool enabled,
+  ) {
+    final palette = SureColors.of(context).palette;
+    const price = 'accountable_attributes.initial_balance';
+    const date = 'accountable_attributes.purchase_date';
+    final priceText = _field('initial_balance').text;
+    return [
+      if (_lockedFields.contains(price))
+        SureListRow(
+          key: const ValueKey('spa-initial_balance'),
+          title: l.spaPurchasePrice,
+          trailing: priceText.isEmpty
+              ? Text('—', style: TextStyle(color: palette.textSecondary))
+              : MoneyText(priceText,
+                  trend: MoneyTrend.neutral,
+                  color: palette.textSecondary,
+                  style: const TextStyle(fontSize: 15)),
+        )
+      else if (!_isLocked(price))
+        _numberRow('initial_balance', l.spaPurchasePrice, optional,
+            enabled: enabled),
+      // The web offers the purchase date only once the account exists (it
+      // re-anchors the opening balance).
+      if (_editing)
+        if (_lockedFields.contains(date))
+          SureListRow(
+            key: const ValueKey('spa-purchase_date'),
+            title: l.spaPurchaseDate,
+            value: _purchaseDate == null
+                ? '—'
+                : SureDates.shortOf(context, _purchaseDate!),
+          )
+        else if (!_isLocked(date))
+          _dateRow('purchase_date', l.spaPurchaseDate, _purchaseDate,
+              optional, (d) => _purchaseDate = d,
+              last: DateTime.now(), enabled: enabled),
+    ];
+  }
+
+  /// Sure+ `accounts.loan_rates` loan fields in the More section.
+  List<Widget> _loanRateRows(
+    AppLocalizations l,
+    String optional,
+    bool enabled,
+  ) {
+    return [
+      _numberRow('insurance_rate', l.sa2InsuranceRate, optional,
+          suffix: '%', enabled: enabled),
+      _choiceRow(
+        'insurance_rate_type',
+        l.sa2InsuranceType,
+        [
+          PickerOption(id: '', label: l.spaNone),
+          PickerOption(id: 'level_term', label: l.sa2InsuranceLevelTerm),
+          PickerOption(id: 'decreasing_life', label: l.sa2InsuranceDecreasing),
+        ],
+        optional,
+        enabled: enabled,
+      ),
+      _choiceRow(
+        'day_count_convention',
+        l.sa2DayCount,
+        [
+          PickerOption(id: 'thirty_360', label: l.sa2DayCountThirty360),
+          PickerOption(id: 'actual_365', label: l.sa2DayCountActual365),
+          PickerOption(id: 'actual_actual', label: l.sa2DayCountActualActual),
+        ],
+        optional,
+        enabled: enabled,
+      ),
+      SureListRow(
+        key: const ValueKey('sa2PrincipalOnly'),
+        title: l.sa2PrincipalOnly,
+        subtitle: l.sa2PrincipalOnlySub,
+        trailing: Switch.adaptive(
+          value: _principalOnly,
+          onChanged:
+              enabled ? (v) => setState(() => _principalOnly = v) : null,
+        ),
+      ),
+    ];
+  }
+
+  String _rateText(String rate) {
+    final n = num.tryParse(rate);
+    if (n == null) return '$rate%';
+    final format = NumberFormat.decimalPattern(_locale)
+      ..maximumFractionDigits = 6;
+    return '${format.format(n)}%';
+  }
+
+  Widget _rateChangesPanel(AppLocalizations l, bool enabled) {
+    final palette = SureColors.of(context).palette;
+    return SurePanel.rows(
+      key: const ValueKey('sa2RateChanges'),
+      children: [
+        for (final (i, change) in _rateChanges.indexed)
+          Semantics(
+            key: ValueKey('sa2RateChange-$i'),
+            customSemanticsActions: {
+              CustomSemanticsAction(label: l.commonDelete): () =>
+                  _removeRateChange(change),
+            },
+            child: SureSwipeActions(
+              enabled: enabled,
+              actions: [
+                SureSwipeAction(
+                  label: l.commonDelete,
+                  color: palette.destructive,
+                  onPressed: () => _removeRateChange(change),
+                ),
+              ],
+              child: ColoredBox(
+                color: palette.container,
+                child: SureListRow(
+                  title: SureDates.fullOf(context, change.date),
+                  value: _rateText(change.rate),
+                  showChevron: true,
+                  onTap: enabled ? () => _editRateChange(change) : null,
+                ),
+              ),
+            ),
+          ),
+        SureListRow(
+          key: const ValueKey('sa2AddRateChange'),
+          leading: SureIcon(SureIcons.plus, size: 18, color: palette.link),
+          title: l.sa2AddRateChange,
+          titleColor: palette.link,
+          onTap: enabled ? () => _editRateChange(null) : null,
+        ),
+      ],
+    );
+  }
+
+  void _removeRateChange(_RateChange change) =>
+      setState(() => _rateChanges = [..._rateChanges]..remove(change));
+
+  /// Adds or edits one rate change. One rate per effective date: picking a
+  /// date another row has replaces that row, as the server keys them.
+  Future<void> _editRateChange(_RateChange? existing) async {
+    final result = await showSureSheet<_RateChange>(
+      context: context,
+      builder: (_) => _RateChangeSheet(initial: existing),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _rateChanges = [
+        for (final r in _rateChanges)
+          if (r != existing && r.date != result.date) r,
+        result,
+      ]..sort((x, y) => x.date.compareTo(y.date));
+    });
   }
 
   Widget _textRowFor(
@@ -1361,6 +1791,120 @@ class _RoundIcon extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: SureIcon(icon, size: 15, color: palette.textSecondary),
+      ),
+    );
+  }
+}
+
+/// One row of a loan's `rate_changes`: the annual rate (a canonical decimal
+/// string, as the server sends it) in force from [date].
+typedef _RateChange = ({DateTime date, String rate});
+
+/// Add or edit one rate change: effective date and rate.
+class _RateChangeSheet extends StatefulWidget {
+  const _RateChangeSheet({this.initial});
+
+  final _RateChange? initial;
+
+  @override
+  State<_RateChangeSheet> createState() => _RateChangeSheetState();
+}
+
+class _RateChangeSheetState extends State<_RateChangeSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _rate = TextEditingController();
+  late DateTime _date =
+      widget.initial?.date ?? DateUtils.dateOnly(DateTime.now());
+
+  String get _locale => Localizations.localeOf(context).toString();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final initial = widget.initial;
+    if (initial != null && _rate.text.isEmpty) {
+      final n = num.tryParse(initial.rate);
+      _rate.text = n == null
+          ? initial.rate
+          : (NumberFormat.decimalPattern(_locale)
+                ..maximumFractionDigits = 6
+                ..turnOffGrouping())
+              .format(n);
+    }
+  }
+
+  @override
+  void dispose() {
+    _rate.dispose();
+    super.dispose();
+  }
+
+  /// The server's bound: 0 to 100 (`Loan::MAX_INTEREST_RATE`).
+  String? _validateRate(String? value) {
+    final l = AppLocalizations.of(context);
+    if (value == null || value.trim().isEmpty) return l.sa2RateRequired;
+    final double rate;
+    try {
+      rate = AmountParser.parse(value, locale: _locale).value;
+    } on FormatException {
+      return l.spaInvalidNumber;
+    }
+    return rate < 0 || rate > 100 ? l.sa2RateOutOfRange : null;
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(DateTime.now().year + 50),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _date = DateUtils.dateOnly(picked));
+  }
+
+  void _done() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop<_RateChange>((
+      date: _date,
+      rate: AmountParser.canonicalize(_rate.text.trim(), locale: _locale),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return SureSheet(
+      title: l.sa2RateChange,
+      actionLabel: widget.initial == null ? l.spaAdd : l.dsSave,
+      actionKey: const ValueKey('sa2RateChangeSave'),
+      onAction: _done,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Form(
+          key: _formKey,
+          child: SurePanel.rows(children: [
+            SureListRow(
+              key: const ValueKey('sa2RateChangeDate'),
+              title: l.sa2EffectiveDate,
+              value: SureDates.fullOf(context, _date),
+              showChevron: true,
+              onTap: _pickDate,
+            ),
+            FormSheetFieldRow(
+              fieldKey: const ValueKey('sa2RateChangeRate'),
+              label: l.sa2Rate,
+              controller: _rate,
+              hint: '5.25',
+              mono: true,
+              suffix: '%',
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              validator: _validateRate,
+            ),
+          ]),
+        ),
       ),
     );
   }
