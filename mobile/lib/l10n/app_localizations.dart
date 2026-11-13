@@ -6271,6 +6271,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bills need an internet connection.'**
   String get billsOfflineBody;
+
+  /// Swipe action on one connection: sync it now.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get spdConnectionSyncNow;
+
+  /// Swipe action and confirm button: disconnect one bank or broker connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get spdConnectionDisconnect;
+
+  /// Title of the confirm dialog before disconnecting a connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect {name}?'**
+  String spdConnectionDisconnectTitle(String name);
+
+  /// Body of the confirm dialog before disconnecting a connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Its accounts stop syncing. You can connect it again on the web.'**
+  String get spdConnectionDisconnectBody;
+
+  /// Status of a connection the server will delete shortly.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled for deletion'**
+  String get spdConnectionStatusScheduled;
+
+  /// Error when the server cannot sync this connection type (FinanceKit).
+  ///
+  /// In en, this message translates to:
+  /// **'This connection updates from your device, not from the server. Manage it on the web.'**
+  String get spdConnectionErrorSyncNotSupported;
+
+  /// Error when the server cannot disconnect this connection type (FinanceKit).
+  ///
+  /// In en, this message translates to:
+  /// **'This connection can\'t be disconnected here. Disconnect it on the web.'**
+  String get spdConnectionErrorDisconnectNotSupported;
+
+  /// Error when a sync needs an interactive security code (Sophtron).
+  ///
+  /// In en, this message translates to:
+  /// **'This connection needs a security code to sync. Sync it on the web.'**
+  String get spdConnectionErrorManualSync;
+
+  /// Error when a connection was never authorized or lost its authorization (TrueLayer).
+  ///
+  /// In en, this message translates to:
+  /// **'This connection isn\'t authorized. Reconnect it on the web.'**
+  String get spdConnectionErrorNotConnected;
+
+  /// Error when a connection needs the user to log in again (Trade Republic).
+  ///
+  /// In en, this message translates to:
+  /// **'This connection needs a new login. Log in again on the web.'**
+  String get spdConnectionErrorReconnect;
+
+  /// Error when disconnecting failed because accounts could not be unlinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Some accounts couldn\'t be unlinked, so the connection is still connected. Try again on the web.'**
+  String get spdConnectionErrorUnlinkFailed;
+
+  /// Error when the user may not sync or disconnect this connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a family admin, or for Plaid the person who connected it, can manage this connection.'**
+  String get spdConnectionErrorForbidden;
+
+  /// Error when the app's API access is read-only (403 insufficient_scope).
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in can only read data. Manage the connection on the web.'**
+  String get spdConnectionErrorScope;
+
+  /// Generic error when syncing or disconnecting a connection failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the connection.'**
+  String get spdConnectionActionFailed;
 }
 
 class _AppLocalizationsDelegate

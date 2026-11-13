@@ -72,6 +72,112 @@ void main() {
     });
   });
 
+  group('ProviderConnectionsService manage (connections.manage)', () {
+    // Two providers can hold the same item id; the provider must go along.
+    final plaid = ProviderConnection.fromJson(
+        connectionJson(id: 'c1', provider: 'plaid'));
+
+    test('sync POSTs with provider and returns the syncing row', () async {
+      late http.Request sent;
+      final service = ProviderConnectionsService(
+        client: MockClient((request) async {
+          sent = request;
+          return http.Response(
+              jsonEncode(connectionJson(provider: 'plaid', syncing: true)),
+              202);
+        }),
+      );
+
+      final result =
+          await service.sync(accessToken: 'token', connection: plaid);
+
+      expect(sent.method, 'POST');
+      expect(sent.url.path, '/api/v1/provider_connections/c1/sync');
+      expect(sent.url.queryParameters, {'provider': 'plaid'});
+      expect(sent.headers['Authorization'], 'Bearer token');
+      expect(result['success'], true);
+      expect((result['connection'] as ProviderConnection).syncing, isTrue);
+    });
+
+    test('disconnect DELETEs with provider and returns the scheduled row',
+        () async {
+      late http.Request sent;
+      final service = ProviderConnectionsService(
+        client: MockClient((request) async {
+          sent = request;
+          return http.Response(
+              jsonEncode(connectionJson(
+                  provider: 'plaid', scheduledForDeletion: true)),
+              202);
+        }),
+      );
+
+      final result =
+          await service.disconnect(accessToken: 'token', connection: plaid);
+
+      expect(sent.method, 'DELETE');
+      expect(sent.url.path, '/api/v1/provider_connections/c1');
+      expect(sent.url.queryParameters, {'provider': 'plaid'});
+      expect(result['success'], true);
+      expect((result['connection'] as ProviderConnection).scheduledForDeletion,
+          isTrue);
+    });
+
+    test('a 202 without a row still succeeds', () async {
+      final service = ProviderConnectionsService(
+          client: MockClient((_) async => http.Response('', 202)));
+      final result = await service.sync(accessToken: 't', connection: plaid);
+      expect(result['success'], true);
+      expect(result['connection'], isNull);
+    });
+
+    const errors = {
+      'sync_not_supported': 422,
+      'disconnect_not_supported': 422,
+      'manual_sync_required': 422,
+      'not_connected': 422,
+      'reconnect_required': 422,
+      'unlink_failed': 422,
+      'forbidden': 403,
+      'insufficient_scope': 403,
+    };
+    for (final MapEntry(key: code, value: status) in errors.entries) {
+      test('$status $code carries its code and the server message', () async {
+        final service = ProviderConnectionsService(
+          client: MockClient((_) async => http.Response(
+              jsonEncode({'error': code, 'message': 'Server says $code'}),
+              status)),
+        );
+
+        for (final call in [service.sync, service.disconnect]) {
+          final result = await call(accessToken: 't', connection: plaid);
+          expect(result['success'], false);
+          expect(result['status'], status);
+          expect(result['code'], code);
+          expect(result['error'], 'Server says $code');
+          expect(ProviderConnectionsService.webFixCodes, contains(code));
+        }
+      });
+    }
+
+    test('401 is unauthorized', () async {
+      final service = ProviderConnectionsService(
+          client: MockClient((_) async => http.Response('{}', 401)));
+      expect(
+          (await service.disconnect(
+              accessToken: 't', connection: plaid))['error'],
+          'unauthorized');
+    });
+
+    test('network errors fail without throwing', () async {
+      final service = ProviderConnectionsService(
+          client: MockClient((_) async => throw http.ClientException('x')));
+      final result = await service.sync(accessToken: 't', connection: plaid);
+      expect(result['success'], false);
+      expect(result.containsKey('code'), isFalse);
+    });
+  });
+
   group('ProviderConnection.needsAttention', () {
     ProviderConnection parse(Map<String, dynamic> json) =>
         ProviderConnection.fromJson(json);

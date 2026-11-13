@@ -11,6 +11,7 @@ Map<String, dynamic> connectionJson({
   String? lastSyncedAt = '2026-11-11T10:00:00Z',
   String? institution = 'Example Bank',
   int unlinked = 0,
+  bool syncing = false,
 }) =>
     {
       'id': id,
@@ -29,7 +30,7 @@ Map<String, dynamic> connectionJson({
         'unlinked_count': unlinked,
       },
       'sync': {
-        'syncing': false,
+        'syncing': syncing,
         'status_summary': '3 accounts synced',
         'last_synced_at': lastSyncedAt,
         'latest': latest,

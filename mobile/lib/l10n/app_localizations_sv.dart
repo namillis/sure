@@ -3710,4 +3710,57 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get billsOfflineBody => 'Räkningar kräver en internetanslutning.';
+
+  @override
+  String get spdConnectionSyncNow => 'Synka nu';
+
+  @override
+  String get spdConnectionDisconnect => 'Koppla från';
+
+  @override
+  String spdConnectionDisconnectTitle(String name) {
+    return 'Koppla från $name?';
+  }
+
+  @override
+  String get spdConnectionDisconnectBody =>
+      'Dess konton slutar synkas. Du kan ansluta igen på webben.';
+
+  @override
+  String get spdConnectionStatusScheduled => 'Schemalagd för borttagning';
+
+  @override
+  String get spdConnectionErrorSyncNotSupported =>
+      'Den här anslutningen uppdateras från din enhet, inte från servern. Hantera den på webben.';
+
+  @override
+  String get spdConnectionErrorDisconnectNotSupported =>
+      'Den här anslutningen kan inte kopplas från här. Koppla från den på webben.';
+
+  @override
+  String get spdConnectionErrorManualSync =>
+      'Den här anslutningen behöver en säkerhetskod för att synkas. Synka den på webben.';
+
+  @override
+  String get spdConnectionErrorNotConnected =>
+      'Den här anslutningen är inte auktoriserad. Anslut den igen på webben.';
+
+  @override
+  String get spdConnectionErrorReconnect =>
+      'Den här anslutningen behöver en ny inloggning. Logga in igen på webben.';
+
+  @override
+  String get spdConnectionErrorUnlinkFailed =>
+      'Några konton kunde inte kopplas loss, så anslutningen är fortfarande ansluten. Försök igen på webben.';
+
+  @override
+  String get spdConnectionErrorForbidden =>
+      'Bara en administratör i hushållet, eller för Plaid den som anslöt den, kan hantera den här anslutningen.';
+
+  @override
+  String get spdConnectionErrorScope =>
+      'Den här inloggningen kan bara läsa data. Hantera anslutningen på webben.';
+
+  @override
+  String get spdConnectionActionFailed => 'Kunde inte uppdatera anslutningen.';
 }

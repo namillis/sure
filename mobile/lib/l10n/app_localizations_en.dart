@@ -3677,4 +3677,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billsOfflineBody => 'Bills need an internet connection.';
+
+  @override
+  String get spdConnectionSyncNow => 'Sync now';
+
+  @override
+  String get spdConnectionDisconnect => 'Disconnect';
+
+  @override
+  String spdConnectionDisconnectTitle(String name) {
+    return 'Disconnect $name?';
+  }
+
+  @override
+  String get spdConnectionDisconnectBody =>
+      'Its accounts stop syncing. You can connect it again on the web.';
+
+  @override
+  String get spdConnectionStatusScheduled => 'Scheduled for deletion';
+
+  @override
+  String get spdConnectionErrorSyncNotSupported =>
+      'This connection updates from your device, not from the server. Manage it on the web.';
+
+  @override
+  String get spdConnectionErrorDisconnectNotSupported =>
+      'This connection can\'t be disconnected here. Disconnect it on the web.';
+
+  @override
+  String get spdConnectionErrorManualSync =>
+      'This connection needs a security code to sync. Sync it on the web.';
+
+  @override
+  String get spdConnectionErrorNotConnected =>
+      'This connection isn\'t authorized. Reconnect it on the web.';
+
+  @override
+  String get spdConnectionErrorReconnect =>
+      'This connection needs a new login. Log in again on the web.';
+
+  @override
+  String get spdConnectionErrorUnlinkFailed =>
+      'Some accounts couldn\'t be unlinked, so the connection is still connected. Try again on the web.';
+
+  @override
+  String get spdConnectionErrorForbidden =>
+      'Only a family admin, or for Plaid the person who connected it, can manage this connection.';
+
+  @override
+  String get spdConnectionErrorScope =>
+      'This sign-in can only read data. Manage the connection on the web.';
+
+  @override
+  String get spdConnectionActionFailed => 'Couldn\'t update the connection.';
 }

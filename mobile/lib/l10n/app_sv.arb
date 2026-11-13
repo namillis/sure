@@ -1036,5 +1036,19 @@
   "billsLoadFailed": "Kunde inte läsa in räkningar",
   "billsRefreshFailed": "Kunde inte uppdatera räkningar.",
   "billsOfflineTitle": "Du är offline",
-  "billsOfflineBody": "Räkningar kräver en internetanslutning."
+  "billsOfflineBody": "Räkningar kräver en internetanslutning.",
+  "spdConnectionSyncNow": "Synka nu",
+  "spdConnectionDisconnect": "Koppla från",
+  "spdConnectionDisconnectTitle": "Koppla från {name}?",
+  "spdConnectionDisconnectBody": "Dess konton slutar synkas. Du kan ansluta igen på webben.",
+  "spdConnectionStatusScheduled": "Schemalagd för borttagning",
+  "spdConnectionErrorSyncNotSupported": "Den här anslutningen uppdateras från din enhet, inte från servern. Hantera den på webben.",
+  "spdConnectionErrorDisconnectNotSupported": "Den här anslutningen kan inte kopplas från här. Koppla från den på webben.",
+  "spdConnectionErrorManualSync": "Den här anslutningen behöver en säkerhetskod för att synkas. Synka den på webben.",
+  "spdConnectionErrorNotConnected": "Den här anslutningen är inte auktoriserad. Anslut den igen på webben.",
+  "spdConnectionErrorReconnect": "Den här anslutningen behöver en ny inloggning. Logga in igen på webben.",
+  "spdConnectionErrorUnlinkFailed": "Några konton kunde inte kopplas loss, så anslutningen är fortfarande ansluten. Försök igen på webben.",
+  "spdConnectionErrorForbidden": "Bara en administratör i hushållet, eller för Plaid den som anslöt den, kan hantera den här anslutningen.",
+  "spdConnectionErrorScope": "Den här inloggningen kan bara läsa data. Hantera anslutningen på webben.",
+  "spdConnectionActionFailed": "Kunde inte uppdatera anslutningen."
 }

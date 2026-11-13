@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:provider/provider.dart';
 import 'package:sure_mobile/l10n/app_localizations.dart';
+import 'package:sure_mobile/providers/server_features_provider.dart';
 import 'package:sure_mobile/screens/connections_screen.dart';
 import 'package:sure_mobile/services/provider_connections_service.dart';
 import 'package:sure_mobile/widgets/ds/ds.dart';
@@ -124,6 +126,193 @@ void main() {
     await tester.tap(find.text('Try Again'));
     await tester.pumpAndSettle();
     expect(find.text('Example Bank'), findsOneWidget);
+  });
+
+  group('connections.manage', () {
+    Future<void> pumpManaged(WidgetTester tester, MockClient client,
+            {Set<String> features = const {
+              ServerFeaturesProvider.connectionsManage
+            }}) =>
+        pumpLocalized(
+          tester,
+          ChangeNotifierProvider<ServerFeaturesProvider>(
+            create: (_) => ServerFeaturesProvider()..debugSet(features),
+            child: ConnectionsScreen(
+              service: ProviderConnectionsService(client: client),
+              accessTokenLoader: () async => 'token',
+              onUnauthorized: () async {},
+              now: () => now,
+            ),
+          ),
+        );
+
+    String list(List<Map<String, dynamic>> rows) => jsonEncode({'data': rows});
+
+    Future<void> swipe(WidgetTester tester, String name) async {
+      await tester.drag(find.text(name), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('without the feature rows have no swipe actions',
+        (tester) async {
+      await pumpManaged(
+        tester,
+        MockClient((_) async => http.Response(list([connectionJson()]), 200)),
+        features: const {},
+      );
+      expect(find.byType(SureSwipeActions), findsNothing);
+      await swipe(tester, 'Example Bank');
+      expect(find.text('Disconnect'), findsNothing);
+    });
+
+    testWidgets('Sync now posts with the provider and shows Syncing',
+        (tester) async {
+      final writes = <http.Request>[];
+      await pumpManaged(
+        tester,
+        MockClient((request) async {
+          if (request.method == 'GET') {
+            return http.Response(
+                list([connectionJson(provider: 'simplefin')]), 200);
+          }
+          writes.add(request);
+          return http.Response(
+              jsonEncode(connectionJson(provider: 'simplefin', syncing: true)),
+              202);
+        }),
+      );
+      expect(find.text('Connected'), findsOneWidget);
+
+      await swipe(tester, 'Example Bank');
+      await tester.tap(find.text('Sync now'));
+      await tester.pumpAndSettle();
+
+      expect(writes.single.method, 'POST');
+      expect(writes.single.url.path, '/api/v1/provider_connections/c1/sync');
+      expect(writes.single.url.queryParameters['provider'], 'simplefin');
+      expect(find.text('Syncing'), findsOneWidget);
+    });
+
+    testWidgets('Disconnect confirms, deletes with provider, shows scheduled',
+        (tester) async {
+      final writes = <http.Request>[];
+      await pumpManaged(
+        tester,
+        MockClient((request) async {
+          if (request.method == 'GET') {
+            return http.Response(list([connectionJson(provider: 'plaid')]), 200);
+          }
+          writes.add(request);
+          return http.Response(
+              jsonEncode(connectionJson(
+                  provider: 'plaid', scheduledForDeletion: true)),
+              202);
+        }),
+      );
+
+      await swipe(tester, 'Example Bank');
+      await tester.tap(find.text('Disconnect'));
+      await tester.pumpAndSettle();
+      expect(find.text('Disconnect Example Bank?'), findsOneWidget);
+      expect(
+          find.text(
+              'Its accounts stop syncing. You can connect it again on the web.'),
+          findsOneWidget);
+
+      // Cancel sends nothing.
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(writes, isEmpty);
+
+      await swipe(tester, 'Example Bank');
+      await tester.tap(find.text('Disconnect'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.descendant(
+          of: find.byType(AlertDialog), matching: find.text('Disconnect')));
+      await tester.pumpAndSettle();
+
+      expect(writes.single.method, 'DELETE');
+      expect(writes.single.url.path, '/api/v1/provider_connections/c1');
+      expect(writes.single.url.queryParameters['provider'], 'plaid');
+      expect(find.text('Scheduled for deletion'), findsOneWidget);
+      // A row being deleted offers no more actions.
+      expect(find.byType(SureSwipeActions), findsNothing);
+    });
+
+    for (final (status, code, message) in [
+      (
+        422,
+        'manual_sync_required',
+        'This connection needs a security code to sync. Sync it on the web.'
+      ),
+      (
+        422,
+        'reconnect_required',
+        'This connection needs a new login. Log in again on the web.'
+      ),
+      (
+        403,
+        'forbidden',
+        'Only a family admin, or for Plaid the person who connected it, '
+            'can manage this connection.'
+      ),
+      (
+        403,
+        'insufficient_scope',
+        'This sign-in can only read data. Manage the connection on the web.'
+      ),
+    ]) {
+      testWidgets('$status $code shows a message and Fix on the web',
+          (tester) async {
+        await pumpManaged(
+          tester,
+          MockClient((request) async => request.method == 'GET'
+              ? http.Response(list([connectionJson()]), 200)
+              : http.Response(
+                  jsonEncode({'error': code, 'message': 'server text'}),
+                  status)),
+        );
+
+        await swipe(tester, 'Example Bank');
+        await tester.tap(find.text('Sync now'));
+        await tester.pump();
+
+        expect(find.text(message), findsOneWidget);
+        expect(find.widgetWithText(SnackBarAction, 'Fix on the web'),
+            findsOneWidget);
+        expect(find.text('Connected'), findsOneWidget);
+      });
+    }
+
+    testWidgets('fits 320 px in Swedish with actions open', (tester) async {
+      tester.view.physicalSize = const Size(960, 2400);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ServerFeaturesProvider>(
+          create: (_) => ServerFeaturesProvider()
+            ..debugSet({ServerFeaturesProvider.connectionsManage}),
+          child: MaterialApp(
+            locale: const Locale('sv'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: ConnectionsScreen(
+              service: ProviderConnectionsService(
+                  client: MockClient((_) async => http.Response(
+                      list([connectionJson(scheduledForDeletion: false)]),
+                      200))),
+              accessTokenLoader: () async => 'token',
+              onUnauthorized: () async {},
+              now: () => now,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await swipe(tester, 'Example Bank');
+      expect(find.text('Koppla från'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 
   test('lastSyncedLabel', () {
