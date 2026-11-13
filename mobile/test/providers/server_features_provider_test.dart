@@ -19,6 +19,17 @@ class _Auth extends AuthProvider {
   Future<String?> getValidAccessToken() async => 'token';
 }
 
+class _ApiKeyAuth extends AuthProvider {
+  @override
+  User? get user => null;
+  @override
+  bool get isAuthenticated => true;
+  @override
+  bool get isApiKeyAuth => true;
+  @override
+  Future<String?> getValidAccessToken() async => 'key';
+}
+
 User _user(String id) => User.fromJson({
       'id': id,
       'email': 'a@b.c',
@@ -64,6 +75,16 @@ void main() {
     offline.updateAuth(_Auth(_user('u1')));
     await _settle();
     expect(offline.has(ServerFeaturesProvider.goals), isTrue);
+  });
+
+  test('API-key sign-in (no user record) still loads the list', () async {
+    final provider = ServerFeaturesProvider(
+      client: MockClient((_) async => http.Response(
+          jsonEncode({'version': '1', 'features': ['goals']}), 200)),
+    );
+    provider.updateAuth(_ApiKeyAuth());
+    await _settle();
+    expect(provider.has(ServerFeaturesProvider.goals), isTrue);
   });
 
   test('stock Sure (no features key) offers nothing', () async {

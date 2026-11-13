@@ -45,7 +45,9 @@ class ServerFeaturesProvider with ChangeNotifier {
   /// Called by the provider tree whenever [AuthProvider] changes. Loads the
   /// cached list for the new server + user at once, then refreshes it.
   void updateAuth(AuthProvider auth) {
-    final userId = auth.user?.id;
+    // API-key sign-in has no user record, so key the cache on the API key
+    // session instead of a user id.
+    final userId = auth.user?.id ?? (auth.isApiKeyAuth ? 'api-key' : null);
     if (!auth.isAuthenticated || userId == null) {
       if (_key != null || _features.isNotEmpty) {
         _key = null;
