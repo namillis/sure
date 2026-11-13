@@ -3763,4 +3763,164 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get spdConnectionActionFailed => 'Kunde inte uppdatera anslutningen.';
+
+  @override
+  String get spmReadOnlyAccess =>
+      'Den här inloggningen kan bara visa data. Logga in igen med full åtkomst för att göra ändringar.';
+
+  @override
+  String get spmCategoryEdit => 'Redigera kategori';
+
+  @override
+  String get spmCategoryIconHintEdit => 'Ändra ikonen på webben.';
+
+  @override
+  String get spmCategorySaved => 'Kategorin har sparats';
+
+  @override
+  String get spmCategoryDeleted => 'Kategorin har tagits bort';
+
+  @override
+  String get spmCategoryDelete => 'Ta bort kategori';
+
+  @override
+  String spmCategoryDeleteTitle(String name) {
+    return 'Ta bort ”$name”?';
+  }
+
+  @override
+  String get spmCategoryDeleteBody =>
+      'Transaktionerna flyttas till kategorin du väljer nedan, eller blir okategoriserade. Det går inte att ångra.';
+
+  @override
+  String spmCategoryDeleteSubcategories(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Dess $count underkategorier blir huvudkategorier.',
+      one: 'Dess underkategori blir en huvudkategori.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get spmCategoryDeleteMoveTo => 'Flytta transaktioner till';
+
+  @override
+  String get spmCategoryDeleteUncategorized => 'Lämna okategoriserade';
+
+  @override
+  String get spmMerchantEdit => 'Redigera handlare';
+
+  @override
+  String get spmMerchantSaved => 'Handlaren har sparats';
+
+  @override
+  String get spmMerchantDeleted => 'Handlaren har tagits bort';
+
+  @override
+  String get spmMerchantDelete => 'Ta bort handlare';
+
+  @override
+  String spmMerchantDeleteTitle(String name) {
+    return 'Ta bort ”$name”?';
+  }
+
+  @override
+  String get spmMerchantDeleteBody =>
+      'Transaktionerna behåller sina uppgifter men förlorar handlaren, och dess återkommande transaktioner tas bort. Det går inte att ångra.';
+
+  @override
+  String get spmProfileYou => 'Du';
+
+  @override
+  String get spmProfileFirstName => 'Förnamn';
+
+  @override
+  String get spmProfileLastName => 'Efternamn';
+
+  @override
+  String get spmProfileEmail => 'E-post';
+
+  @override
+  String get spmProfileChangeOnWeb => 'Ändra på webben';
+
+  @override
+  String get spmProfileChangeOnWebSubtitle => 'E-post, lösenord och MFA';
+
+  @override
+  String get spmProfileLanguage => 'Språk';
+
+  @override
+  String get spmProfileLanguageAuto => 'Automatiskt';
+
+  @override
+  String get spmProfileDefaultPeriod => 'Standardperiod';
+
+  @override
+  String get spmProfileHousehold => 'Hushåll';
+
+  @override
+  String get spmProfileHouseholdName => 'Namn';
+
+  @override
+  String get spmProfileCurrency => 'Valuta';
+
+  @override
+  String get spmProfileCountry => 'Land';
+
+  @override
+  String get spmProfileTimezone => 'Tidszon';
+
+  @override
+  String get spmProfileDateFormat => 'Datumformat';
+
+  @override
+  String get spmProfileHouseholdFooter =>
+      'Hushållets inställningar gäller för alla i hushållet.';
+
+  @override
+  String get spmProfileNotSet => 'Inte angivet';
+
+  @override
+  String get spmProfileSaved => 'Profilen har sparats';
+
+  @override
+  String get spmProfileLoadFailed => 'Det gick inte att läsa in din profil.';
+
+  @override
+  String get spmPeriodLastDay => 'Senaste dygnet';
+
+  @override
+  String get spmPeriodCurrentWeek => 'Denna vecka';
+
+  @override
+  String get spmPeriodLast7Days => 'Senaste 7 dagarna';
+
+  @override
+  String get spmPeriodCurrentMonth => 'Denna månad';
+
+  @override
+  String get spmPeriodLastMonth => 'Förra månaden';
+
+  @override
+  String get spmPeriodLast30Days => 'Senaste 30 dagarna';
+
+  @override
+  String get spmPeriodLast90Days => 'Senaste 90 dagarna';
+
+  @override
+  String get spmPeriodCurrentYear => 'Detta år';
+
+  @override
+  String get spmPeriodLast365Days => 'Senaste 365 dagarna';
+
+  @override
+  String get spmPeriodLast5Years => 'Senaste 5 åren';
+
+  @override
+  String get spmPeriodLast10Years => 'Senaste 10 åren';
+
+  @override
+  String get spmPeriodAllTime => 'All tid';
 }

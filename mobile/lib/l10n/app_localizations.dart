@@ -6355,6 +6355,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t update the connection.'**
   String get spdConnectionActionFailed;
+
+  /// Error when a write fails because the sign-in has read-only scope (403 insufficient_scope).
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in can only view data. Sign in again with full access to make changes.'**
+  String get spmReadOnlyAccess;
+
+  /// Title of the edit category sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get spmCategoryEdit;
+
+  /// Note in the edit category sheet: the icon can only be changed on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the icon on the web.'**
+  String get spmCategoryIconHintEdit;
+
+  /// Snackbar after a category was edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Category saved'**
+  String get spmCategorySaved;
+
+  /// Snackbar after a category was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Category deleted'**
+  String get spmCategoryDeleted;
+
+  /// Destructive button in the edit category sheet and in the delete sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete category'**
+  String get spmCategoryDelete;
+
+  /// Title of the delete category sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String spmCategoryDeleteTitle(String name);
+
+  /// Delete category sheet: what happens to the transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Its transactions move to the category you pick below, or stay uncategorized. This can\'t be undone.'**
+  String get spmCategoryDeleteBody;
+
+  /// Delete category sheet: what happens to the subcategories.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Its subcategory becomes a top-level category.} other{Its {count} subcategories become top-level categories.}}'**
+  String spmCategoryDeleteSubcategories(int count);
+
+  /// Section header above the replacement category list in the delete sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Move transactions to'**
+  String get spmCategoryDeleteMoveTo;
+
+  /// Delete category sheet option: don't move the transactions to another category.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave uncategorized'**
+  String get spmCategoryDeleteUncategorized;
+
+  /// Title of the edit merchant sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit merchant'**
+  String get spmMerchantEdit;
+
+  /// Snackbar after a merchant was edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant saved'**
+  String get spmMerchantSaved;
+
+  /// Snackbar after a merchant was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant deleted'**
+  String get spmMerchantDeleted;
+
+  /// Destructive button in the edit merchant sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete merchant'**
+  String get spmMerchantDelete;
+
+  /// Title of the delete merchant confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String spmMerchantDeleteTitle(String name);
+
+  /// Body of the delete merchant confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Its transactions keep their details but lose the merchant, and its recurring transactions are removed. This can\'t be undone.'**
+  String get spmMerchantDeleteBody;
+
+  /// Profile screen: section header of the user's own fields.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get spmProfileYou;
+
+  /// Profile screen: first name field label.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get spmProfileFirstName;
+
+  /// Profile screen: last name field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get spmProfileLastName;
+
+  /// Profile screen: read-only email row.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get spmProfileEmail;
+
+  /// Profile screen: row that opens the web security settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Change on the web'**
+  String get spmProfileChangeOnWeb;
+
+  /// Profile screen: subtitle of the Change on the web row.
+  ///
+  /// In en, this message translates to:
+  /// **'Email, password and MFA'**
+  String get spmProfileChangeOnWebSubtitle;
+
+  /// Profile screen: language picker row, for the user and for the household.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get spmProfileLanguage;
+
+  /// Profile screen: language option that follows the household or browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get spmProfileLanguageAuto;
+
+  /// Profile screen: default chart period picker row.
+  ///
+  /// In en, this message translates to:
+  /// **'Default period'**
+  String get spmProfileDefaultPeriod;
+
+  /// Profile screen: section header of the household preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Household'**
+  String get spmProfileHousehold;
+
+  /// Profile screen: read-only household name row.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get spmProfileHouseholdName;
+
+  /// Profile screen: household currency picker row.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get spmProfileCurrency;
+
+  /// Profile screen: household country picker row.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get spmProfileCountry;
+
+  /// Profile screen: household time zone picker row.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone'**
+  String get spmProfileTimezone;
+
+  /// Profile screen: household date format picker row.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format'**
+  String get spmProfileDateFormat;
+
+  /// Profile screen: note under the household group.
+  ///
+  /// In en, this message translates to:
+  /// **'Household settings apply to everyone in your household.'**
+  String get spmProfileHouseholdFooter;
+
+  /// Profile screen: value of a preference the server has no value for.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get spmProfileNotSet;
+
+  /// Snackbar after the profile was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get spmProfileSaved;
+
+  /// Profile screen: error state when GET /users/me fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your profile.'**
+  String get spmProfileLoadFailed;
+
+  /// Default period option (Period last_day).
+  ///
+  /// In en, this message translates to:
+  /// **'Last day'**
+  String get spmPeriodLastDay;
+
+  /// Default period option (Period current_week).
+  ///
+  /// In en, this message translates to:
+  /// **'Current week'**
+  String get spmPeriodCurrentWeek;
+
+  /// Default period option (Period last_7_days).
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get spmPeriodLast7Days;
+
+  /// Default period option (Period current_month).
+  ///
+  /// In en, this message translates to:
+  /// **'Current month'**
+  String get spmPeriodCurrentMonth;
+
+  /// Default period option (Period last_month).
+  ///
+  /// In en, this message translates to:
+  /// **'Last month'**
+  String get spmPeriodLastMonth;
+
+  /// Default period option (Period last_30_days).
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get spmPeriodLast30Days;
+
+  /// Default period option (Period last_90_days).
+  ///
+  /// In en, this message translates to:
+  /// **'Last 90 days'**
+  String get spmPeriodLast90Days;
+
+  /// Default period option (Period current_year).
+  ///
+  /// In en, this message translates to:
+  /// **'Current year'**
+  String get spmPeriodCurrentYear;
+
+  /// Default period option (Period last_365_days).
+  ///
+  /// In en, this message translates to:
+  /// **'Last 365 days'**
+  String get spmPeriodLast365Days;
+
+  /// Default period option (Period last_5_years).
+  ///
+  /// In en, this message translates to:
+  /// **'Last 5 years'**
+  String get spmPeriodLast5Years;
+
+  /// Default period option (Period last_10_years).
+  ///
+  /// In en, this message translates to:
+  /// **'Last 10 years'**
+  String get spmPeriodLast10Years;
+
+  /// Default period option (Period all_time).
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get spmPeriodAllTime;
 }
 
 class _AppLocalizationsDelegate

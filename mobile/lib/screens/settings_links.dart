@@ -143,10 +143,13 @@ class SettingsWebRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final native = onTap != null;
     return SureListRow(
       title: title,
       subtitle: subtitle,
-      trailing: const SettingsWebMark(),
+      // A native screen gets a chevron; only a web page keeps the ↗ mark.
+      trailing: native ? null : const SettingsWebMark(),
+      showChevron: native,
       onTap: onTap ?? () => openWebFallback(context, title: title, path: path),
     );
   }

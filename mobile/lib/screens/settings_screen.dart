@@ -699,6 +699,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               initials: profileInitials(user),
               name: user?.displayName ?? l.settingsUserFallback,
               host: host,
+              native: nativeProfile,
               onTap: nativeProfile
                   ? openProfile
                   : () => openWebFallback(
@@ -891,19 +892,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 /// The profile panel: a 30 px inverse circle with initials, the name, and
-/// "host · Profile on web ↗". Tapping opens the web profile page.
+/// the server host. On a server without the native Profile screen the host
+/// line adds "· Profile on web ↗" and tapping opens the web profile page.
 class _ProfileRow extends StatelessWidget {
   const _ProfileRow({
     required this.initials,
     required this.name,
     required this.host,
     required this.onTap,
+    this.native = false,
   });
 
   final String initials;
   final String name;
   final String host;
   final VoidCallback onTap;
+  final bool native;
 
   @override
   Widget build(BuildContext context) {
@@ -961,7 +965,7 @@ class _ProfileRow extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              '$host · ${l.ds2sProfileOnWeb}',
+                              native ? host : '$host · ${l.ds2sProfileOnWeb}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -970,13 +974,18 @@ class _ProfileRow extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 2),
-                          const SettingsWebMark(size: 12),
+                          if (!native) ...[
+                            const SizedBox(width: 2),
+                            const SettingsWebMark(size: 12),
+                          ],
                         ],
                       ),
                     ],
                   ),
                 ),
+                if (native)
+                  SureIcon(SureIcons.chevronRight,
+                      size: 16, color: palette.textSubdued),
               ],
             ),
           ),
