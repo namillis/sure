@@ -7,6 +7,7 @@ module SurePlus
     NAMES = %w[
       categories.write
       holdings.stable_order
+      merchants.write
       recurring.category
     ].freeze
   end
