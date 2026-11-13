@@ -6,6 +6,7 @@ import '../models/account.dart';
 import '../models/account_holding.dart';
 import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/account_detail_service.dart';
 import '../services/preferences_service.dart';
 import '../theme/sure_colors.dart';
@@ -62,6 +63,10 @@ class _HoldingsListState extends State<HoldingsList>
 
   Future<void> _load() async {
     final authProvider = context.read<AuthProvider>();
+    final stableOrder = context
+            .read<ServerFeaturesProvider?>()
+            ?.has(ServerFeaturesProvider.holdingsStableOrder) ??
+        false;
     final token = await authProvider.getValidAccessToken();
     if (!mounted) return;
     if (token == null) {
@@ -77,6 +82,7 @@ class _HoldingsListState extends State<HoldingsList>
     final result = await _service.getCurrentHoldings(
       accessToken: token,
       accountId: widget.account.id,
+      stableOrder: stableOrder,
     );
     if (!mounted) return;
 

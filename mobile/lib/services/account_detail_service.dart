@@ -172,11 +172,13 @@ class AccountDetailService {
   Future<Map<String, dynamic>> getCurrentHoldings({
     required String accessToken,
     required String accountId,
+    bool stableOrder = false,
   }) {
     return getHoldings(
       accessToken: accessToken,
       accountId: accountId,
       perPage: null,
+      stableOrder: stableOrder,
     );
   }
 
@@ -235,10 +237,15 @@ class AccountDetailService {
 
   /// Positions on the latest holdings date, largest first. [perPage] caps how
   /// many are returned; null returns all of them.
+  ///
+  /// Pass [stableOrder] when the server has `holdings.stable_order` (it then
+  /// orders by date and id), so walking pages backwards from the last one is
+  /// safe and the extra `?date=` query is skipped.
   Future<Map<String, dynamic>> getHoldings({
     required String accessToken,
     required String accountId,
     int? perPage = 5,
+    bool stableOrder = false,
   }) async {
     final displayLimit = perPage?.clamp(1, _holdingsPageSize).toInt();
 
@@ -289,6 +296,29 @@ class AccountDetailService {
         currentHoldings = lastPage.holdings
             .where((h) => _sameDate(h.date, latest))
             .toList();
+      } else if (stableOrder) {
+        // Order is (date, id), so the latest-date rows end the list: walk
+        // back from the last page until a page starts with an older date.
+        currentHoldings = [...lastPage.holdings];
+        for (var page = totalPages - 1; page >= 1; page--) {
+          final previous = page == 1
+              ? firstPage
+              : await _getHoldingsPage(
+                  accessToken: accessToken,
+                  accountId: accountId,
+                  page: page,
+                );
+          if (!previous.success) {
+            return _failureFromStatus(
+              previous.statusCode,
+              'Failed to fetch holdings',
+            );
+          }
+          final onLatest =
+              previous.holdings.where((h) => _sameDate(h.date, latest));
+          currentHoldings.insertAll(0, onLatest);
+          if (previous.holdings.any((h) => !_sameDate(h.date, latest))) break;
+        }
       } else {
         currentHoldings = [];
         var page = 1;

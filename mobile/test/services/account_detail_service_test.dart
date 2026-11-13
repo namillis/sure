@@ -357,6 +357,93 @@ void main() {
           hasLength(1));
     });
 
+    test(
+        'with stableOrder, walks pages back without a date query and '
+        'dedupes by id', () async {
+      String row(String id, String date, String ticker, String amount) =>
+          '{"id":"$id","date":"$date","qty":"1.0","price":"$amount",'
+          '"amount":"$amount","currency":"USD","account":{"id":"acct_1"},'
+          '"security":{"id":"sec_$ticker","ticker":"$ticker","name":"$ticker"}}';
+      String page(List<String> rows, int page, int pages) =>
+          '{"holdings":[${rows.join(',')}],"pagination":{"page":$page,'
+          '"per_page":100,"total_count":${pages * 100},"total_pages":$pages}}';
+
+      final requests = <Uri>[];
+      final service = AccountDetailService(
+        client: MockClient((request) async {
+          requests.add(request.url);
+          // Ordered by (date, id): the latest date fills pages 3 and 2 and
+          // begins on page 1. A row repeated across a boundary is dropped.
+          switch (request.url.queryParameters['page']) {
+            case '1':
+              return http.Response(
+                page([
+                  row('old', '2026-05-31', 'OLD', r'$5.00'),
+                  row('a', '2026-06-01', 'AAA', r'$30.00'),
+                ], 1, 3),
+                200,
+              );
+            case '2':
+              return http.Response(
+                page([
+                  row('a', '2026-06-01', 'AAA', r'$30.00'),
+                  row('b', '2026-06-01', 'BBB', r'$20.00'),
+                ], 2, 3),
+                200,
+              );
+            default:
+              return http.Response(
+                page([row('c', '2026-06-01', 'CCC', r'$10.00')], 3, 3),
+                200,
+              );
+          }
+        }),
+      );
+
+      final result = await service.getCurrentHoldings(
+        accessToken: 'token',
+        accountId: 'acct_1',
+        stableOrder: true,
+      );
+
+      expect(result['success'], true);
+      final tickers = [
+        for (final h in result['holdings'] as List) (h as dynamic).ticker,
+      ];
+      expect(tickers, ['AAA', 'BBB', 'CCC']);
+      expect(requests.any((u) => u.queryParameters.containsKey('date')),
+          isFalse);
+      // Page 1 is reused from the first request, not fetched again.
+      expect([for (final u in requests) u.queryParameters['page']],
+          ['1', '3', '2']);
+    });
+
+    test('with stableOrder, a failed earlier page fails the load', () async {
+      final service = AccountDetailService(
+        client: MockClient((request) async {
+          final page = request.url.queryParameters['page'];
+          if (page == '2') return http.Response('{}', 500);
+          final date = page == '1' ? '2026-05-31' : '2026-06-01';
+          return http.Response(
+            '{"holdings":[{"id":"h$page","date":"$date","qty":"1.0",'
+            '"price":"\$1.00","amount":"\$1.00","currency":"USD",'
+            '"security":{"ticker":"T$page","name":"T"}}],'
+            '"pagination":{"page":$page,"per_page":100,"total_count":3,'
+            '"total_pages":3}}',
+            200,
+          );
+        }),
+      );
+
+      final result = await service.getCurrentHoldings(
+        accessToken: 'token',
+        accountId: 'acct_1',
+        stableOrder: true,
+      );
+
+      expect(result['success'], false);
+    });
+
     test('parses non-string account balance and holding scalar values',
         () async {
       var requestCount = 0;

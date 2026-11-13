@@ -9,6 +9,7 @@ import '../models/account_holding.dart';
 import '../models/account_trade.dart';
 import '../providers/auth_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/account_detail_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_tokens.dart';
@@ -117,6 +118,10 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       _failed = false;
     });
 
+    final stableOrder = context
+            .read<ServerFeaturesProvider?>()
+            ?.has(ServerFeaturesProvider.holdingsStableOrder) ??
+        false;
     final token = await _token();
     if (token == null || !mounted || generation != _positionsGeneration) {
       return;
@@ -124,7 +129,11 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
     final results = await Future.wait([
       for (final account in accounts)
-        _service.getCurrentHoldings(accessToken: token, accountId: account.id),
+        _service.getCurrentHoldings(
+          accessToken: token,
+          accountId: account.id,
+          stableOrder: stableOrder,
+        ),
       if (accounts.isNotEmpty)
         _service.getTrades(
           accessToken: token,
