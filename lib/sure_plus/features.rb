@@ -5,6 +5,7 @@
 module SurePlus
   module Features
     NAMES = %w[
+      connections.manage
       holdings.stable_order
       recurring.category
     ].freeze
