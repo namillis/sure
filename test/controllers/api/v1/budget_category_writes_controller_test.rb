@@ -189,6 +189,113 @@ class Api::V1::BudgetCategoryWritesControllerTest < ActionDispatch::IntegrationT
     assert_equal 500, @parent_budget_category.reload.budgeted_spending.to_i
   end
 
+  test "moves allocation between categories and returns both rows with the budget" do
+    food = Category.create!(name: "Food API move", family: @family, color: "#111111")
+    food_budget_category = @budget.budget_categories.create!(category: food, budgeted_spending: 40, currency: "USD")
+
+    post move_api_v1_budget_budget_categories_url(@budget.id),
+         params: { move: { from_id: @water_budget_category.id, to_id: food_budget_category.id, amount: "30" } },
+         headers: api_headers(@write_key), as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal @water_budget_category.id, body.dig("from", "id")
+    assert_equal 2000, body.dig("from", "budgeted_spending_cents")
+    assert_equal food_budget_category.id, body.dig("to", "id")
+    assert_equal 7000, body.dig("to", "budgeted_spending_cents")
+    assert body["from"].key?("available_to_spend_cents")
+    assert_equal @budget.id, body.dig("budget", "id")
+    assert body["budget"].key?("available_to_allocate_cents")
+    assert_equal 20, @water_budget_category.reload.budgeted_spending.to_i
+    assert_equal 470, @parent_budget_category.reload.budgeted_spending.to_i
+  end
+
+  test "refuses a move larger than the source allocation and leaves both rows alone" do
+    post move_api_v1_budget_budget_categories_url(@budget.id),
+         params: { move: { from_id: @water_budget_category.id, to_id: @electric_budget_category.id, amount: 51 } },
+         headers: api_headers(@write_key), as: :json
+
+    assert_response :unprocessable_entity
+    body = JSON.parse(response.body)
+    assert_equal "validation_failed", body["error"]
+    assert_equal "insufficient_funds", body["reason"]
+    assert_equal I18n.t("budget_categories.move.errors.insufficient_funds"), body["message"]
+    assert_equal 50, @water_budget_category.reload.budgeted_spending.to_i
+    assert_equal 100, @electric_budget_category.reload.budgeted_spending.to_i
+  end
+
+  test "refuses a move between different budgets" do
+    other_budget = Budget.find_or_bootstrap(@family, start_date: 1.month.ago)
+    other_budget_category = other_budget.budget_categories.find_by!(category: @water_category)
+
+    post move_api_v1_budget_budget_categories_url(@budget.id),
+         params: { move: { from_id: @water_budget_category.id, to_id: other_budget_category.id, amount: 10 } },
+         headers: api_headers(@write_key), as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "different_budgets", JSON.parse(response.body)["reason"]
+    assert_equal 50, @water_budget_category.reload.budgeted_spending.to_i
+  end
+
+  test "refuses a zero or malformed move amount" do
+    [ 0, "-5", "abc", nil ].each do |bad_amount|
+      post move_api_v1_budget_budget_categories_url(@budget.id),
+           params: { move: { from_id: @water_budget_category.id, to_id: @electric_budget_category.id, amount: bad_amount } },
+           headers: api_headers(@write_key), as: :json
+
+      assert_response :unprocessable_entity
+      assert_equal "validation_failed", JSON.parse(response.body)["error"]
+    end
+  end
+
+  test "move returns not found for unknown budgets and categories" do
+    post move_api_v1_budget_budget_categories_url("not-a-uuid"),
+         params: { move: { from_id: @water_budget_category.id, to_id: @electric_budget_category.id, amount: 1 } },
+         headers: api_headers(@write_key), as: :json
+    assert_response :not_found
+
+    post move_api_v1_budget_budget_categories_url(@budget.id),
+         params: { move: { from_id: SecureRandom.uuid, to_id: @electric_budget_category.id, amount: 1 } },
+         headers: api_headers(@write_key), as: :json
+    assert_response :not_found
+  end
+
+  test "move respects personal budget sharing" do
+    owner = users(:family_member)
+    member_budget_category = personal_budget_category_for(owner)
+    member_budget = member_budget_category.budget
+    unrelated = Category.create!(name: "Travel API move", family: @family, color: "#222222")
+    other = member_budget.budget_categories.create!(category: unrelated, budgeted_spending: 0, currency: "USD")
+    move = { move: { from_id: member_budget_category.id, to_id: other.id, amount: 10 } }
+
+    post move_api_v1_budget_budget_categories_url(member_budget.id), params: move, headers: api_headers(@write_key), as: :json
+    assert_response :not_found
+
+    share = BudgetShare.create!(owner: owner, viewer: @user, permission: "read_only")
+    post move_api_v1_budget_budget_categories_url(member_budget.id), params: move, headers: api_headers(@write_key), as: :json
+    assert_response :forbidden
+    assert_equal 300, member_budget_category.reload.budgeted_spending.to_i
+
+    share.update!(permission: "read_write")
+    post move_api_v1_budget_budget_categories_url(member_budget.id), params: move, headers: api_headers(@write_key), as: :json
+    assert_response :success
+    assert_equal 290, member_budget_category.reload.budgeted_spending.to_i
+  end
+
+  test "move needs a read-write key and authentication" do
+    read_key = ApiKey.create!(user: @user, name: "Test Read Key", scopes: [ "read" ], source: "mobile",
+                              display_key: "test_read_#{SecureRandom.hex(8)}")
+    move = { move: { from_id: @water_budget_category.id, to_id: @electric_budget_category.id, amount: 1 } }
+
+    post move_api_v1_budget_budget_categories_url(@budget.id), params: move, headers: api_headers(read_key), as: :json
+    assert_response :forbidden
+    assert_equal "insufficient_scope", JSON.parse(response.body)["error"]
+
+    post move_api_v1_budget_budget_categories_url(@budget.id), params: move, as: :json
+    assert_response :unauthorized
+    assert_equal 50, @water_budget_category.reload.budgeted_spending.to_i
+  end
+
   private
 
     def personal_budget_category_for(owner)
