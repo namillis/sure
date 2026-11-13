@@ -18,6 +18,26 @@ class BalanceSheet::NetWorthSeriesBuilder
     end
   end
 
+  def cache_key(period)
+    shares_version = user ? AccountShare.where(user: user).maximum(:updated_at)&.to_i : nil
+    key = [
+      "balance_sheet_net_worth_series_historical",
+      user&.id,
+      shares_version,
+      period.start_date,
+      period.end_date
+    ].compact.join("_")
+
+    family.build_cache_key(
+      key,
+      invalidate_on_data_updates: true
+    )
+  end
+
+  def any_accounts?
+    historical_account_ids.any?
+  end
+
   private
     attr_reader :family, :user
 
@@ -40,21 +60,5 @@ class BalanceSheet::NetWorthSeriesBuilder
 
     def historical_account_scope
       @historical_account_scope ||= BalanceSheet::HistoricalAccountScope.new(family, user: user)
-    end
-
-    def cache_key(period)
-      shares_version = user ? AccountShare.where(user: user).maximum(:updated_at)&.to_i : nil
-      key = [
-        "balance_sheet_net_worth_series_historical",
-        user&.id,
-        shares_version,
-        period.start_date,
-        period.end_date
-      ].compact.join("_")
-
-      family.build_cache_key(
-        key,
-        invalidate_on_data_updates: true
-      )
     end
 end

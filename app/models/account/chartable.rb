@@ -32,6 +32,16 @@ module Account::Chartable
     end
   end
 
+  def cached_balance_series(period:, view: :balance)
+    Rails.cache.fetch(balance_series_cache_key(period: period, view: view), expires_in: 24.hours) do
+      balance_series(period: period, view: view)
+    end
+  end
+
+  def balance_series_cache_key(period:, view:)
+    [ sparkline_cache_key, "balance_series", view, period.start_date, period.end_date ].join("_")
+  end
+
   # Built from this account's own data, so a sync of another account keeps it cached.
   # Investment series are normalized from holdings and entries that can change outside
   # this account's syncs, so those keep the family-wide sync timestamp.
