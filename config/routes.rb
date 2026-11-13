@@ -833,6 +833,7 @@ Rails.application.routes.draw do
 
       # Production API endpoints
       resources :accounts, only: [ :index, :show ]
+      resources :accounts, only: [ :create, :update, :destroy ], controller: "account_writes"
       resources :account_statements, only: [ :index, :show, :create ]
       resources :balances, only: [ :index, :show ]
       resources :budgets, only: [ :index, :show ]
