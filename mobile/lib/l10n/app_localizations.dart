@@ -8287,6 +8287,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add an investment or crypto account, or connect a brokerage.'**
   String get spaInvestEmptyBody;
+
+  /// Goals summary tile: amount contributed in the last 30 days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get sg2SummaryLast30;
+
+  /// Goals summary tile subtitle: the prior 30 days' contributions.
+  ///
+  /// In en, this message translates to:
+  /// **'vs {amount}'**
+  String sg2SummaryVsPrior(String amount);
+
+  /// Goals summary tile: what the goals need saved this month.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs this month'**
+  String get sg2SummaryNeedsThisMonth;
+
+  /// Goals summary tile subtitle: number of goals behind pace.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} behind'**
+  String sg2SummaryBehind(int count);
+
+  /// Goals summary On track tile value, e.g. 2 of 3.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total}'**
+  String sg2SummaryOnTrackValue(int count, int total);
+
+  /// Goals summary On track tile subtitle: goals that reached their target.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reached'**
+  String sg2SummaryReached(int count);
+
+  /// Goals summary row: total saved toward goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get sg2SummarySaved;
+
+  /// Goals summary row value: saved / target.
+  ///
+  /// In en, this message translates to:
+  /// **'{saved} / {target}'**
+  String sg2SummarySavedValue(String saved, String target);
+
+  /// Goal detail action and sheet title: record money spent from the goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend from this goal'**
+  String get sg2ActionConsume;
+
+  /// Goal detail action.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get sg2ActionPause;
+
+  /// Goal detail action.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get sg2ActionResume;
+
+  /// Goal detail action and confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark complete'**
+  String get sg2ActionComplete;
+
+  /// Goal detail action.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get sg2ActionReopen;
+
+  /// Goal detail action and confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get sg2ActionArchive;
+
+  /// Goal detail action.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get sg2ActionUnarchive;
+
+  /// Confirm dialog title before completing a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark this goal complete?'**
+  String get sg2CompleteTitle;
+
+  /// Confirm dialog body before completing a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'The money earmarked for it is released for your other goals on the same account. You can still archive or reopen it later.'**
+  String get sg2CompleteBody;
+
+  /// Confirm dialog title before archiving a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive this goal?'**
+  String get sg2ArchiveTitle;
+
+  /// Confirm dialog body before archiving a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived goals leave the main list, and you can restore them later. Archiving doesn\'t record what you reached; mark the goal complete first if you want that kept.'**
+  String get sg2ArchiveBody;
+
+  /// Snackbar after pausing a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal paused'**
+  String get sg2Paused;
+
+  /// Snackbar after resuming a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal resumed'**
+  String get sg2Resumed;
+
+  /// Snackbar after completing a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal marked complete'**
+  String get sg2Completed;
+
+  /// Snackbar after reopening a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reopened'**
+  String get sg2Reopened;
+
+  /// Snackbar after archiving a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal archived'**
+  String get sg2Archived;
+
+  /// Snackbar after unarchiving a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal unarchived'**
+  String get sg2Unarchived;
+
+  /// Spend sheet row: the linked account the money came out of.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get sg2ConsumeFrom;
+
+  /// Spend sheet action button.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get sg2ConsumeRecord;
+
+  /// Spend sheet footnote.
+  ///
+  /// In en, this message translates to:
+  /// **'The amount you record stops being reserved for this goal, so your other goals on that account get their share back.'**
+  String get sg2ConsumeHint;
+
+  /// Snackbar after recording a spend from a goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend recorded'**
+  String get sg2Consumed;
 }
 
 class _AppLocalizationsDelegate

@@ -20,6 +20,7 @@ Map<String, dynamic> goalJson(
   List<Map<String, dynamic>> pledges = const [],
   List<Map<String, dynamic>>? linked,
   String? notes,
+  List<String>? actions,
 }) =>
     {
       'id': id,
@@ -61,6 +62,7 @@ Map<String, dynamic> goalJson(
       'progress_basis': 'balance',
       'months_of_runway': null,
       'projected_completion_date': '2027-03-01',
+      'available_actions': actions ?? goalActionsFor(state),
       'behind_pace': status == 'behind',
       'needs_attention': status == 'behind',
       'status_callout': callout,
@@ -125,4 +127,49 @@ Map<String, dynamic> accountJson(String id, String name, String type,
       'currency': 'USD',
       'classification': type == 'credit_card' ? 'liability' : 'asset',
       'account_type': type,
+    };
+
+/// `available_actions` as the server's state machine permits them for a
+/// one-off goal with a spendable linked account.
+List<String> goalActionsFor(String state) {
+  switch (state) {
+    case 'active':
+      return ['pause', 'complete', 'archive', 'consume'];
+    case 'paused':
+      return ['resume', 'complete', 'archive'];
+    case 'completed':
+      return ['reopen', 'archive'];
+    default:
+      return ['unarchive'];
+  }
+}
+
+/// `GET /api/v1/goals/summary`, shaped like
+/// `app/views/api/v1/goals/summary.json.jbuilder`.
+Map<String, dynamic> goalsSummaryJson({
+  String velocity = '\$420.00',
+  String saved = '\$10,000.00',
+}) =>
+    {
+      'currency': 'USD',
+      'velocity_30d': velocity,
+      'velocity_30d_cents': 42000,
+      'velocity_prior_30d': '\$310.00',
+      'velocity_prior_30d_cents': 31000,
+      'velocity_delta_percent': 35.5,
+      'velocity_direction': 'up',
+      'needs_this_month': '\$780.00',
+      'needs_this_month_cents': 78000,
+      'on_track_count': 1,
+      'tracked_total': 2,
+      'reached_count': 0,
+      'behind_count': 1,
+      'no_date_count': 1,
+      'paused_count': 1,
+      'active_total': 2,
+      'saved': saved,
+      'saved_cents': 1000000,
+      'target': '\$23,000.00',
+      'target_cents': 2300000,
+      'pending_pledges_count': 1,
     };

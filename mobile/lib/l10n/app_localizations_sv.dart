@@ -4860,4 +4860,104 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get spaInvestEmptyBody =>
       'Lägg till ett investerings- eller kryptokonto, eller anslut en mäklare.';
+
+  @override
+  String get sg2SummaryLast30 => 'Senaste 30 dagarna';
+
+  @override
+  String sg2SummaryVsPrior(String amount) {
+    return 'mot $amount';
+  }
+
+  @override
+  String get sg2SummaryNeedsThisMonth => 'Behövs denna månad';
+
+  @override
+  String sg2SummaryBehind(int count) {
+    return '$count ligger efter';
+  }
+
+  @override
+  String sg2SummaryOnTrackValue(int count, int total) {
+    return '$count av $total';
+  }
+
+  @override
+  String sg2SummaryReached(int count) {
+    return '$count uppnådda';
+  }
+
+  @override
+  String get sg2SummarySaved => 'Sparat';
+
+  @override
+  String sg2SummarySavedValue(String saved, String target) {
+    return '$saved / $target';
+  }
+
+  @override
+  String get sg2ActionConsume => 'Använd pengar från målet';
+
+  @override
+  String get sg2ActionPause => 'Pausa';
+
+  @override
+  String get sg2ActionResume => 'Återuppta';
+
+  @override
+  String get sg2ActionComplete => 'Markera som klart';
+
+  @override
+  String get sg2ActionReopen => 'Öppna igen';
+
+  @override
+  String get sg2ActionArchive => 'Arkivera';
+
+  @override
+  String get sg2ActionUnarchive => 'Återställ från arkivet';
+
+  @override
+  String get sg2CompleteTitle => 'Markera målet som klart?';
+
+  @override
+  String get sg2CompleteBody =>
+      'Pengarna som är öronmärkta för målet frigörs för dina andra mål på samma konto. Du kan fortfarande arkivera eller öppna det igen senare.';
+
+  @override
+  String get sg2ArchiveTitle => 'Arkivera målet?';
+
+  @override
+  String get sg2ArchiveBody =>
+      'Arkiverade mål försvinner från huvudlistan, och du kan återställa dem senare. Arkivering sparar inte vad du har uppnått; markera målet som klart först om du vill behålla det.';
+
+  @override
+  String get sg2Paused => 'Målet har pausats';
+
+  @override
+  String get sg2Resumed => 'Målet har återupptagits';
+
+  @override
+  String get sg2Completed => 'Målet har markerats som klart';
+
+  @override
+  String get sg2Reopened => 'Målet har öppnats igen';
+
+  @override
+  String get sg2Archived => 'Målet har arkiverats';
+
+  @override
+  String get sg2Unarchived => 'Målet har återställts';
+
+  @override
+  String get sg2ConsumeFrom => 'Från';
+
+  @override
+  String get sg2ConsumeRecord => 'Registrera';
+
+  @override
+  String get sg2ConsumeHint =>
+      'Beloppet du registrerar slutar vara reserverat för målet, så att dina andra mål på kontot får tillbaka sin andel.';
+
+  @override
+  String get sg2Consumed => 'Uttaget har registrerats';
 }

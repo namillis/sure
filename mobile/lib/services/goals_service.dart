@@ -206,6 +206,71 @@ class GoalsService {
         _pledge,
       );
 
+  /// `GET /api/v1/goals/summary` (feature `goals.summary`). `'summary'`
+  /// holds the [GoalsSummary].
+  Future<Map<String, dynamic>> getSummary({required String accessToken}) =>
+      _send(
+        'getSummary',
+        'Failed to load the goals summary',
+        () => _client.get(_uri('/api/v1/goals/summary'),
+            headers: _headers(accessToken)),
+        (body) =>
+            {'summary': GoalsSummary.fromJson(body as Map<String, dynamic>)},
+      );
+
+  /// The lifecycle events `PATCH /api/v1/goals/:id/<action>` accepts.
+  static const transitions = {
+    'pause',
+    'resume',
+    'complete',
+    'archive',
+    'unarchive',
+    'reopen',
+  };
+
+  /// `PATCH /api/v1/goals/:id/<action>` (feature `goals.lifecycle`), one of
+  /// [transitions]. `'goal'` holds the updated [Goal]; a refused transition
+  /// is 422 `invalid_transition` with the web's message in `'error'`.
+  Future<Map<String, dynamic>> transitionGoal({
+    required String accessToken,
+    required String id,
+    required String action,
+  }) {
+    assert(transitions.contains(action), 'unknown goal action $action');
+    return _send(
+      'transitionGoal',
+      'Failed to update goal',
+      () => _client.patch(
+          _uri('/api/v1/goals/${_id(id)}/${Uri.encodeComponent(action)}'),
+          headers: _headers(accessToken)),
+      _goal,
+    );
+  }
+
+  /// `POST /api/v1/goals/:id/consume` (feature `goals.lifecycle`): records
+  /// [amount] (goal currency, like "200") as spent, from [accountId] when
+  /// given. `'goal'` holds the updated [Goal]; a refusal is 422
+  /// `consumption_refused` with a showable message in `'error'`.
+  Future<Map<String, dynamic>> consumeGoal({
+    required String accessToken,
+    required String id,
+    required String amount,
+    String? accountId,
+  }) =>
+      _send(
+        'consumeGoal',
+        'Failed to record the spend',
+        () => _client.post(_uri('/api/v1/goals/${_id(id)}/consume'),
+            headers: _headers(accessToken),
+            body: jsonEncode({
+              'consumption': {
+                'amount': amount,
+                if (accountId != null) 'account_id': accountId,
+              },
+            })),
+        _goal,
+      );
+
   static Map<String, dynamic> _goal(dynamic body) =>
       {'goal': Goal.fromJson(body as Map<String, dynamic>)};
 
