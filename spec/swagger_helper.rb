@@ -759,6 +759,8 @@ RSpec.configure do |config|
               id: { type: :string, format: :uuid },
               name: { type: :string },
               type: { type: :string, enum: %w[FamilyMerchant ProviderMerchant] },
+              color: { type: :string, nullable: true },
+              website_url: { type: :string, nullable: true },
               created_at: { type: :string, format: :'date-time' },
               updated_at: { type: :string, format: :'date-time' }
             }

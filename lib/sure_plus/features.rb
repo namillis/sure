@@ -5,9 +5,17 @@
 module SurePlus
   module Features
     NAMES = %w[
+      accounts.write
       budgets.write
+      categories.write
+      connections.manage
+      goals
+      goals.pledges
       holdings.stable_order
+      merchants.write
+      profile.write
       recurring.category
+      rules.write
     ].freeze
   end
 end

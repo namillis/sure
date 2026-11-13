@@ -839,8 +839,8 @@ Rails.application.routes.draw do
       resources :budgets, only: :update, controller: :budget_writes
       resources :budget_categories, only: [ :index, :show ]
       resources :budget_categories, only: :update, controller: :budget_category_writes
-      resources :categories, only: [ :index, :show, :create ]
-      resources :merchants, only: [ :index, :show, :create ]
+      resources :categories, only: [ :index, :show, :create, :update, :destroy ]
+      resources :merchants, only: [ :index, :show, :create, :update, :destroy ]
       resources :rules, only: [ :index, :show ]
       resources :rule_runs, only: [ :index, :show ]
       resources :securities, only: [ :index, :show ]

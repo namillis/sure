@@ -4,8 +4,9 @@ module Api
   module V1
     class MerchantsController < BaseController
       before_action -> { authorize_scope!(:read) }, only: [ :index, :show ]
-      before_action -> { authorize_scope!(:write) }, only: [ :create ]
-      before_action :reject_guest_writes!, only: [ :create ]
+      before_action -> { authorize_scope!(:write) }, only: [ :create, :update, :destroy ]
+      before_action :reject_guest_writes!, only: [ :create, :update, :destroy ]
+      before_action :set_family_merchant, only: [ :update, :destroy ]
 
       def index
         family = current_resource_owner.family
@@ -125,13 +126,51 @@ module Api
                status: :internal_server_error
       end
 
+      def update
+        if @merchant.update(merchant_params)
+          render json: merchant_json(@merchant)
+        else
+          render json: {
+            error: "validation_failed",
+            message: @merchant.errors.full_messages.join(", "),
+            errors: @merchant.errors.full_messages
+          }, status: :unprocessable_entity
+        end
+      end
+
+      def destroy
+        @merchant.destroy!
+        head :no_content
+      end
+
       private
+
+        def set_family_merchant
+          family = current_resource_owner.family
+          @merchant = family.merchants.find_by(id: params[:id])
+          return if @merchant
+
+          if family.assigned_merchants_for(current_resource_owner).where(type: "ProviderMerchant").exists?(id: params[:id])
+            render json: {
+              error: "forbidden",
+              message: "Provider merchants are read-only. Only your family's own merchants can be changed."
+            }, status: :forbidden
+          else
+            render json: { error: "not_found", message: "Merchant not found" }, status: :not_found
+          end
+        end
+
+        def merchant_params
+          params.require(:merchant).permit(:name, :color, :website_url)
+        end
 
         def merchant_json(merchant)
           {
             id: merchant.id,
             name: merchant.name,
             type: merchant.type,
+            color: merchant.color,
+            website_url: merchant.website_url,
             created_at: merchant.created_at,
             updated_at: merchant.updated_at
           }

@@ -4,9 +4,9 @@ class Api::V1::CategoriesController < Api::V1::BaseController
   include Pagy::Backend
 
   before_action :ensure_read_scope, only: %i[index show]
-  before_action :ensure_write_scope, only: :create
-  before_action :reject_guest_writes!, only: :create
-  before_action :set_category, only: :show
+  before_action :ensure_write_scope, only: %i[create update destroy]
+  before_action :reject_guest_writes!, only: %i[create update destroy]
+  before_action :set_category, only: %i[show update destroy]
 
   def index
     family = current_resource_owner.family
@@ -77,6 +77,53 @@ class Api::V1::CategoriesController < Api::V1::BaseController
         message: @category.errors.full_messages.join(", ")
       }, status: :unprocessable_entity
     end
+  end
+
+  def update
+    attrs = category_params
+
+    if attrs[:parent_id].present?
+      if attrs[:parent_id] == @category.id
+        return render json: {
+          error: "unprocessable_entity",
+          message: "A category cannot be its own parent"
+        }, status: :unprocessable_entity
+      end
+
+      unless current_resource_owner.family.categories.exists?(id: attrs[:parent_id])
+        return render json: {
+          error: "unprocessable_entity",
+          message: "Parent must be a category in your family"
+        }, status: :unprocessable_entity
+      end
+    end
+
+    if @category.update(attrs)
+      render :show
+    else
+      render json: {
+        error: "unprocessable_entity",
+        message: @category.errors.full_messages.join(", ")
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    replacement = nil
+
+    if params[:replacement_category_id].present?
+      replacement = current_resource_owner.family.categories.where.not(id: @category.id).find_by(id: params[:replacement_category_id])
+
+      unless replacement
+        return render json: {
+          error: "unprocessable_entity",
+          message: "Replacement must be another category in your family"
+        }, status: :unprocessable_entity
+      end
+    end
+
+    @category.replace_and_destroy!(replacement)
+    head :no_content
   end
 
   private
