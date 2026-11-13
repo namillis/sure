@@ -889,6 +889,8 @@ Rails.application.routes.draw do
       get "users/reset/status", to: "users#reset_status"
       delete "users/reset", to: "users#reset"
       delete "users/me", to: "users#destroy"
+      get "users/me", to: "profiles#show"
+      patch "users/me", to: "profiles#update"
 
       # Test routes for API controller testing (only available in test environment)
       if Rails.env.test?

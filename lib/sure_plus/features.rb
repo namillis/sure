@@ -6,6 +6,7 @@ module SurePlus
   module Features
     NAMES = %w[
       holdings.stable_order
+      profile.write
       recurring.category
     ].freeze
   end
