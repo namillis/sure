@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/category.dart';
 import '../providers/auth_provider.dart';
 import '../providers/categories_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../services/metadata_create_service.dart';
 import '../services/metadata_manage_service.dart';
 import '../theme/sure_colors.dart';
@@ -15,8 +16,9 @@ import '../widgets/open_on_web_action.dart';
 import 'form_sheet_fields.dart';
 
 /// Lists the family's categories with their subcategories, and creates new
-/// ones. The API can't edit or delete categories, so a row opens an info
-/// sheet that links to the web.
+/// ones. On a Sure+ server with `categories.write` a row opens the edit sheet
+/// (with delete); elsewhere the API can't edit or delete categories, so a row
+/// opens an info sheet that links to the web.
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({
     super.key,
@@ -38,6 +40,9 @@ class CategoriesScreen extends StatefulWidget {
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
 }
+
+/// What the edit category sheet ended with.
+enum _EditOutcome { saved, deleted }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   late final MetadataManageService _service;
@@ -149,7 +154,103 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     await _load();
   }
 
+  /// Runs a write with a token; returns an error message, or null on
+  /// success (after refreshing [CategoriesProvider]).
+  Future<String?> _run(
+    Future<Map<String, dynamic>> Function(String token) call,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final token = await _token();
+    if (token == null) {
+      await _unauthorized();
+      return l.manageActionFailed;
+    }
+    final result = await call(token);
+    if (result['error'] == 'unauthorized') {
+      await _unauthorized();
+      return l.manageActionFailed;
+    }
+    if (result['code'] == 'insufficient_scope') return l.spmReadOnlyAccess;
+    if (result['success'] != true) {
+      return result['error']?.toString() ?? l.manageActionFailed;
+    }
+    await _refreshProvider(token);
+    return null;
+  }
+
+  /// The Sure+ edit sheet (`categories.write`): rename, recolor, move under
+  /// another parent or to the top level, or delete.
+  Future<void> _openEdit(Category category) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final all = _categories ?? const <Category>[];
+    final hasChildren = all.any((c) => c.parent?.id == category.id);
+    final outcome = await showManageSheet<_EditOutcome>(
+      context,
+      (sheetContext) {
+        void close(_EditOutcome outcome) {
+          if (sheetContext.mounted) Navigator.of(sheetContext).pop(outcome);
+        }
+
+        return CategoryForm(
+          existing: category,
+          // A category with subcategories can't become one (two levels max).
+          parents: hasChildren
+              ? const []
+              : all
+                  .where((c) => c.parent == null && c.id != category.id)
+                  .toList(),
+          replacements: all.where((c) => c.id != category.id).toList(),
+          subcategoryCount: all.where((c) => c.parent?.id == category.id).length,
+          onSubmit: (name, color, parentId) async {
+            final error = await _run((token) => _service.updateCategory(
+                  accessToken: token,
+                  id: category.id,
+                  name: name,
+                  color: color,
+                  // "" moves it to the top level.
+                  parentId: hasChildren ? null : (parentId ?? ''),
+                ));
+            if (error == null) close(_EditOutcome.saved);
+            return error;
+          },
+          onDelete: (replacementId) async {
+            final error = await _run((token) => _service.deleteCategory(
+                accessToken: token,
+                id: category.id,
+                replacementId: replacementId));
+            if (error == null) close(_EditOutcome.deleted);
+            return error;
+          },
+        );
+      },
+    );
+    if (outcome == null || !mounted) return;
+    messenger.showSnackBar(SnackBar(
+      content: Text(outcome == _EditOutcome.saved
+          ? l.spmCategorySaved
+          : l.spmCategoryDeleted),
+    ));
+    await _load();
+  }
+
+  /// True when the server can edit and delete categories. Off when the app's
+  /// providers aren't mounted (tests).
+  bool get _canEdit {
+    try {
+      return context
+          .read<ServerFeaturesProvider>()
+          .has(ServerFeaturesProvider.categoriesWrite);
+    } on ProviderNotFoundException {
+      return false;
+    }
+  }
+
   void _showInfo(Category category) {
+    if (_canEdit) {
+      _openEdit(category);
+      return;
+    }
     final l = AppLocalizations.of(context);
     final children = (_categories ?? const <Category>[])
         .where((c) => c.parent?.id == category.id)
@@ -292,11 +393,28 @@ class CategoryForm extends StatefulWidget {
     super.key,
     required this.parents,
     required this.onSubmit,
+    this.existing,
+    this.replacements = const [],
+    this.subcategoryCount = 0,
+    this.onDelete,
   });
 
   final List<Category> parents;
   final Future<String?> Function(String name, String color, String? parentId)
       onSubmit;
+
+  /// The category being edited (Sure+ `categories.write`); null creates one.
+  final Category? existing;
+
+  /// The categories its transactions can move to on delete.
+  final List<Category> replacements;
+
+  /// How many subcategories [existing] has; they become top-level on delete.
+  final int subcategoryCount;
+
+  /// Deletes [existing], moving its transactions to the picked replacement
+  /// (null leaves them uncategorized). Returns an error message, or null.
+  final Future<String?> Function(String? replacementId)? onDelete;
 
   @override
   State<CategoryForm> createState() => _CategoryFormState();
@@ -304,9 +422,9 @@ class CategoryForm extends StatefulWidget {
 
 class _CategoryFormState extends State<CategoryForm> {
   final _formKey = GlobalKey<FormState>();
-  final _name = TextEditingController();
+  late final TextEditingController _name;
   final _nameFocus = FocusNode();
-  String _color = kMetadataColors.first;
+  late String _color;
   String? _parentId;
   bool _saving = false;
   String? _error;
@@ -314,8 +432,15 @@ class _CategoryFormState extends State<CategoryForm> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _nameFocus.requestFocus());
+    final existing = widget.existing;
+    _name = TextEditingController(text: existing?.name ?? '');
+    final color = existing?.color;
+    _color = color != null && color.isNotEmpty ? color : kMetadataColors.first;
+    _parentId = existing?.parent?.id;
+    if (existing == null) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _nameFocus.requestFocus());
+    }
   }
 
   @override
@@ -325,18 +450,37 @@ class _CategoryFormState extends State<CategoryForm> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _guard(Future<String?> Function() action) async {
     setState(() {
       _saving = true;
       _error = null;
     });
-    final error = await widget.onSubmit(_name.text.trim(), _color, _parentId);
+    final error = await action();
     if (!mounted) return;
     setState(() {
       _saving = false;
       _error = error;
     });
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    await _guard(
+        () => widget.onSubmit(_name.text.trim(), _color, _parentId));
+  }
+
+  Future<void> _delete() async {
+    final existing = widget.existing;
+    final onDelete = widget.onDelete;
+    if (existing == null || onDelete == null) return;
+    final picked = await showCategoryDeleteSheet(
+      context,
+      category: existing,
+      replacements: widget.replacements,
+      subcategoryCount: widget.subcategoryCount,
+    );
+    if (picked == null || !mounted) return;
+    await _guard(() => onDelete(picked.value));
   }
 
   Future<void> _pickParent() async {
@@ -358,8 +502,9 @@ class _CategoryFormState extends State<CategoryForm> {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
     final parent = widget.parents.where((p) => p.id == _parentId).firstOrNull;
+    final editing = widget.existing != null;
     return SureSheet(
-      title: l.manageCategoryNew,
+      title: editing ? l.spmCategoryEdit : l.manageCategoryNew,
       actionLabel: l.commonSave,
       actionKey: const ValueKey('categoryFormSave'),
       busy: _saving,
@@ -403,7 +548,7 @@ class _CategoryFormState extends State<CategoryForm> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
                 child: Text(
-                  l.manageCategoryIconHint,
+                  editing ? l.spmCategoryIconHintEdit : l.manageCategoryIconHint,
                   style: TextStyle(
                       fontSize: 13, height: 1.35, color: palette.textSecondary),
                 ),
@@ -412,8 +557,135 @@ class _CategoryFormState extends State<CategoryForm> {
                 const SizedBox(height: SureSpacing.lg),
                 ManageErrorText(_error!),
               ],
+              if (editing && widget.onDelete != null)
+                SureButtonPanel(
+                  key: const ValueKey('categoryFormDelete'),
+                  label: l.spmCategoryDelete,
+                  destructive: true,
+                  margin: const EdgeInsets.only(top: SureSpacing.xxxl),
+                  onPressed: _saving ? null : _delete,
+                ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Asks what happens to [category]'s transactions before it is deleted: move
+/// them to one of [replacements], or leave them uncategorized. Returns the
+/// picked replacement id (null = uncategorized) in a record, or null when the
+/// user backed out.
+Future<({String? value})?> showCategoryDeleteSheet(
+  BuildContext context, {
+  required Category category,
+  required List<Category> replacements,
+  int subcategoryCount = 0,
+}) {
+  return showManageSheet<({String? value})>(
+    context,
+    (_) => _CategoryDeleteSheet(
+      category: category,
+      replacements: replacements,
+      subcategoryCount: subcategoryCount,
+    ),
+  );
+}
+
+class _CategoryDeleteSheet extends StatefulWidget {
+  const _CategoryDeleteSheet({
+    required this.category,
+    required this.replacements,
+    required this.subcategoryCount,
+  });
+
+  final Category category;
+  final List<Category> replacements;
+  final int subcategoryCount;
+
+  @override
+  State<_CategoryDeleteSheet> createState() => _CategoryDeleteSheetState();
+}
+
+class _CategoryDeleteSheetState extends State<_CategoryDeleteSheet> {
+  String? _replacementId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final textStyle =
+        TextStyle(fontSize: 13, height: 1.35, color: palette.textSecondary);
+
+    Widget option(String? id, String title, {Widget? leading}) {
+      final selected = id == _replacementId;
+      return Semantics(
+        selected: selected,
+        child: SureListRow(
+          title: title,
+          leading: leading,
+          trailing: selected
+              ? SureIcon(SureIcons.check, size: 18, color: palette.link)
+              : null,
+          onTap: () {
+            if (!selected) SureHaptics.selection();
+            setState(() => _replacementId = id);
+          },
+        ),
+      );
+    }
+
+    return SureSheet(
+      title: l.spmCategoryDeleteTitle(widget.category.name),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(l.spmCategoryDeleteBody, style: textStyle),
+            ),
+            if (widget.subcategoryCount > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+                child: Text(
+                    l.spmCategoryDeleteSubcategories(widget.subcategoryCount),
+                    style: textStyle),
+              ),
+            SureSectionHeader(
+              label: l.spmCategoryDeleteMoveTo,
+              padding: const EdgeInsets.fromLTRB(4, 16, 4, 6),
+            ),
+            SurePanel.rows(
+              dividerIndent: SurePanel.iconRowDividerIndent,
+              children: [
+                option(
+                  null,
+                  l.spmCategoryDeleteUncategorized,
+                  leading: const ManageIconBadge(icon: SureIcons.circleDashed),
+                ),
+                for (final c in widget.replacements)
+                  option(
+                    c.id,
+                    c.displayName,
+                    leading: SureCategoryIcon(
+                        name: c.name, color: c.color, icon: c.icon),
+                  ),
+              ],
+            ),
+            SureButtonPanel(
+              key: const ValueKey('categoryDeleteConfirm'),
+              label: l.spmCategoryDelete,
+              destructive: true,
+              margin: const EdgeInsets.only(top: SureSpacing.xxl),
+              onPressed: () =>
+                  Navigator.of(context).pop((value: _replacementId)),
+            ),
+          ],
         ),
       ),
     );

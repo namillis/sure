@@ -3710,4 +3710,49 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get billsOfflineBody => 'Räkningar kräver en internetanslutning.';
+
+  @override
+  String get spmReadOnlyAccess =>
+      'Den här inloggningen kan bara visa data. Logga in igen med full åtkomst för att göra ändringar.';
+
+  @override
+  String get spmCategoryEdit => 'Redigera kategori';
+
+  @override
+  String get spmCategoryIconHintEdit => 'Ändra ikonen på webben.';
+
+  @override
+  String get spmCategorySaved => 'Kategorin har sparats';
+
+  @override
+  String get spmCategoryDeleted => 'Kategorin har tagits bort';
+
+  @override
+  String get spmCategoryDelete => 'Ta bort kategori';
+
+  @override
+  String spmCategoryDeleteTitle(String name) {
+    return 'Ta bort ”$name”?';
+  }
+
+  @override
+  String get spmCategoryDeleteBody =>
+      'Transaktionerna flyttas till kategorin du väljer nedan, eller blir okategoriserade. Det går inte att ångra.';
+
+  @override
+  String spmCategoryDeleteSubcategories(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Dess $count underkategorier blir huvudkategorier.',
+      one: 'Dess underkategori blir en huvudkategori.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get spmCategoryDeleteMoveTo => 'Flytta transaktioner till';
+
+  @override
+  String get spmCategoryDeleteUncategorized => 'Lämna okategoriserade';
 }

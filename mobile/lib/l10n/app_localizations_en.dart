@@ -3677,4 +3677,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billsOfflineBody => 'Bills need an internet connection.';
+
+  @override
+  String get spmReadOnlyAccess =>
+      'This sign-in can only view data. Sign in again with full access to make changes.';
+
+  @override
+  String get spmCategoryEdit => 'Edit category';
+
+  @override
+  String get spmCategoryIconHintEdit => 'Change the icon on the web.';
+
+  @override
+  String get spmCategorySaved => 'Category saved';
+
+  @override
+  String get spmCategoryDeleted => 'Category deleted';
+
+  @override
+  String get spmCategoryDelete => 'Delete category';
+
+  @override
+  String spmCategoryDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get spmCategoryDeleteBody =>
+      'Its transactions move to the category you pick below, or stay uncategorized. This can\'t be undone.';
+
+  @override
+  String spmCategoryDeleteSubcategories(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Its $count subcategories become top-level categories.',
+      one: 'Its subcategory becomes a top-level category.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get spmCategoryDeleteMoveTo => 'Move transactions to';
+
+  @override
+  String get spmCategoryDeleteUncategorized => 'Leave uncategorized';
 }

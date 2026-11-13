@@ -1036,5 +1036,16 @@
   "billsLoadFailed": "Kunde inte läsa in räkningar",
   "billsRefreshFailed": "Kunde inte uppdatera räkningar.",
   "billsOfflineTitle": "Du är offline",
-  "billsOfflineBody": "Räkningar kräver en internetanslutning."
+  "billsOfflineBody": "Räkningar kräver en internetanslutning.",
+  "spmReadOnlyAccess": "Den här inloggningen kan bara visa data. Logga in igen med full åtkomst för att göra ändringar.",
+  "spmCategoryEdit": "Redigera kategori",
+  "spmCategoryIconHintEdit": "Ändra ikonen på webben.",
+  "spmCategorySaved": "Kategorin har sparats",
+  "spmCategoryDeleted": "Kategorin har tagits bort",
+  "spmCategoryDelete": "Ta bort kategori",
+  "spmCategoryDeleteTitle": "Ta bort ”{name}”?",
+  "spmCategoryDeleteBody": "Transaktionerna flyttas till kategorin du väljer nedan, eller blir okategoriserade. Det går inte att ångra.",
+  "spmCategoryDeleteSubcategories": "{count, plural, =1{Dess underkategori blir en huvudkategori.} other{Dess {count} underkategorier blir huvudkategorier.}}",
+  "spmCategoryDeleteMoveTo": "Flytta transaktioner till",
+  "spmCategoryDeleteUncategorized": "Lämna okategoriserade"
 }

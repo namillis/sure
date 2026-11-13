@@ -227,6 +227,134 @@ class MetadataManageService {
     }
   }
 
+  /// `PATCH /api/v1/categories/:id` (Sure+ `categories.write`). An empty
+  /// [parentId] makes the category top-level. `'category'` holds the updated
+  /// [Category].
+  Future<Map<String, dynamic>> updateCategory({
+    required String accessToken,
+    required String id,
+    String? name,
+    String? color,
+    String? parentId,
+  }) async {
+    const fallback = 'Failed to update category';
+    try {
+      final response = await _client
+          .patch(
+            _uri('/api/v1/categories/${Uri.encodeComponent(id)}'),
+            headers: _headers(accessToken),
+            body: jsonEncode({
+              'category': {
+                if (name != null) 'name': name.trim(),
+                if (color != null) 'color': color,
+                if (parentId != null) 'parent_id': parentId,
+              },
+            }),
+          )
+          .timeout(_timeout);
+      if (response.statusCode != 200) return _failure(response, fallback);
+      return {
+        'success': true,
+        'category': Category.fromJson(
+            jsonDecode(response.body) as Map<String, dynamic>),
+      };
+    } catch (e) {
+      _log('updateCategory', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  /// `DELETE /api/v1/categories/:id` (Sure+ `categories.write`). Its
+  /// transactions move to [replacementId], or become uncategorized without
+  /// one; its subcategories become top-level.
+  Future<Map<String, dynamic>> deleteCategory({
+    required String accessToken,
+    required String id,
+    String? replacementId,
+  }) {
+    return _delete(
+      'deleteCategory',
+      _uri(
+        '/api/v1/categories/${Uri.encodeComponent(id)}',
+        replacementId == null
+            ? null
+            : {'replacement_category_id': replacementId},
+      ),
+      accessToken: accessToken,
+      fallback: 'Failed to delete category',
+    );
+  }
+
+  /// `PATCH /api/v1/merchants/:id` (Sure+ `merchants.write`), family
+  /// merchants only. An empty [websiteUrl] clears the website. `'merchant'`
+  /// holds the updated [Merchant].
+  Future<Map<String, dynamic>> updateMerchant({
+    required String accessToken,
+    required String id,
+    String? name,
+    String? color,
+    String? websiteUrl,
+  }) async {
+    const fallback = 'Failed to update merchant';
+    try {
+      final response = await _client
+          .patch(
+            _uri('/api/v1/merchants/${Uri.encodeComponent(id)}'),
+            headers: _headers(accessToken),
+            body: jsonEncode({
+              'merchant': {
+                if (name != null) 'name': name.trim(),
+                if (color != null) 'color': color,
+                if (websiteUrl != null) 'website_url': websiteUrl.trim(),
+              },
+            }),
+          )
+          .timeout(_timeout);
+      if (response.statusCode != 200) return _failure(response, fallback);
+      return {
+        'success': true,
+        'merchant':
+            Merchant.fromJson(jsonDecode(response.body) as Map<String, dynamic>),
+      };
+    } catch (e) {
+      _log('updateMerchant', e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
+  /// `DELETE /api/v1/merchants/:id` (Sure+ `merchants.write`).
+  Future<Map<String, dynamic>> deleteMerchant({
+    required String accessToken,
+    required String id,
+  }) {
+    return _delete(
+      'deleteMerchant',
+      _uri('/api/v1/merchants/${Uri.encodeComponent(id)}'),
+      accessToken: accessToken,
+      fallback: 'Failed to delete merchant',
+    );
+  }
+
+  Future<Map<String, dynamic>> _delete(
+    String operation,
+    Uri uri, {
+    required String accessToken,
+    required String fallback,
+  }) async {
+    try {
+      final response = await _client
+          .delete(uri, headers: _headers(accessToken))
+          .timeout(_timeout);
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        return {'success': true};
+      }
+      return _failure(response, fallback);
+    } catch (e) {
+      _log(operation, e);
+      return {'success': false, 'error': fallback};
+    }
+  }
+
   Future<Map<String, dynamic>> _getList<T>(
     String operation, {
     required String path,
@@ -265,6 +393,9 @@ class MetadataManageService {
     return {
       'success': false,
       'error': extractErrorMessage(response.body, fallback: fallback),
+      if (response.statusCode == 403 &&
+          response.body.contains('insufficient_scope'))
+        'code': 'insufficient_scope',
     };
   }
 

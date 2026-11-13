@@ -6271,6 +6271,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bills need an internet connection.'**
   String get billsOfflineBody;
+
+  /// Error when a write fails because the sign-in has read-only scope (403 insufficient_scope).
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in can only view data. Sign in again with full access to make changes.'**
+  String get spmReadOnlyAccess;
+
+  /// Title of the edit category sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get spmCategoryEdit;
+
+  /// Note in the edit category sheet: the icon can only be changed on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the icon on the web.'**
+  String get spmCategoryIconHintEdit;
+
+  /// Snackbar after a category was edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Category saved'**
+  String get spmCategorySaved;
+
+  /// Snackbar after a category was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Category deleted'**
+  String get spmCategoryDeleted;
+
+  /// Destructive button in the edit category sheet and in the delete sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete category'**
+  String get spmCategoryDelete;
+
+  /// Title of the delete category sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String spmCategoryDeleteTitle(String name);
+
+  /// Delete category sheet: what happens to the transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Its transactions move to the category you pick below, or stay uncategorized. This can\'t be undone.'**
+  String get spmCategoryDeleteBody;
+
+  /// Delete category sheet: what happens to the subcategories.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Its subcategory becomes a top-level category.} other{Its {count} subcategories become top-level categories.}}'**
+  String spmCategoryDeleteSubcategories(int count);
+
+  /// Section header above the replacement category list in the delete sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Move transactions to'**
+  String get spmCategoryDeleteMoveTo;
+
+  /// Delete category sheet option: don't move the transactions to another category.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave uncategorized'**
+  String get spmCategoryDeleteUncategorized;
 }
 
 class _AppLocalizationsDelegate
