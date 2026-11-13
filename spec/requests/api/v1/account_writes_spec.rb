@@ -44,7 +44,8 @@ RSpec.describe 'API V1 Account writes', type: :request do
         description: "Fields of the account's type. CreditCard: available_credit, minimum_payment, apr, annual_fee, expiration_date, " \
                      'statement_close_day, due_day. Loan: subtype, rate_type, interest_rate, term_months, initial_balance, start_date, ' \
                      'down_payment, insurance_rate, insurance_rate_type, day_count_convention, principal_only_transfers, ' \
-                     'rate_changes [{effective_date, rate}]. Investment: subtype. Crypto: subtype, tax_treatment. ' \
+                     'rate_changes [{effective_date (YYYY-MM-DD), rate (0-100)}] replaces the whole list ([] clears it, ' \
+                     'leaving it out keeps it). Investment: subtype. Crypto: subtype, tax_treatment. ' \
                      'Property: subtype, year_built, area_value, area_unit, address_attributes {line1, line2, locality, region, ' \
                      'country, postal_code}. Vehicle: make, model, year, mileage_value, mileage_unit, initial_balance, ' \
                      'initial_balance_shown, purchase_date (the last three not on linked accounts). Depository, OtherAsset, ' \
@@ -151,6 +152,24 @@ RSpec.describe 'API V1 Account writes', type: :request do
         schema '$ref' => '#/components/schemas/AccountDetail'
 
         let(:body) { { account: { name: 'Everyday Checking', balance: 1800, subtype: 'checking' } } }
+
+        run_test!
+      end
+
+      response '200', 'loan rate changes and insurance updated' do
+        schema '$ref' => '#/components/schemas/AccountDetail'
+
+        let(:id) do
+          Account.create!(family: family, owner: user, name: 'Mortgage', balance: 250_000, currency: 'USD',
+            accountable: Loan.create!(rate_type: 'variable', interest_rate: 4.5, term_months: 360,
+              start_date: Date.new(2020, 1, 1))).id
+        end
+        let(:body) do
+          { account: { accountable_attributes: {
+            insurance_rate: 0.25, insurance_rate_type: 'decreasing_life',
+            rate_changes: [ { effective_date: '2023-06-01', rate: 5.125 } ]
+          } } }
+        end
 
         run_test!
       end
