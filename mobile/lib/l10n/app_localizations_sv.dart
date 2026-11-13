@@ -3776,4 +3776,98 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get spmMerchantDeleteBody =>
       'Transaktionerna behåller sina uppgifter men förlorar handlaren, och dess återkommande transaktioner tas bort. Det går inte att ångra.';
+
+  @override
+  String get spmProfileYou => 'Du';
+
+  @override
+  String get spmProfileFirstName => 'Förnamn';
+
+  @override
+  String get spmProfileLastName => 'Efternamn';
+
+  @override
+  String get spmProfileEmail => 'E-post';
+
+  @override
+  String get spmProfileChangeOnWeb => 'Ändra på webben';
+
+  @override
+  String get spmProfileChangeOnWebSubtitle => 'E-post, lösenord och MFA';
+
+  @override
+  String get spmProfileLanguage => 'Språk';
+
+  @override
+  String get spmProfileLanguageAuto => 'Automatiskt';
+
+  @override
+  String get spmProfileDefaultPeriod => 'Standardperiod';
+
+  @override
+  String get spmProfileHousehold => 'Hushåll';
+
+  @override
+  String get spmProfileHouseholdName => 'Namn';
+
+  @override
+  String get spmProfileCurrency => 'Valuta';
+
+  @override
+  String get spmProfileCountry => 'Land';
+
+  @override
+  String get spmProfileTimezone => 'Tidszon';
+
+  @override
+  String get spmProfileDateFormat => 'Datumformat';
+
+  @override
+  String get spmProfileHouseholdFooter =>
+      'Hushållets inställningar gäller för alla i hushållet.';
+
+  @override
+  String get spmProfileNotSet => 'Inte angivet';
+
+  @override
+  String get spmProfileSaved => 'Profilen har sparats';
+
+  @override
+  String get spmProfileLoadFailed => 'Det gick inte att läsa in din profil.';
+
+  @override
+  String get spmPeriodLastDay => 'Senaste dygnet';
+
+  @override
+  String get spmPeriodCurrentWeek => 'Denna vecka';
+
+  @override
+  String get spmPeriodLast7Days => 'Senaste 7 dagarna';
+
+  @override
+  String get spmPeriodCurrentMonth => 'Denna månad';
+
+  @override
+  String get spmPeriodLastMonth => 'Förra månaden';
+
+  @override
+  String get spmPeriodLast30Days => 'Senaste 30 dagarna';
+
+  @override
+  String get spmPeriodLast90Days => 'Senaste 90 dagarna';
+
+  @override
+  String get spmPeriodCurrentYear => 'Detta år';
+
+  @override
+  String get spmPeriodLast365Days => 'Senaste 365 dagarna';
+
+  @override
+  String get spmPeriodLast5Years => 'Senaste 5 åren';
+
+  @override
+  String get spmPeriodLast10Years => 'Senaste 10 åren';
+
+  @override
+  String get spmPeriodAllTime => 'All tid';
 }

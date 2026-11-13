@@ -711,6 +711,8 @@ class AuthService {
     );
   }
 
+  Future<void> saveUser(User user) => _saveUser(user);
+
   Future<void> _saveUser(User user) async {
     await _storage.write(
       key: _userKey,

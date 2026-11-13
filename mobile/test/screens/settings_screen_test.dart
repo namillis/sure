@@ -12,9 +12,12 @@ import 'package:sure_mobile/providers/auth_provider.dart';
 import 'package:sure_mobile/providers/categories_provider.dart';
 import 'package:sure_mobile/providers/merchants_provider.dart';
 import 'package:sure_mobile/providers/privacy_provider.dart';
+import 'package:sure_mobile/providers/server_features_provider.dart';
 import 'package:sure_mobile/providers/tags_provider.dart';
 import 'package:sure_mobile/providers/theme_provider.dart';
+import 'package:sure_mobile/screens/profile_screen.dart';
 import 'package:sure_mobile/screens/settings_screen.dart';
+import 'package:sure_mobile/screens/web_view_screen.dart';
 import 'package:sure_mobile/services/api_config.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
@@ -78,6 +81,8 @@ void main() {
     WidgetTester tester, {
     double width = 390,
     Brightness brightness = Brightness.light,
+    Set<String> features = const {},
+    List<NavigatorObserver> observers = const [],
   }) async {
     tester.view.physicalSize = Size(width, 844);
     tester.view.devicePixelRatio = 1;
@@ -90,12 +95,15 @@ void main() {
         ChangeNotifierProvider(create: (_) => CategoriesProvider()),
         ChangeNotifierProvider(create: (_) => MerchantsProvider()),
         ChangeNotifierProvider(create: (_) => TagsProvider()),
+        ChangeNotifierProvider<ServerFeaturesProvider>.value(
+            value: ServerFeaturesProvider()..debugSet(features)),
       ],
       child: MaterialApp(
         theme: brightness == Brightness.dark ? SureTheme.dark : SureTheme.light,
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        navigatorObservers: observers,
         home: const SettingsScreen(),
       ),
     ));
@@ -156,6 +164,36 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  group('profile.write', () {
+    /// The screen each push built, without building it (the web view needs
+    /// a platform).
+    Future<List<Widget>> tapAndCollect(
+        WidgetTester tester, Finder row, Set<String> features) async {
+      final observer = _PushRecorder();
+      await pump(tester, features: features, observers: [observer]);
+      await scrollTo(tester, row);
+      await tester.tap(row);
+      return observer.pushed;
+    }
+
+    for (final (name, row) in [
+      ('profile row', find.byKey(const ValueKey('settingsProfileRow'))),
+      ('Preferences row', find.text('Preferences')),
+    ]) {
+      testWidgets('$name opens the native Profile screen with the feature',
+          (tester) async {
+        final pushed = await tapAndCollect(
+            tester, row, {ServerFeaturesProvider.profileWrite});
+        expect(pushed.single, isA<ProfileScreen>());
+      });
+
+      testWidgets('$name opens the web without the feature', (tester) async {
+        final pushed = await tapAndCollect(tester, row, const {});
+        expect(pushed.single, isA<WebViewScreen>());
+      });
+    }
   });
 
   testWidgets('no longer offers Group by Account Type', (tester) async {
@@ -371,4 +409,16 @@ void main() {
           'Biometric lock');
     });
   });
+}
+
+/// Records the page each push would show, by calling the route's builder.
+class _PushRecorder extends NavigatorObserver {
+  final pushed = <Widget>[];
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is MaterialPageRoute && previousRoute != null) {
+      pushed.add(route.builder(navigator!.context));
+    }
+  }
 }

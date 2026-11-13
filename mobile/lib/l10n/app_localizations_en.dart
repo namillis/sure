@@ -3743,4 +3743,98 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get spmMerchantDeleteBody =>
       'Its transactions keep their details but lose the merchant, and its recurring transactions are removed. This can\'t be undone.';
+
+  @override
+  String get spmProfileYou => 'You';
+
+  @override
+  String get spmProfileFirstName => 'First name';
+
+  @override
+  String get spmProfileLastName => 'Last name';
+
+  @override
+  String get spmProfileEmail => 'Email';
+
+  @override
+  String get spmProfileChangeOnWeb => 'Change on the web';
+
+  @override
+  String get spmProfileChangeOnWebSubtitle => 'Email, password and MFA';
+
+  @override
+  String get spmProfileLanguage => 'Language';
+
+  @override
+  String get spmProfileLanguageAuto => 'Automatic';
+
+  @override
+  String get spmProfileDefaultPeriod => 'Default period';
+
+  @override
+  String get spmProfileHousehold => 'Household';
+
+  @override
+  String get spmProfileHouseholdName => 'Name';
+
+  @override
+  String get spmProfileCurrency => 'Currency';
+
+  @override
+  String get spmProfileCountry => 'Country';
+
+  @override
+  String get spmProfileTimezone => 'Time zone';
+
+  @override
+  String get spmProfileDateFormat => 'Date format';
+
+  @override
+  String get spmProfileHouseholdFooter =>
+      'Household settings apply to everyone in your household.';
+
+  @override
+  String get spmProfileNotSet => 'Not set';
+
+  @override
+  String get spmProfileSaved => 'Profile saved';
+
+  @override
+  String get spmProfileLoadFailed => 'Couldn\'t load your profile.';
+
+  @override
+  String get spmPeriodLastDay => 'Last day';
+
+  @override
+  String get spmPeriodCurrentWeek => 'Current week';
+
+  @override
+  String get spmPeriodLast7Days => 'Last 7 days';
+
+  @override
+  String get spmPeriodCurrentMonth => 'Current month';
+
+  @override
+  String get spmPeriodLastMonth => 'Last month';
+
+  @override
+  String get spmPeriodLast30Days => 'Last 30 days';
+
+  @override
+  String get spmPeriodLast90Days => 'Last 90 days';
+
+  @override
+  String get spmPeriodCurrentYear => 'Current year';
+
+  @override
+  String get spmPeriodLast365Days => 'Last 365 days';
+
+  @override
+  String get spmPeriodLast5Years => 'Last 5 years';
+
+  @override
+  String get spmPeriodLast10Years => 'Last 10 years';
+
+  @override
+  String get spmPeriodAllTime => 'All time';
 }
