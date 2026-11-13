@@ -158,13 +158,28 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
   RuleEditorChoices _choices() =>
       widget.editorChoices ?? RuleEditorChoices.fromProviders(context);
 
+  /// The server catalog and groups for the editor; null when signed out.
+  Future<RuleEditorExtras?> _extras() async {
+    final token = await _token();
+    if (!mounted) return null;
+    if (token == null) {
+      await _unauthorized();
+      return null;
+    }
+    return loadRuleEditorExtras(context, service: _service, token: token);
+  }
+
   Future<void> _edit(Rule rule) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final extras = await _extras();
+    if (extras == null || !mounted) return;
     final result = await showRuleEditorSheet(
       context,
       existing: rule,
       choices: _choices(),
+      catalog: extras.catalog,
+      groups: extras.groups,
       save: (body) => _write((token) =>
           _service.updateRule(accessToken: token, id: rule.id, body: body)),
     );
@@ -183,10 +198,14 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final extras = await _extras();
+    if (extras == null || !mounted) return;
     final result = await showRuleEditorSheet(
       context,
       copyOf: rule,
       choices: _choices(),
+      catalog: extras.catalog,
+      groups: extras.groups,
       save: (body) => _write(
           (token) => _service.createRule(accessToken: token, body: body)),
     );

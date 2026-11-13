@@ -29,6 +29,10 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const rulesWrite = 'rules.write';
   static const accountsWrite = 'accounts.write';
   static const connectionsManage = 'connections.manage';
+  static const rulesReorder = 'rules.reorder';
+  static const rulesGroups = 'rules.groups';
+  static const rulesCatalog = 'rules.catalog';
+  static const rulesApplyAll = 'rules.apply_all';
 
   static const _prefsPrefix = 'server_features:';
 

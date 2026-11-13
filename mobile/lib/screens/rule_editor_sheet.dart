@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -19,16 +21,67 @@ import '../widgets/ds/ds.dart';
 import '../widgets/manage_widgets.dart';
 import '../widgets/metadata_picker_sheet.dart';
 import 'form_sheet_fields.dart';
+import 'rule_groups_screen.dart';
 
 /// True when the server can create and edit rules (Sure+ `rules.write`).
 /// Watches [ServerFeaturesProvider]; false when it isn't mounted.
-bool rulesWriteEnabled(BuildContext context) {
+bool rulesWriteEnabled(BuildContext context) =>
+    ruleFeatureEnabled(context, ServerFeaturesProvider.rulesWrite);
+
+/// True when the server offers Sure+ [feature]. Watches
+/// [ServerFeaturesProvider] unless [listen] is false; false when it isn't
+/// mounted.
+bool ruleFeatureEnabled(BuildContext context, String feature,
+    {bool listen = true}) {
   try {
-    return Provider.of<ServerFeaturesProvider>(context)
-        .has(ServerFeaturesProvider.rulesWrite);
+    return Provider.of<ServerFeaturesProvider>(context, listen: listen)
+        .has(feature);
   } on ProviderNotFoundException {
     return false;
   }
+}
+
+/// What the editor needs from the server besides the rule.
+class RuleEditorExtras {
+  const RuleEditorExtras({required this.catalog, this.groups});
+
+  final RuleEditorCatalog catalog;
+
+  /// The family's groups with Sure+ `rules.groups` (empty when they
+  /// failed to load); null without it, which hides the Group row.
+  final List<RuleGroup>? groups;
+}
+
+/// Loads the server's rule catalog (Sure+ `rules.catalog`, cached for the
+/// session; the hand-written one otherwise or on failure) and the rule
+/// groups (Sure+ `rules.groups`) before the editor opens.
+Future<RuleEditorExtras> loadRuleEditorExtras(
+  BuildContext context, {
+  required RulesService service,
+  required String token,
+}) async {
+  final catalogOn = ruleFeatureEnabled(
+      context, ServerFeaturesProvider.rulesCatalog,
+      listen: false);
+  final groupsOn = ruleFeatureEnabled(
+      context, ServerFeaturesProvider.rulesGroups,
+      listen: false);
+  final locale = Localizations.localeOf(context).languageCode;
+  final none = Future.value(const <String, dynamic>{});
+  final results = await Future.wait([
+    catalogOn ? service.getCatalog(accessToken: token, locale: locale) : none,
+    groupsOn ? service.listRuleGroups(accessToken: token) : none,
+  ]);
+  final catalog = results[0]['catalog'];
+  final groups = results[1]['groups'];
+  return RuleEditorExtras(
+    catalog: catalog is RuleEditorCatalog
+        ? catalog
+        : const RuleEditorCatalog.builtIn(),
+    groups: groupsOn
+        ? (groups is List ? groups.cast<RuleGroup>() : const <RuleGroup>[])
+        : null,
+  );
 }
 
 /// The records the editor's value pickers offer.
@@ -107,6 +160,8 @@ Future<RuleEditorResult?> showRuleEditorSheet(
   required RuleEditorChoices choices,
   Rule? existing,
   Rule? copyOf,
+  RuleEditorCatalog catalog = const RuleEditorCatalog.builtIn(),
+  List<RuleGroup>? groups,
 }) {
   return showSureSheet<RuleEditorResult>(
     context: context,
@@ -116,6 +171,8 @@ Future<RuleEditorResult?> showRuleEditorSheet(
       choices: choices,
       existing: existing,
       copyOf: copyOf,
+      catalog: catalog,
+      groups: groups,
     ),
   );
 }
@@ -142,8 +199,8 @@ class _ConditionDraft {
       );
 
   /// A new "Name contains …" row: the registry's first condition type.
-  factory _ConditionDraft.blank() {
-    final spec = ruleConditionSpecs.first;
+  factory _ConditionDraft.blank(RuleEditorCatalog catalog) {
+    final spec = catalog.conditions.first;
     return _ConditionDraft(type: spec.key, operator: spec.operators.first);
   }
 
@@ -156,32 +213,70 @@ class _ConditionDraft {
 
   bool get isCompound => type == ruleCompoundType;
 
-  RuleCondition toCondition() => RuleCondition(
+  RuleCondition toCondition(RuleEditorCatalog catalog) => RuleCondition(
         id: id,
         conditionType: type,
         operator: operator,
-        value: isCompound || !ruleOperatorNeedsValue(operator) ? null : value,
-        subConditions: [for (final s in subs) s.toCondition()],
+        value: isCompound || !_needsValue(catalog, this) ? null : value,
+        subConditions: [for (final s in subs) s.toCondition(catalog)],
       );
 }
 
-class _ActionDraft {
-  _ActionDraft({this.id, required this.type, this.value});
+/// Whether [c]'s operator takes a value, by its spec's `requires_value`.
+bool _needsValue(RuleEditorCatalog catalog, _ConditionDraft c) =>
+    catalog.condition(c.type)?.needsValue(c.operator) ??
+    ruleOperatorNeedsValue(c.operator);
 
+class _ActionDraft {
+  _ActionDraft(this.catalog, {this.id, required this.type, this.value}) {
+    if (input == RuleValueInput.split) _loadSplit();
+  }
+
+  final RuleEditorCatalog catalog;
   final String? id;
   String type;
   String? value;
   final Key key = UniqueKey();
 
-  RuleValueInput get input =>
-      ruleActionSpec(type)?.input ?? RuleValueInput.unsupported;
+  /// The split editor's rows and mode (`fixed` / `percentage`).
+  List<RuleSplitRow> splitRows = [];
+  String splitMode = 'percentage';
 
-  RuleAction toAction() => RuleAction(
-        id: id,
-        actionType: type,
-        value: input == RuleValueInput.none ? null : value,
-      );
+  void _loadSplit() {
+    splitRows = RuleSplitRow.parseValue(value);
+    if (splitRows.isNotEmpty && splitRows.every((r) => r.isFixed)) {
+      splitMode = 'fixed';
+    }
+  }
+
+  /// Switches to [newType], clearing the value when its kind changes.
+  void changeType(String newType) {
+    final oldInput = input;
+    type = newType;
+    if (input != oldInput || _isSelect(input)) value = null;
+    if (input == RuleValueInput.split) _loadSplit();
+  }
+
+  RuleValueInput get input =>
+      catalog.action(type)?.input ?? RuleValueInput.unsupported;
+
+  RuleAction toAction() => input == RuleValueInput.split
+      ? RuleAction(
+          id: id,
+          actionType: type,
+          splitRows: [
+            for (final r in splitRows) r.copyWith(type: splitMode),
+          ],
+        )
+      : RuleAction(
+          id: id,
+          actionType: type,
+          value: input == RuleValueInput.none ? null : value,
+        );
 }
+
+bool _isSelect(RuleValueInput input) =>
+    input == RuleValueInput.select || input == RuleValueInput.multiSelect;
 
 bool _blank(String? value) => value == null || value.trim().isEmpty;
 
@@ -189,7 +284,9 @@ bool _blank(String? value) => value == null || value.trim().isEmpty;
 /// switch, the conditions as "[field] [operator] [value]" sentences with
 /// one level of all/any groups, and the actions as "[action] [value]". Each
 /// bracket is a pill that opens a picker. Types, operators and value kinds
-/// come from [ruleConditionSpecs] / [ruleActionSpecs] (the server registry).
+/// come from [catalog]: the server registry's own (Sure+ `rules.catalog`)
+/// or the hand-written copy. With [groups] (Sure+ `rules.groups`) a Group
+/// row picks the rule's group or names a new one.
 class RuleEditorSheet extends StatefulWidget {
   const RuleEditorSheet({
     super.key,
@@ -197,12 +294,16 @@ class RuleEditorSheet extends StatefulWidget {
     required this.choices,
     this.existing,
     this.copyOf,
+    this.catalog = const RuleEditorCatalog.builtIn(),
+    this.groups,
   });
 
   final RuleEditorSave save;
   final RuleEditorChoices choices;
   final Rule? existing;
   final Rule? copyOf;
+  final RuleEditorCatalog catalog;
+  final List<RuleGroup>? groups;
 
   @override
   State<RuleEditorSheet> createState() => _RuleEditorSheetState();
@@ -216,24 +317,36 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
   bool _saving = false;
   String? _error;
 
+  /// The Group row: an existing group's id, or a new group's name.
+  String? _groupId;
+  String? _newGroupName;
+
+  /// Set when picking a split removed the rule's other actions.
+  bool _splitRemovedOthers = false;
+
+  RuleEditorCatalog get _catalog => widget.catalog;
+
   @override
   void initState() {
     super.initState();
     final source = widget.existing ?? widget.copyOf;
     final keepIds = widget.existing != null;
     _active = source?.active ?? true;
+    _groupId = source?.ruleGroupId;
     _name = TextEditingController(text: source?.name?.trim() ?? '');
     _conditions = [
       for (final c in source?.conditions ?? const <RuleCondition>[])
         _ConditionDraft.from(c, keepIds: keepIds),
     ];
-    if (source == null) _conditions.add(_ConditionDraft.blank());
+    if (source == null) _conditions.add(_ConditionDraft.blank(_catalog));
     _actions = [
       for (final a in source?.actions ?? const <RuleAction>[])
-        _ActionDraft(
+        _ActionDraft(_catalog,
             id: keepIds ? a.id : null, type: a.actionType, value: a.value),
     ];
-    if (source == null) _actions.add(_ActionDraft(type: _offeredActions.first));
+    if (source == null) {
+      _actions.add(_ActionDraft(_catalog, type: _offeredActions.first));
+    }
   }
 
   @override
@@ -260,7 +373,7 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
   List<String> get _offeredActions {
     final used = _actions.map((a) => a.type).toSet();
     return [
-      for (final spec in ruleActionSpecs)
+      for (final spec in _catalog.actions)
         if (spec.offeredForNew && !used.contains(spec.key)) spec.key,
     ];
   }
@@ -270,10 +383,13 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
       _offeredActions.isNotEmpty &&
       !_actions.any((a) => a.type == 'split_transaction');
 
+  _ActionDraft? get _splitDraft =>
+      _actions.where((a) => a.input == RuleValueInput.split).firstOrNull;
+
   String? _validate(AppLocalizations l) {
     if (_actions.isEmpty) return l.sprRuleNeedsAction;
     bool missing(_ConditionDraft c) =>
-        ruleOperatorNeedsValue(c.operator) && _blank(c.value);
+        _needsValue(_catalog, c) && _blank(c.value);
     for (final c in _conditions) {
       if (c.isCompound) {
         if (c.subs.isEmpty) return l.sprRuleEmptyGroup;
@@ -283,11 +399,59 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
       }
     }
     for (final a in _actions) {
-      final needsValue =
-          a.input != RuleValueInput.none && a.input != RuleValueInput.unsupported;
+      final needsValue = a.input != RuleValueInput.none &&
+          a.input != RuleValueInput.unsupported &&
+          a.input != RuleValueInput.split;
       if (needsValue && _blank(a.value)) return l.sprRuleMissingValue;
     }
     return null;
+  }
+
+  /// The exact amount an all-fixed split needs: an ANDed
+  /// `transaction_amount =` condition (top level or in an all-group), as
+  /// `Rule::Action#exact_amount_condition_value` reads it.
+  double? _exactAmount() {
+    double? find(List<_ConditionDraft> conditions) {
+      for (final c in conditions) {
+        if (c.isCompound) {
+          if (c.operator != 'and') continue;
+          final found = find(c.subs);
+          if (found != null) return found;
+        } else if (c.type == 'transaction_amount' && c.operator == '=') {
+          final parsed = double.tryParse(c.value?.trim() ?? '');
+          if (parsed != null) return parsed;
+        }
+      }
+      return null;
+    }
+
+    return find(_conditions);
+  }
+
+  /// Why the split can't be saved yet, or null.
+  String? _splitProblem(AppLocalizations l, _ActionDraft split) {
+    final rows = split.splitRows;
+    if (rows.length < 2 || rows.length > 20) return l.sr2SplitCount;
+    final total = _splitTotal(split);
+    if (split.splitMode == 'percentage') {
+      if ((total - 100).abs() > 0.01) return l.sr2SplitPercentTotal;
+      return null;
+    }
+    final exact = _exactAmount();
+    if (exact == null) return l.sr2SplitFixedNeedsAmount;
+    if ((total - exact).abs() > 0.00005) {
+      return l.sr2SplitFixedMustMatch(_formatShare(exact));
+    }
+    return null;
+  }
+
+  double _splitTotal(_ActionDraft split) => split.splitRows
+      .fold(0.0, (sum, r) => sum + (double.tryParse(r.share) ?? 0));
+
+  String _formatShare(double value) {
+    final locale = Localizations.localeOf(context).toString();
+    return NumberFormat.decimalPatternDigits(locale: locale, decimalDigits: 2)
+        .format(value);
   }
 
   Future<void> _save() async {
@@ -304,9 +468,12 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     final body = ruleWriteBody(
       name: _name.text,
       active: _active,
-      conditions: [for (final c in _conditions) c.toCondition()],
+      conditions: [for (final c in _conditions) c.toCondition(_catalog)],
       actions: [for (final a in _actions) a.toAction()],
       copyOf: widget.copyOf,
+      sendGroup: widget.groups != null,
+      groupId: _groupId,
+      newGroupName: _newGroupName,
     );
     final result = await widget.save(body);
     if (!mounted) return;
@@ -336,6 +503,24 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
 
   // Pickers ----------------------------------------------------------------
 
+  /// A field's name: the app's wording for the registry's known fields,
+  /// else the server's label.
+  String _fieldLabel(RuleText text, String key) =>
+      ruleConditionSpec(key) == null
+          ? _catalog.condition(key)?.label ?? text.field(key)
+          : text.field(key);
+
+  String _operatorLabel(RuleText text, String conditionType, String op) {
+    final label = text.operatorLabel(op);
+    if (label != op) return label;
+    return _catalog.condition(conditionType)?.operatorLabels[op] ?? op;
+  }
+
+  String _actionLabel(RuleText text, String key) =>
+      ruleActionSpec(key) == null
+          ? _catalog.action(key)?.label ?? text.actionLabel(key)
+          : text.actionLabel(key);
+
   Future<void> _pickField(_ConditionDraft c) async {
     final l = AppLocalizations.of(context);
     final text = _text(l);
@@ -343,36 +528,39 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
       context,
       title: l.sprRulePickField,
       options: [
-        for (final spec in ruleConditionSpecs) (spec.key, text.field(spec.key)),
+        for (final spec in _catalog.conditions)
+          (spec.key, _fieldLabel(text, spec.key)),
       ],
       selected: c.type,
     );
     if (picked == null || picked.value == c.type) return;
-    final spec = ruleConditionSpec(picked.value)!;
-    final oldInput = ruleConditionSpec(c.type)?.input;
+    final spec = _catalog.condition(picked.value)!;
+    final oldInput = _catalog.condition(c.type)?.input;
     _edit(() {
       c.type = spec.key;
       if (!spec.operators.contains(c.operator)) {
         c.operator = spec.operators.first;
       }
-      if (oldInput != spec.input) c.value = null;
+      if (oldInput != spec.input || _isSelect(spec.input)) c.value = null;
     });
   }
 
   Future<void> _pickOperator(_ConditionDraft c) async {
     final l = AppLocalizations.of(context);
     final text = _text(l);
-    final operators = ruleConditionSpec(c.type)?.operators ?? [c.operator];
+    final operators = _catalog.condition(c.type)?.operators ?? [c.operator];
     final picked = await showManageOptionSheet<String>(
       context,
       title: l.sprRulePickOperator,
-      options: [for (final op in operators) (op, text.operatorLabel(op))],
+      options: [
+        for (final op in operators) (op, _operatorLabel(text, c.type, op)),
+      ],
       selected: c.operator,
     );
     if (picked == null) return;
     _edit(() {
       c.operator = picked.value;
-      if (!ruleOperatorNeedsValue(c.operator)) c.value = null;
+      if (!_needsValue(_catalog, c)) c.value = null;
     });
   }
 
@@ -394,15 +582,70 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     final picked = await showManageOptionSheet<String>(
       context,
       title: l.sprRulePickAction,
-      options: [for (final key in options) (key, text.actionLabel(key))],
+      options: [for (final key in options) (key, _actionLabel(text, key))],
       selected: a.type,
     );
     if (picked == null || picked.value == a.type) return;
-    final oldInput = a.input;
     _edit(() {
-      a.type = picked.value;
-      if (a.input != oldInput) a.value = null;
+      a.changeType(picked.value);
+      // A split must be the rule's only action.
+      if (a.input == RuleValueInput.split && _actions.length > 1) {
+        _actions.removeWhere((other) => other != a);
+        _splitRemovedOthers = true;
+      }
     });
+  }
+
+  /// The Group row's picker: none, a group, or "New group…".
+  Future<void> _pickRuleGroup() async {
+    final l = AppLocalizations.of(context);
+    // Group ids are UUIDs, so these can't collide with one.
+    const newKey = '_new';
+    const createKey = '_create';
+    final groups = widget.groups ?? const <RuleGroup>[];
+    final picked = await showManageOptionSheet<String?>(
+      context,
+      title: l.sr2RuleGroup,
+      options: [
+        (null, l.sr2RuleGroupNone),
+        for (final g in groups) (g.id, g.name),
+        if (_newGroupName != null) (newKey, _newGroupName!),
+        (createKey, l.sr2RuleGroupNew),
+      ],
+      selected: _newGroupName != null ? newKey : _groupId,
+    );
+    if (picked == null || !mounted) return;
+    if (picked.value == createKey) {
+      final group = await showSureSheet<RuleGroup>(
+        context: context,
+        builder: (_) => RuleGroupNameSheet(
+          initialName: '',
+          isNew: true,
+          // Created with the rule (`new_rule_group_name`).
+          save: (name) async => {
+            'success': true,
+            'group': RuleGroup(id: '', name: name.trim()),
+          },
+        ),
+      );
+      if (group != null) _edit(() => _newGroupName = group.name);
+      return;
+    }
+    if (picked.value == newKey) return;
+    _edit(() {
+      _newGroupName = null;
+      _groupId = picked.value;
+    });
+  }
+
+  String _groupLabel(AppLocalizations l) {
+    if (_newGroupName != null) return _newGroupName!;
+    final id = _groupId;
+    if (id == null) return l.sr2RuleGroupNone;
+    final source = widget.existing ?? widget.copyOf;
+    return widget.groups?.where((g) => g.id == id).firstOrNull?.name ??
+        (source?.ruleGroupId == id ? source?.ruleGroupName : null) ??
+        l.sr2GroupUnnamed;
   }
 
   /// Opens the picker or field for a value of kind [input]; returns the new
@@ -412,11 +655,35 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     required String title,
     required String? current,
     bool multiTags = false,
+    List<RuleOptionSpec>? options,
   }) async {
     final l = AppLocalizations.of(context);
     final text = _text(l);
     final choices = widget.choices;
     switch (input) {
+      case RuleValueInput.select:
+      case RuleValueInput.multiSelect:
+        final multi = input == RuleValueInput.multiSelect;
+        final pickerOptions = [
+          for (final o in options ?? const <RuleOptionSpec>[])
+            PickerOption(id: o.value, label: o.label),
+        ];
+        final selected = _ids(current);
+        final picked = await MetadataPickerSheet.show(
+          context,
+          title: title,
+          options: pickerOptions,
+          initialSelection: multi ? selected : selected.take(1).toSet(),
+          multiSelect: multi,
+        );
+        if (picked == null) return null;
+        if (!multi) return picked.firstOrNull;
+        return [
+          for (final o in pickerOptions)
+            if (picked.contains(o.id)) o.id,
+          for (final id in picked)
+            if (!pickerOptions.any((o) => o.id == id)) id,
+        ].join(',');
       case RuleValueInput.text:
       case RuleValueInput.amount:
         return showSureSheet<String>(
@@ -485,13 +752,29 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
         return picked?.value;
       case RuleValueInput.none:
       case RuleValueInput.unsupported:
+      case RuleValueInput.split:
         return null;
     }
   }
 
+  static Set<String> _ids(String? value) => (value ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .where((id) => id.isNotEmpty)
+      .toSet();
+
   /// The value pill's text, or null for "not set".
-  String? _valueLabel(RuleValueInput input, String? value, RuleText text) {
+  String? _valueLabel(RuleValueInput input, String? value, RuleText text,
+      {List<RuleOptionSpec>? options}) {
     if (_blank(value)) return null;
+    if (_isSelect(input)) {
+      String label(String id) =>
+          options?.where((o) => o.value == id).firstOrNull?.label ??
+          text.l.sprRuleChooseValue;
+      final ids = _ids(value).toList();
+      if (ids.length > 2) return text.l.sprRuleTagsCount(ids.length);
+      return ids.map(label).join(', ');
+    }
     final raw = value!.trim();
     final l = text.l;
     String named(RuleValueKind kind, String some) =>
@@ -508,7 +791,12 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
       RuleValueInput.tag => _tagsLabel(raw, l),
       RuleValueInput.transactionType => text.transactionType(raw),
       RuleValueInput.activityLabel => raw,
-      RuleValueInput.none || RuleValueInput.unsupported => null,
+      RuleValueInput.none ||
+      RuleValueInput.unsupported ||
+      RuleValueInput.select ||
+      RuleValueInput.multiSelect ||
+      RuleValueInput.split =>
+        null,
     };
   }
 
@@ -527,9 +815,9 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
   Widget _conditionRow(_ConditionDraft c, List<_ConditionDraft> owner,
       RuleText text) {
     final l = text.l;
-    final spec = ruleConditionSpec(c.type);
+    final spec = _catalog.condition(c.type);
     final input = spec?.input ?? RuleValueInput.text;
-    final field = text.field(c.type);
+    final field = _fieldLabel(text, c.type);
     return _SentenceRow(
       key: c.key,
       removeLabel: l.sprRuleRemove,
@@ -542,16 +830,17 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
         ),
         RuleEditorPill(
           key: ValueKey('ruleOperator-${c.key}'),
-          label: text.operatorLabel(c.operator),
+          label: _operatorLabel(text, c.type, c.operator),
           onTap: () => _pickOperator(c),
         ),
-        if (ruleOperatorNeedsValue(c.operator))
+        if (_needsValue(_catalog, c))
           _valuePill(
             key: ValueKey('ruleValue-${c.key}'),
             input: input,
             value: c.value,
             text: text,
             title: field,
+            options: spec?.options,
             onPicked: (v) => _edit(() => c.value = v),
           ),
       ],
@@ -566,8 +855,9 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     required String title,
     required ValueChanged<String> onPicked,
     bool multiTags = false,
+    List<RuleOptionSpec>? options,
   }) {
-    final label = _valueLabel(input, value, text);
+    final label = _valueLabel(input, value, text, options: options);
     return RuleEditorPill(
       key: key,
       label: label ??
@@ -578,7 +868,10 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
       mono: input == RuleValueInput.amount,
       onTap: () async {
         final picked = await _pickValue(input,
-            title: title, current: value, multiTags: multiTags);
+            title: title,
+            current: value,
+            multiTags: multiTags,
+            options: options);
         if (picked != null && mounted) onPicked(picked);
       },
     );
@@ -599,7 +892,7 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
             pills: [
               RuleEditorPill(
                 key: ValueKey('ruleGroup-${group.key}'),
-                label: text.compoundHeading(group.toCondition()),
+                label: text.compoundHeading(group.toCondition(_catalog)),
                 onTap: () => _pickGroup(group),
               ),
             ],
@@ -611,8 +904,8 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
               _AddRow(
                 key: ValueKey('ruleGroupAdd-${group.key}'),
                 label: l.sprRuleAddCondition,
-                onTap: () =>
-                    _edit(() => group.subs.add(_ConditionDraft.blank())),
+                onTap: () => _edit(
+                    () => group.subs.add(_ConditionDraft.blank(_catalog))),
               ),
             ],
           ),
@@ -624,9 +917,9 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
   Widget _actionRow(_ActionDraft a, RuleText text) {
     final l = text.l;
     final palette = SureColors.of(context).palette;
-    final split = a.input == RuleValueInput.unsupported;
-    final label = text.actionLabel(a.type);
-    return _SentenceRow(
+    final webOnly = a.input == RuleValueInput.unsupported;
+    final label = _actionLabel(text, a.type);
+    final row = _SentenceRow(
       key: a.key,
       removeLabel: l.sprRuleRemove,
       onRemove: () => _edit(() => _actions.remove(a)),
@@ -635,12 +928,14 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
           key: ValueKey('ruleAction-${a.key}'),
           label: label,
           // A split's config is edited on the web; it is kept as is.
-          onTap: split ? null : () => _pickActionType(a),
+          onTap: webOnly ? null : () => _pickActionType(a),
         ),
-        if (split)
+        if (webOnly)
           Text(l.sprRuleSplitOnWeb,
               style: TextStyle(fontSize: 13, color: palette.textSecondary)),
-        if (!split && a.input != RuleValueInput.none)
+        if (!webOnly &&
+            a.input != RuleValueInput.none &&
+            a.input != RuleValueInput.split)
           _valuePill(
             key: ValueKey('ruleActionValue-${a.key}'),
             input: a.input,
@@ -648,9 +943,162 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
             text: text,
             title: label,
             multiTags: a.type == 'set_transaction_tags',
+            options: _catalog.action(a.type)?.options,
             onPicked: (v) => _edit(() => a.value = v),
           ),
       ],
+    );
+    if (a.input != RuleValueInput.split) return row;
+    return Column(
+      key: ValueKey('ruleSplit-${a.key}'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [row, _splitEditor(a, l)],
+    );
+  }
+
+  // Split editor -----------------------------------------------------------
+
+  String? _optionLabel(String kind, String? id) => id == null
+      ? null
+      : _catalog
+          .splitOptions(kind)
+          .where((o) => o.value == id)
+          .firstOrNull
+          ?.label;
+
+  Future<void> _editSplitRow(_ActionDraft split, [int? index]) async {
+    final row = await showSureSheet<RuleSplitRow>(
+      context: context,
+      builder: (_) => _SplitRowSheet(
+        initial: index == null
+            ? RuleSplitRow(type: split.splitMode)
+            : split.splitRows[index],
+        isNew: index == null,
+        percentage: split.splitMode == 'percentage',
+        categories: _catalog.splitOptions('category'),
+        merchants: _catalog.splitOptions('merchant'),
+      ),
+    );
+    if (row == null || !mounted) return;
+    _edit(() {
+      if (index == null) {
+        split.splitRows.add(row);
+      } else {
+        split.splitRows[index] = row;
+      }
+    });
+  }
+
+  Widget _splitEditor(_ActionDraft split, AppLocalizations l) {
+    final palette = SureColors.of(context).palette;
+    final percentage = split.splitMode == 'percentage';
+    final total = _splitTotal(split);
+    final exact = percentage ? null : _exactAmount();
+    final problem = _splitProblem(l, split);
+    final totalText = percentage
+        ? l.sr2SplitTotalPercent(_formatShare(total))
+        : exact == null
+            ? l.sr2SplitTotalAmount(_formatShare(total))
+            : l.sr2SplitTotalOf(_formatShare(total), _formatShare(exact));
+    final secondary = TextStyle(fontSize: 13, color: palette.textSecondary);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SureSegmentedControl<String>(
+            key: const ValueKey('ruleSplitMode'),
+            segments: [
+              SureSegment(value: 'fixed', label: l.sr2SplitFixed),
+              SureSegment(value: 'percentage', label: l.sr2SplitPercentage),
+            ],
+            selected: split.splitMode,
+            onChanged: (mode) => _edit(() => split.splitMode = mode),
+          ),
+          const SizedBox(height: 8),
+          SurePanel.rows(
+            children: [
+              for (var i = 0; i < split.splitRows.length; i++)
+                _splitRowTile(split, i, l),
+              if (split.splitRows.length < 20)
+                _AddRow(
+                  key: const ValueKey('ruleSplitAdd'),
+                  label: l.sr2SplitAdd,
+                  onTap: () => _editSplitRow(split),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              totalText,
+              key: const ValueKey('ruleSplitTotal'),
+              style: SureMoney.tabular(secondary),
+            ),
+          ),
+          if (!percentage) ...[
+            const SizedBox(height: 4),
+            Text(l.sr2SplitFixedHelp, style: secondary),
+          ],
+          if (problem != null) ...[
+            const SizedBox(height: 6),
+            ManageErrorText(problem, compact: true),
+          ],
+          if (_splitRemovedOthers) ...[
+            const SizedBox(height: 6),
+            Text(l.sr2SplitOnlyAction, style: secondary),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _splitRowTile(_ActionDraft split, int index, AppLocalizations l) {
+    final palette = SureColors.of(context).palette;
+    final row = split.splitRows[index];
+    final share = double.tryParse(row.share);
+    final shareText = share == null
+        ? row.share
+        : split.splitMode == 'percentage'
+            ? '${_formatShare(share)}%'
+            : _formatShare(share);
+    final details = [
+      _optionLabel('category', row.categoryId),
+      _optionLabel('merchant', row.merchantId),
+    ].whereType<String>().join(' · ');
+    void remove() => _edit(() => split.splitRows.removeAt(index));
+    return Semantics(
+      key: ValueKey('ruleSplitRow-$index'),
+      customSemanticsActions: {
+        CustomSemanticsAction(label: l.commonDelete): remove,
+      },
+      child: SureSwipeActions(
+        actions: [
+          SureSwipeAction(
+            label: l.commonDelete,
+            color: palette.destructive,
+            onPressed: remove,
+          ),
+        ],
+        child: ColoredBox(
+          color: palette.container,
+          child: SureListRow(
+            title: row.name.trim().isEmpty ? l.sr2SplitUnnamed : row.name,
+            subtitle: details.isEmpty ? l.sr2SplitNoCategory : details,
+            trailing: Text(
+              shareText,
+              style: SureMoney.tabular(TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: palette.textPrimary,
+              )),
+            ),
+            onTap: () => _editSplitRow(split, index),
+          ),
+        ),
+      ),
     );
   }
 
@@ -660,12 +1108,16 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
     final palette = SureColors.of(context).palette;
     final text = _text(l);
     const header = EdgeInsets.fromLTRB(4, 16, 4, 6);
+    final split = _splitDraft;
+    final splitBlocked = split != null && _splitProblem(l, split) != null;
 
     return SureSheet(
       title: widget.existing != null ? l.sprRuleEdit : l.sprRuleNew,
       actionLabel: l.commonSave,
       actionKey: const ValueKey('ruleEditorSave'),
       busy: _saving,
+      // An invalid split is explained inline under it.
+      actionEnabled: !splitBlocked,
       onAction: _save,
       child: SafeArea(
         top: false,
@@ -693,6 +1145,14 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
                     onChanged: (v) => _edit(() => _active = v),
                   ),
                 ),
+                if (widget.groups != null)
+                  SureListRow(
+                    key: const ValueKey('ruleEditorGroup'),
+                    title: l.sr2RuleGroup,
+                    value: _groupLabel(l),
+                    showChevron: true,
+                    onTap: _pickRuleGroup,
+                  ),
               ],
             ),
             SureSectionHeader(label: l.sprRuleIfHeader, padding: header),
@@ -712,7 +1172,8 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
                 _AddRow(
                   key: const ValueKey('ruleAddCondition'),
                   label: l.sprRuleAddCondition,
-                  onTap: () => _edit(() => _conditions.add(_ConditionDraft.blank())),
+                  onTap: () => _edit(
+                      () => _conditions.add(_ConditionDraft.blank(_catalog))),
                 ),
                 _AddRow(
                   key: const ValueKey('ruleAddGroup'),
@@ -720,7 +1181,7 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
                   onTap: () => _edit(() => _conditions.add(_ConditionDraft(
                         type: ruleCompoundType,
                         operator: 'and',
-                        subs: [_ConditionDraft.blank()],
+                        subs: [_ConditionDraft.blank(_catalog)],
                       ))),
                 ),
               ],
@@ -733,8 +1194,8 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
                   _AddRow(
                     key: const ValueKey('ruleAddAction'),
                     label: l.sprRuleAddAction,
-                    onTap: () => _edit(() =>
-                        _actions.add(_ActionDraft(type: _offeredActions.first))),
+                    onTap: () => _edit(() => _actions.add(
+                        _ActionDraft(_catalog, type: _offeredActions.first))),
                   ),
               ],
             ),
@@ -743,6 +1204,148 @@ class _RuleEditorSheetState extends State<RuleEditorSheet> {
               ManageErrorText(_error!),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Edits one split row: name, share (a percentage or an amount), category
+/// and merchant. Pops the row on Done.
+class _SplitRowSheet extends StatefulWidget {
+  const _SplitRowSheet({
+    required this.initial,
+    required this.isNew,
+    required this.percentage,
+    required this.categories,
+    required this.merchants,
+  });
+
+  final RuleSplitRow initial;
+  final bool isNew;
+  final bool percentage;
+  final List<RuleOptionSpec> categories;
+  final List<RuleOptionSpec> merchants;
+
+  @override
+  State<_SplitRowSheet> createState() => _SplitRowSheetState();
+}
+
+class _SplitRowSheetState extends State<_SplitRowSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _name =
+      TextEditingController(text: widget.initial.name);
+  late final TextEditingController _share =
+      TextEditingController(text: widget.initial.share);
+  late String? _categoryId = widget.initial.categoryId;
+  late String? _merchantId = widget.initial.merchantId;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _share.dispose();
+    super.dispose();
+  }
+
+  /// The share as a canonical positive decimal, or null.
+  String? _canonicalShare(String input) {
+    try {
+      final locale = Localizations.localeOf(context).toString();
+      final value = AmountParser.parse(input, locale: locale).canonicalValue;
+      final parsed = double.tryParse(value);
+      return parsed == null || parsed <= 0 ? null : value;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  Future<void> _pick(String title, List<RuleOptionSpec> options,
+      String? current, ValueChanged<String?> onPicked) async {
+    final picked = await MetadataPickerSheet.show(
+      context,
+      title: title,
+      options: [
+        for (final o in options) PickerOption(id: o.value, label: o.label),
+      ],
+      initialSelection: current == null ? const <String>{} : {current},
+    );
+    if (picked == null || !mounted) return;
+    setState(() => onPicked(picked.firstOrNull));
+  }
+
+  void _done() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop(widget.initial.copyWith(
+      name: _name.text.trim(),
+      share: _canonicalShare(_share.text),
+      categoryId: () => _categoryId,
+      merchantId: () => _merchantId,
+    ));
+  }
+
+  String? _label(List<RuleOptionSpec> options, String? id) =>
+      options.where((o) => o.value == id).firstOrNull?.label;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return SureSheet(
+      title: widget.isNew ? l.sr2SplitNew : l.sr2SplitEdit,
+      actionLabel: l.dsDone,
+      actionKey: const ValueKey('ruleSplitDone'),
+      onAction: _done,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Form(
+          key: _formKey,
+          child: SurePanel.rows(
+            children: [
+              FormSheetFieldRow(
+                label: l.sr2SplitName,
+                controller: _name,
+                fieldKey: const ValueKey('ruleSplitName'),
+                hint: l.sr2SplitNameHint,
+                textCapitalization: TextCapitalization.sentences,
+                validator: (v) =>
+                    _blank(v) ? l.sr2SplitNameRequired : null,
+              ),
+              FormSheetFieldRow(
+                label: widget.percentage
+                    ? l.sr2SplitSharePercent
+                    : l.sr2SplitShareAmount,
+                controller: _share,
+                fieldKey: const ValueKey('ruleSplitShare'),
+                hint: '0',
+                mono: true,
+                suffix: widget.percentage ? '%' : null,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                textInputAction: TextInputAction.done,
+                validator: (v) => _canonicalShare(v ?? '') == null
+                    ? l.sr2SplitShareInvalid
+                    : null,
+              ),
+              SureListRow(
+                key: const ValueKey('ruleSplitCategory'),
+                title: l.p3roRuleFieldCategory,
+                value: _label(widget.categories, _categoryId) ??
+                    l.sr2RuleGroupNone,
+                showChevron: true,
+                onTap: () => _pick(l.p3roRuleFieldCategory, widget.categories,
+                    _categoryId, (id) => _categoryId = id),
+              ),
+              SureListRow(
+                key: const ValueKey('ruleSplitMerchant'),
+                title: l.p3roRuleFieldMerchant,
+                value: _label(widget.merchants, _merchantId) ??
+                    l.sr2RuleGroupNone,
+                showChevron: true,
+                onTap: () => _pick(l.p3roRuleFieldMerchant, widget.merchants,
+                    _merchantId, (id) => _merchantId = id),
+              ),
+            ],
+          ),
         ),
       ),
     );

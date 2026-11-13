@@ -8287,6 +8287,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add an investment or crypto account, or connect a brokerage.'**
   String get spaInvestEmptyBody;
+
+  /// Rules list section header for rules without a group.
+  ///
+  /// In en, this message translates to:
+  /// **'Ungrouped'**
+  String get sr2Ungrouped;
+
+  /// Fallback name of a rule group the app has no name for.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get sr2GroupUnnamed;
+
+  /// Row at the bottom of the rules list that opens the rule groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage groups'**
+  String get sr2ManageGroups;
+
+  /// Title of the rule groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get sr2GroupsTitle;
+
+  /// Rule groups screen error state and snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load groups'**
+  String get sr2GroupsLoadFailed;
+
+  /// Rule groups screen empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet'**
+  String get sr2GroupsEmpty;
+
+  /// Rule groups screen empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups keep related rules together. Tap + to add one.'**
+  String get sr2GroupsEmptyBody;
+
+  /// Subtitle of a rule group row: how many rules it holds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No rules} one{1 rule} other{{count} rules}}'**
+  String sr2GroupRuleCount(int count);
+
+  /// Title of the add rule group sheet and the + button label.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get sr2GroupNew;
+
+  /// Title of the rename rule group sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename group'**
+  String get sr2GroupRename;
+
+  /// Name field label on the rule group sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sr2GroupName;
+
+  /// Name field placeholder on the rule group sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Subscriptions'**
+  String get sr2GroupNameHint;
+
+  /// Error when saving a rule group without a name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name.'**
+  String get sr2GroupNameRequired;
+
+  /// Delete rule group confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String sr2GroupDeleteTitle(String name);
+
+  /// Delete rule group confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Its rules stay, without a group.'**
+  String get sr2GroupDeleteBody;
+
+  /// Snackbar after deleting a rule group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get sr2GroupDeleted;
+
+  /// Rule editor row and picker title for the rule's group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get sr2RuleGroup;
+
+  /// Picker choice and row value for no group, category or merchant.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get sr2RuleGroupNone;
+
+  /// Rule editor group picker choice that names a new group.
+  ///
+  /// In en, this message translates to:
+  /// **'New group…'**
+  String get sr2RuleGroupNew;
+
+  /// Rules list nav bar button that turns on reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get sr2RulesEdit;
+
+  /// Screen reader label of a rule group's drag handle in reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {name}'**
+  String sr2MoveGroup(String name);
+
+  /// Screen reader label of a rule's drag handle in reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {name}'**
+  String sr2MoveRule(String name);
+
+  /// Row at the top of the rules list that runs every rule on existing transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply all rules'**
+  String get sr2ApplyAll;
+
+  /// Title of the apply all rules confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply all rules?'**
+  String get sr2ApplyAllTitle;
+
+  /// Apply all dialog: how many rules run.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Runs your 1 rule on existing transactions.} other{Runs all {count} rules on existing transactions.}}'**
+  String sr2ApplyAllBody(int count);
+
+  /// Snackbar after apply all rules was queued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Queued 1 rule} other{Queued {count} rules}}'**
+  String sr2ApplyAllQueued(int count);
+
+  /// Split editor choice: each split is a fixed amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get sr2SplitFixed;
+
+  /// Split editor choice: each split is a percentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get sr2SplitPercentage;
+
+  /// Split editor row that adds a split.
+  ///
+  /// In en, this message translates to:
+  /// **'Add split'**
+  String get sr2SplitAdd;
+
+  /// Title of the sheet that adds a split row.
+  ///
+  /// In en, this message translates to:
+  /// **'New split'**
+  String get sr2SplitNew;
+
+  /// Title of the sheet that edits a split row.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit split'**
+  String get sr2SplitEdit;
+
+  /// Split row name field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sr2SplitName;
+
+  /// Split row name field placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Rent'**
+  String get sr2SplitNameHint;
+
+  /// Error for a split row without a name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name.'**
+  String get sr2SplitNameRequired;
+
+  /// Split row share field label for a percentage split.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent'**
+  String get sr2SplitSharePercent;
+
+  /// Split row share field label for a fixed split.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get sr2SplitShareAmount;
+
+  /// Error for a split share that isn't a positive number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number above zero.'**
+  String get sr2SplitShareInvalid;
+
+  /// Split row title when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed split'**
+  String get sr2SplitUnnamed;
+
+  /// Split row subtitle when it has no category or merchant.
+  ///
+  /// In en, this message translates to:
+  /// **'No category'**
+  String get sr2SplitNoCategory;
+
+  /// Running total of a percentage split.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {total}%'**
+  String sr2SplitTotalPercent(String total);
+
+  /// Running total of a fixed split.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {total}'**
+  String sr2SplitTotalAmount(String total);
+
+  /// Running total of a fixed split against the rule's exact amount condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {total} of {amount}'**
+  String sr2SplitTotalOf(String total, String amount);
+
+  /// Explains what an all-fixed split needs.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed splits need an \"Amount is\" condition (not inside an \"any\" group), and the splits must add up to that amount.'**
+  String get sr2SplitFixedHelp;
+
+  /// Split editor error: wrong number of rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 2 to 20 splits.'**
+  String get sr2SplitCount;
+
+  /// Split editor error: percentages don't total 100.
+  ///
+  /// In en, this message translates to:
+  /// **'The percentages must add up to 100%.'**
+  String get sr2SplitPercentTotal;
+
+  /// Split editor error: fixed splits without an exact amount condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an \"Amount is\" condition to save fixed splits.'**
+  String get sr2SplitFixedNeedsAmount;
+
+  /// Split editor error: fixed shares don't sum to the condition amount.
+  ///
+  /// In en, this message translates to:
+  /// **'The splits must add up to {amount}.'**
+  String sr2SplitFixedMustMatch(String amount);
+
+  /// Note after picking a split removed the rule's other actions.
+  ///
+  /// In en, this message translates to:
+  /// **'A split must be the rule\'s only action, so the other actions were removed.'**
+  String get sr2SplitOnlyAction;
 }
 
 class _AppLocalizationsDelegate

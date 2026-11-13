@@ -42,30 +42,83 @@ enum RuleValueInput {
 
   /// A structured value the app can't edit (split config); kept as is.
   unsupported,
+
+  /// One of the spec's [RuleConditionSpec.options] (server catalog).
+  select,
+
+  /// Several of the spec's options, comma-separated (server catalog).
+  multiSelect,
+
+  /// The split editor (server catalog): `split_rows`.
+  split,
+}
+
+/// One choice of a catalog select.
+class RuleOptionSpec {
+  const RuleOptionSpec(this.value, this.label);
+
+  final String value;
+  final String label;
 }
 
 /// One condition type of the registry.
 class RuleConditionSpec {
-  const RuleConditionSpec(this.key, this.operators, this.input);
+  const RuleConditionSpec(
+    this.key,
+    this.operators,
+    this.input, {
+    this.label,
+    this.operatorLabels = const {},
+    this.valuelessOperators,
+    this.options,
+  });
 
   final String key;
 
   /// Operator values in the server's order.
   final List<String> operators;
   final RuleValueInput input;
+
+  /// The server's label; null uses the app's own wording.
+  final String? label;
+
+  /// The server's (localized) operator labels by key.
+  final Map<String, String> operatorLabels;
+
+  /// Operators with `requires_value: false`; null uses
+  /// [ruleValuelessOperators].
+  final Set<String>? valuelessOperators;
+
+  /// Choices for [RuleValueInput.select].
+  final List<RuleOptionSpec>? options;
+
+  bool needsValue(String operator) =>
+      !(valuelessOperators ?? ruleValuelessOperators).contains(operator);
 }
 
 /// One action type of the registry.
 class RuleActionSpec {
-  const RuleActionSpec(this.key, this.input, {this.offeredForNew = true});
+  const RuleActionSpec(
+    this.key,
+    this.input, {
+    this.offeredForNew = true,
+    this.label,
+    this.options,
+  });
 
   final String key;
   final RuleValueInput input;
 
+  /// The server's label; null uses the app's own wording.
+  final String? label;
+
+  /// Choices for [RuleValueInput.select] / [RuleValueInput.multiSelect].
+  final List<RuleOptionSpec>? options;
+
   /// False for actions the editor keeps on a rule but doesn't offer when
   /// adding: split (structured config, web only) and the AI actions, which
   /// the server offers only while an AI provider is configured — something
-  /// the API doesn't report.
+  /// the API doesn't report. From the server catalog: its `available`.
   final bool offeredForNew;
 }
 
@@ -162,3 +215,95 @@ RuleActionSpec? ruleActionSpec(String key) =>
 
 bool ruleOperatorNeedsValue(String operator) =>
     !ruleValuelessOperators.contains(operator);
+
+/// The condition and action types the rule editor offers: the hand-written
+/// lists above ([RuleEditorCatalog.builtIn]), or the server's own from
+/// `GET /api/v1/rules/catalog` (Sure+ `rules.catalog`, built from the same
+/// registry, with labels, options and AI availability).
+class RuleEditorCatalog {
+  const RuleEditorCatalog({
+    required this.conditions,
+    required this.actions,
+    this.fromServer = false,
+  });
+
+  const RuleEditorCatalog.builtIn()
+      : conditions = ruleConditionSpecs,
+        actions = ruleActionSpecs,
+        fromServer = false;
+
+  /// Parses the catalog body. Unknown value types become text (conditions)
+  /// or [RuleValueInput.unsupported] (actions).
+  factory RuleEditorCatalog.fromJson(Map<String, dynamic> json) {
+    List<RuleOptionSpec>? options(dynamic raw) => raw is List
+        ? [
+            for (final o in raw.whereType<Map>())
+              RuleOptionSpec('${o['value']}', '${o['label'] ?? o['value']}'),
+          ]
+        : null;
+
+    final conditions = <RuleConditionSpec>[];
+    for (final c in (json['conditions'] as List? ?? const []).whereType<Map>()) {
+      final ops = (c['operators'] as List? ?? const []).whereType<Map>();
+      final type = c['type']?.toString();
+      final opts = options(c['options']);
+      conditions.add(RuleConditionSpec(
+        '${c['key']}',
+        [for (final o in ops) '${o['key']}'],
+        switch (type) {
+          'number' => RuleValueInput.amount,
+          'select' when opts != null => RuleValueInput.select,
+          _ => RuleValueInput.text,
+        },
+        label: c['label']?.toString(),
+        operatorLabels: {
+          for (final o in ops)
+            if (o['label'] != null) '${o['key']}': '${o['label']}',
+        },
+        valuelessOperators: {
+          for (final o in ops)
+            if (o['requires_value'] == false) '${o['key']}',
+        },
+        options: opts,
+      ));
+    }
+
+    final actions = <RuleActionSpec>[];
+    for (final a in (json['actions'] as List? ?? const []).whereType<Map>()) {
+      final opts = options(a['options']);
+      actions.add(RuleActionSpec(
+        '${a['key']}',
+        switch (a['value_type']?.toString()) {
+          'function' => RuleValueInput.none,
+          'text' => RuleValueInput.text,
+          'select' when opts != null => RuleValueInput.select,
+          'multi_select' when opts != null => RuleValueInput.multiSelect,
+          'split' => RuleValueInput.split,
+          _ => RuleValueInput.unsupported,
+        },
+        offeredForNew: a['available'] != false,
+        label: a['label']?.toString(),
+        options: opts,
+      ));
+    }
+    return RuleEditorCatalog(
+        conditions: conditions, actions: actions, fromServer: true);
+  }
+
+  final List<RuleConditionSpec> conditions;
+  final List<RuleActionSpec> actions;
+  final bool fromServer;
+
+  RuleConditionSpec? condition(String key) =>
+      conditions.where((s) => s.key == key).firstOrNull;
+
+  RuleActionSpec? action(String key) =>
+      actions.where((s) => s.key == key).firstOrNull;
+
+  /// The options a split row offers for [kind]: the matching action's (the
+  /// split executor sends none of its own), else the condition's.
+  List<RuleOptionSpec> splitOptions(String kind) =>
+      action('set_transaction_$kind')?.options ??
+      condition('transaction_$kind')?.options ??
+      const [];
+}

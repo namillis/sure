@@ -121,6 +121,7 @@ abstract final class SureIcons {
   static const String cloudUpload = 'cloud-upload';
   static const String coins = 'coins';
   static const String ellipsis = 'ellipsis';
+  static const String gripVertical = 'grip-vertical';
   static const String externalLink = 'external-link';
   static const String eye = 'eye';
   static const String eyeOff = 'eye-off';
