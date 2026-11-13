@@ -451,6 +451,16 @@ RSpec.configure do |config|
               status: { type: :string, enum: %w[active draft disabled pending_deletion] },
               institution_name: { type: :string, nullable: true },
               institution_domain: { type: :string, nullable: true },
+              linked: { type: :boolean, description: 'Synced from a provider (Sure+ `accounts.permissions`)' },
+              permissions: {
+                type: :object,
+                description: 'What the API user may do through PATCH/DELETE /api/v1/accounts/{id}',
+                properties: { edit: { type: :boolean }, delete: { type: :boolean } }
+              },
+              locked_fields: {
+                type: :array, items: { type: :string },
+                description: 'Fields a PATCH may not send for this linked account; accountable fields are `accountable_attributes.<key>`'
+              },
               created_at: { type: :string, format: :'date-time' },
               updated_at: { type: :string, format: :'date-time' }
             }

@@ -5,6 +5,7 @@
 module SurePlus
   module Features
     NAMES = %w[
+      accounts.permissions
       accounts.write
       budgets.write
       categories.write

@@ -16,5 +16,12 @@ json.subtype account.subtype
 json.status account.status
 json.institution_name account.institution_name
 json.institution_domain account.institution_domain
+access = Account::ApiAccess.new(account, Current.user)
+json.linked account.linked?
+json.permissions do
+  json.edit access.can_edit?
+  json.delete access.can_delete?
+end
+json.locked_fields access.locked_fields
 json.created_at account.created_at.iso8601
 json.updated_at account.updated_at.iso8601

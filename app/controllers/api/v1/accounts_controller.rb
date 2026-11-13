@@ -63,6 +63,7 @@ class Api::V1::AccountsController < Api::V1::BaseController
       scope = current_resource_owner.family.accounts
                                     .accessible_by(current_resource_owner)
                                     .includes(:accountable, account_providers: :provider)
+                                    .preload(:account_shares, :plaid_account, :simplefin_account)
       include_disabled_accounts? ? scope : scope.visible
     end
 
