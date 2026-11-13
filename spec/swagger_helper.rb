@@ -834,6 +834,7 @@ RSpec.configure do |config|
               effective_date: { type: :string, format: :date, nullable: true },
               position: { type: :integer, description: 'Run order within the family; rules run from the lowest position up and the top rule wins per attribute' },
               stop_processing: { type: :boolean, description: 'When true, rules further down do not change transactions this rule matches' },
+              rule_group_id: { type: :string, format: :uuid, nullable: true },
               conditions: {
                 type: :array,
                 items: { '$ref' => '#/components/schemas/RuleCondition' }
