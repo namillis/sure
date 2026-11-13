@@ -3,7 +3,7 @@
 class Api::V1::RuleCatalogsController < Api::V1::BaseController
   before_action :ensure_read_scope
   # Localize picks the locale before the API key identifies the user, so pick
-  # it again now that Current.user is known, as the web does for its session.
+  # it again once the key's user is known, as the web does for its session.
   skip_around_action :switch_locale
   around_action :switch_locale
 

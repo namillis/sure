@@ -715,6 +715,37 @@ components:
         institution_domain:
           type: string
           nullable: true
+        linked:
+          type: boolean
+          description: Synced from a provider (Sure+ `accounts.permissions`)
+        permissions:
+          type: object
+          description: What the API user may do through PATCH/DELETE /api/v1/accounts/{id}
+          properties:
+            edit:
+              type: boolean
+            delete:
+              type: boolean
+        locked_fields:
+          type: array
+          items:
+            type: string
+          description: Fields a PATCH may not send for this linked account; accountable
+            fields are `accountable_attributes.<key>`
+        accountable:
+          type: object
+          nullable: true
+          description: 'Show and write responses only (Sure+ `accounts.loan_rates`).
+            The type''s own fields, keyed as PATCH takes them in `accountable_attributes`.
+            Loan: subtype, rate_type, interest_rate, term_months, initial_balance,
+            start_date, down_payment, insurance_rate, insurance_rate_type, day_count_convention,
+            principal_only_transfers, rate_changes [{effective_date, rate}]. CreditCard:
+            available_credit, minimum_payment, apr, annual_fee, expiration_date, statement_close_day,
+            due_day. Investment: subtype. Crypto: subtype, tax_treatment. Vehicle:
+            make, model, year, mileage_value, mileage_unit, initial_balance, initial_balance_shown,
+            purchase_date. Property: subtype, year_built, area_unit, area_value, address_attributes.
+            Other types: empty.'
+          additionalProperties: true
         created_at:
           type: string
           format: date-time
@@ -822,6 +853,10 @@ components:
           type: boolean
         current:
           type: boolean
+        can_edit:
+          type: boolean
+          description: Whether the caller can change this budget; false for a budget
+            shared read-only
         budgeted_spending:
           type: string
           nullable: true
@@ -874,6 +909,10 @@ components:
           type: boolean
         current:
           type: boolean
+        can_edit:
+          type: boolean
+          description: Whether the caller can change this budget; false for a budget
+            shared read-only
         budgeted_spending:
           type: string
           nullable: true
@@ -1032,6 +1071,17 @@ components:
         available_to_spend:
           type: string
         available_to_spend_cents:
+          type: integer
+        average_spent:
+          type: string
+          description: Mean monthly spending across every month with spending in this
+            category
+        average_spent_cents:
+          type: integer
+        median_spent:
+          type: string
+          description: Median monthly spending; the figure the web shows as "/m avg"
+        median_spent_cents:
           type: integer
         category:
           type: object
@@ -1503,6 +1553,18 @@ components:
           type: string
           format: uuid
           nullable: true
+        rule_group:
+          type: object
+          nullable: true
+          required:
+          - id
+          - name
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
         conditions:
           type: array
           items:
@@ -5260,13 +5322,15 @@ paths:
                         due_day. Loan: subtype, rate_type, interest_rate, term_months,
                         initial_balance, start_date, down_payment, insurance_rate,
                         insurance_rate_type, day_count_convention, principal_only_transfers,
-                        rate_changes [{effective_date, rate}]. Investment: subtype.
-                        Crypto: subtype, tax_treatment. Property: subtype, year_built,
-                        area_value, area_unit, address_attributes {line1, line2, locality,
-                        region, country, postal_code}. Vehicle: make, model, year,
-                        mileage_value, mileage_unit, initial_balance, initial_balance_shown,
-                        purchase_date (the last three not on linked accounts). Depository,
-                        OtherAsset, OtherLiability: none. Other keys are ignored'
+                        rate_changes [{effective_date (YYYY-MM-DD), rate (0-100)}]
+                        replaces the whole list ([] clears it, leaving it out keeps
+                        it). Investment: subtype. Crypto: subtype, tax_treatment.
+                        Property: subtype, year_built, area_value, area_unit, address_attributes
+                        {line1, line2, locality, region, country, postal_code}. Vehicle:
+                        make, model, year, mileage_value, mileage_unit, initial_balance,
+                        initial_balance_shown, purchase_date (the last three not on
+                        linked accounts). Depository, OtherAsset, OtherLiability:
+                        none. Other keys are ignored'
                       additionalProperties: true
                   required:
                   - accountable_type
@@ -5328,7 +5392,7 @@ paths:
       parameters: []
       responses:
         '200':
-          description: account updated
+          description: loan rate changes and insurance updated
           content:
             application/json:
               schema:
@@ -5425,13 +5489,15 @@ paths:
                         due_day. Loan: subtype, rate_type, interest_rate, term_months,
                         initial_balance, start_date, down_payment, insurance_rate,
                         insurance_rate_type, day_count_convention, principal_only_transfers,
-                        rate_changes [{effective_date, rate}]. Investment: subtype.
-                        Crypto: subtype, tax_treatment. Property: subtype, year_built,
-                        area_value, area_unit, address_attributes {line1, line2, locality,
-                        region, country, postal_code}. Vehicle: make, model, year,
-                        mileage_value, mileage_unit, initial_balance, initial_balance_shown,
-                        purchase_date (the last three not on linked accounts). Depository,
-                        OtherAsset, OtherLiability: none. Other keys are ignored'
+                        rate_changes [{effective_date (YYYY-MM-DD), rate (0-100)}]
+                        replaces the whole list ([] clears it, leaving it out keeps
+                        it). Investment: subtype. Crypto: subtype, tax_treatment.
+                        Property: subtype, year_built, area_value, area_unit, address_attributes
+                        {line1, line2, locality, region, country, postal_code}. Vehicle:
+                        make, model, year, mileage_value, mileage_unit, initial_balance,
+                        initial_balance_shown, purchase_date (the last three not on
+                        linked accounts). Depository, OtherAsset, OtherLiability:
+                        none. Other keys are ignored'
                       additionalProperties: true
               required:
               - account
@@ -6240,6 +6306,306 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/budgets":
+    post:
+      summary: Open a budget month
+      tags:
+      - Budgets
+      security:
+      - apiKeyAuth: []
+      description: Creates the budget row for a month the way opening it on the web
+        does, with a row for every category. Returns 201 when it was created and 200
+        when it already existed. Another member's month is only returned if it already
+        exists; it is never created on their behalf.
+      parameters:
+      - name: owner
+        in: query
+        required: false
+        description: 'Whose budget: omit for your own (the household budget when personal
+          budgets are off), "household", or the user id of a member who shared their
+          budget with you'
+        schema:
+          type: string
+      responses:
+        '201':
+          description: budget month created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Budget"
+        '200':
+          description: budget month already existed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Budget"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: forbidden - requires read_write scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: malformed month, or outside the range budgets can be set up
+            for
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - budget
+              properties:
+                budget:
+                  type: object
+                  required:
+                  - month
+                  properties:
+                    month:
+                      type: string
+                      example: 2026-12
+                      description: Month as YYYY-MM
+        required: true
+    get:
+      summary: List budgets
+      tags:
+      - Budgets
+      security:
+      - apiKeyAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        description: 'Page number (default: 1)'
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        description: 'Items per page (default: 25, max: 100)'
+        schema:
+          type: integer
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Filter budgets starting on or after this date
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Filter budgets ending on or before this date
+      responses:
+        '200':
+          description: budgets listed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BudgetCollection"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: invalid date filter
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/budgets/{month_year}/copy_previous":
+    parameters:
+    - name: month_year
+      in: path
+      required: true
+      description: Month in the web's budget URL format, e.g. nov-2026 (case-insensitive)
+      schema:
+        type: string
+    post:
+      summary: Copy the previous month into a budget
+      tags:
+      - Budgets
+      security:
+      - apiKeyAuth: []
+      description: Copies spending budget, expected income, category allocations and
+        rollover choices from the most recent earlier month that was set up, creating
+        the month first if needed.
+      parameters:
+      - name: owner
+        in: query
+        required: false
+        description: 'Whose budget: omit for your own (the household budget when personal
+          budgets are off), "household", or the user id of a member who shared their
+          budget with you'
+        schema:
+          type: string
+      responses:
+        '201':
+          description: budget copied
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Budget"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: forbidden - requires read_write scope, or the budget is shared
+            read-only
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: malformed month or budget not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '409':
+          description: 'already_set_up: the month already has amounts set'
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: 'no_source: no earlier month has been set up'
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/budgets/{budget_id}/budget_categories/move":
+    parameters:
+    - name: budget_id
+      in: path
+      required: true
+      description: Budget ID
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Move allocation between budget categories
+      tags:
+      - Budget Categories
+      security:
+      - apiKeyAuth: []
+      description: 'Moves part of one category''s allocation to another in the same
+        budget, as the web''s move does. Returns both updated rows and the budget.
+        422 carries a `reason`: non_positive_amount, insufficient_funds, different_budgets,
+        same_category, parent_child or uncategorized.'
+      parameters: []
+      responses:
+        '200':
+          description: allocation moved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - from
+                - to
+                - budget
+                properties:
+                  from:
+                    "$ref": "#/components/schemas/BudgetCategory"
+                  to:
+                    "$ref": "#/components/schemas/BudgetCategory"
+                  budget:
+                    "$ref": "#/components/schemas/Budget"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: forbidden - requires read_write scope, or the budget is shared
+            read-only
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: budget or budget category not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: invalid move
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - error
+                - message
+                - reason
+                properties:
+                  error:
+                    type: string
+                    example: validation_failed
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  reason:
+                    type: string
+                    example: insufficient_funds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - move
+              properties:
+                move:
+                  type: object
+                  required:
+                  - from_id
+                  - to_id
+                  - amount
+                  properties:
+                    from_id:
+                      type: string
+                      format: uuid
+                      description: Budget category to take from
+                    to_id:
+                      type: string
+                      format: uuid
+                      description: Budget category to give to
+                    amount:
+                      type: number
+                      exclusiveMinimum: 0
+                      example: 50
+        required: true
   "/api/v1/budget_categories":
     get:
       summary: List budget categories
@@ -6510,65 +6876,6 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
         '404':
           description: budget not found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/budgets":
-    get:
-      summary: List budgets
-      tags:
-      - Budgets
-      security:
-      - apiKeyAuth: []
-      parameters:
-      - name: page
-        in: query
-        required: false
-        description: 'Page number (default: 1)'
-        schema:
-          type: integer
-      - name: per_page
-        in: query
-        required: false
-        description: 'Items per page (default: 25, max: 100)'
-        schema:
-          type: integer
-      - name: start_date
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date
-        description: Filter budgets starting on or after this date
-      - name: end_date
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date
-        description: Filter budgets ending on or before this date
-      responses:
-        '200':
-          description: budgets listed
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BudgetCollection"
-        '401':
-          description: unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: insufficient scope
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '422':
-          description: invalid date filter
           content:
             application/json:
               schema:
@@ -8413,6 +8720,20 @@ paths:
                           type: string
                           format: date
                           nullable: true
+                        available_actions:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                            - pause
+                            - resume
+                            - complete
+                            - archive
+                            - unarchive
+                            - reopen
+                            - consume
+                          description: Lifecycle actions valid in the goal's current
+                            state, plus consume when the caller can record a spend
                         behind_pace:
                           type: boolean
                         needs_attention:
@@ -8734,6 +9055,20 @@ paths:
                     type: string
                     format: date
                     nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
                   behind_pace:
                     type: boolean
                   needs_attention:
@@ -8923,6 +9258,119 @@ paths:
                       description: account_id => earmark amount. Blank or missing
                         claims the whole balance.
         required: true
+  "/api/v1/goals/summary":
+    get:
+      summary: Goals summary
+      tags:
+      - Goals
+      description: The figures the web goals index shows in its KPI header, over active
+        and paused goals (completed and archived are left out), plus the Plan hub's
+        saved and target totals. velocity_* is the net inflow into goal-linked accounts
+        over the last 30 days and the 30 days before, signed. on_track_count is out
+        of tracked_total, which leaves out paused, reached, reserve and no-target-date
+        goals. saved and target only include goals in the family currency.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - currency
+                - velocity_30d
+                - velocity_30d_cents
+                - needs_this_month
+                - needs_this_month_cents
+                - on_track_count
+                - tracked_total
+                - active_total
+                - saved
+                - saved_cents
+                - target
+                - target_cents
+                properties:
+                  currency:
+                    type: string
+                  velocity_30d:
+                    type: string
+                    nullable: true
+                    description: Contributed in the last 30 days (net inflow; negative
+                      for a net outflow)
+                  velocity_30d_cents:
+                    type: integer
+                    nullable: true
+                  velocity_prior_30d:
+                    type: string
+                    nullable: true
+                    description: The same figure for the 30 days before
+                  velocity_prior_30d_cents:
+                    type: integer
+                    nullable: true
+                  velocity_delta_percent:
+                    type: number
+                    nullable: true
+                    description: Change against the prior 30 days; null when that
+                      was zero
+                  velocity_direction:
+                    type: string
+                    enum:
+                    - up
+                    - down
+                    - flat
+                  needs_this_month:
+                    type: string
+                    nullable: true
+                    description: Sum of the monthly target of goals behind pace
+                  needs_this_month_cents:
+                    type: integer
+                    nullable: true
+                  on_track_count:
+                    type: integer
+                  tracked_total:
+                    type: integer
+                    description: Goals with a pace to compare against
+                  reached_count:
+                    type: integer
+                  behind_count:
+                    type: integer
+                  no_date_count:
+                    type: integer
+                  paused_count:
+                    type: integer
+                  active_total:
+                    type: integer
+                    description: Active and paused goals
+                  saved:
+                    type: string
+                    nullable: true
+                    description: Total held for the goals
+                  saved_cents:
+                    type: integer
+                    nullable: true
+                  target:
+                    type: string
+                    nullable: true
+                    description: Total of the goals' targets
+                  target_cents:
+                    type: integer
+                    nullable: true
+                  pending_pledges_count:
+                    type: integer
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: preview features disabled
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/goals/{id}":
     parameters:
     - name: id
@@ -9108,6 +9556,20 @@ paths:
                     type: string
                     format: date
                     nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
                   behind_pace:
                     type: boolean
                   needs_attention:
@@ -9414,6 +9876,20 @@ paths:
                     type: string
                     format: date
                     nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
                   behind_pace:
                     type: boolean
                   needs_attention:
@@ -9624,6 +10100,2415 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/goals/{id}/pause":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      summary: Pause goal
+      tags:
+      - Goals
+      description: Fires the goal's pause transition, as on the web goal page. No
+        body. Returns 422 invalid_transition, with a message to show as-is, when the
+        goal's state does not allow it.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - kind
+                - target_mode
+                - state
+                - status
+                - display_status
+                - currency
+                - target_amount
+                - target_amount_cents
+                - current_amount_cents
+                - progress_amount_cents
+                - remaining_amount_cents
+                - progress_percent
+                - open_pledges
+                - linked_accounts
+                - linked_account_count
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - one_off
+                    - maintained
+                  target_mode:
+                    type: string
+                    enum:
+                    - fixed
+                    - months_of_expenses
+                  target_months:
+                    type: integer
+                    nullable: true
+                  state:
+                    type: string
+                    enum:
+                    - active
+                    - paused
+                    - completed
+                    - archived
+                  status:
+                    type: string
+                    enum:
+                    - reached
+                    - on_track
+                    - behind
+                    - no_target_date
+                    - funded
+                    - depleted
+                  display_status:
+                    type: string
+                    description: status, or the lifecycle state when paused, completed
+                      or archived
+                  color:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  currency:
+                    type: string
+                  target_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  days_left:
+                    type: integer
+                    nullable: true
+                  months_remaining:
+                    type: number
+                    nullable: true
+                  target_amount:
+                    type: string
+                    nullable: true
+                    description: Target
+                  target_amount_cents:
+                    type: integer
+                    nullable: true
+                  current_amount:
+                    type: string
+                    nullable: true
+                    description: Balance the linked accounts hold for the goal
+                  current_amount_cents:
+                    type: integer
+                    nullable: true
+                  progress_amount:
+                    type: string
+                    nullable: true
+                    description: current_amount plus consumed_amount; what the ring
+                      is drawn from
+                  progress_amount_cents:
+                    type: integer
+                    nullable: true
+                  consumed_amount:
+                    type: string
+                    nullable: true
+                    description: Already spent on the goal
+                  consumed_amount_cents:
+                    type: integer
+                    nullable: true
+                  remaining_amount:
+                    type: string
+                    nullable: true
+                    description: Still to save
+                  remaining_amount_cents:
+                    type: integer
+                    nullable: true
+                  monthly_target_amount:
+                    type: string
+                    nullable: true
+                    description: Needed per month to hit target_date; null without
+                      a date
+                  monthly_target_amount_cents:
+                    type: integer
+                    nullable: true
+                  pace:
+                    type: string
+                    nullable: true
+                    description: Average monthly net inflow over 90 days
+                  pace_cents:
+                    type: integer
+                    nullable: true
+                  catch_up_amount:
+                    type: string
+                    nullable: true
+                    description: Extra per month needed beyond pace and open pledges
+                  catch_up_amount_cents:
+                    type: integer
+                    nullable: true
+                  projection_end_amount:
+                    type: string
+                    nullable: true
+                    description: Projected balance at target_date at the current pace
+                  projection_end_amount_cents:
+                    type: integer
+                    nullable: true
+                  market_value:
+                    type: string
+                    nullable: true
+                    description: Market value of the backing
+                  market_value_cents:
+                    type: integer
+                    nullable: true
+                  progress_percent:
+                    type: integer
+                  progress_basis:
+                    type: string
+                    enum:
+                    - balance
+                    - contributions
+                  months_of_runway:
+                    type: number
+                    nullable: true
+                  projected_completion_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
+                  behind_pace:
+                    type: boolean
+                  needs_attention:
+                    type: boolean
+                  status_callout:
+                    type: string
+                    nullable: true
+                    description: Localized one-line status, as on the web goal page
+                  currency_conversion_incomplete:
+                    type: boolean
+                  last_matched_pledge_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  pledges_use_transfer:
+                    type: boolean
+                  pending_pledges_count:
+                    type: integer
+                  open_pledges:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - account_id
+                      - kind
+                      - status
+                      - amount
+                      - amount_cents
+                      - currency
+                      - days_left
+                      - expires_at
+                      - created_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        account_id:
+                          type: string
+                          format: uuid
+                        account_name:
+                          type: string
+                          nullable: true
+                          description: Null when the caller cannot access the account
+                        kind:
+                          type: string
+                          enum:
+                          - transfer
+                          - manual_save
+                        status:
+                          type: string
+                          enum:
+                          - open
+                          - matched
+                          - cancelled
+                          - expired
+                        amount:
+                          type: string
+                        amount_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        days_left:
+                          type: integer
+                        expires_at:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                  linked_account_count:
+                    type: integer
+                    description: All linked accounts, including ones the caller cannot
+                      see
+                  linked_accounts:
+                    type: array
+                    description: Linked accounts the caller can access
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - accountable_type
+                      - currency
+                      - whole_account
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        accountable_type:
+                          type: string
+                        currency:
+                          type: string
+                        whole_account:
+                          type: boolean
+                        allocated_amount:
+                          type: string
+                          nullable: true
+                          description: Earmark in account currency; null for a whole-account
+                            link
+                        allocated_amount_cents:
+                          type: integer
+                          nullable: true
+                        backing_amount:
+                          type: string
+                          nullable: true
+                          description: This account's share of the goal, in goal currency
+                        backing_amount_cents:
+                          type: integer
+                          nullable: true
+                  completed_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '422':
+          description: transition not allowed in the current state
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/goals/{id}/resume":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      summary: Resume goal
+      tags:
+      - Goals
+      description: Fires the goal's resume transition, as on the web goal page. No
+        body. Returns 422 invalid_transition, with a message to show as-is, when the
+        goal's state does not allow it.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - kind
+                - target_mode
+                - state
+                - status
+                - display_status
+                - currency
+                - target_amount
+                - target_amount_cents
+                - current_amount_cents
+                - progress_amount_cents
+                - remaining_amount_cents
+                - progress_percent
+                - open_pledges
+                - linked_accounts
+                - linked_account_count
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - one_off
+                    - maintained
+                  target_mode:
+                    type: string
+                    enum:
+                    - fixed
+                    - months_of_expenses
+                  target_months:
+                    type: integer
+                    nullable: true
+                  state:
+                    type: string
+                    enum:
+                    - active
+                    - paused
+                    - completed
+                    - archived
+                  status:
+                    type: string
+                    enum:
+                    - reached
+                    - on_track
+                    - behind
+                    - no_target_date
+                    - funded
+                    - depleted
+                  display_status:
+                    type: string
+                    description: status, or the lifecycle state when paused, completed
+                      or archived
+                  color:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  currency:
+                    type: string
+                  target_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  days_left:
+                    type: integer
+                    nullable: true
+                  months_remaining:
+                    type: number
+                    nullable: true
+                  target_amount:
+                    type: string
+                    nullable: true
+                    description: Target
+                  target_amount_cents:
+                    type: integer
+                    nullable: true
+                  current_amount:
+                    type: string
+                    nullable: true
+                    description: Balance the linked accounts hold for the goal
+                  current_amount_cents:
+                    type: integer
+                    nullable: true
+                  progress_amount:
+                    type: string
+                    nullable: true
+                    description: current_amount plus consumed_amount; what the ring
+                      is drawn from
+                  progress_amount_cents:
+                    type: integer
+                    nullable: true
+                  consumed_amount:
+                    type: string
+                    nullable: true
+                    description: Already spent on the goal
+                  consumed_amount_cents:
+                    type: integer
+                    nullable: true
+                  remaining_amount:
+                    type: string
+                    nullable: true
+                    description: Still to save
+                  remaining_amount_cents:
+                    type: integer
+                    nullable: true
+                  monthly_target_amount:
+                    type: string
+                    nullable: true
+                    description: Needed per month to hit target_date; null without
+                      a date
+                  monthly_target_amount_cents:
+                    type: integer
+                    nullable: true
+                  pace:
+                    type: string
+                    nullable: true
+                    description: Average monthly net inflow over 90 days
+                  pace_cents:
+                    type: integer
+                    nullable: true
+                  catch_up_amount:
+                    type: string
+                    nullable: true
+                    description: Extra per month needed beyond pace and open pledges
+                  catch_up_amount_cents:
+                    type: integer
+                    nullable: true
+                  projection_end_amount:
+                    type: string
+                    nullable: true
+                    description: Projected balance at target_date at the current pace
+                  projection_end_amount_cents:
+                    type: integer
+                    nullable: true
+                  market_value:
+                    type: string
+                    nullable: true
+                    description: Market value of the backing
+                  market_value_cents:
+                    type: integer
+                    nullable: true
+                  progress_percent:
+                    type: integer
+                  progress_basis:
+                    type: string
+                    enum:
+                    - balance
+                    - contributions
+                  months_of_runway:
+                    type: number
+                    nullable: true
+                  projected_completion_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
+                  behind_pace:
+                    type: boolean
+                  needs_attention:
+                    type: boolean
+                  status_callout:
+                    type: string
+                    nullable: true
+                    description: Localized one-line status, as on the web goal page
+                  currency_conversion_incomplete:
+                    type: boolean
+                  last_matched_pledge_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  pledges_use_transfer:
+                    type: boolean
+                  pending_pledges_count:
+                    type: integer
+                  open_pledges:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - account_id
+                      - kind
+                      - status
+                      - amount
+                      - amount_cents
+                      - currency
+                      - days_left
+                      - expires_at
+                      - created_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        account_id:
+                          type: string
+                          format: uuid
+                        account_name:
+                          type: string
+                          nullable: true
+                          description: Null when the caller cannot access the account
+                        kind:
+                          type: string
+                          enum:
+                          - transfer
+                          - manual_save
+                        status:
+                          type: string
+                          enum:
+                          - open
+                          - matched
+                          - cancelled
+                          - expired
+                        amount:
+                          type: string
+                        amount_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        days_left:
+                          type: integer
+                        expires_at:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                  linked_account_count:
+                    type: integer
+                    description: All linked accounts, including ones the caller cannot
+                      see
+                  linked_accounts:
+                    type: array
+                    description: Linked accounts the caller can access
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - accountable_type
+                      - currency
+                      - whole_account
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        accountable_type:
+                          type: string
+                        currency:
+                          type: string
+                        whole_account:
+                          type: boolean
+                        allocated_amount:
+                          type: string
+                          nullable: true
+                          description: Earmark in account currency; null for a whole-account
+                            link
+                        allocated_amount_cents:
+                          type: integer
+                          nullable: true
+                        backing_amount:
+                          type: string
+                          nullable: true
+                          description: This account's share of the goal, in goal currency
+                        backing_amount_cents:
+                          type: integer
+                          nullable: true
+                  completed_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '422':
+          description: transition not allowed in the current state
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/goals/{id}/complete":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      summary: Complete goal
+      tags:
+      - Goals
+      description: Fires the goal's complete transition, as on the web goal page.
+        No body. Returns 422 invalid_transition, with a message to show as-is, when
+        the goal's state does not allow it.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - kind
+                - target_mode
+                - state
+                - status
+                - display_status
+                - currency
+                - target_amount
+                - target_amount_cents
+                - current_amount_cents
+                - progress_amount_cents
+                - remaining_amount_cents
+                - progress_percent
+                - open_pledges
+                - linked_accounts
+                - linked_account_count
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - one_off
+                    - maintained
+                  target_mode:
+                    type: string
+                    enum:
+                    - fixed
+                    - months_of_expenses
+                  target_months:
+                    type: integer
+                    nullable: true
+                  state:
+                    type: string
+                    enum:
+                    - active
+                    - paused
+                    - completed
+                    - archived
+                  status:
+                    type: string
+                    enum:
+                    - reached
+                    - on_track
+                    - behind
+                    - no_target_date
+                    - funded
+                    - depleted
+                  display_status:
+                    type: string
+                    description: status, or the lifecycle state when paused, completed
+                      or archived
+                  color:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  currency:
+                    type: string
+                  target_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  days_left:
+                    type: integer
+                    nullable: true
+                  months_remaining:
+                    type: number
+                    nullable: true
+                  target_amount:
+                    type: string
+                    nullable: true
+                    description: Target
+                  target_amount_cents:
+                    type: integer
+                    nullable: true
+                  current_amount:
+                    type: string
+                    nullable: true
+                    description: Balance the linked accounts hold for the goal
+                  current_amount_cents:
+                    type: integer
+                    nullable: true
+                  progress_amount:
+                    type: string
+                    nullable: true
+                    description: current_amount plus consumed_amount; what the ring
+                      is drawn from
+                  progress_amount_cents:
+                    type: integer
+                    nullable: true
+                  consumed_amount:
+                    type: string
+                    nullable: true
+                    description: Already spent on the goal
+                  consumed_amount_cents:
+                    type: integer
+                    nullable: true
+                  remaining_amount:
+                    type: string
+                    nullable: true
+                    description: Still to save
+                  remaining_amount_cents:
+                    type: integer
+                    nullable: true
+                  monthly_target_amount:
+                    type: string
+                    nullable: true
+                    description: Needed per month to hit target_date; null without
+                      a date
+                  monthly_target_amount_cents:
+                    type: integer
+                    nullable: true
+                  pace:
+                    type: string
+                    nullable: true
+                    description: Average monthly net inflow over 90 days
+                  pace_cents:
+                    type: integer
+                    nullable: true
+                  catch_up_amount:
+                    type: string
+                    nullable: true
+                    description: Extra per month needed beyond pace and open pledges
+                  catch_up_amount_cents:
+                    type: integer
+                    nullable: true
+                  projection_end_amount:
+                    type: string
+                    nullable: true
+                    description: Projected balance at target_date at the current pace
+                  projection_end_amount_cents:
+                    type: integer
+                    nullable: true
+                  market_value:
+                    type: string
+                    nullable: true
+                    description: Market value of the backing
+                  market_value_cents:
+                    type: integer
+                    nullable: true
+                  progress_percent:
+                    type: integer
+                  progress_basis:
+                    type: string
+                    enum:
+                    - balance
+                    - contributions
+                  months_of_runway:
+                    type: number
+                    nullable: true
+                  projected_completion_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
+                  behind_pace:
+                    type: boolean
+                  needs_attention:
+                    type: boolean
+                  status_callout:
+                    type: string
+                    nullable: true
+                    description: Localized one-line status, as on the web goal page
+                  currency_conversion_incomplete:
+                    type: boolean
+                  last_matched_pledge_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  pledges_use_transfer:
+                    type: boolean
+                  pending_pledges_count:
+                    type: integer
+                  open_pledges:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - account_id
+                      - kind
+                      - status
+                      - amount
+                      - amount_cents
+                      - currency
+                      - days_left
+                      - expires_at
+                      - created_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        account_id:
+                          type: string
+                          format: uuid
+                        account_name:
+                          type: string
+                          nullable: true
+                          description: Null when the caller cannot access the account
+                        kind:
+                          type: string
+                          enum:
+                          - transfer
+                          - manual_save
+                        status:
+                          type: string
+                          enum:
+                          - open
+                          - matched
+                          - cancelled
+                          - expired
+                        amount:
+                          type: string
+                        amount_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        days_left:
+                          type: integer
+                        expires_at:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                  linked_account_count:
+                    type: integer
+                    description: All linked accounts, including ones the caller cannot
+                      see
+                  linked_accounts:
+                    type: array
+                    description: Linked accounts the caller can access
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - accountable_type
+                      - currency
+                      - whole_account
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        accountable_type:
+                          type: string
+                        currency:
+                          type: string
+                        whole_account:
+                          type: boolean
+                        allocated_amount:
+                          type: string
+                          nullable: true
+                          description: Earmark in account currency; null for a whole-account
+                            link
+                        allocated_amount_cents:
+                          type: integer
+                          nullable: true
+                        backing_amount:
+                          type: string
+                          nullable: true
+                          description: This account's share of the goal, in goal currency
+                        backing_amount_cents:
+                          type: integer
+                          nullable: true
+                  completed_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '422':
+          description: transition not allowed in the current state
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/goals/{id}/archive":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      summary: Archive goal
+      tags:
+      - Goals
+      description: Fires the goal's archive transition, as on the web goal page. No
+        body. Returns 422 invalid_transition, with a message to show as-is, when the
+        goal's state does not allow it.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - kind
+                - target_mode
+                - state
+                - status
+                - display_status
+                - currency
+                - target_amount
+                - target_amount_cents
+                - current_amount_cents
+                - progress_amount_cents
+                - remaining_amount_cents
+                - progress_percent
+                - open_pledges
+                - linked_accounts
+                - linked_account_count
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - one_off
+                    - maintained
+                  target_mode:
+                    type: string
+                    enum:
+                    - fixed
+                    - months_of_expenses
+                  target_months:
+                    type: integer
+                    nullable: true
+                  state:
+                    type: string
+                    enum:
+                    - active
+                    - paused
+                    - completed
+                    - archived
+                  status:
+                    type: string
+                    enum:
+                    - reached
+                    - on_track
+                    - behind
+                    - no_target_date
+                    - funded
+                    - depleted
+                  display_status:
+                    type: string
+                    description: status, or the lifecycle state when paused, completed
+                      or archived
+                  color:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  currency:
+                    type: string
+                  target_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  days_left:
+                    type: integer
+                    nullable: true
+                  months_remaining:
+                    type: number
+                    nullable: true
+                  target_amount:
+                    type: string
+                    nullable: true
+                    description: Target
+                  target_amount_cents:
+                    type: integer
+                    nullable: true
+                  current_amount:
+                    type: string
+                    nullable: true
+                    description: Balance the linked accounts hold for the goal
+                  current_amount_cents:
+                    type: integer
+                    nullable: true
+                  progress_amount:
+                    type: string
+                    nullable: true
+                    description: current_amount plus consumed_amount; what the ring
+                      is drawn from
+                  progress_amount_cents:
+                    type: integer
+                    nullable: true
+                  consumed_amount:
+                    type: string
+                    nullable: true
+                    description: Already spent on the goal
+                  consumed_amount_cents:
+                    type: integer
+                    nullable: true
+                  remaining_amount:
+                    type: string
+                    nullable: true
+                    description: Still to save
+                  remaining_amount_cents:
+                    type: integer
+                    nullable: true
+                  monthly_target_amount:
+                    type: string
+                    nullable: true
+                    description: Needed per month to hit target_date; null without
+                      a date
+                  monthly_target_amount_cents:
+                    type: integer
+                    nullable: true
+                  pace:
+                    type: string
+                    nullable: true
+                    description: Average monthly net inflow over 90 days
+                  pace_cents:
+                    type: integer
+                    nullable: true
+                  catch_up_amount:
+                    type: string
+                    nullable: true
+                    description: Extra per month needed beyond pace and open pledges
+                  catch_up_amount_cents:
+                    type: integer
+                    nullable: true
+                  projection_end_amount:
+                    type: string
+                    nullable: true
+                    description: Projected balance at target_date at the current pace
+                  projection_end_amount_cents:
+                    type: integer
+                    nullable: true
+                  market_value:
+                    type: string
+                    nullable: true
+                    description: Market value of the backing
+                  market_value_cents:
+                    type: integer
+                    nullable: true
+                  progress_percent:
+                    type: integer
+                  progress_basis:
+                    type: string
+                    enum:
+                    - balance
+                    - contributions
+                  months_of_runway:
+                    type: number
+                    nullable: true
+                  projected_completion_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
+                  behind_pace:
+                    type: boolean
+                  needs_attention:
+                    type: boolean
+                  status_callout:
+                    type: string
+                    nullable: true
+                    description: Localized one-line status, as on the web goal page
+                  currency_conversion_incomplete:
+                    type: boolean
+                  last_matched_pledge_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  pledges_use_transfer:
+                    type: boolean
+                  pending_pledges_count:
+                    type: integer
+                  open_pledges:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - account_id
+                      - kind
+                      - status
+                      - amount
+                      - amount_cents
+                      - currency
+                      - days_left
+                      - expires_at
+                      - created_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        account_id:
+                          type: string
+                          format: uuid
+                        account_name:
+                          type: string
+                          nullable: true
+                          description: Null when the caller cannot access the account
+                        kind:
+                          type: string
+                          enum:
+                          - transfer
+                          - manual_save
+                        status:
+                          type: string
+                          enum:
+                          - open
+                          - matched
+                          - cancelled
+                          - expired
+                        amount:
+                          type: string
+                        amount_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        days_left:
+                          type: integer
+                        expires_at:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                  linked_account_count:
+                    type: integer
+                    description: All linked accounts, including ones the caller cannot
+                      see
+                  linked_accounts:
+                    type: array
+                    description: Linked accounts the caller can access
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - accountable_type
+                      - currency
+                      - whole_account
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        accountable_type:
+                          type: string
+                        currency:
+                          type: string
+                        whole_account:
+                          type: boolean
+                        allocated_amount:
+                          type: string
+                          nullable: true
+                          description: Earmark in account currency; null for a whole-account
+                            link
+                        allocated_amount_cents:
+                          type: integer
+                          nullable: true
+                        backing_amount:
+                          type: string
+                          nullable: true
+                          description: This account's share of the goal, in goal currency
+                        backing_amount_cents:
+                          type: integer
+                          nullable: true
+                  completed_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '422':
+          description: transition not allowed in the current state
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/goals/{id}/unarchive":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      summary: Unarchive goal
+      tags:
+      - Goals
+      description: Fires the goal's unarchive transition, as on the web goal page.
+        No body. Returns 422 invalid_transition, with a message to show as-is, when
+        the goal's state does not allow it.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - kind
+                - target_mode
+                - state
+                - status
+                - display_status
+                - currency
+                - target_amount
+                - target_amount_cents
+                - current_amount_cents
+                - progress_amount_cents
+                - remaining_amount_cents
+                - progress_percent
+                - open_pledges
+                - linked_accounts
+                - linked_account_count
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - one_off
+                    - maintained
+                  target_mode:
+                    type: string
+                    enum:
+                    - fixed
+                    - months_of_expenses
+                  target_months:
+                    type: integer
+                    nullable: true
+                  state:
+                    type: string
+                    enum:
+                    - active
+                    - paused
+                    - completed
+                    - archived
+                  status:
+                    type: string
+                    enum:
+                    - reached
+                    - on_track
+                    - behind
+                    - no_target_date
+                    - funded
+                    - depleted
+                  display_status:
+                    type: string
+                    description: status, or the lifecycle state when paused, completed
+                      or archived
+                  color:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  currency:
+                    type: string
+                  target_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  days_left:
+                    type: integer
+                    nullable: true
+                  months_remaining:
+                    type: number
+                    nullable: true
+                  target_amount:
+                    type: string
+                    nullable: true
+                    description: Target
+                  target_amount_cents:
+                    type: integer
+                    nullable: true
+                  current_amount:
+                    type: string
+                    nullable: true
+                    description: Balance the linked accounts hold for the goal
+                  current_amount_cents:
+                    type: integer
+                    nullable: true
+                  progress_amount:
+                    type: string
+                    nullable: true
+                    description: current_amount plus consumed_amount; what the ring
+                      is drawn from
+                  progress_amount_cents:
+                    type: integer
+                    nullable: true
+                  consumed_amount:
+                    type: string
+                    nullable: true
+                    description: Already spent on the goal
+                  consumed_amount_cents:
+                    type: integer
+                    nullable: true
+                  remaining_amount:
+                    type: string
+                    nullable: true
+                    description: Still to save
+                  remaining_amount_cents:
+                    type: integer
+                    nullable: true
+                  monthly_target_amount:
+                    type: string
+                    nullable: true
+                    description: Needed per month to hit target_date; null without
+                      a date
+                  monthly_target_amount_cents:
+                    type: integer
+                    nullable: true
+                  pace:
+                    type: string
+                    nullable: true
+                    description: Average monthly net inflow over 90 days
+                  pace_cents:
+                    type: integer
+                    nullable: true
+                  catch_up_amount:
+                    type: string
+                    nullable: true
+                    description: Extra per month needed beyond pace and open pledges
+                  catch_up_amount_cents:
+                    type: integer
+                    nullable: true
+                  projection_end_amount:
+                    type: string
+                    nullable: true
+                    description: Projected balance at target_date at the current pace
+                  projection_end_amount_cents:
+                    type: integer
+                    nullable: true
+                  market_value:
+                    type: string
+                    nullable: true
+                    description: Market value of the backing
+                  market_value_cents:
+                    type: integer
+                    nullable: true
+                  progress_percent:
+                    type: integer
+                  progress_basis:
+                    type: string
+                    enum:
+                    - balance
+                    - contributions
+                  months_of_runway:
+                    type: number
+                    nullable: true
+                  projected_completion_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
+                  behind_pace:
+                    type: boolean
+                  needs_attention:
+                    type: boolean
+                  status_callout:
+                    type: string
+                    nullable: true
+                    description: Localized one-line status, as on the web goal page
+                  currency_conversion_incomplete:
+                    type: boolean
+                  last_matched_pledge_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  pledges_use_transfer:
+                    type: boolean
+                  pending_pledges_count:
+                    type: integer
+                  open_pledges:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - account_id
+                      - kind
+                      - status
+                      - amount
+                      - amount_cents
+                      - currency
+                      - days_left
+                      - expires_at
+                      - created_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        account_id:
+                          type: string
+                          format: uuid
+                        account_name:
+                          type: string
+                          nullable: true
+                          description: Null when the caller cannot access the account
+                        kind:
+                          type: string
+                          enum:
+                          - transfer
+                          - manual_save
+                        status:
+                          type: string
+                          enum:
+                          - open
+                          - matched
+                          - cancelled
+                          - expired
+                        amount:
+                          type: string
+                        amount_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        days_left:
+                          type: integer
+                        expires_at:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                  linked_account_count:
+                    type: integer
+                    description: All linked accounts, including ones the caller cannot
+                      see
+                  linked_accounts:
+                    type: array
+                    description: Linked accounts the caller can access
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - accountable_type
+                      - currency
+                      - whole_account
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        accountable_type:
+                          type: string
+                        currency:
+                          type: string
+                        whole_account:
+                          type: boolean
+                        allocated_amount:
+                          type: string
+                          nullable: true
+                          description: Earmark in account currency; null for a whole-account
+                            link
+                        allocated_amount_cents:
+                          type: integer
+                          nullable: true
+                        backing_amount:
+                          type: string
+                          nullable: true
+                          description: This account's share of the goal, in goal currency
+                        backing_amount_cents:
+                          type: integer
+                          nullable: true
+                  completed_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '422':
+          description: transition not allowed in the current state
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/goals/{id}/reopen":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      summary: Reopen goal
+      tags:
+      - Goals
+      description: Fires the goal's reopen transition, as on the web goal page. No
+        body. Returns 422 invalid_transition, with a message to show as-is, when the
+        goal's state does not allow it.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - kind
+                - target_mode
+                - state
+                - status
+                - display_status
+                - currency
+                - target_amount
+                - target_amount_cents
+                - current_amount_cents
+                - progress_amount_cents
+                - remaining_amount_cents
+                - progress_percent
+                - open_pledges
+                - linked_accounts
+                - linked_account_count
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - one_off
+                    - maintained
+                  target_mode:
+                    type: string
+                    enum:
+                    - fixed
+                    - months_of_expenses
+                  target_months:
+                    type: integer
+                    nullable: true
+                  state:
+                    type: string
+                    enum:
+                    - active
+                    - paused
+                    - completed
+                    - archived
+                  status:
+                    type: string
+                    enum:
+                    - reached
+                    - on_track
+                    - behind
+                    - no_target_date
+                    - funded
+                    - depleted
+                  display_status:
+                    type: string
+                    description: status, or the lifecycle state when paused, completed
+                      or archived
+                  color:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  currency:
+                    type: string
+                  target_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  days_left:
+                    type: integer
+                    nullable: true
+                  months_remaining:
+                    type: number
+                    nullable: true
+                  target_amount:
+                    type: string
+                    nullable: true
+                    description: Target
+                  target_amount_cents:
+                    type: integer
+                    nullable: true
+                  current_amount:
+                    type: string
+                    nullable: true
+                    description: Balance the linked accounts hold for the goal
+                  current_amount_cents:
+                    type: integer
+                    nullable: true
+                  progress_amount:
+                    type: string
+                    nullable: true
+                    description: current_amount plus consumed_amount; what the ring
+                      is drawn from
+                  progress_amount_cents:
+                    type: integer
+                    nullable: true
+                  consumed_amount:
+                    type: string
+                    nullable: true
+                    description: Already spent on the goal
+                  consumed_amount_cents:
+                    type: integer
+                    nullable: true
+                  remaining_amount:
+                    type: string
+                    nullable: true
+                    description: Still to save
+                  remaining_amount_cents:
+                    type: integer
+                    nullable: true
+                  monthly_target_amount:
+                    type: string
+                    nullable: true
+                    description: Needed per month to hit target_date; null without
+                      a date
+                  monthly_target_amount_cents:
+                    type: integer
+                    nullable: true
+                  pace:
+                    type: string
+                    nullable: true
+                    description: Average monthly net inflow over 90 days
+                  pace_cents:
+                    type: integer
+                    nullable: true
+                  catch_up_amount:
+                    type: string
+                    nullable: true
+                    description: Extra per month needed beyond pace and open pledges
+                  catch_up_amount_cents:
+                    type: integer
+                    nullable: true
+                  projection_end_amount:
+                    type: string
+                    nullable: true
+                    description: Projected balance at target_date at the current pace
+                  projection_end_amount_cents:
+                    type: integer
+                    nullable: true
+                  market_value:
+                    type: string
+                    nullable: true
+                    description: Market value of the backing
+                  market_value_cents:
+                    type: integer
+                    nullable: true
+                  progress_percent:
+                    type: integer
+                  progress_basis:
+                    type: string
+                    enum:
+                    - balance
+                    - contributions
+                  months_of_runway:
+                    type: number
+                    nullable: true
+                  projected_completion_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
+                  behind_pace:
+                    type: boolean
+                  needs_attention:
+                    type: boolean
+                  status_callout:
+                    type: string
+                    nullable: true
+                    description: Localized one-line status, as on the web goal page
+                  currency_conversion_incomplete:
+                    type: boolean
+                  last_matched_pledge_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  pledges_use_transfer:
+                    type: boolean
+                  pending_pledges_count:
+                    type: integer
+                  open_pledges:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - account_id
+                      - kind
+                      - status
+                      - amount
+                      - amount_cents
+                      - currency
+                      - days_left
+                      - expires_at
+                      - created_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        account_id:
+                          type: string
+                          format: uuid
+                        account_name:
+                          type: string
+                          nullable: true
+                          description: Null when the caller cannot access the account
+                        kind:
+                          type: string
+                          enum:
+                          - transfer
+                          - manual_save
+                        status:
+                          type: string
+                          enum:
+                          - open
+                          - matched
+                          - cancelled
+                          - expired
+                        amount:
+                          type: string
+                        amount_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        days_left:
+                          type: integer
+                        expires_at:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                  linked_account_count:
+                    type: integer
+                    description: All linked accounts, including ones the caller cannot
+                      see
+                  linked_accounts:
+                    type: array
+                    description: Linked accounts the caller can access
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - accountable_type
+                      - currency
+                      - whole_account
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        accountable_type:
+                          type: string
+                        currency:
+                          type: string
+                        whole_account:
+                          type: boolean
+                        allocated_amount:
+                          type: string
+                          nullable: true
+                          description: Earmark in account currency; null for a whole-account
+                            link
+                        allocated_amount_cents:
+                          type: integer
+                          nullable: true
+                        backing_amount:
+                          type: string
+                          nullable: true
+                          description: This account's share of the goal, in goal currency
+                        backing_amount_cents:
+                          type: integer
+                          nullable: true
+                  completed_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '422':
+          description: transition not allowed in the current state
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/goals/{id}/consume":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Record a spend against a goal
+      tags:
+      - Goals
+      description: The web's "I used some of this money" flow. Adds to consumed_amount
+        and releases the same amount from the account's earmark. Pass either amount
+        (plus account_id when the caller can see more than one linked account) or
+        transaction_id to attribute a detected outflow, whose amount and account are
+        used. Only one-off active goals can be spent from; refusals return 422 consumption_refused
+        with a reason.
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: spend recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - kind
+                - target_mode
+                - state
+                - status
+                - display_status
+                - currency
+                - target_amount
+                - target_amount_cents
+                - current_amount_cents
+                - progress_amount_cents
+                - remaining_amount_cents
+                - progress_percent
+                - open_pledges
+                - linked_accounts
+                - linked_account_count
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  kind:
+                    type: string
+                    enum:
+                    - one_off
+                    - maintained
+                  target_mode:
+                    type: string
+                    enum:
+                    - fixed
+                    - months_of_expenses
+                  target_months:
+                    type: integer
+                    nullable: true
+                  state:
+                    type: string
+                    enum:
+                    - active
+                    - paused
+                    - completed
+                    - archived
+                  status:
+                    type: string
+                    enum:
+                    - reached
+                    - on_track
+                    - behind
+                    - no_target_date
+                    - funded
+                    - depleted
+                  display_status:
+                    type: string
+                    description: status, or the lifecycle state when paused, completed
+                      or archived
+                  color:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  currency:
+                    type: string
+                  target_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  days_left:
+                    type: integer
+                    nullable: true
+                  months_remaining:
+                    type: number
+                    nullable: true
+                  target_amount:
+                    type: string
+                    nullable: true
+                    description: Target
+                  target_amount_cents:
+                    type: integer
+                    nullable: true
+                  current_amount:
+                    type: string
+                    nullable: true
+                    description: Balance the linked accounts hold for the goal
+                  current_amount_cents:
+                    type: integer
+                    nullable: true
+                  progress_amount:
+                    type: string
+                    nullable: true
+                    description: current_amount plus consumed_amount; what the ring
+                      is drawn from
+                  progress_amount_cents:
+                    type: integer
+                    nullable: true
+                  consumed_amount:
+                    type: string
+                    nullable: true
+                    description: Already spent on the goal
+                  consumed_amount_cents:
+                    type: integer
+                    nullable: true
+                  remaining_amount:
+                    type: string
+                    nullable: true
+                    description: Still to save
+                  remaining_amount_cents:
+                    type: integer
+                    nullable: true
+                  monthly_target_amount:
+                    type: string
+                    nullable: true
+                    description: Needed per month to hit target_date; null without
+                      a date
+                  monthly_target_amount_cents:
+                    type: integer
+                    nullable: true
+                  pace:
+                    type: string
+                    nullable: true
+                    description: Average monthly net inflow over 90 days
+                  pace_cents:
+                    type: integer
+                    nullable: true
+                  catch_up_amount:
+                    type: string
+                    nullable: true
+                    description: Extra per month needed beyond pace and open pledges
+                  catch_up_amount_cents:
+                    type: integer
+                    nullable: true
+                  projection_end_amount:
+                    type: string
+                    nullable: true
+                    description: Projected balance at target_date at the current pace
+                  projection_end_amount_cents:
+                    type: integer
+                    nullable: true
+                  market_value:
+                    type: string
+                    nullable: true
+                    description: Market value of the backing
+                  market_value_cents:
+                    type: integer
+                    nullable: true
+                  progress_percent:
+                    type: integer
+                  progress_basis:
+                    type: string
+                    enum:
+                    - balance
+                    - contributions
+                  months_of_runway:
+                    type: number
+                    nullable: true
+                  projected_completion_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  available_actions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - pause
+                      - resume
+                      - complete
+                      - archive
+                      - unarchive
+                      - reopen
+                      - consume
+                    description: Lifecycle actions valid in the goal's current state,
+                      plus consume when the caller can record a spend
+                  behind_pace:
+                    type: boolean
+                  needs_attention:
+                    type: boolean
+                  status_callout:
+                    type: string
+                    nullable: true
+                    description: Localized one-line status, as on the web goal page
+                  currency_conversion_incomplete:
+                    type: boolean
+                  last_matched_pledge_date:
+                    type: string
+                    format: date
+                    nullable: true
+                  pledges_use_transfer:
+                    type: boolean
+                  pending_pledges_count:
+                    type: integer
+                  open_pledges:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - account_id
+                      - kind
+                      - status
+                      - amount
+                      - amount_cents
+                      - currency
+                      - days_left
+                      - expires_at
+                      - created_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        account_id:
+                          type: string
+                          format: uuid
+                        account_name:
+                          type: string
+                          nullable: true
+                          description: Null when the caller cannot access the account
+                        kind:
+                          type: string
+                          enum:
+                          - transfer
+                          - manual_save
+                        status:
+                          type: string
+                          enum:
+                          - open
+                          - matched
+                          - cancelled
+                          - expired
+                        amount:
+                          type: string
+                        amount_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        days_left:
+                          type: integer
+                        expires_at:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                  linked_account_count:
+                    type: integer
+                    description: All linked accounts, including ones the caller cannot
+                      see
+                  linked_accounts:
+                    type: array
+                    description: Linked accounts the caller can access
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - accountable_type
+                      - currency
+                      - whole_account
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        accountable_type:
+                          type: string
+                        currency:
+                          type: string
+                        whole_account:
+                          type: boolean
+                        allocated_amount:
+                          type: string
+                          nullable: true
+                          description: Earmark in account currency; null for a whole-account
+                            link
+                        allocated_amount_cents:
+                          type: integer
+                          nullable: true
+                        backing_amount:
+                          type: string
+                          nullable: true
+                          description: This account's share of the goal, in goal currency
+                        backing_amount_cents:
+                          type: integer
+                          nullable: true
+                  completed_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+        '422':
+          description: spend refused
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - error
+                - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                    - consumption_refused
+                    - validation_failed
+                  reason:
+                    type: string
+                    enum:
+                    - non_positive
+                    - maintained
+                    - exceeds_target
+                    - account_required
+                    - account_not_linked
+                    - not_active
+                    - exceeds_earmark
+                    - transaction_already_claimed
+                    - transaction_not_found
+                    - no_linked_account
+                    - missing_exchange_rate
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - consumption
+              properties:
+                consumption:
+                  type: object
+                  properties:
+                    amount:
+                      type: number
+                      description: In goal currency; ignored when transaction_id is
+                        given
+                    account_id:
+                      type: string
+                      format: uuid
+                      description: Linked account the money came out of
+                    transaction_id:
+                      type: string
+                      format: uuid
+                      description: An unattributed outflow on a linked account
+        required: true
   "/api/v1/goals/{goal_id}/pledges":
     parameters:
     - name: goal_id
@@ -9871,6 +12756,20 @@ paths:
                         type: string
                         format: date
                         nullable: true
+                      available_actions:
+                        type: array
+                        items:
+                          type: string
+                          enum:
+                          - pause
+                          - resume
+                          - complete
+                          - archive
+                          - unarchive
+                          - reopen
+                          - consume
+                        description: Lifecycle actions valid in the goal's current
+                          state, plus consume when the caller can record a spend
                       behind_pace:
                         type: boolean
                       needs_attention:
@@ -10278,6 +13177,20 @@ paths:
                         type: string
                         format: date
                         nullable: true
+                      available_actions:
+                        type: array
+                        items:
+                          type: string
+                          enum:
+                          - pause
+                          - resume
+                          - complete
+                          - archive
+                          - unarchive
+                          - reopen
+                          - consume
+                        description: Lifecycle actions valid in the goal's current
+                          state, plus consume when the caller can record a spend
                       behind_pace:
                         type: boolean
                       needs_attention:
@@ -10663,6 +13576,20 @@ paths:
                         type: string
                         format: date
                         nullable: true
+                      available_actions:
+                        type: array
+                        items:
+                          type: string
+                          enum:
+                          - pause
+                          - resume
+                          - complete
+                          - archive
+                          - unarchive
+                          - reopen
+                          - consume
+                        description: Lifecycle actions valid in the goal's current
+                          state, plus consume when the caller can record a spend
                       behind_pace:
                         type: boolean
                       needs_attention:
@@ -12997,6 +15924,384 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/rules/catalog":
+    get:
+      summary: List the conditions and actions a rule can use
+      tags:
+      - Rules
+      security:
+      - apiKeyAuth: []
+      description: |
+        Built from the server's rule registry, as the web rule form renders it. Labels are localized
+        as on the web: the `locale` param, else the user's locale, else Accept-Language, else the family's.
+
+        `options` lists `{ value, label }` for select and multi_select types, including categories,
+        merchants, tags and accounts scoped as the web form scopes them; it is null for every other type.
+        `available` is false for an action a new rule cannot pick right now (the AI actions without a
+        provider); existing rules may still carry it.
+
+        Split action (`value_type: split`): `value` is a JSON string
+        `{"splits":[{"name":"Rent","type":"percentage","share":"60","category_id":"<uuid>|null",
+        "merchant_id":"<uuid>|null","tag_ids":["<uuid>"]}, ...]}` with 2 to 20 rows. `type` is
+        `fixed` (an amount, at most 4 decimals) or `percentage` (of what is left after the fixed rows;
+        percentages must total 100 within 0.01). `share` is a number or numeric string. `name` is required, at most 255 characters. Shares
+        must be positive. Category, merchant and tags must belong to the family. A config with only
+        fixed rows needs an ANDed `transaction_amount` `=` condition whose value the shares sum to.
+        A split must be the rule's only action. Writes may instead send
+        `split_rows: [{ type, name, share, category_id, merchant_id, tag_ids }]` and the server builds `value`.
+      parameters:
+      - name: resource_type
+        in: query
+        required: false
+        description: 'Rule resource type (default: transaction)'
+        schema:
+          type: string
+          enum:
+          - transaction
+      - name: locale
+        in: query
+        required: false
+        description: Locale for labels, overriding the user, Accept-Language and family
+          locale
+        schema:
+          type: string
+      responses:
+        '200':
+          description: catalog listed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - resource_type
+                - ai_available
+                - conditions
+                - actions
+                properties:
+                  resource_type:
+                    type: string
+                  ai_available:
+                    type: boolean
+                    description: Whether any AI action is offered for new rules
+                  conditions:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - key
+                      - label
+                      - type
+                      - operators
+                      - options
+                      properties:
+                        key:
+                          type: string
+                        label:
+                          type: string
+                        type:
+                          type: string
+                          enum:
+                          - text
+                          - number
+                          - select
+                        operators:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - key
+                            - label
+                            - requires_value
+                            properties:
+                              key:
+                                type: string
+                              label:
+                                type: string
+                              requires_value:
+                                type: boolean
+                        options:
+                          type: array
+                          nullable: true
+                          items:
+                            type: object
+                            required:
+                            - value
+                            - label
+                            properties:
+                              value:
+                                type: string
+                              label:
+                                type: string
+                        number_step:
+                          type: number
+                          nullable: true
+                  actions:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - key
+                      - label
+                      - value_type
+                      - options
+                      - requires_ai
+                      - available
+                      properties:
+                        key:
+                          type: string
+                        label:
+                          type: string
+                        value_type:
+                          type: string
+                          enum:
+                          - select
+                          - multi_select
+                          - function
+                          - text
+                          - split
+                        options:
+                          type: array
+                          nullable: true
+                          items:
+                            type: object
+                            required:
+                            - value
+                            - label
+                            properties:
+                              value:
+                                type: string
+                              label:
+                                type: string
+                        requires_ai:
+                          type: boolean
+                        available:
+                          type: boolean
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: unsupported resource type
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/rule_groups":
+    get:
+      summary: List rule groups
+      tags:
+      - Rule Groups
+      description: The family's rule groups in the order the rules page shows them.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: rule groups listed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - position
+                      - rules_count
+                      - created_at
+                      - updated_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        position:
+                          type: integer
+                          description: Place among the top-level items of the rules
+                            list; its rules follow it
+                        rules_count:
+                          type: integer
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      summary: Create a rule group
+      tags:
+      - Rule Groups
+      description: Adds an empty group at the end of the rules list. Guests cannot
+        create groups.
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: rule group created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - id
+                    - name
+                    - position
+                    - rules_count
+                    - created_at
+                    - updated_at
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                      position:
+                        type: integer
+                        description: Place among the top-level items of the rules
+                          list; its rules follow it
+                      rules_count:
+                        type: integer
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+        '422':
+          description: validation failed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - rule_group
+              properties:
+                rule_group:
+                  type: object
+                  required:
+                  - name
+                  properties:
+                    name:
+                      type: string
+                      description: Unique within the family, at most 100 characters
+  "/api/v1/rule_groups/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Rule group ID
+      schema:
+        type: string
+    patch:
+      summary: Rename a rule group
+      tags:
+      - Rule Groups
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: rule group updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - id
+                    - name
+                    - position
+                    - rules_count
+                    - created_at
+                    - updated_at
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                      position:
+                        type: integer
+                        description: Place among the top-level items of the rules
+                          list; its rules follow it
+                      rules_count:
+                        type: integer
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+        '404':
+          description: rule group not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: validation failed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - rule_group
+              properties:
+                rule_group:
+                  type: object
+                  required:
+                  - name
+                  properties:
+                    name:
+                      type: string
+                      description: Unique within the family, at most 100 characters
+    delete:
+      summary: Delete a rule group
+      tags:
+      - Rule Groups
+      description: Deletes the group. Its rules are kept, in the same place in the
+        run order, without a group.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '204':
+          description: rule group deleted
+        '404':
+          description: rule group not found
   "/api/v1/rule_runs":
     get:
       summary: List rule runs
@@ -13124,6 +16429,145 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/rules/apply_all":
+    post:
+      summary: Apply all rules to existing transactions
+      tags:
+      - Rules
+      description: 'Runs every rule of the family, active or not, top to bottom, as
+        the web "Apply all" does. Without confirm: true it changes nothing and returns
+        what the web confirmation shows. With it, the run is queued (202); each rule''s
+        run then appears in GET /api/v1/rule_runs.'
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '202':
+          description: rules queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - status
+                    - rule_count
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - queued
+                      rule_count:
+                        type: integer
+        '422':
+          description: confirmation required
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - error
+                - confirmation
+                properties:
+                  error:
+                    type: string
+                    enum:
+                    - confirmation_required
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  confirmation:
+                    type: object
+                    required:
+                    - rule_count
+                    - affected_resource_count
+                    - auto_categorize
+                    properties:
+                      rule_count:
+                        type: integer
+                      affected_resource_count:
+                        type: integer
+                        description: Unique transactions any rule matches
+                      auto_categorize:
+                        type: boolean
+                      ai_model:
+                        type: string
+                        nullable: true
+                      estimated_ai_cost:
+                        type: number
+                        nullable: true
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm:
+                  type: boolean
+  "/api/v1/rules/reorder":
+    patch:
+      summary: Reorder rules
+      tags:
+      - Rules
+      description: Sets the run order of all the family's rules, top to bottom, as
+        the web drag and drop does. rule_ids lists every rule of the family exactly
+        once, and the rules of a group next to each other (a group moves as one block).
+        A group with no rules stays after the item it follows now.
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: rules reordered
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - rules
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Rule"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: rule_ids are not exactly the family's rules, or split a group
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - rule_ids
+              properties:
+                rule_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
   "/api/v1/rules":
     get:
       summary: List rules
