@@ -10,6 +10,7 @@ import '../models/family_sync.dart';
 import '../models/offline_transaction.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../services/connectivity_service.dart';
@@ -151,6 +152,17 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// Sure+ `charts.series`: charts come from the server's own series.
+  bool get _serverSeries {
+    try {
+      return Provider.of<ServerFeaturesProvider?>(context, listen: false)
+              ?.has(ServerFeaturesProvider.chartsSeries) ??
+          false;
+    } on ProviderNotFoundException {
+      return false;
+    }
+  }
+
   DateTime _now() => (widget.clock ?? DateTime.now)();
 
   bool get _offline =>
@@ -275,6 +287,10 @@ class DashboardScreenState extends State<DashboardScreen> {
     final accounts = provider.accounts;
     if (accounts.isEmpty) return;
     setState(() => _inFlight.add(range));
+    // At launch the server's feature list may still be loading; the chart
+    // request depends on it.
+    await _maybeRead<ServerFeaturesProvider>()?.ready();
+    if (!mounted || generation != _historyGeneration) return;
 
     final token = await _token();
     if (!mounted || generation != _historyGeneration) return;
@@ -291,6 +307,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       start: range.startDate(now),
       end: DateTime(now.year, now.month, now.day),
       cacheKey: cacheKey,
+      useServerSeries: _serverSeries,
     );
     if (!mounted || generation != _historyGeneration) return;
     setState(() {

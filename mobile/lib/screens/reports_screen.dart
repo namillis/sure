@@ -10,6 +10,7 @@ import '../models/category.dart';
 import '../models/spending_vs_normal.dart';
 import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../providers/categories_provider.dart';
 import '../providers/privacy_provider.dart';
 import '../services/cash_flow_service.dart';
@@ -146,6 +147,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
     if (widget.netWorthService == null) _netWorth.close();
     if (widget.spendingService == null) _spending.close();
     super.dispose();
+  }
+
+  /// Sure+ `charts.series`: charts come from the server's own series.
+  bool get _serverSeries {
+    try {
+      return Provider.of<ServerFeaturesProvider?>(context, listen: false)
+              ?.has(ServerFeaturesProvider.chartsSeries) ??
+          false;
+    } on ProviderNotFoundException {
+      return false;
+    }
   }
 
   DateTime _today() {
@@ -321,6 +333,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       start: range.start,
       end: end,
       cacheKey: _netWorthCacheKey(_period, range),
+      useServerSeries: _serverSeries,
     );
     if (!mounted || generation != _generation) return;
     setState(() {

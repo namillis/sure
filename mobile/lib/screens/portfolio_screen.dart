@@ -221,6 +221,10 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     final currency = _currency;
     final range = _range;
     final locale = Localizations.localeOf(context).toString();
+    final serverSeries = context
+                  .read<ServerFeaturesProvider?>()
+                  ?.has(ServerFeaturesProvider.chartsSeries) ??
+              false;
     setState(() => _loadingHistory = true);
 
     final token = await _token();
@@ -232,6 +236,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
           accessToken: token,
           accountId: account.id,
           startDate: range.startDate(DateTime.now()),
+          useSeries: serverSeries,
         ),
     ]);
     if (!mounted || generation != _historyGeneration) return;

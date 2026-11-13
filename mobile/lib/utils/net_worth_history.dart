@@ -73,12 +73,12 @@ class NetWorthHistory {
 
   int? get currentCents => points.isEmpty ? null : points.last.cents;
 
-  /// Compact JSON for the on-device chart cache: the first day plus one
-  /// cents value per day (points are always consecutive days).
+  /// Compact JSON for the on-device chart cache. Points are consecutive
+  /// days when built on the phone, but a server series (Sure+
+  /// `charts.series`) can be weekly or monthly, so each point keeps its day.
   Map<String, dynamic> toJson() => {
-        'v': 1,
-        if (points.isNotEmpty)
-          'start': _isoDay(points.first.date),
+        'v': 2,
+        'dates': [for (final p in points) _isoDay(p.date)],
         'cents': [for (final p in points) p.cents],
         'other': [
           for (final o in otherCurrencies)
@@ -86,14 +86,24 @@ class NetWorthHistory {
         ],
       };
 
-  /// Reads [toJson] output; null when it isn't a version this build knows.
+  /// Reads [toJson] output (or the older consecutive-day `v: 1`); null when
+  /// it isn't a version this build knows.
   static NetWorthHistory? fromJson(Object? json) {
-    if (json is! Map || json['v'] != 1) return null;
+    if (json is! Map || (json['v'] != 1 && json['v'] != 2)) return null;
     final cents = json['cents'];
     final other = json['other'];
     if (cents is! List || other is! List) return null;
     final points = <NetWorthPoint>[];
-    if (cents.isNotEmpty) {
+    if (json['v'] == 2) {
+      final dates = json['dates'];
+      if (dates is! List || dates.length != cents.length) return null;
+      for (var i = 0; i < cents.length; i++) {
+        final date = DateTime.tryParse(dates[i]?.toString() ?? '');
+        final value = cents[i];
+        if (date == null || value is! int) return null;
+        points.add(NetWorthPoint(DateTime(date.year, date.month, date.day), value));
+      }
+    } else if (cents.isNotEmpty) {
       final start = DateTime.tryParse(json['start']?.toString() ?? '');
       if (start == null) return null;
       for (var i = 0; i < cents.length; i++) {

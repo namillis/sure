@@ -104,7 +104,15 @@ class AccountDetailService {
     required String accountId,
     DateTime? startDate,
     int maxPages = 40,
+    bool useSeries = false,
   }) async {
+    if (useSeries) {
+      return getBalanceSeries(
+        accessToken: accessToken,
+        accountId: accountId,
+        startDate: startDate,
+      );
+    }
     Uri pageUrl(int page) =>
         Uri.parse('${ApiConfig.baseUrl}/api/v1/balances').replace(
           queryParameters: {
@@ -437,6 +445,111 @@ class AccountDetailService {
     }
 
     return {'success': false, 'error': fallback};
+  }
+
+  /// The series window: the server's own All-time start when [start] is
+  /// null, otherwise [start]..[end].
+  static Map<String, String> seriesWindow(DateTime? start, DateTime end) {
+    final f = DateFormat('yyyy-MM-dd');
+    return start == null
+        ? {'period': 'all_time'}
+        : {'start_date': f.format(start), 'end_date': f.format(end)};
+  }
+
+  /// One account's chart from Sure+ `charts.series`
+  /// (`GET /api/v1/accounts/:id/balance_series`): one request instead of
+  /// paging `/balances`. Returns the same `balances` list shape as
+  /// [getBalanceHistory] (oldest first, one row per series point).
+  Future<Map<String, dynamic>> getBalanceSeries({
+    required String accessToken,
+    required String accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final now = DateTime.now();
+    final end = endDate ?? DateTime(now.year, now.month, now.day);
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/accounts/'
+            '${Uri.encodeComponent(accountId)}/balance_series')
+        .replace(queryParameters: seriesWindow(startDate, end));
+    try {
+      final response = await _client
+          .get(url, headers: ApiConfig.getAuthHeaders(accessToken))
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) {
+        return _failureFromStatus(
+            response.statusCode, 'Failed to fetch balances');
+      }
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': true,
+        'balances': seriesBalances(data, idPrefix: accountId),
+      };
+    } catch (e) {
+      _logFailure('getBalanceSeries', e);
+      return {
+        'success': false,
+        'error': 'Unable to load balance history. Please try again later.',
+      };
+    }
+  }
+
+  /// The family's net worth chart from Sure+ `charts.series`
+  /// (`GET /api/v1/net_worth_series`). With [etag], a 304 comes back as
+  /// `{'success': true, 'notModified': true}`. A 200 gives `data` (the
+  /// decoded body) and the new `etag`.
+  Future<Map<String, dynamic>> getNetWorthSeries({
+    required String accessToken,
+    required DateTime? startDate,
+    required DateTime endDate,
+    String? etag,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/net_worth_series')
+        .replace(queryParameters: seriesWindow(startDate, endDate));
+    try {
+      final response = await _client.get(url, headers: {
+        ...ApiConfig.getAuthHeaders(accessToken),
+        if (etag != null) 'If-None-Match': etag,
+      }).timeout(const Duration(seconds: 30));
+      if (response.statusCode == 304) {
+        return {'success': true, 'notModified': true};
+      }
+      if (response.statusCode != 200) {
+        return _failureFromStatus(
+            response.statusCode, 'Failed to fetch net worth');
+      }
+      return {
+        'success': true,
+        'data': jsonDecode(response.body) as Map<String, dynamic>,
+        'etag': response.headers['etag'],
+      };
+    } catch (e) {
+      _logFailure('getNetWorthSeries', e);
+      return {
+        'success': false,
+        'error': 'Unable to load net worth. Please try again later.',
+      };
+    }
+  }
+
+  /// A chart-series body's `values` as balance rows, oldest first.
+  static List<AccountBalance> seriesBalances(
+    Map<String, dynamic> data, {
+    required String idPrefix,
+  }) {
+    final currency = data['currency']?.toString() ?? '';
+    final values = data['values'];
+    if (values is! List) return const [];
+    return [
+      for (final v in values)
+        if (v is Map && DateTime.tryParse(v['date']?.toString() ?? '') != null)
+          AccountBalance(
+            id: '$idPrefix-${v['date']}',
+            date: DateTime.parse(v['date'].toString()),
+            currency: currency,
+            balance: v['value']?.toString() ?? '',
+            balanceCents: JsonParsing.parseInt(v['value_cents']),
+          ),
+    ];
   }
 
   void _logFailure(String operation, Object error) {

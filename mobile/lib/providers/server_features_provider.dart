@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -39,6 +40,7 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const rulesApplyAll = 'rules.apply_all';
   static const accountsPermissions = 'accounts.permissions';
   static const accountsLoanRates = 'accounts.loan_rates';
+  static const chartsSeries = 'charts.series';
 
   static const _prefsPrefix = 'server_features:';
 
@@ -46,6 +48,22 @@ class ServerFeaturesProvider with ChangeNotifier {
   Set<String> _features = const {};
   String? _key;
   String? _loadingKey;
+
+  Future<void>? _cachedReady;
+
+  /// Completes once the saved list for the signed-in server and user has
+  /// been read (the network refresh may still be running). A screen that
+  /// loads at launch awaits it so its first request already knows the
+  /// server's features.
+  Future<void> ready() async {
+    final pending = _cachedReady;
+    if (pending == null) return;
+    try {
+      await pending.timeout(const Duration(seconds: 2));
+    } catch (_) {
+      // A slow refresh or prefs read never holds the screen up for long.
+    }
+  }
 
   /// True when the current server advertises [feature].
   bool has(String feature) => _features.contains(feature);
@@ -69,17 +87,27 @@ class ServerFeaturesProvider with ChangeNotifier {
     final key = '${ApiConfig.baseUrl}|$userId';
     if (key == _key || key == _loadingKey) return;
     _loadingKey = key;
-    _load(key, auth);
+    final ready = Completer<void>();
+    _cachedReady = ready.future;
+    _load(key, auth, ready);
   }
 
-  Future<void> _load(String key, AuthProvider auth) async {
-    final prefs = await SharedPreferences.getInstance();
-    final cached = prefs.getStringList('$_prefsPrefix$key');
-    if (_loadingKey != key) return;
-    _key = key;
-    _features = cached?.toSet() ?? const {};
-    notifyListeners();
-    await refresh(auth);
+  /// [ready] completes once a saved list is applied, or, on a first launch
+  /// with none saved, once the network answers.
+  Future<void> _load(
+      String key, AuthProvider auth, Completer<void> ready) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cached = prefs.getStringList('$_prefsPrefix$key');
+      if (_loadingKey != key) return;
+      _key = key;
+      _features = cached?.toSet() ?? const {};
+      notifyListeners();
+      if (cached != null) ready.complete();
+      await refresh(auth);
+    } finally {
+      if (!ready.isCompleted) ready.complete();
+    }
   }
 
   /// Fetches the list from the server and caches it. Keeps the last known

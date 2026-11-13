@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/server_features_provider.dart';
 
 import '../models/account.dart';
 import '../models/account_balance.dart';
@@ -74,6 +75,10 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
     // widgets (e.g. AppLocalizations.of) here. The failure message is localized
     // at render time in build() via the _detailsUnavailable flag.
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final serverSeries = Provider.of<ServerFeaturesProvider?>(context,
+                listen: false)
+            ?.has(ServerFeaturesProvider.chartsSeries) ??
+        false;
     final accessToken = await authProvider.getValidAccessToken();
     if (_disposed) return;
 
@@ -101,6 +106,7 @@ class _AccountDetailHeaderState extends State<AccountDetailHeader> {
           accessToken: accessToken,
           accountId: widget.account.id,
           startDate: range.startDate(DateTime.now()),
+          useSeries: serverSeries,
         ),
       ]);
 
