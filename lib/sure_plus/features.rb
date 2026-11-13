@@ -6,6 +6,7 @@ module SurePlus
   module Features
     NAMES = %w[
       goals
+      goals.pledges
       holdings.stable_order
       recurring.category
     ].freeze

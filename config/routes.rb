@@ -838,7 +838,11 @@ Rails.application.routes.draw do
       resources :budgets, only: [ :index, :show ]
       resources :budget_categories, only: [ :index, :show ]
       resources :categories, only: [ :index, :show, :create ]
-      resources :goals, only: [ :index, :show, :create, :update, :destroy ]
+      resources :goals, only: [ :index, :show, :create, :update, :destroy ] do
+        resources :pledges, only: [ :create, :destroy ], controller: "goal_pledges" do
+          patch :renew, on: :member
+        end
+      end
       resources :merchants, only: [ :index, :show, :create ]
       resources :rules, only: [ :index, :show ]
       resources :rule_runs, only: [ :index, :show ]

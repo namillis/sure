@@ -92,6 +92,12 @@ goal_schema = {
   }
 }.freeze
 
+pledge_response_schema = {
+  type: :object,
+  required: %w[pledge goal],
+  properties: { pledge: goal_pledge_schema, goal: goal_schema }
+}.freeze
+
 goal_input_schema = {
   type: :object,
   properties: {
@@ -266,6 +272,108 @@ RSpec.describe "API V1 Goals", type: :request do
       response "404", "not found" do
         schema "$ref" => "#/components/schemas/ErrorResponse"
         let(:id) { SecureRandom.uuid }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/goals/{goal_id}/pledges" do
+    parameter name: :goal_id, in: :path, required: true, schema: { type: :string, format: :uuid }
+    let(:goal_id) { goal.id }
+
+    post "Pledge a contribution to a goal" do
+      tags "Goals"
+      description "Records that the user just moved money toward the goal. Sync matches the pledge against the incoming transfer (or a manual balance update) and closes it; unmatched pledges expire after 7 days. Returns the pledge and the refreshed goal."
+      security [ { apiKeyAuth: [] } ]
+      consumes "application/json"
+      produces "application/json"
+      parameter name: :body, in: :body, required: true, schema: {
+        type: :object,
+        properties: {
+          pledge: {
+            type: :object,
+            required: %w[amount account_id],
+            properties: {
+              amount: { type: :number, description: "In goal currency" },
+              account_id: { type: :string, format: :uuid, description: "A linked account the caller can access" }
+            }
+          }
+        }
+      }
+
+      response "201", "pledge created" do
+        schema pledge_response_schema
+        let(:body) { { pledge: { amount: 200, account_id: account.id } } }
+        run_test!
+      end
+
+      response "422", "validation failed" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        let(:body) { { pledge: { amount: 0, account_id: account.id } } }
+        run_test!
+      end
+
+      response "404", "goal not found" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        let(:goal_id) { SecureRandom.uuid }
+        let(:body) { { pledge: { amount: 200, account_id: account.id } } }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/goals/{goal_id}/pledges/{id}" do
+    parameter name: :goal_id, in: :path, required: true, schema: { type: :string, format: :uuid }
+    parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
+    let(:goal_id) { goal.id }
+    let(:pledge) { goal.goal_pledges.create!(account: account, amount: 200, currency: "USD") }
+    let(:id) { pledge.id }
+
+    delete "Cancel a pledge" do
+      tags "Goals"
+      description "Cancels an open pledge (it is kept with status cancelled). Returns the pledge and the refreshed goal."
+      security [ { apiKeyAuth: [] } ]
+      produces "application/json"
+
+      response "200", "pledge cancelled" do
+        schema pledge_response_schema
+        run_test!
+      end
+
+      response "422", "pledge is not open" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        before { pledge.cancel! }
+        run_test!
+      end
+
+      response "404", "pledge not found" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        let(:id) { SecureRandom.uuid }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/goals/{goal_id}/pledges/{id}/renew" do
+    parameter name: :goal_id, in: :path, required: true, schema: { type: :string, format: :uuid }
+    parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
+    let(:goal_id) { goal.id }
+    let(:pledge) { goal.goal_pledges.create!(account: account, amount: 200, currency: "USD") }
+    let(:id) { pledge.id }
+
+    patch "Extend a pledge by 7 days" do
+      tags "Goals"
+      security [ { apiKeyAuth: [] } ]
+      produces "application/json"
+
+      response "200", "pledge extended" do
+        schema pledge_response_schema
+        run_test!
+      end
+
+      response "422", "pledge is not open" do
+        schema "$ref" => "#/components/schemas/ErrorResponse"
+        before { pledge.cancel! }
         run_test!
       end
     end
