@@ -4239,4 +4239,625 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get spgAccountsRequired =>
       'Välj minst ett konto som finansierar målet.';
+
+  @override
+  String get spbEditTotals => 'Ändra totaler';
+
+  @override
+  String get spbTotalBudget => 'Total budget';
+
+  @override
+  String get spbExpectedIncome => 'Förväntad inkomst';
+
+  @override
+  String spbSpentThisMonth(String amount) {
+    return '$amount spenderat den här månaden';
+  }
+
+  @override
+  String spbSpentInPeriod(String amount) {
+    return '$amount spenderat';
+  }
+
+  @override
+  String get spbRollover => 'För över det som blir kvar';
+
+  @override
+  String get spbTransactions => 'Transaktioner';
+
+  @override
+  String get spbSharedReadOnly =>
+      'Den här budgeten är delad med dig med läsbehörighet.';
+
+  @override
+  String get spbInvalidAmount => 'Ange ett belopp på 0 eller mer.';
+
+  @override
+  String get spbSaveFailed => 'Det gick inte att spara budgeten.';
+
+  @override
+  String get spbSaved => 'Budgeten har sparats';
+
+  @override
+  String get sprRulesReorderOnWeb => 'Ordna om regler på webben';
+
+  @override
+  String get sprRulesEmptyBody =>
+      'Regler kategoriserar, taggar och byter namn på transaktioner automatiskt. Tryck på + för att skapa en.';
+
+  @override
+  String get sprRuleNew => 'Ny regel';
+
+  @override
+  String get sprRuleEdit => 'Redigera regel';
+
+  @override
+  String get sprRuleName => 'Namn';
+
+  @override
+  String get sprRuleNameHint => 'Valfritt';
+
+  @override
+  String get sprRuleIfHeader => 'Om en transaktion';
+
+  @override
+  String get sprRuleThenHeader => 'Då';
+
+  @override
+  String get sprRuleAddCondition => 'Lägg till villkor';
+
+  @override
+  String get sprRuleAddGroup => 'Lägg till villkorsgrupp';
+
+  @override
+  String get sprRuleAddAction => 'Lägg till åtgärd';
+
+  @override
+  String get sprRuleNoConditions =>
+      'Inga villkor: regeln gäller alla transaktioner.';
+
+  @override
+  String get sprRuleRemove => 'Ta bort';
+
+  @override
+  String get sprRulePickField => 'Fält';
+
+  @override
+  String get sprRulePickOperator => 'Jämförelse';
+
+  @override
+  String get sprRulePickValue => 'Värde';
+
+  @override
+  String get sprRulePickAction => 'Åtgärd';
+
+  @override
+  String get sprRulePickGroup => 'Matcha';
+
+  @override
+  String get sprRuleChooseValue => 'Välj…';
+
+  @override
+  String get sprRuleEnterValue => 'Ange ett värde';
+
+  @override
+  String sprRuleTagsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count taggar',
+      one: '1 tagg',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sprOpLike => 'innehåller';
+
+  @override
+  String get sprOpNotLike => 'innehåller inte';
+
+  @override
+  String get sprOpStartsWith => 'börjar med';
+
+  @override
+  String get sprOpEndsWith => 'slutar med';
+
+  @override
+  String get sprOpRegex => 'matchar mönstret';
+
+  @override
+  String get sprOpEquals => 'är';
+
+  @override
+  String get sprOpNotEquals => 'är inte';
+
+  @override
+  String get sprOpEmpty => 'är tomt';
+
+  @override
+  String get sprOpNotEmpty => 'är inte tomt';
+
+  @override
+  String get sprOpGreater => 'är mer än';
+
+  @override
+  String get sprOpAtLeast => 'är minst';
+
+  @override
+  String get sprOpLess => 'är mindre än';
+
+  @override
+  String get sprOpAtMost => 'är högst';
+
+  @override
+  String get sprActSetCategory => 'Sätt kategori';
+
+  @override
+  String get sprActAddTags => 'Lägg till taggar';
+
+  @override
+  String get sprActSetMerchant => 'Sätt handlare';
+
+  @override
+  String get sprActRename => 'Byt namn till';
+
+  @override
+  String get sprActActivity => 'Sätt investeringsaktivitet';
+
+  @override
+  String get sprActTransfer => 'Markera som överföring eller betalning till';
+
+  @override
+  String get sprRuleSplitOnWeb => 'Redigera uppdelningen på webben';
+
+  @override
+  String get sprRuleNeedsAction => 'Lägg till minst en åtgärd.';
+
+  @override
+  String get sprRuleMissingValue => 'Fyll i alla värden eller ta bort raden.';
+
+  @override
+  String get sprRuleEmptyGroup =>
+      'Lägg till ett villkor i varje grupp eller ta bort gruppen.';
+
+  @override
+  String get sprRuleAmountInvalid => 'Ange ett tal.';
+
+  @override
+  String get sprRuleSaved => 'Regeln sparades';
+
+  @override
+  String get sprRuleDeleted => 'Regeln togs bort';
+
+  @override
+  String get sprRuleApply => 'Tillämpa på tidigare transaktioner';
+
+  @override
+  String get sprRuleApplying => 'Tillämpar… det kan ta några sekunder.';
+
+  @override
+  String get sprRuleApplyTitle => 'Tillämpa den här regeln?';
+
+  @override
+  String sprRuleApplyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Den ändrar $count transaktioner.',
+      one: 'Den ändrar 1 transaktion.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sprRuleApplyAbove(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aktiva regler körs före den.',
+      one: '1 aktiv regel körs före den.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sprRuleApplyAiCost(String cost) {
+    return 'Använder AI-kategorisering · cirka $cost';
+  }
+
+  @override
+  String get sprRuleApplyAiNoCost =>
+      'Använder AI-kategorisering · okänd kostnad';
+
+  @override
+  String get sprRuleApplyConfirm => 'Tillämpa';
+
+  @override
+  String sprRuleApplied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ändrade $count transaktioner',
+      one: 'Ändrade 1 transaktion',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sprRuleApplyRunning =>
+      'En annan regel körs. Försök igen om en stund.';
+
+  @override
+  String get sprRuleEditLink => 'Redigera';
+
+  @override
+  String get sprRuleDuplicate => 'Duplicera';
+
+  @override
+  String get sprRuleDelete => 'Ta bort';
+
+  @override
+  String get sprRuleDeleteTitle => 'Ta bort den här regeln?';
+
+  @override
+  String get sprRuleDeleteBody =>
+      'Transaktioner som den redan har ändrat förblir som de är.';
+
+  @override
+  String sprRuleCopyName(String name) {
+    return '$name (kopia)';
+  }
+
+  @override
+  String get spaAddAccount => 'Lägg till konto';
+
+  @override
+  String get spaEditAccount => 'Redigera konto';
+
+  @override
+  String get spaConnectBank => 'Anslut en bank';
+
+  @override
+  String get spaConnectBankSub => 'Länka konton på webben';
+
+  @override
+  String get spaOrByHand => 'Eller lägg till ett manuellt';
+
+  @override
+  String get spaTypeDepository => 'Kontanter eller bank';
+
+  @override
+  String get spaTypeInvestment => 'Investering';
+
+  @override
+  String get spaTypeCrypto => 'Krypto';
+
+  @override
+  String get spaTypeProperty => 'Fastighet';
+
+  @override
+  String get spaTypeVehicle => 'Fordon';
+
+  @override
+  String get spaTypeCreditCard => 'Kreditkort';
+
+  @override
+  String get spaTypeLoan => 'Lån';
+
+  @override
+  String get spaTypeOtherAsset => 'Annan tillgång';
+
+  @override
+  String get spaTypeOtherLiability => 'Annan skuld';
+
+  @override
+  String get spaBackToType => '‹ Typ';
+
+  @override
+  String get spaAdd => 'Lägg till';
+
+  @override
+  String get spaCurrentBalance => 'Nuvarande saldo';
+
+  @override
+  String get spaCurrentValue => 'Nuvarande värde';
+
+  @override
+  String get spaAmountOwed => 'Skuldbelopp';
+
+  @override
+  String get spaSyncedFromBank => 'Synkas från din bank';
+
+  @override
+  String get spaName => 'Namn';
+
+  @override
+  String get spaNameHint => 'Obligatoriskt';
+
+  @override
+  String get spaNameRequired => 'Ange ett namn';
+
+  @override
+  String get spaBalanceRequired => 'Ange ett belopp';
+
+  @override
+  String get spaInvalidNumber => 'Ange ett tal';
+
+  @override
+  String get spaInvalidWholeNumber => 'Ange ett heltal';
+
+  @override
+  String get spaCurrency => 'Valuta';
+
+  @override
+  String get spaSubtype => 'Undertyp';
+
+  @override
+  String get spaPropertyType => 'Fastighetstyp';
+
+  @override
+  String get spaPropertyTypeRequired => 'Välj en fastighetstyp';
+
+  @override
+  String get spaNone => 'Ingen';
+
+  @override
+  String get spaOptional => 'Valfritt';
+
+  @override
+  String get spaUnchanged => 'Oförändrat';
+
+  @override
+  String get spaAvailableCredit => 'Tillgänglig kredit';
+
+  @override
+  String get spaApr => 'Årsränta';
+
+  @override
+  String get spaMinimumPayment => 'Minsta betalning';
+
+  @override
+  String get spaAnnualFee => 'Årsavgift';
+
+  @override
+  String get spaExpirationDate => 'Utgångsdatum';
+
+  @override
+  String get spaStatementCloseDay => 'Fakturan stängs';
+
+  @override
+  String get spaDueDay => 'Förfallodag';
+
+  @override
+  String spaDayOfMonth(int day) {
+    return 'Dag $day';
+  }
+
+  @override
+  String get spaInterestRate => 'Ränta';
+
+  @override
+  String get spaRateType => 'Räntetyp';
+
+  @override
+  String get spaRateFixed => 'Fast';
+
+  @override
+  String get spaRateVariable => 'Rörlig';
+
+  @override
+  String get spaRateAdjustable => 'Justerbar';
+
+  @override
+  String get spaTerm => 'Löptid';
+
+  @override
+  String get spaMonthsSuffix => 'månader';
+
+  @override
+  String get spaStartDate => 'Startdatum';
+
+  @override
+  String get spaOriginalAmount => 'Ursprungligt belopp';
+
+  @override
+  String get spaDownPayment => 'Kontantinsats';
+
+  @override
+  String get spaMake => 'Märke';
+
+  @override
+  String get spaModel => 'Modell';
+
+  @override
+  String get spaYear => 'År';
+
+  @override
+  String get spaMileage => 'Mätarställning';
+
+  @override
+  String get spaMileageUnit => 'Enhet för mätarställning';
+
+  @override
+  String get spaMiles => 'Miles';
+
+  @override
+  String get spaKilometers => 'Kilometer';
+
+  @override
+  String get spaPurchasePrice => 'Inköpspris';
+
+  @override
+  String get spaPurchaseDate => 'Inköpsdatum';
+
+  @override
+  String get spaYearBuilt => 'Byggår';
+
+  @override
+  String get spaArea => 'Yta';
+
+  @override
+  String get spaAreaUnit => 'Enhet för yta';
+
+  @override
+  String get spaSquareFeet => 'Kvadratfot';
+
+  @override
+  String get spaSquareMeters => 'Kvadratmeter';
+
+  @override
+  String get spaAddress => 'Adress';
+
+  @override
+  String get spaStreet => 'Gata';
+
+  @override
+  String get spaStreet2 => 'Lägenhet, våning';
+
+  @override
+  String get spaCity => 'Ort';
+
+  @override
+  String get spaRegion => 'Delstat eller region';
+
+  @override
+  String get spaPostalCode => 'Postnummer';
+
+  @override
+  String get spaCountry => 'Land';
+
+  @override
+  String get spaTaxTreatment => 'Skattebehandling';
+
+  @override
+  String get spaTaxable => 'Skattepliktig';
+
+  @override
+  String get spaTaxDeferred => 'Skatteuppskjuten';
+
+  @override
+  String get spaTaxExempt => 'Skattefri';
+
+  @override
+  String get spaMore => 'Mer';
+
+  @override
+  String get spaInstitution => 'Institution';
+
+  @override
+  String get spaNotes => 'Anteckningar';
+
+  @override
+  String get spaOpeningDate => 'Datum för startsaldo';
+
+  @override
+  String get spaExcludeFromReports => 'Exkludera från rapporter';
+
+  @override
+  String get spaSubCash => 'Kontanter';
+
+  @override
+  String get spaSubChecking => 'Lönekonto';
+
+  @override
+  String get spaSubSavings => 'Sparkonto';
+
+  @override
+  String get spaSubHsa => 'Hälsosparkonto (HSA)';
+
+  @override
+  String get spaSubCd => 'Bunden insättning';
+
+  @override
+  String get spaSubMoneyMarket => 'Penningmarknadskonto';
+
+  @override
+  String get spaSubMortgage => 'Bolån';
+
+  @override
+  String get spaSubStudentLoan => 'Studielån';
+
+  @override
+  String get spaSubAutoLoan => 'Billån';
+
+  @override
+  String get spaSubHomeEquity => 'Lån mot bostaden';
+
+  @override
+  String get spaSubLineOfCredit => 'Kreditlina';
+
+  @override
+  String get spaSubBusinessLoan => 'Företagslån';
+
+  @override
+  String get spaSubOtherLoan => 'Annat lån';
+
+  @override
+  String get spaSubWallet => 'Kryptoplånbok';
+
+  @override
+  String get spaSubExchange => 'Kryptobörs';
+
+  @override
+  String get spaSubSingleFamily => 'Villa';
+
+  @override
+  String get spaSubMultiFamily => 'Flerfamiljshus';
+
+  @override
+  String get spaSubCondo => 'Bostadsrätt';
+
+  @override
+  String get spaSubTownhouse => 'Radhus';
+
+  @override
+  String get spaSubInvestmentProperty => 'Investeringsfastighet';
+
+  @override
+  String get spaSubSecondHome => 'Fritidshus';
+
+  @override
+  String get spaSubApartment => 'Lägenhet';
+
+  @override
+  String get spaSubPlot => 'Tomt / mark';
+
+  @override
+  String get spaSubCommercial => 'Kommersiell fastighet';
+
+  @override
+  String get spaSubAgriLand => 'Jordbruksmark';
+
+  @override
+  String get spaCreated => 'Kontot har lagts till';
+
+  @override
+  String get spaSaved => 'Kontot har sparats';
+
+  @override
+  String get spaSaveFailed => 'Det gick inte att spara kontot';
+
+  @override
+  String get spaDeleteAccount => 'Radera konto';
+
+  @override
+  String spaDeleteConfirmTitle(String name) {
+    return 'Radera $name?';
+  }
+
+  @override
+  String get spaDeleteConfirmBody =>
+      'Dess transaktioner och historik tas bort. Det går inte att ångra.';
+
+  @override
+  String get spaDeleted => 'Kontot har raderats';
+
+  @override
+  String get spaReadOnlyAccess =>
+      'Den här inloggningen kan bara visa data. Logga in igen med full åtkomst för att ändra konton.';
+
+  @override
+  String get spaInvestEmptyBody =>
+      'Lägg till ett investerings- eller kryptokonto, eller anslut en mäklare.';
 }

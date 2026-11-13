@@ -4207,4 +4207,623 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get spgAccountsRequired =>
       'Pick at least one account to fund this goal.';
+
+  @override
+  String get spbEditTotals => 'Edit totals';
+
+  @override
+  String get spbTotalBudget => 'Total budget';
+
+  @override
+  String get spbExpectedIncome => 'Expected income';
+
+  @override
+  String spbSpentThisMonth(String amount) {
+    return 'Spent $amount this month';
+  }
+
+  @override
+  String spbSpentInPeriod(String amount) {
+    return 'Spent $amount';
+  }
+
+  @override
+  String get spbRollover => 'Roll over unused amount';
+
+  @override
+  String get spbTransactions => 'Transactions';
+
+  @override
+  String get spbSharedReadOnly => 'This budget is shared with you read-only.';
+
+  @override
+  String get spbInvalidAmount => 'Enter an amount of 0 or more.';
+
+  @override
+  String get spbSaveFailed => 'Couldn\'t save the budget.';
+
+  @override
+  String get spbSaved => 'Budget saved';
+
+  @override
+  String get sprRulesReorderOnWeb => 'Reorder rules on the web';
+
+  @override
+  String get sprRulesEmptyBody =>
+      'Rules categorize, tag and rename transactions automatically. Tap + to create one.';
+
+  @override
+  String get sprRuleNew => 'New rule';
+
+  @override
+  String get sprRuleEdit => 'Edit rule';
+
+  @override
+  String get sprRuleName => 'Name';
+
+  @override
+  String get sprRuleNameHint => 'Optional';
+
+  @override
+  String get sprRuleIfHeader => 'If a transaction';
+
+  @override
+  String get sprRuleThenHeader => 'Then';
+
+  @override
+  String get sprRuleAddCondition => 'Add condition';
+
+  @override
+  String get sprRuleAddGroup => 'Add condition group';
+
+  @override
+  String get sprRuleAddAction => 'Add action';
+
+  @override
+  String get sprRuleNoConditions =>
+      'No conditions: the rule applies to every transaction.';
+
+  @override
+  String get sprRuleRemove => 'Remove';
+
+  @override
+  String get sprRulePickField => 'Field';
+
+  @override
+  String get sprRulePickOperator => 'Comparison';
+
+  @override
+  String get sprRulePickValue => 'Value';
+
+  @override
+  String get sprRulePickAction => 'Action';
+
+  @override
+  String get sprRulePickGroup => 'Match';
+
+  @override
+  String get sprRuleChooseValue => 'Choose…';
+
+  @override
+  String get sprRuleEnterValue => 'Enter a value';
+
+  @override
+  String sprRuleTagsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tags',
+      one: '1 tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sprOpLike => 'contains';
+
+  @override
+  String get sprOpNotLike => 'doesn\'t contain';
+
+  @override
+  String get sprOpStartsWith => 'starts with';
+
+  @override
+  String get sprOpEndsWith => 'ends with';
+
+  @override
+  String get sprOpRegex => 'matches the pattern';
+
+  @override
+  String get sprOpEquals => 'is';
+
+  @override
+  String get sprOpNotEquals => 'is not';
+
+  @override
+  String get sprOpEmpty => 'is empty';
+
+  @override
+  String get sprOpNotEmpty => 'is not empty';
+
+  @override
+  String get sprOpGreater => 'is more than';
+
+  @override
+  String get sprOpAtLeast => 'is at least';
+
+  @override
+  String get sprOpLess => 'is less than';
+
+  @override
+  String get sprOpAtMost => 'is at most';
+
+  @override
+  String get sprActSetCategory => 'Set category';
+
+  @override
+  String get sprActAddTags => 'Add tags';
+
+  @override
+  String get sprActSetMerchant => 'Set merchant';
+
+  @override
+  String get sprActRename => 'Rename to';
+
+  @override
+  String get sprActActivity => 'Set investment activity';
+
+  @override
+  String get sprActTransfer => 'Mark as transfer or payment to';
+
+  @override
+  String get sprRuleSplitOnWeb => 'Edit the split on the web';
+
+  @override
+  String get sprRuleNeedsAction => 'Add at least one action.';
+
+  @override
+  String get sprRuleMissingValue => 'Fill in every value, or remove the row.';
+
+  @override
+  String get sprRuleEmptyGroup =>
+      'Add a condition to each group, or remove the group.';
+
+  @override
+  String get sprRuleAmountInvalid => 'Enter a number.';
+
+  @override
+  String get sprRuleSaved => 'Rule saved';
+
+  @override
+  String get sprRuleDeleted => 'Rule deleted';
+
+  @override
+  String get sprRuleApply => 'Apply to past transactions';
+
+  @override
+  String get sprRuleApplying => 'Applying… this can take a few seconds.';
+
+  @override
+  String get sprRuleApplyTitle => 'Apply this rule?';
+
+  @override
+  String sprRuleApplyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'It will change $count transactions.',
+      one: 'It will change 1 transaction.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sprRuleApplyAbove(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active rules run before it.',
+      one: '1 active rule runs before it.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sprRuleApplyAiCost(String cost) {
+    return 'Uses AI categorization · about $cost';
+  }
+
+  @override
+  String get sprRuleApplyAiNoCost => 'Uses AI categorization · cost unknown';
+
+  @override
+  String get sprRuleApplyConfirm => 'Apply';
+
+  @override
+  String sprRuleApplied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Changed $count transactions',
+      one: 'Changed 1 transaction',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sprRuleApplyRunning =>
+      'Another rule is running. Try again in a moment.';
+
+  @override
+  String get sprRuleEditLink => 'Edit';
+
+  @override
+  String get sprRuleDuplicate => 'Duplicate';
+
+  @override
+  String get sprRuleDelete => 'Delete';
+
+  @override
+  String get sprRuleDeleteTitle => 'Delete this rule?';
+
+  @override
+  String get sprRuleDeleteBody =>
+      'Transactions it already changed stay as they are.';
+
+  @override
+  String sprRuleCopyName(String name) {
+    return '$name (copy)';
+  }
+
+  @override
+  String get spaAddAccount => 'Add account';
+
+  @override
+  String get spaEditAccount => 'Edit account';
+
+  @override
+  String get spaConnectBank => 'Connect a bank';
+
+  @override
+  String get spaConnectBankSub => 'Link accounts on the web';
+
+  @override
+  String get spaOrByHand => 'Or add one by hand';
+
+  @override
+  String get spaTypeDepository => 'Cash or bank';
+
+  @override
+  String get spaTypeInvestment => 'Investment';
+
+  @override
+  String get spaTypeCrypto => 'Crypto';
+
+  @override
+  String get spaTypeProperty => 'Property';
+
+  @override
+  String get spaTypeVehicle => 'Vehicle';
+
+  @override
+  String get spaTypeCreditCard => 'Credit card';
+
+  @override
+  String get spaTypeLoan => 'Loan';
+
+  @override
+  String get spaTypeOtherAsset => 'Other asset';
+
+  @override
+  String get spaTypeOtherLiability => 'Other liability';
+
+  @override
+  String get spaBackToType => '‹ Type';
+
+  @override
+  String get spaAdd => 'Add';
+
+  @override
+  String get spaCurrentBalance => 'Current balance';
+
+  @override
+  String get spaCurrentValue => 'Current value';
+
+  @override
+  String get spaAmountOwed => 'Amount owed';
+
+  @override
+  String get spaSyncedFromBank => 'Synced from your bank';
+
+  @override
+  String get spaName => 'Name';
+
+  @override
+  String get spaNameHint => 'Required';
+
+  @override
+  String get spaNameRequired => 'Enter a name';
+
+  @override
+  String get spaBalanceRequired => 'Enter an amount';
+
+  @override
+  String get spaInvalidNumber => 'Enter a number';
+
+  @override
+  String get spaInvalidWholeNumber => 'Enter a whole number';
+
+  @override
+  String get spaCurrency => 'Currency';
+
+  @override
+  String get spaSubtype => 'Subtype';
+
+  @override
+  String get spaPropertyType => 'Property type';
+
+  @override
+  String get spaPropertyTypeRequired => 'Choose a property type';
+
+  @override
+  String get spaNone => 'None';
+
+  @override
+  String get spaOptional => 'Optional';
+
+  @override
+  String get spaUnchanged => 'Unchanged';
+
+  @override
+  String get spaAvailableCredit => 'Available credit';
+
+  @override
+  String get spaApr => 'APR';
+
+  @override
+  String get spaMinimumPayment => 'Minimum payment';
+
+  @override
+  String get spaAnnualFee => 'Annual fee';
+
+  @override
+  String get spaExpirationDate => 'Expiration date';
+
+  @override
+  String get spaStatementCloseDay => 'Statement closes';
+
+  @override
+  String get spaDueDay => 'Payment due';
+
+  @override
+  String spaDayOfMonth(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get spaInterestRate => 'Interest rate';
+
+  @override
+  String get spaRateType => 'Rate type';
+
+  @override
+  String get spaRateFixed => 'Fixed';
+
+  @override
+  String get spaRateVariable => 'Variable';
+
+  @override
+  String get spaRateAdjustable => 'Adjustable';
+
+  @override
+  String get spaTerm => 'Term';
+
+  @override
+  String get spaMonthsSuffix => 'months';
+
+  @override
+  String get spaStartDate => 'Start date';
+
+  @override
+  String get spaOriginalAmount => 'Original amount';
+
+  @override
+  String get spaDownPayment => 'Down payment';
+
+  @override
+  String get spaMake => 'Make';
+
+  @override
+  String get spaModel => 'Model';
+
+  @override
+  String get spaYear => 'Year';
+
+  @override
+  String get spaMileage => 'Mileage';
+
+  @override
+  String get spaMileageUnit => 'Mileage unit';
+
+  @override
+  String get spaMiles => 'Miles';
+
+  @override
+  String get spaKilometers => 'Kilometers';
+
+  @override
+  String get spaPurchasePrice => 'Purchase price';
+
+  @override
+  String get spaPurchaseDate => 'Purchase date';
+
+  @override
+  String get spaYearBuilt => 'Year built';
+
+  @override
+  String get spaArea => 'Area';
+
+  @override
+  String get spaAreaUnit => 'Area unit';
+
+  @override
+  String get spaSquareFeet => 'Square feet';
+
+  @override
+  String get spaSquareMeters => 'Square meters';
+
+  @override
+  String get spaAddress => 'Address';
+
+  @override
+  String get spaStreet => 'Street';
+
+  @override
+  String get spaStreet2 => 'Apt, suite';
+
+  @override
+  String get spaCity => 'City';
+
+  @override
+  String get spaRegion => 'State or region';
+
+  @override
+  String get spaPostalCode => 'Postal code';
+
+  @override
+  String get spaCountry => 'Country';
+
+  @override
+  String get spaTaxTreatment => 'Tax treatment';
+
+  @override
+  String get spaTaxable => 'Taxable';
+
+  @override
+  String get spaTaxDeferred => 'Tax-deferred';
+
+  @override
+  String get spaTaxExempt => 'Tax-exempt';
+
+  @override
+  String get spaMore => 'More';
+
+  @override
+  String get spaInstitution => 'Institution';
+
+  @override
+  String get spaNotes => 'Notes';
+
+  @override
+  String get spaOpeningDate => 'Opening balance date';
+
+  @override
+  String get spaExcludeFromReports => 'Exclude from reports';
+
+  @override
+  String get spaSubCash => 'Cash';
+
+  @override
+  String get spaSubChecking => 'Checking';
+
+  @override
+  String get spaSubSavings => 'Savings';
+
+  @override
+  String get spaSubHsa => 'Health Savings Account';
+
+  @override
+  String get spaSubCd => 'Certificate of Deposit';
+
+  @override
+  String get spaSubMoneyMarket => 'Money Market';
+
+  @override
+  String get spaSubMortgage => 'Mortgage';
+
+  @override
+  String get spaSubStudentLoan => 'Student Loan';
+
+  @override
+  String get spaSubAutoLoan => 'Auto Loan';
+
+  @override
+  String get spaSubHomeEquity => 'Home Equity Loan';
+
+  @override
+  String get spaSubLineOfCredit => 'Line of Credit';
+
+  @override
+  String get spaSubBusinessLoan => 'Business Loan';
+
+  @override
+  String get spaSubOtherLoan => 'Other Loan';
+
+  @override
+  String get spaSubWallet => 'Crypto Wallet';
+
+  @override
+  String get spaSubExchange => 'Crypto Exchange';
+
+  @override
+  String get spaSubSingleFamily => 'Single Family Home';
+
+  @override
+  String get spaSubMultiFamily => 'Multi-Family Home';
+
+  @override
+  String get spaSubCondo => 'Condominium';
+
+  @override
+  String get spaSubTownhouse => 'Townhouse';
+
+  @override
+  String get spaSubInvestmentProperty => 'Investment Property';
+
+  @override
+  String get spaSubSecondHome => 'Second Home';
+
+  @override
+  String get spaSubApartment => 'Apartment';
+
+  @override
+  String get spaSubPlot => 'Plot / Land';
+
+  @override
+  String get spaSubCommercial => 'Commercial Property';
+
+  @override
+  String get spaSubAgriLand => 'Agricultural Land';
+
+  @override
+  String get spaCreated => 'Account added';
+
+  @override
+  String get spaSaved => 'Account saved';
+
+  @override
+  String get spaSaveFailed => 'Couldn\'t save the account';
+
+  @override
+  String get spaDeleteAccount => 'Delete account';
+
+  @override
+  String spaDeleteConfirmTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get spaDeleteConfirmBody =>
+      'Its transactions and history are removed. This can\'t be undone.';
+
+  @override
+  String get spaDeleted => 'Account deleted';
+
+  @override
+  String get spaReadOnlyAccess =>
+      'This sign-in can only view data. Sign in again with full access to change accounts.';
+
+  @override
+  String get spaInvestEmptyBody =>
+      'Add an investment or crypto account, or connect a brokerage.';
 }

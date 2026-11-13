@@ -7153,6 +7153,1140 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick at least one account to fund this goal.'**
   String get spgAccountsRequired;
+
+  /// Link under the budget hero that opens the sheet for the month's total budget and expected income.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit totals'**
+  String get spbEditTotals;
+
+  /// Row label in the Edit totals sheet: the month's total spending budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Total budget'**
+  String get spbTotalBudget;
+
+  /// Row label in the Edit totals sheet: the income expected this month.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected income'**
+  String get spbExpectedIncome;
+
+  /// Line under the amount in the budget category sheet for the current month.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {amount} this month'**
+  String spbSpentThisMonth(String amount);
+
+  /// Line under the amount in the budget category sheet for a past or future month.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {amount}'**
+  String spbSpentInPeriod(String amount);
+
+  /// Switch row in the budget category sheet: carry what is left to next month.
+  ///
+  /// In en, this message translates to:
+  /// **'Roll over unused amount'**
+  String get spbRollover;
+
+  /// Row in the budget category sheet that opens the category's transactions for the month.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get spbTransactions;
+
+  /// Shown when the server refuses a budget change because the budget is shared with the user read-only (403 forbidden).
+  ///
+  /// In en, this message translates to:
+  /// **'This budget is shared with you read-only.'**
+  String get spbSharedReadOnly;
+
+  /// Validation error for a budget amount that is not a number or is negative.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount of 0 or more.'**
+  String get spbInvalidAmount;
+
+  /// Generic error when saving a budget or budget category failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the budget.'**
+  String get spbSaveFailed;
+
+  /// Snackbar after a budget or budget category was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget saved'**
+  String get spbSaved;
+
+  /// Rules list row that opens the web rules page, on servers where rules can be created in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder rules on the web'**
+  String get sprRulesReorderOnWeb;
+
+  /// Rules list empty state body when rules can be created in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules categorize, tag and rename transactions automatically. Tap + to create one.'**
+  String get sprRulesEmptyBody;
+
+  /// Rule editor sheet title for a new rule; also the + button label.
+  ///
+  /// In en, this message translates to:
+  /// **'New rule'**
+  String get sprRuleNew;
+
+  /// Rule editor sheet title for an existing rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit rule'**
+  String get sprRuleEdit;
+
+  /// Rule editor row label for the rule name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sprRuleName;
+
+  /// Placeholder of the optional rule name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get sprRuleNameHint;
+
+  /// Rule editor section header above the conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'If a transaction'**
+  String get sprRuleIfHeader;
+
+  /// Rule editor section header above the actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Then'**
+  String get sprRuleThenHeader;
+
+  /// Rule editor row that adds a condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Add condition'**
+  String get sprRuleAddCondition;
+
+  /// Rule editor row that adds a group of conditions matched with all/any.
+  ///
+  /// In en, this message translates to:
+  /// **'Add condition group'**
+  String get sprRuleAddGroup;
+
+  /// Rule editor row that adds an action.
+  ///
+  /// In en, this message translates to:
+  /// **'Add action'**
+  String get sprRuleAddAction;
+
+  /// Rule editor note when the rule has no conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'No conditions: the rule applies to every transaction.'**
+  String get sprRuleNoConditions;
+
+  /// Accessibility label of the remove button on a condition, group or action.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get sprRuleRemove;
+
+  /// Title of the sheet that picks what a condition looks at (name, amount, category...).
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get sprRulePickField;
+
+  /// Title of the sheet that picks a condition's operator (contains, is, more than...).
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison'**
+  String get sprRulePickOperator;
+
+  /// Title of the sheet that edits a condition or action value.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get sprRulePickValue;
+
+  /// Title of the sheet that picks an action type.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get sprRulePickAction;
+
+  /// Title of the sheet that picks all/any for a condition group.
+  ///
+  /// In en, this message translates to:
+  /// **'Match'**
+  String get sprRulePickGroup;
+
+  /// Placeholder pill for a condition or action value not set yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose…'**
+  String get sprRuleChooseValue;
+
+  /// Placeholder of the text value field.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value'**
+  String get sprRuleEnterValue;
+
+  /// Value pill of an add-tags action with several tags.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 tag} other{{count} tags}}'**
+  String sprRuleTagsCount(int count);
+
+  /// Condition operator pill: like (contains).
+  ///
+  /// In en, this message translates to:
+  /// **'contains'**
+  String get sprOpLike;
+
+  /// Condition operator pill: not_like.
+  ///
+  /// In en, this message translates to:
+  /// **'doesn\'t contain'**
+  String get sprOpNotLike;
+
+  /// Condition operator pill: starts_with.
+  ///
+  /// In en, this message translates to:
+  /// **'starts with'**
+  String get sprOpStartsWith;
+
+  /// Condition operator pill: ends_with.
+  ///
+  /// In en, this message translates to:
+  /// **'ends with'**
+  String get sprOpEndsWith;
+
+  /// Condition operator pill: matches_regex.
+  ///
+  /// In en, this message translates to:
+  /// **'matches the pattern'**
+  String get sprOpRegex;
+
+  /// Condition operator pill: = (equal to).
+  ///
+  /// In en, this message translates to:
+  /// **'is'**
+  String get sprOpEquals;
+
+  /// Condition operator pill: != (not equal to).
+  ///
+  /// In en, this message translates to:
+  /// **'is not'**
+  String get sprOpNotEquals;
+
+  /// Condition operator pill: is_null.
+  ///
+  /// In en, this message translates to:
+  /// **'is empty'**
+  String get sprOpEmpty;
+
+  /// Condition operator pill: is_not_null.
+  ///
+  /// In en, this message translates to:
+  /// **'is not empty'**
+  String get sprOpNotEmpty;
+
+  /// Condition operator pill: >.
+  ///
+  /// In en, this message translates to:
+  /// **'is more than'**
+  String get sprOpGreater;
+
+  /// Condition operator pill: >=.
+  ///
+  /// In en, this message translates to:
+  /// **'is at least'**
+  String get sprOpAtLeast;
+
+  /// Condition operator pill: <.
+  ///
+  /// In en, this message translates to:
+  /// **'is less than'**
+  String get sprOpLess;
+
+  /// Condition operator pill: <=.
+  ///
+  /// In en, this message translates to:
+  /// **'is at most'**
+  String get sprOpAtMost;
+
+  /// Action pill: set_transaction_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Set category'**
+  String get sprActSetCategory;
+
+  /// Action pill: set_transaction_tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tags'**
+  String get sprActAddTags;
+
+  /// Action pill: set_transaction_merchant.
+  ///
+  /// In en, this message translates to:
+  /// **'Set merchant'**
+  String get sprActSetMerchant;
+
+  /// Action pill: set_transaction_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename to'**
+  String get sprActRename;
+
+  /// Action pill: set_investment_activity_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Set investment activity'**
+  String get sprActActivity;
+
+  /// Action pill: set_as_transfer_or_payment (value is an account).
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as transfer or payment to'**
+  String get sprActTransfer;
+
+  /// Note on a split action in the rule editor; the split is kept as is.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the split on the web'**
+  String get sprRuleSplitOnWeb;
+
+  /// Rule editor error when saving without actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one action.'**
+  String get sprRuleNeedsAction;
+
+  /// Rule editor error when a condition or action has no value.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in every value, or remove the row.'**
+  String get sprRuleMissingValue;
+
+  /// Rule editor error when a condition group is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a condition to each group, or remove the group.'**
+  String get sprRuleEmptyGroup;
+
+  /// Error under the amount value field.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number.'**
+  String get sprRuleAmountInvalid;
+
+  /// Snackbar after saving a rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule saved'**
+  String get sprRuleSaved;
+
+  /// Snackbar after deleting a rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule deleted'**
+  String get sprRuleDeleted;
+
+  /// Primary button on the rule detail that runs the rule on existing transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to past transactions'**
+  String get sprRuleApply;
+
+  /// Shown while the server applies the rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying… this can take a few seconds.'**
+  String get sprRuleApplying;
+
+  /// Title of the apply confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply this rule?'**
+  String get sprRuleApplyTitle;
+
+  /// Apply dialog: how many transactions the rule matches.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{It will change 1 transaction.} other{It will change {count} transactions.}}'**
+  String sprRuleApplyCount(int count);
+
+  /// Apply dialog: active rules above this one run first.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 active rule runs before it.} other{{count} active rules run before it.}}'**
+  String sprRuleApplyAbove(int count);
+
+  /// Apply dialog line for an AI categorize action with the server's cost estimate (USD).
+  ///
+  /// In en, this message translates to:
+  /// **'Uses AI categorization · about {cost}'**
+  String sprRuleApplyAiCost(String cost);
+
+  /// Apply dialog line for an AI categorize action when the server has no cost estimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses AI categorization · cost unknown'**
+  String get sprRuleApplyAiNoCost;
+
+  /// Confirm button of the apply dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get sprRuleApplyConfirm;
+
+  /// Result after applying a rule.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Changed 1 transaction} other{Changed {count} transactions}}'**
+  String sprRuleApplied(int count);
+
+  /// Apply failed with 409 rules_running.
+  ///
+  /// In en, this message translates to:
+  /// **'Another rule is running. Try again in a moment.'**
+  String get sprRuleApplyRunning;
+
+  /// Rule detail footer link that opens the editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get sprRuleEditLink;
+
+  /// Rule detail footer link that opens the editor prefilled as a new rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get sprRuleDuplicate;
+
+  /// Rule detail footer link that deletes the rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get sprRuleDelete;
+
+  /// Delete rule confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this rule?'**
+  String get sprRuleDeleteTitle;
+
+  /// Delete rule confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions it already changed stay as they are.'**
+  String get sprRuleDeleteBody;
+
+  /// Name prefilled when duplicating a named rule.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (copy)'**
+  String sprRuleCopyName(String name);
+
+  /// Title of the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get spaAddAccount;
+
+  /// Title of the edit account sheet and the account menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit account'**
+  String get spaEditAccount;
+
+  /// Row on the add account sheet that opens bank connections on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a bank'**
+  String get spaConnectBank;
+
+  /// Subtitle of the Connect a bank row.
+  ///
+  /// In en, this message translates to:
+  /// **'Link accounts on the web'**
+  String get spaConnectBankSub;
+
+  /// Section header above the manual account types.
+  ///
+  /// In en, this message translates to:
+  /// **'Or add one by hand'**
+  String get spaOrByHand;
+
+  /// Account type (Depository) on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash or bank'**
+  String get spaTypeDepository;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment'**
+  String get spaTypeInvestment;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get spaTypeCrypto;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Property'**
+  String get spaTypeProperty;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get spaTypeVehicle;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card'**
+  String get spaTypeCreditCard;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan'**
+  String get spaTypeLoan;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Other asset'**
+  String get spaTypeOtherAsset;
+
+  /// Account type on the add account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Other liability'**
+  String get spaTypeOtherLiability;
+
+  /// Back link from the account details step to the type step.
+  ///
+  /// In en, this message translates to:
+  /// **'‹ Type'**
+  String get spaBackToType;
+
+  /// Action that creates the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get spaAdd;
+
+  /// Label over the balance field for bank accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance'**
+  String get spaCurrentBalance;
+
+  /// Label over the balance field for assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Current value'**
+  String get spaCurrentValue;
+
+  /// Label over the balance field for liabilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount owed'**
+  String get spaAmountOwed;
+
+  /// Shown under a linked account's read-only balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced from your bank'**
+  String get spaSyncedFromBank;
+
+  /// Account name row.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get spaName;
+
+  /// Placeholder of the account name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get spaNameHint;
+
+  /// Validation error when the account name is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get spaNameRequired;
+
+  /// Validation error when the balance is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount'**
+  String get spaBalanceRequired;
+
+  /// Validation error for a field that is not a number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number'**
+  String get spaInvalidNumber;
+
+  /// Validation error for a field that needs a whole number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number'**
+  String get spaInvalidWholeNumber;
+
+  /// Currency row of the account form.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get spaCurrency;
+
+  /// Subtype row of the account form.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtype'**
+  String get spaSubtype;
+
+  /// Subtype row label for property accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Property type'**
+  String get spaPropertyType;
+
+  /// Error when a property is added without a property type.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a property type'**
+  String get spaPropertyTypeRequired;
+
+  /// Picker option for no value.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get spaNone;
+
+  /// Placeholder of an optional field.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get spaOptional;
+
+  /// Placeholder of a field in the edit form that keeps its current value when left empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Unchanged'**
+  String get spaUnchanged;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Available credit'**
+  String get spaAvailableCredit;
+
+  /// Credit card annual percentage rate field.
+  ///
+  /// In en, this message translates to:
+  /// **'APR'**
+  String get spaApr;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum payment'**
+  String get spaMinimumPayment;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual fee'**
+  String get spaAnnualFee;
+
+  /// Credit card field.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiration date'**
+  String get spaExpirationDate;
+
+  /// Credit card statement close day field.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement closes'**
+  String get spaStatementCloseDay;
+
+  /// Credit card payment due day field.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment due'**
+  String get spaDueDay;
+
+  /// A day of the month in the statement day pickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String spaDayOfMonth(int day);
+
+  /// Loan field.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest rate'**
+  String get spaInterestRate;
+
+  /// Loan field.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate type'**
+  String get spaRateType;
+
+  /// Loan rate type.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get spaRateFixed;
+
+  /// Loan rate type.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable'**
+  String get spaRateVariable;
+
+  /// Loan rate type.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustable'**
+  String get spaRateAdjustable;
+
+  /// Loan term field.
+  ///
+  /// In en, this message translates to:
+  /// **'Term'**
+  String get spaTerm;
+
+  /// Unit after the loan term.
+  ///
+  /// In en, this message translates to:
+  /// **'months'**
+  String get spaMonthsSuffix;
+
+  /// Loan origination date field.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get spaStartDate;
+
+  /// Loan initial balance field.
+  ///
+  /// In en, this message translates to:
+  /// **'Original amount'**
+  String get spaOriginalAmount;
+
+  /// Loan field.
+  ///
+  /// In en, this message translates to:
+  /// **'Down payment'**
+  String get spaDownPayment;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Make'**
+  String get spaMake;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get spaModel;
+
+  /// Vehicle model year field.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get spaYear;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Mileage'**
+  String get spaMileage;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Mileage unit'**
+  String get spaMileageUnit;
+
+  /// Mileage unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Miles'**
+  String get spaMiles;
+
+  /// Mileage unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilometers'**
+  String get spaKilometers;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase price'**
+  String get spaPurchasePrice;
+
+  /// Vehicle field.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date'**
+  String get spaPurchaseDate;
+
+  /// Property field.
+  ///
+  /// In en, this message translates to:
+  /// **'Year built'**
+  String get spaYearBuilt;
+
+  /// Property field.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get spaArea;
+
+  /// Property field.
+  ///
+  /// In en, this message translates to:
+  /// **'Area unit'**
+  String get spaAreaUnit;
+
+  /// Area unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Square feet'**
+  String get spaSquareFeet;
+
+  /// Area unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Square meters'**
+  String get spaSquareMeters;
+
+  /// Section header for the property address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get spaAddress;
+
+  /// Address line 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Street'**
+  String get spaStreet;
+
+  /// Address line 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Apt, suite'**
+  String get spaStreet2;
+
+  /// Address locality.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get spaCity;
+
+  /// Address region.
+  ///
+  /// In en, this message translates to:
+  /// **'State or region'**
+  String get spaRegion;
+
+  /// Address postal code.
+  ///
+  /// In en, this message translates to:
+  /// **'Postal code'**
+  String get spaPostalCode;
+
+  /// Address country.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get spaCountry;
+
+  /// Crypto field.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax treatment'**
+  String get spaTaxTreatment;
+
+  /// Tax treatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxable'**
+  String get spaTaxable;
+
+  /// Tax treatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax-deferred'**
+  String get spaTaxDeferred;
+
+  /// Tax treatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax-exempt'**
+  String get spaTaxExempt;
+
+  /// Section header for rarely used account fields.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get spaMore;
+
+  /// Institution name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Institution'**
+  String get spaInstitution;
+
+  /// Notes field.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get spaNotes;
+
+  /// Opening balance date field.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance date'**
+  String get spaOpeningDate;
+
+  /// Switch row.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude from reports'**
+  String get spaExcludeFromReports;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get spaSubCash;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get spaSubChecking;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get spaSubSavings;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Savings Account'**
+  String get spaSubHsa;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate of Deposit'**
+  String get spaSubCd;
+
+  /// Depository subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Money Market'**
+  String get spaSubMoneyMarket;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Mortgage'**
+  String get spaSubMortgage;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Student Loan'**
+  String get spaSubStudentLoan;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Loan'**
+  String get spaSubAutoLoan;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Home Equity Loan'**
+  String get spaSubHomeEquity;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Line of Credit'**
+  String get spaSubLineOfCredit;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Loan'**
+  String get spaSubBusinessLoan;
+
+  /// Loan subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Loan'**
+  String get spaSubOtherLoan;
+
+  /// Crypto subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto Wallet'**
+  String get spaSubWallet;
+
+  /// Crypto subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto Exchange'**
+  String get spaSubExchange;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Single Family Home'**
+  String get spaSubSingleFamily;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Family Home'**
+  String get spaSubMultiFamily;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Condominium'**
+  String get spaSubCondo;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Townhouse'**
+  String get spaSubTownhouse;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment Property'**
+  String get spaSubInvestmentProperty;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Second Home'**
+  String get spaSubSecondHome;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Apartment'**
+  String get spaSubApartment;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Plot / Land'**
+  String get spaSubPlot;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Commercial Property'**
+  String get spaSubCommercial;
+
+  /// Property subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'Agricultural Land'**
+  String get spaSubAgriLand;
+
+  /// Snackbar after creating an account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account added'**
+  String get spaCreated;
+
+  /// Snackbar after editing an account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account saved'**
+  String get spaSaved;
+
+  /// Fallback error when saving an account fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the account'**
+  String get spaSaveFailed;
+
+  /// Destructive button on the edit account sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get spaDeleteAccount;
+
+  /// Delete account confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String spaDeleteConfirmTitle(String name);
+
+  /// Delete account confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Its transactions and history are removed. This can\'t be undone.'**
+  String get spaDeleteConfirmBody;
+
+  /// Snackbar after deleting an account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get spaDeleted;
+
+  /// Error when an account write fails because the sign-in is read-only (403 insufficient_scope).
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in can only view data. Sign in again with full access to change accounts.'**
+  String get spaReadOnlyAccess;
+
+  /// Invest tab empty state body when accounts can be added in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an investment or crypto account, or connect a brokerage.'**
+  String get spaInvestEmptyBody;
 }
 
 class _AppLocalizationsDelegate

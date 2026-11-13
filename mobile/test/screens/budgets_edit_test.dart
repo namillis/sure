@@ -164,7 +164,8 @@ void main() {
     testWidgets('shows the limit, spending, rollover and transactions',
         (tester) async {
       await pumpScreen(tester, feature: true);
-      expect(find.text('Edit on web'), findsNothing);
+      // Allocation moves stay on the web, so the link stays.
+      expect(find.text('Edit on web'), findsOneWidget);
 
       await openCategory(tester, 'Food');
 

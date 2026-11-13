@@ -490,11 +490,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     return [
       SureSectionHeader(
         label: l.budgetsCategoriesTitle,
-        // Native editing replaces the web link; allocation moves and new
-        // months stay on the web (the empty state still links there).
-        actionLabel: canEdit ? null : l.ds2pEditOnWeb,
-        actionIcon: canEdit ? null : SureIcons.arrowUpRight,
-        onAction: canEdit ? null : () => _openWeb(budget.startDate),
+        // Kept with native editing too: allocation moves only exist on the
+        // web.
+        actionLabel: l.ds2pEditOnWeb,
+        actionIcon: SureIcons.arrowUpRight,
+        onAction: () => _openWeb(budget.startDate),
       ),
       if (overCount > 0)
         Padding(
