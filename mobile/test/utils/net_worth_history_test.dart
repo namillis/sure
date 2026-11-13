@@ -41,6 +41,24 @@ void main() {
         end: to ?? end,
       );
 
+  test('saved JSON reads back the same points and other currencies', () {
+    final h = build([
+      _account('a', [_b('2026-10-01', 100), _b('2026-10-03', 300)]),
+      _account('uk', const [], currency: 'GBP', current: 5000),
+    ], from: DateTime(2026, 10, 30), to: DateTime(2026, 11, 2));
+    final back = NetWorthHistory.fromJson(h.toJson())!;
+    expect(back.points, h.points, reason: 'across a month end');
+    expect(back.otherCurrencies.single.currency, 'GBP');
+    expect(back.otherCurrencies.single.cents, 5000);
+    expect(back.otherCurrencies.single.accountCount, 1);
+
+    final empty = NetWorthHistory.fromJson(
+        const NetWorthHistory(points: [], otherCurrencies: []).toJson())!;
+    expect(empty.points, isEmpty);
+    expect(NetWorthHistory.fromJson({'v': 2}), isNull);
+    expect(NetWorthHistory.fromJson('junk'), isNull);
+  });
+
   test('one point per day, carrying balances forward over gaps', () {
     final h = build([
       _account('a', [

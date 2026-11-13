@@ -17,6 +17,7 @@ import 'package:sure_mobile/screens/reports_screen.dart';
 import 'package:sure_mobile/services/account_detail_service.dart';
 import 'package:sure_mobile/services/cash_flow_service.dart';
 import 'package:sure_mobile/services/net_worth_history_service.dart';
+import 'package:sure_mobile/services/offline_cache_store.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/services/spending_vs_normal_service.dart';
 import 'package:sure_mobile/services/transactions_service.dart';
@@ -24,6 +25,7 @@ import 'package:sure_mobile/theme/sure_colors.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
 import 'package:sure_mobile/widgets/ds/ds.dart';
 
+import '../support/memory_cache.dart';
 import '../support/cash_flow_fixture.dart';
 import '../support/fake_categories_service.dart';
 
@@ -142,6 +144,7 @@ void main() {
     List<Category> categories = const [],
     Future<void>? cashFlowGate,
     bool pushed = false,
+    OfflineCacheStore? netWorthCache,
   }) {
     final cashFlow = CashFlowService(
       client: MockClient((request) async {
@@ -173,6 +176,7 @@ void main() {
           );
         }),
       ),
+      cache: netWorthCache,
     );
     final spending = SpendingVsNormalService(
       client: MockClient((request) async {
@@ -224,6 +228,22 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
   }
+
+  testWidgets('a saved net worth chart shows when its load fails',
+      (tester) async {
+    useTallSurface(tester);
+    final cache = MemoryCache();
+    await tester.pumpWidget(harness(netWorthCache: cache));
+    await tester.pumpAndSettle();
+    expect(find.text(r'$1,300.00'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(
+        harness(netWorthCache: cache, balancesStatus: 500));
+    await tester.pumpAndSettle();
+    expect(find.text(r'$1,300.00'), findsOneWidget);
+    expect(find.byKey(const ValueKey('reportsNetWorthChart')), findsOneWidget);
+  });
 
   testWidgets('shows net worth, cash flow and spending for the month',
       (tester) async {

@@ -16,6 +16,7 @@ import '../services/cash_flow_service.dart';
 import '../services/categories_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/net_worth_history_service.dart';
+import '../services/offline_cache_store.dart';
 import '../services/spending_vs_normal_service.dart';
 import '../services/transactions_service.dart';
 import '../theme/sure_colors.dart';
@@ -106,8 +107,8 @@ class ReportsScreen extends StatefulWidget {
 class _ReportsScreenState extends State<ReportsScreen> {
   late final CashFlowService _cashFlow =
       widget.cashFlowService ?? CashFlowService();
-  late final NetWorthHistoryService _netWorth =
-      widget.netWorthService ?? NetWorthHistoryService();
+  late final NetWorthHistoryService _netWorth = widget.netWorthService ??
+      NetWorthHistoryService(cache: OfflineCacheStore.instance);
   late final SpendingVsNormalService _spending =
       widget.spendingService ?? SpendingVsNormalService();
 
@@ -218,6 +219,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
         _cashStatus = _Status.failed;
         _netWorthStatus = _Status.failed;
       });
+      // Offline, the saved chart for this period still shows.
+      final range = period.cashFlowPeriod
+          .rangeFor(_today(), monthStartDay: _monthStartDay ?? 1);
+      await _showCachedNetWorth(period, range, generation);
       return;
     }
     // Category rows show their icon; the list is shared and fetched once.
@@ -302,6 +307,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     DateTime today,
     int generation,
   ) async {
+    final showedCached =
+        await _showCachedNetWorth(_period, range, generation);
+    if (!mounted || generation != _generation) return;
     final accounts = _accounts();
     final currency = _mainCurrency(accounts) ?? '';
     // A budget month can end after today; history stops at today.
@@ -312,6 +320,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       mainCurrency: currency,
       start: range.start,
       end: end,
+      cacheKey: _netWorthCacheKey(_period, range),
     );
     if (!mounted || generation != _generation) return;
     setState(() {
@@ -320,12 +329,37 @@ class _ReportsScreenState extends State<ReportsScreen> {
         _historyCurrency = currency;
         _historyStart = range.start;
         _netWorthStatus = _Status.loaded;
-      } else {
+      } else if (!showedCached) {
         _history = null;
         _netWorthStatus = _Status.failed;
       }
     });
     if (result['error'] == 'unauthorized') await _handleUnauthorized();
+  }
+
+  /// One saved chart per period and window start, so last month's chart
+  /// never stands in for this month's.
+  static String _netWorthCacheKey(
+          ReportsPeriod period, CashFlowDateRange range) =>
+      NetWorthHistoryService.cacheKey('reports:${period.name}:'
+          '${range.start.year}-${range.start.month}-${range.start.day}');
+
+  /// Shows the saved chart for [period] while the network loads. Returns
+  /// true when one was shown.
+  Future<bool> _showCachedNetWorth(
+    ReportsPeriod period,
+    CashFlowDateRange range,
+    int generation,
+  ) async {
+    final saved = await _netWorth.cached(_netWorthCacheKey(period, range));
+    if (!mounted || generation != _generation || saved == null) return false;
+    setState(() {
+      _history = saved.history;
+      _historyCurrency = saved.currency;
+      _historyStart = range.start;
+      _netWorthStatus = _Status.loaded;
+    });
+    return true;
   }
 
   void _selectPeriod(ReportsPeriod period) {

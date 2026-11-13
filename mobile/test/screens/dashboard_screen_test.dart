@@ -18,13 +18,16 @@ import 'package:sure_mobile/services/connectivity_service.dart';
 import 'package:sure_mobile/services/family_sync_service.dart';
 import 'package:sure_mobile/services/insights_service.dart';
 import 'package:sure_mobile/services/net_worth_history_service.dart';
+import 'package:sure_mobile/services/offline_cache_store.dart';
 import 'package:sure_mobile/services/preferences_service.dart';
 import 'package:sure_mobile/services/spending_vs_normal_service.dart';
 import 'package:sure_mobile/services/transaction_search_service.dart';
 import 'package:sure_mobile/theme/sure_theme.dart';
+import 'package:sure_mobile/utils/net_worth_history.dart';
 import 'package:sure_mobile/widgets/ds/ds.dart';
 
 import '../support/home_fixtures.dart';
+import '../support/memory_cache.dart';
 import '../support/recurring_fixtures.dart';
 
 final _now = DateTime(2026, 11, 11, 12);
@@ -91,15 +94,18 @@ void main() {
 
   final balanceRequests = <Uri>[];
   final transactionRequests = <Uri>[];
+  var failBalances = false;
   setUp(() {
     balanceRequests.clear();
     transactionRequests.clear();
+    failBalances = false;
   });
 
   MockClient client() => MockClient((request) async {
         final path = request.url.path;
         if (path == '/api/v1/balances') {
           balanceRequests.add(request.url);
+          if (failBalances) return http.Response('{}', 500);
           switch (request.url.queryParameters['account_id']) {
             case 'chk':
               return http.Response(
@@ -191,6 +197,7 @@ void main() {
     VoidCallback? onOpenActivity,
     Brightness brightness = Brightness.light,
     double width = 390,
+    OfflineCacheStore? cache,
   }) async {
     tester.view.physicalSize = Size(width, 1400);
     tester.view.devicePixelRatio = 1;
@@ -223,7 +230,8 @@ void main() {
             onOpenActivity: onOpenActivity,
             accessTokenLoader: () async => 'token',
             netWorthService: NetWorthHistoryService(
-                accountDetailService: AccountDetailService(client: http)),
+                accountDetailService: AccountDetailService(client: http),
+                cache: cache),
             searchService: TransactionSearchService(client: http),
             insightsService: InsightsService(client: http),
             spendingService: SpendingVsNormalService(client: http),
@@ -253,10 +261,12 @@ void main() {
     for (final label in ['1M', '3M', '1Y', 'All']) {
       expect(find.widgetWithText(SureChip, label), findsOneWidget);
     }
-    expect(
-      balanceRequests.map((u) => u.queryParameters['start_date']).toSet(),
-      {'2026-08-13'},
-    );
+    // 3M first, then 1Y and All loaded ahead in the background.
+    expect(balanceRequests.first.queryParameters['start_date'], '2026-08-13');
+    final starts =
+        balanceRequests.map((u) => u.queryParameters['start_date']).toSet();
+    expect(starts.length, 3, reason: '3M, 1Y and All');
+    expect(starts.contains(null), isTrue, reason: 'All has no start date');
     expect(
       balanceRequests.map((u) => u.queryParameters['account_id']).toSet(),
       {'chk', 'sav', 'card', 'brk'},
@@ -330,12 +340,76 @@ void main() {
     await tester.pumpAndSettle();
     expect(balanceRequests, isEmpty);
 
+    // All was loaded ahead after 3M: tapping it needs no request.
     await tester.tap(find.widgetWithText(SureChip, 'All'));
     await tester.pumpAndSettle();
-    expect(balanceRequests, isNotEmpty);
+    expect(balanceRequests, isEmpty);
     expect(
-        balanceRequests.every((u) => !u.queryParameters.containsKey('start_date')),
-        isTrue);
+        tester
+            .widget<Text>(find.byKey(const ValueKey('netWorthChange')))
+            .textSpan!
+            .toPlainText(),
+        endsWith('All'));
+  });
+
+  group('saved charts', () {
+    late MemoryCache cache;
+    const scope = 's';
+    setUp(() => cache = MemoryCache());
+
+    Future<void> seed(String range, int cents, {DateTime? savedAt}) =>
+        cache.write(scope, NetWorthHistoryService.cacheKey(range), {
+          'currency': 'USD',
+          'history': NetWorthHistory(points: [
+            NetWorthPoint(DateTime(2026, 8, 13), cents - 10000),
+            NetWorthPoint(DateTime(2026, 11, 11), cents),
+          ], otherCurrencies: const [])
+              .toJson(),
+        });
+
+    testWidgets('a saved chart shows when the network fails', (tester) async {
+      await seed('quarter', 777700);
+      failBalances = true;
+      await pump(tester, cache: cache);
+      final change =
+          tester.widget<Text>(find.byKey(const ValueKey('netWorthChange')));
+      expect(change.textSpan!.toPlainText(), startsWith(r'+$100.00'));
+    });
+
+    testWidgets('a fresh load replaces the saved chart and is saved',
+        (tester) async {
+      await seed('quarter', 777700);
+      await pump(tester, cache: cache);
+      final change =
+          tester.widget<Text>(find.byKey(const ValueKey('netWorthChange')));
+      expect(change.textSpan!.toPlainText(), r'+$500.00 (4.6%)  3M');
+      final saved = await NetWorthHistoryService(cache: cache)
+          .cached(NetWorthHistoryService.cacheKey('quarter'));
+      expect(saved!.history.currentCents, 1130000);
+    });
+
+    testWidgets('a recently saved slow range is not loaded ahead',
+        (tester) async {
+      await seed('year', 900000);
+      await seed('all', 900000);
+      await pump(tester, cache: cache);
+      expect(
+          balanceRequests.map((u) => u.queryParameters['start_date']).toSet(),
+          {'2026-08-13'});
+    });
+
+    testWidgets('an old saved slow range is loaded ahead', (tester) async {
+      cache.savedAt = DateTime(2026, 11, 10, 12);
+      await seed('year', 900000);
+      await seed('all', 900000);
+      await pump(tester, cache: cache);
+      expect(
+          balanceRequests
+              .map((u) => u.queryParameters['start_date'])
+              .toSet()
+              .length,
+          3);
+    });
   });
 
   testWidgets('an account group opens its list with empty accounts collapsed',
@@ -410,3 +484,4 @@ void main() {
 }
 
 const brightnesses = [Brightness.light, Brightness.dark];
+

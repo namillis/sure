@@ -73,6 +73,55 @@ class NetWorthHistory {
 
   int? get currentCents => points.isEmpty ? null : points.last.cents;
 
+  /// Compact JSON for the on-device chart cache: the first day plus one
+  /// cents value per day (points are always consecutive days).
+  Map<String, dynamic> toJson() => {
+        'v': 1,
+        if (points.isNotEmpty)
+          'start': _isoDay(points.first.date),
+        'cents': [for (final p in points) p.cents],
+        'other': [
+          for (final o in otherCurrencies)
+            {'currency': o.currency, 'cents': o.cents, 'count': o.accountCount},
+        ],
+      };
+
+  /// Reads [toJson] output; null when it isn't a version this build knows.
+  static NetWorthHistory? fromJson(Object? json) {
+    if (json is! Map || json['v'] != 1) return null;
+    final cents = json['cents'];
+    final other = json['other'];
+    if (cents is! List || other is! List) return null;
+    final points = <NetWorthPoint>[];
+    if (cents.isNotEmpty) {
+      final start = DateTime.tryParse(json['start']?.toString() ?? '');
+      if (start == null) return null;
+      for (var i = 0; i < cents.length; i++) {
+        final value = cents[i];
+        if (value is! int) return null;
+        points.add(NetWorthPoint(
+            DateTime(start.year, start.month, start.day + i), value));
+      }
+    }
+    return NetWorthHistory(
+      points: points,
+      otherCurrencies: [
+        for (final o in other)
+          if (o is Map && o['currency'] is String && o['cents'] is int)
+            NetWorthCurrencyTotal(
+              currency: o['currency'] as String,
+              cents: o['cents'] as int,
+              accountCount: o['count'] is int ? o['count'] as int : 0,
+            ),
+      ],
+    );
+  }
+
+  static String _isoDay(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
+
   /// Last minus first point; null with fewer than two points.
   int? get changeCents =>
       points.length < 2 ? null : points.last.cents - points.first.cents;

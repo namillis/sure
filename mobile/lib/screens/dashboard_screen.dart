@@ -17,6 +17,7 @@ import '../services/family_sync_service.dart';
 import '../services/insights_service.dart';
 import '../services/log_service.dart';
 import '../services/net_worth_history_service.dart';
+import '../services/offline_cache_store.dart';
 import '../services/spending_vs_normal_service.dart';
 import '../services/transaction_search_service.dart';
 import '../theme/sure_colors.dart';
@@ -88,8 +89,8 @@ class DashboardScreen extends StatefulWidget {
 
 class DashboardScreenState extends State<DashboardScreen> {
   final LogService _log = LogService.instance;
-  late final NetWorthHistoryService _netWorth =
-      widget.netWorthService ?? NetWorthHistoryService();
+  late final NetWorthHistoryService _netWorth = widget.netWorthService ??
+      NetWorthHistoryService(cache: OfflineCacheStore.instance);
   late final TransactionSearchService _search =
       widget.searchService ?? TransactionSearchService();
 
@@ -103,11 +104,21 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   AccountChartRange _range = AccountChartRange.quarter;
 
-  /// Loaded histories by range, cleared on refresh.
+  /// Histories by range. A range in [_staleRanges] is shown (from the
+  /// on-device cache, or from before a refresh) but not yet reloaded.
   final Map<AccountChartRange, NetWorthHistory> _histories = {};
+  final Set<AccountChartRange> _staleRanges = {};
+
+  /// Ranges being fetched now.
+  final Set<AccountChartRange> _inFlight = {};
   String _historyCurrency = '';
-  bool _historyLoading = false;
   int _historyGeneration = 0;
+
+  /// Ranges loaded ahead in the background after the shown one, since they
+  /// take the most requests. Skipped when their saved copy is newer than
+  /// [_prefetchMaxAge].
+  static const _prefetchRanges = [AccountChartRange.year, AccountChartRange.all];
+  static const _prefetchMaxAge = Duration(hours: 6);
 
   List<ActivityTransaction>? _recent;
   bool _signedOut = false;
@@ -179,9 +190,25 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadAll() async {
     await Future.wait([
-      _loadAccounts().then((_) => _loadHistory()),
+      Future.wait([_showCachedHistory(), _loadAccounts()])
+          .then((_) => _loadHistory()),
       _loadRecent(),
     ]);
+  }
+
+  /// Draws the shown range from the on-device cache before the network
+  /// answers.
+  Future<void> _showCachedHistory() async {
+    if (!mounted || _histories.containsKey(_range)) return;
+    final range = _range;
+    final saved =
+        await _netWorth.cached(NetWorthHistoryService.cacheKey(range.name));
+    if (!mounted || saved == null || _histories.containsKey(range)) return;
+    setState(() {
+      _histories[range] = saved.history;
+      _staleRanges.add(range);
+      _historyCurrency = saved.currency;
+    });
   }
 
   Future<void> _loadAccounts() async {
@@ -209,19 +236,50 @@ class DashboardScreenState extends State<DashboardScreen> {
     return counts.entries.reduce((a, b) => b.value > a.value ? b : a).key;
   }
 
-  Future<void> _loadHistory() async {
-    final range = _range;
-    if (!mounted || _histories.containsKey(range) || _offline) return;
+  /// Loads [range] (the shown range by default). A range with a fresh
+  /// history is left alone; a stale one keeps showing while it reloads. A
+  /// range with nothing to show is first drawn from the on-device cache.
+  /// After the shown range loads, the slow ranges are loaded ahead
+  /// ([_prefetchRanges]).
+  Future<void> _loadHistory({AccountChartRange? only}) async {
+    final range = only ?? _range;
+    final background = only != null;
+    if (!mounted || _inFlight.contains(range)) return;
+    if (_histories.containsKey(range) && !_staleRanges.contains(range)) {
+      if (!background) _prefetch();
+      return;
+    }
+    final generation = _historyGeneration;
+    final cacheKey = NetWorthHistoryService.cacheKey(range.name);
+
+    if (!_histories.containsKey(range)) {
+      final saved = await _netWorth.cached(cacheKey);
+      if (!mounted || generation != _historyGeneration) return;
+      if (saved != null) {
+        if (background &&
+            _now().difference(saved.savedAt) < _prefetchMaxAge) {
+          return;
+        }
+        if (!_histories.containsKey(range)) {
+          setState(() {
+            _histories[range] = saved.history;
+            _staleRanges.add(range);
+            if (range == _range) _historyCurrency = saved.currency;
+          });
+        }
+      }
+    }
+    if (_offline || _inFlight.contains(range)) return;
+
     final provider = context.read<AccountsProvider>();
     final accounts = provider.accounts;
     if (accounts.isEmpty) return;
-    final generation = ++_historyGeneration;
-    setState(() => _historyLoading = true);
+    setState(() => _inFlight.add(range));
 
     final token = await _token();
     if (!mounted || generation != _historyGeneration) return;
     if (token == null) {
-      setState(() => _historyLoading = false);
+      setState(() => _inFlight.remove(range));
       return;
     }
     final currency = _mainCurrency(provider);
@@ -232,16 +290,36 @@ class DashboardScreenState extends State<DashboardScreen> {
       mainCurrency: currency,
       start: range.startDate(now),
       end: DateTime(now.year, now.month, now.day),
+      cacheKey: cacheKey,
     );
     if (!mounted || generation != _historyGeneration) return;
     setState(() {
-      _historyLoading = false;
+      _inFlight.remove(range);
       if (result['success'] == true) {
         _histories[range] = result['history'] as NetWorthHistory;
-        _historyCurrency = currency;
+        _staleRanges.remove(range);
+        if (range == _range) _historyCurrency = currency;
       }
     });
-    if (result['error'] == 'unauthorized') await _signOut();
+    if (result['error'] == 'unauthorized') {
+      await _signOut();
+      return;
+    }
+    if (!background && result['success'] == true) _prefetch();
+  }
+
+  /// Loads the slow ranges one after another, so they are usually ready
+  /// before they are tapped. Each skips itself when already loaded or saved
+  /// recently.
+  void _prefetch() {
+    if (_offline) return;
+    Future<void>(() async {
+      for (final range in _prefetchRanges) {
+        if (!mounted || _signedOut) return;
+        if (range == _range || _histories.containsKey(range)) continue;
+        await _loadHistory(only: range);
+      }
+    });
   }
 
   Future<void> _loadRecent() async {
@@ -277,9 +355,10 @@ class DashboardScreenState extends State<DashboardScreen> {
   Future<void> reloadData() async {
     setState(() {
       _homeRefreshCount += 1;
-      _histories.clear();
+      // Keep drawing the old charts while they reload.
+      _staleRanges.addAll(_histories.keys);
+      _inFlight.clear();
       _historyGeneration++;
-      _historyLoading = false;
     });
     await _loadAll();
   }
@@ -287,9 +366,10 @@ class DashboardScreenState extends State<DashboardScreen> {
   Future<void> _handleRefresh() async {
     setState(() {
       _homeRefreshCount += 1;
-      _histories.clear();
+      // Keep drawing the old charts while they reload.
+      _staleRanges.addAll(_histories.keys);
+      _inFlight.clear();
       _historyGeneration++;
-      _historyLoading = false;
     });
     await Future.wait([
       _performManualSync().then((_) => _loadHistory()),
@@ -559,7 +639,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           updatedLabel: _updatedLabel(accountsProvider, offline),
           history: history,
           historyCurrency: _historyCurrency,
-          historyLoading: history == null && _historyLoading,
+          historyLoading: history == null && _inFlight.contains(_range),
           range: _range,
           // The history needs the network; offline the chips would do nothing.
           onRangeChanged: offline ? null : _selectRange,
