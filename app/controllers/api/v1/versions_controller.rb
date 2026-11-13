@@ -6,7 +6,9 @@ class Api::V1::VersionsController < Api::V1::BaseController
   before_action :ensure_read_scope, unless: :public_version_request?
 
   def show
-    render_json({ version: Sure.version.to_s, commit_sha: Sure.commit_sha.presence })
+    version_metadata = { version: Sure.version.to_s, commit_sha: Sure.commit_sha.presence }
+    version_metadata[:features] = SurePlus::Features::NAMES unless public_version_request?
+    render_json(version_metadata)
   end
 
   private

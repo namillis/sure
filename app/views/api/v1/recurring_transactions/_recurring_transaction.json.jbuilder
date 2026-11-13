@@ -25,6 +25,16 @@ json.expected_amount_avg recurring_transaction.expected_amount_avg_money&.format
 json.expected_amount_avg_cents money_to_minor_units.call(recurring_transaction.expected_amount_avg_money)
 json.bill_type recurring_transaction.bill_type
 json.category_id recurring_transaction.category_id
+if recurring_transaction.category.present?
+  json.category do
+    json.id recurring_transaction.category.id
+    json.name recurring_transaction.category.name
+    json.color recurring_transaction.category.color
+    json.icon recurring_transaction.category.lucide_icon
+  end
+else
+  json.category nil
+end
 json.anchor_date recurring_transaction.anchor_date
 json.weekend_adjust recurring_transaction.weekend_adjust
 json.end_mode recurring_transaction.end_mode

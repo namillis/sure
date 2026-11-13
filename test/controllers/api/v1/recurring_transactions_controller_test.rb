@@ -69,6 +69,28 @@ class Api::V1::RecurringTransactionsControllerTest < ActionDispatch::Integration
     assert_equal @merchant.id, response_data["merchant"]["id"]
   end
 
+  test "should embed the category on a recurring transaction" do
+    category = categories(:food_and_drink)
+    @recurring_transaction.update!(category: category)
+
+    get api_v1_recurring_transaction_url(@recurring_transaction), headers: api_headers(@api_key)
+
+    assert_response :success
+    response_data = JSON.parse(response.body)
+    assert_equal category.id, response_data["category_id"]
+    assert_equal({ "id" => category.id, "name" => category.name, "color" => category.color, "icon" => category.lucide_icon },
+      response_data["category"])
+  end
+
+  test "should return a null category when a recurring transaction has none" do
+    get api_v1_recurring_transactions_url, headers: api_headers(@api_key)
+
+    assert_response :success
+    listed = JSON.parse(response.body)["recurring_transactions"].find { |item| item["id"] == @recurring_transaction.id }
+    assert listed.key?("category")
+    assert_nil listed["category"]
+  end
+
   test "should not mutate recurring transaction on read only shared account" do
     member = users(:family_member)
     member.api_keys.active.destroy_all

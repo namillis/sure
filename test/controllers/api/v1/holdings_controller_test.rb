@@ -47,6 +47,24 @@ class Api::V1::HoldingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes holding_ids, @private_holding.id
   end
 
+  test "orders holdings that share a date by id so pages never repeat or skip one" do
+    same_day_holdings = %w[msft aapl].map do |security_name|
+      @account.holdings.create!(security: securities(security_name), date: 5.days.ago.to_date, qty: 1, price: 10,
+        amount: 10, currency: "USD")
+    end
+    expected_ids = @account.holdings.where(date: 5.days.ago.to_date).order(:id).pluck(:id)
+
+    paged_ids = (1..expected_ids.size).flat_map do |page|
+      get api_v1_holdings_url, params: { account_id: @account.id, date: 5.days.ago.to_date.iso8601, per_page: 1, page: page },
+        headers: api_headers(@api_key)
+      assert_response :success
+      JSON.parse(response.body)["holdings"].map { |holding| holding["id"] }
+    end
+
+    assert_equal expected_ids, paged_ids
+    assert_equal same_day_holdings.map(&:id).sort, paged_ids.sort
+  end
+
   test "account_ids filter cannot reach inaccessible accounts" do
     get api_v1_holdings_url,
         params: { account_ids: [ @private_account.id ] },

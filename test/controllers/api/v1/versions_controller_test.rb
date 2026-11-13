@@ -20,10 +20,11 @@ class Api::V1::VersionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.headers["Cache-Control"], "no-store"
   end
 
-  test "read key returns only version and commit with no caching" do
+  test "read key returns version, commit and Sure+ features with no caching" do
     get api_v1_version_url, headers: api_headers(@api_key)
     assert_response :success
-    assert_equal({ "version" => "2026.11.2", "commit_sha" => "a" * 40 }, response.parsed_body)
+    assert_equal({ "version" => "2026.11.2", "commit_sha" => "a" * 40, "features" => SurePlus::Features::NAMES },
+      response.parsed_body)
     assert_includes response.headers["Cache-Control"], "no-store"
     assert_equal "application/json", response.media_type
   end
