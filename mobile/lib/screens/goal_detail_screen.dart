@@ -10,6 +10,7 @@ import '../widgets/ds/ds.dart';
 import '../widgets/manage_widgets.dart';
 import '../widgets/open_on_web_action.dart';
 import '../widgets/sure_button.dart';
+import 'goal_consume_sheet.dart';
 import 'goal_form_sheet.dart';
 import 'goals_screen.dart';
 import 'pledge_sheet.dart';
@@ -17,8 +18,8 @@ import 'pledge_sheet.dart';
 /// One goal (feature `goals`): a centered hero with the amount and bar, "I
 /// saved toward this" (feature `goals.pledges`, goals with linked accounts),
 /// pending pledges with Extend and cancel, the funding accounts, the plan
-/// figures, Edit, a web link for the lifecycle actions the API lacks, and
-/// Delete.
+/// figures, Edit, the lifecycle actions (feature `goals.lifecycle`; a web
+/// link without it), and Delete.
 class GoalDetailScreen extends StatefulWidget {
   const GoalDetailScreen({
     super.key,
@@ -27,6 +28,8 @@ class GoalDetailScreen extends StatefulWidget {
     this.auth = const GoalsAuth(),
     this.accounts = const [],
     this.pledgesEnabled = false,
+    this.lifecycleEnabled = false,
+    this.onChanged,
   });
 
   final Goal goal;
@@ -37,6 +40,13 @@ class GoalDetailScreen extends StatefulWidget {
   final List<Account> accounts;
   final bool pledgesEnabled;
 
+  /// Feature `goals.lifecycle`: the native action rows replace the web link.
+  final bool lifecycleEnabled;
+
+  /// Called after a lifecycle action or spend changed the goal, so the list
+  /// behind this screen reloads.
+  final VoidCallback? onChanged;
+
   @override
   State<GoalDetailScreen> createState() => _GoalDetailScreenState();
 }
@@ -46,6 +56,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
   bool _scrolled = false;
   bool _deleting = false;
   String? _busyPledgeId;
+  String? _busyAction;
   String? _error;
 
   @override
@@ -134,6 +145,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     required String body,
     required String action,
     String? cancel,
+    bool destructive = true,
   }) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -150,7 +162,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: palette.destructive),
+              style: destructive
+                  ? TextButton.styleFrom(foregroundColor: palette.destructive)
+                  : null,
               child: Text(action),
             ),
           ],
@@ -214,6 +228,132 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
       _deleting = false;
       if (result != null) _error = goalsErrorText(l, result);
     });
+  }
+
+  /// The lifecycle rows in their fixed order, filtered by the goal's
+  /// `available_actions`.
+  static const _actionOrder = [
+    'consume',
+    'pause',
+    'resume',
+    'complete',
+    'reopen',
+    'archive',
+    'unarchive',
+  ];
+
+  static String _actionLabel(AppLocalizations l, String action) {
+    switch (action) {
+      case 'consume':
+        return l.sg2ActionConsume;
+      case 'pause':
+        return l.sg2ActionPause;
+      case 'resume':
+        return l.sg2ActionResume;
+      case 'complete':
+        return l.sg2ActionComplete;
+      case 'reopen':
+        return l.sg2ActionReopen;
+      case 'archive':
+        return l.sg2ActionArchive;
+      default:
+        return l.sg2ActionUnarchive;
+    }
+  }
+
+  static String _actionDone(AppLocalizations l, String action) {
+    switch (action) {
+      case 'pause':
+        return l.sg2Paused;
+      case 'resume':
+        return l.sg2Resumed;
+      case 'complete':
+        return l.sg2Completed;
+      case 'reopen':
+        return l.sg2Reopened;
+      case 'archive':
+        return l.sg2Archived;
+      default:
+        return l.sg2Unarchived;
+    }
+  }
+
+  Future<void> _consume() async {
+    final l = AppLocalizations.of(context);
+    final updated = await showGoalConsumeSheet(
+      context,
+      service: widget.service,
+      auth: widget.auth,
+      goal: _goal,
+    );
+    if (updated == null || !mounted) return;
+    setState(() => _goal = updated);
+    widget.onChanged?.call();
+    _snack(l.sg2Consumed);
+  }
+
+  Future<void> _transition(String action) async {
+    final l = AppLocalizations.of(context);
+    if (action == 'complete' || action == 'archive') {
+      final complete = action == 'complete';
+      final ok = await _confirm(
+        title: complete ? l.sg2CompleteTitle : l.sg2ArchiveTitle,
+        body: complete ? l.sg2CompleteBody : l.sg2ArchiveBody,
+        action: _actionLabel(l, action),
+        destructive: false,
+      );
+      if (!ok) return;
+    }
+    setState(() {
+      _busyAction = action;
+      _error = null;
+    });
+    final result = await _authed((t) => widget.service
+        .transitionGoal(accessToken: t, id: _goal.id, action: action));
+    if (!mounted) return;
+    final ok = result?['success'] == true;
+    setState(() {
+      _busyAction = null;
+      if (ok) {
+        _goal = result!['goal'] as Goal;
+      } else if (result != null) {
+        _error = goalsErrorText(l, result);
+      }
+    });
+    if (!ok) return;
+    widget.onChanged?.call();
+    _snack(_actionDone(l, action));
+  }
+
+  Widget _actionsPanel(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final available = _goal.availableActions.toSet();
+    final idle = _busyAction == null && !_deleting;
+    return SurePanel.rows(
+      key: const ValueKey('goalActions'),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        for (final action in _actionOrder)
+          if (available.contains(action))
+            SureListRow(
+              key: ValueKey('goalAction-$action'),
+              title: _actionLabel(l, action),
+              titleColor: palette.link,
+              trailing: _busyAction == action
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+              onTap: !idle
+                  ? null
+                  : action == 'consume'
+                      ? _consume
+                      : () => _transition(action),
+            ),
+      ],
+    );
   }
 
   void _openWeb() {
@@ -358,6 +498,10 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
       ],
       const SizedBox(height: 16),
       _footerLinks(context),
+      if (widget.lifecycleEnabled && goal.availableActions.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        _actionsPanel(context),
+      ],
       const SizedBox(height: 16),
       SureButtonPanel(
         key: const ValueKey('goalDelete'),
@@ -511,15 +655,17 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
       fontWeight: SureTokens.weightMedium,
       color: palette.link,
     );
+    final edit = TextButton(
+      key: const ValueKey('goalEdit'),
+      onPressed: _deleting ? null : _edit,
+      child: Text(l.spgEdit, style: style),
+    );
+    if (widget.lifecycleEnabled) return Center(child: edit);
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        TextButton(
-          key: const ValueKey('goalEdit'),
-          onPressed: _deleting ? null : _edit,
-          child: Text(l.spgEdit, style: style),
-        ),
+        edit,
         Text('·', style: TextStyle(color: palette.textSubdued)),
         TextButton(
           key: const ValueKey('goalOpenWeb'),

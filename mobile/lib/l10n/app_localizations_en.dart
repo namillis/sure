@@ -4826,4 +4826,104 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get spaInvestEmptyBody =>
       'Add an investment or crypto account, or connect a brokerage.';
+
+  @override
+  String get sg2SummaryLast30 => 'Last 30 days';
+
+  @override
+  String sg2SummaryVsPrior(String amount) {
+    return 'vs $amount';
+  }
+
+  @override
+  String get sg2SummaryNeedsThisMonth => 'Needs this month';
+
+  @override
+  String sg2SummaryBehind(int count) {
+    return '$count behind';
+  }
+
+  @override
+  String sg2SummaryOnTrackValue(int count, int total) {
+    return '$count of $total';
+  }
+
+  @override
+  String sg2SummaryReached(int count) {
+    return '$count reached';
+  }
+
+  @override
+  String get sg2SummarySaved => 'Saved';
+
+  @override
+  String sg2SummarySavedValue(String saved, String target) {
+    return '$saved / $target';
+  }
+
+  @override
+  String get sg2ActionConsume => 'Spend from this goal';
+
+  @override
+  String get sg2ActionPause => 'Pause';
+
+  @override
+  String get sg2ActionResume => 'Resume';
+
+  @override
+  String get sg2ActionComplete => 'Mark complete';
+
+  @override
+  String get sg2ActionReopen => 'Reopen';
+
+  @override
+  String get sg2ActionArchive => 'Archive';
+
+  @override
+  String get sg2ActionUnarchive => 'Unarchive';
+
+  @override
+  String get sg2CompleteTitle => 'Mark this goal complete?';
+
+  @override
+  String get sg2CompleteBody =>
+      'The money earmarked for it is released for your other goals on the same account. You can still archive or reopen it later.';
+
+  @override
+  String get sg2ArchiveTitle => 'Archive this goal?';
+
+  @override
+  String get sg2ArchiveBody =>
+      'Archived goals leave the main list, and you can restore them later. Archiving doesn\'t record what you reached; mark the goal complete first if you want that kept.';
+
+  @override
+  String get sg2Paused => 'Goal paused';
+
+  @override
+  String get sg2Resumed => 'Goal resumed';
+
+  @override
+  String get sg2Completed => 'Goal marked complete';
+
+  @override
+  String get sg2Reopened => 'Goal reopened';
+
+  @override
+  String get sg2Archived => 'Goal archived';
+
+  @override
+  String get sg2Unarchived => 'Goal unarchived';
+
+  @override
+  String get sg2ConsumeFrom => 'From';
+
+  @override
+  String get sg2ConsumeRecord => 'Record';
+
+  @override
+  String get sg2ConsumeHint =>
+      'The amount you record stops being reserved for this goal, so your other goals on that account get their share back.';
+
+  @override
+  String get sg2Consumed => 'Spend recorded';
 }

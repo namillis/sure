@@ -154,4 +154,58 @@ void main() {
     expect(result['success'], true);
     expect(requests.single.method, 'DELETE');
   });
+
+  test('loads the summary', () async {
+    final result = await service(
+            (_) => http.Response(jsonEncode(goalsSummaryJson()), 200))
+        .getSummary(accessToken: 't');
+    expect(requests.single.url.path, '/api/v1/goals/summary');
+    final s = result['summary'] as GoalsSummary;
+    expect(s.velocity30d!.formatted, '\$420.00');
+    expect(s.velocityPrior30d!.cents, 31000);
+    expect(s.needsThisMonth!.formatted, '\$780.00');
+    expect([s.onTrackCount, s.trackedTotal, s.reachedCount, s.behindCount],
+        [1, 2, 0, 1]);
+    expect(s.saved!.formatted, '\$10,000.00');
+    expect(s.target!.formatted, '\$23,000.00');
+  });
+
+  test('transitions and consumes, parsing available_actions', () async {
+    final s = service((_) =>
+        http.Response(jsonEncode(goalJson('g1', state: 'paused')), 200));
+    final paused =
+        await s.transitionGoal(accessToken: 't', id: 'g1', action: 'pause');
+    expect(requests.last.method, 'PATCH');
+    expect(requests.last.url.path, '/api/v1/goals/g1/pause');
+    expect(requests.last.body, isEmpty);
+    expect((paused['goal'] as Goal).availableActions,
+        ['resume', 'complete', 'archive']);
+
+    await s.consumeGoal(accessToken: 't', id: 'g1', amount: '200');
+    expect(requests.last.method, 'POST');
+    expect(requests.last.url.path, '/api/v1/goals/g1/consume');
+    expect(jsonDecode(requests.last.body), {
+      'consumption': {'amount': '200'},
+    });
+    await s.consumeGoal(
+        accessToken: 't', id: 'g1', amount: '5', accountId: 'acc2');
+    expect(jsonDecode(requests.last.body), {
+      'consumption': {'amount': '5', 'account_id': 'acc2'},
+    });
+  });
+
+  test('a refused transition or spend surfaces the server message', () async {
+    final result = await service((_) => http.Response(
+            jsonEncode({
+              'error': 'consumption_refused',
+              'reason': 'not_active',
+              'message': 'This goal is no longer active.',
+              'errors': ['This goal is no longer active.'],
+            }),
+            422))
+        .consumeGoal(accessToken: 't', id: 'g1', amount: '1');
+    expect(result['success'], false);
+    expect(result['code'], 'consumption_refused');
+    expect(result['error'], 'This goal is no longer active.');
+  });
 }

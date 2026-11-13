@@ -26,6 +26,8 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const profileWrite = 'profile.write';
   static const goals = 'goals';
   static const goalsPledges = 'goals.pledges';
+  static const goalsLifecycle = 'goals.lifecycle';
+  static const goalsSummary = 'goals.summary';
   static const rulesWrite = 'rules.write';
   static const accountsWrite = 'accounts.write';
   static const connectionsManage = 'connections.manage';

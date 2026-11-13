@@ -130,6 +130,7 @@ class Goal {
     this.pendingPledgesCount = 0,
     this.openPledges = const [],
     this.linkedAccounts = const [],
+    this.availableActions = const [],
   });
 
   static const states = ['active', 'paused', 'completed', 'archived'];
@@ -179,6 +180,11 @@ class Goal {
   final List<GoalPledge> openPledges;
   final List<GoalLinkedAccount> linkedAccounts;
 
+  /// What this viewer may do next (feature `goals.lifecycle`): the permitted
+  /// state-machine events (`pause`, `resume`, `complete`, `archive`,
+  /// `unarchive`, `reopen`) plus `consume` when there is something to spend.
+  final List<String> availableActions;
+
   bool get isMaintained => kind == 'maintained';
 
   factory Goal.fromJson(Map<String, dynamic> json) {
@@ -227,6 +233,53 @@ class Goal {
           JsonParsing.parseInt(json['pending_pledges_count']) ?? 0,
       openPledges: list('open_pledges', GoalPledge.fromJson),
       linkedAccounts: list('linked_accounts', GoalLinkedAccount.fromJson),
+      availableActions: [
+        if (json['available_actions'] case final List actions)
+          for (final action in actions)
+            if (action is String) action,
+      ],
     );
   }
+}
+
+/// The Goals list header figures (`GET /api/v1/goals/summary`, feature
+/// `goals.summary`), as `app/views/api/v1/goals/summary.json.jbuilder`
+/// renders them: the web's KPI strip plus the Plan hub's saved / target.
+class GoalsSummary {
+  const GoalsSummary({
+    this.velocity30d,
+    this.velocityPrior30d,
+    this.needsThisMonth,
+    this.onTrackCount = 0,
+    this.trackedTotal = 0,
+    this.reachedCount = 0,
+    this.behindCount = 0,
+    this.saved,
+    this.target,
+  });
+
+  /// Contributed in the last 30 days, signed ("-$110.00").
+  final GoalMoney? velocity30d;
+  final GoalMoney? velocityPrior30d;
+  final GoalMoney? needsThisMonth;
+  final int onTrackCount;
+  final int trackedTotal;
+  final int reachedCount;
+  final int behindCount;
+
+  /// Only goals in the family currency, as on the web.
+  final GoalMoney? saved;
+  final GoalMoney? target;
+
+  factory GoalsSummary.fromJson(Map<String, dynamic> json) => GoalsSummary(
+        velocity30d: GoalMoney.fromJson(json, 'velocity_30d'),
+        velocityPrior30d: GoalMoney.fromJson(json, 'velocity_prior_30d'),
+        needsThisMonth: GoalMoney.fromJson(json, 'needs_this_month'),
+        onTrackCount: JsonParsing.parseInt(json['on_track_count']) ?? 0,
+        trackedTotal: JsonParsing.parseInt(json['tracked_total']) ?? 0,
+        reachedCount: JsonParsing.parseInt(json['reached_count']) ?? 0,
+        behindCount: JsonParsing.parseInt(json['behind_count']) ?? 0,
+        saved: GoalMoney.fromJson(json, 'saved'),
+        target: GoalMoney.fromJson(json, 'target'),
+      );
 }

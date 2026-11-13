@@ -289,6 +289,147 @@ class GoalCard extends StatelessWidget {
   }
 }
 
+/// The Goals list header (feature `goals.summary`): three equal tiles (last
+/// 30 days, needs this month, on track) and a "Saved $X / $Y" row. Amounts
+/// shrink to fit a narrow tile and follow privacy masking.
+class GoalsSummaryHeader extends StatelessWidget {
+  const GoalsSummaryHeader({super.key, required this.summary});
+
+  final GoalsSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final s = summary;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _GoalsSummaryTile(
+                    key: const ValueKey('goalsSummaryVelocity'),
+                    label: l.sg2SummaryLast30,
+                    value: goalsMoney(context, s.velocity30d),
+                    money: true,
+                    subtitle: l.sg2SummaryVsPrior(
+                        goalsMoney(context, s.velocityPrior30d)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _GoalsSummaryTile(
+                    key: const ValueKey('goalsSummaryNeeds'),
+                    label: l.sg2SummaryNeedsThisMonth,
+                    value: goalsMoney(context, s.needsThisMonth),
+                    money: true,
+                    subtitle: l.sg2SummaryBehind(s.behindCount),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _GoalsSummaryTile(
+                    key: const ValueKey('goalsSummaryOnTrack'),
+                    label: l.spgStatusOnTrack,
+                    value: l.sg2SummaryOnTrackValue(
+                        s.onTrackCount, s.trackedTotal),
+                    subtitle: l.sg2SummaryReached(s.reachedCount),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SurePanel.rows(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          children: [
+            SureListRow(
+              key: const ValueKey('goalsSummarySaved'),
+              title: l.sg2SummarySaved,
+              trailing: ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width * 0.6),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: MoneyText(
+                    l.sg2SummarySavedValue(goalsMoney(context, s.saved),
+                        goalsMoney(context, s.target)),
+                    trend: MoneyTrend.neutral,
+                    color: palette.textPrimary,
+                    maxLines: 1,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _GoalsSummaryTile extends StatelessWidget {
+  const _GoalsSummaryTile({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.subtitle,
+    this.money = false,
+  });
+
+  final String label;
+  final String value;
+  final String subtitle;
+
+  /// Mono with tabular figures (an amount) rather than plain text.
+  final bool money;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SureColors.of(context).palette;
+    final secondary = TextStyle(fontSize: 12, color: palette.textSecondary);
+    const valueStyle = TextStyle(
+        fontSize: 17, height: 1.2, fontWeight: SureTokens.weightSemibold);
+    return SurePanel(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              maxLines: 2, overflow: TextOverflow.ellipsis, style: secondary),
+          const Spacer(),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: money
+                ? MoneyText(value,
+                    trend: MoneyTrend.neutral,
+                    color: palette.textPrimary,
+                    maxLines: 1,
+                    style: valueStyle)
+                : Text(value,
+                    maxLines: 1,
+                    style: SureMoney.tabular(
+                        valueStyle.copyWith(color: palette.textPrimary))),
+          ),
+          const SizedBox(height: 2),
+          Text(subtitle,
+              maxLines: 2, overflow: TextOverflow.ellipsis, style: secondary),
+        ],
+      ),
+    );
+  }
+}
+
 /// The Plan tab's Goals segment on a Sure+ server (feature `goals`): active
 /// goals as cards, then paused, completed and archived goals behind
 /// collapsed rows, in the server's display order. "+" opens the New goal
@@ -315,6 +456,7 @@ class GoalsScreen extends StatefulWidget {
 class _GoalsScreenState extends State<GoalsScreen> {
   late final GoalsService _service;
   List<Goal>? _goals;
+  GoalsSummary? _summary;
   bool _loading = true;
   Map<String, dynamic>? _failure;
   final Set<String> _expanded = {};
@@ -343,7 +485,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
       setState(() => _loading = false);
       return widget.auth.unauthorized(context);
     }
+    final withSummary = context
+            .read<ServerFeaturesProvider?>()
+            ?.has(ServerFeaturesProvider.goalsSummary) ??
+        false;
+    final summaryRequest =
+        withSummary ? _service.getSummary(accessToken: token) : null;
     final result = await _service.listGoals(accessToken: token);
+    final summary = await summaryRequest;
     if (!mounted) return;
     if (result['error'] == 'unauthorized') {
       setState(() => _loading = false);
@@ -351,6 +500,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
     }
     setState(() {
       _loading = false;
+      // A summary that fails to load is hidden; the list stays.
+      _summary = summary?['success'] == true
+          ? summary!['summary'] as GoalsSummary
+          : null;
       if (result['success'] == true) {
         _goals = result['goals'] as List<Goal>;
         _failure = null;
@@ -374,16 +527,18 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
 
   Future<void> _open(Goal goal) async {
+    final features = context.read<ServerFeaturesProvider?>();
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => GoalDetailScreen(
         goal: goal,
         service: _service,
         auth: widget.auth,
         accounts: _accounts,
-        pledgesEnabled: context
-                .read<ServerFeaturesProvider?>()
-                ?.has(ServerFeaturesProvider.goalsPledges) ??
-            false,
+        pledgesEnabled:
+            features?.has(ServerFeaturesProvider.goalsPledges) ?? false,
+        lifecycleEnabled:
+            features?.has(ServerFeaturesProvider.goalsLifecycle) ?? false,
+        onChanged: _load,
       ),
     ));
     if (mounted) _load();
@@ -474,6 +629,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
           onAction: _load,
           margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
         ),
+      if (_summary case final summary?)
+        GoalsSummaryHeader(
+            key: const ValueKey('goalsSummary'), summary: summary),
       SureSectionHeader(
         key: const ValueKey('goalsActiveHeader'),
         label: l.spgSectionActive(active.length),
