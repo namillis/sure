@@ -91,14 +91,14 @@ void main() {
   test('create and update send the goal body', () async {
     final s = service((r) => http.Response(
         jsonEncode(goalJson('g1')), r.method == 'POST' ? 201 : 200));
-    final input = GoalInput(
+    const input = GoalInput(
       name: 'Trip',
       targetAmount: '2500.5',
       targetDate: '2027-06-01',
       icon: 'plane',
       kind: 'one_off',
-      accountIds: const ['acc1', 'acc2'],
-      allocations: const {'acc1': '300', 'acc2': null},
+      accountIds: ['acc1', 'acc2'],
+      allocations: {'acc1': '300', 'acc2': null},
     );
     final created = await s.createGoal(accessToken: 't', goal: input);
     expect(created['goal'], isA<Goal>());
