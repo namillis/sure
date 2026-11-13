@@ -3,6 +3,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/server_features_provider.dart';
 import 'providers/accounts_provider.dart';
 import 'providers/categories_provider.dart';
 import 'providers/merchants_provider.dart';
@@ -65,6 +66,11 @@ class SureApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LogService.instance),
         ChangeNotifierProvider(create: (_) => ConnectivityService()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, ServerFeaturesProvider>(
+          create: (_) => ServerFeaturesProvider(),
+          update: (_, auth, features) =>
+              (features ?? ServerFeaturesProvider())..updateAuth(auth),
+        ),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => CategoriesProvider()),
         ChangeNotifierProvider(create: (_) => MerchantsProvider()),
