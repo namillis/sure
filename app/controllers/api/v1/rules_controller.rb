@@ -16,18 +16,18 @@ class Api::V1::RulesController < Api::V1::BaseController
     { split_rows: [ :type, :name, :share, :category_id, :merchant_id, { tag_ids: [] } ] }
   ].freeze
 
+  RULE_INCLUDES = [ :actions, :rule_group, { conditions: :sub_conditions } ].freeze
+
   before_action :ensure_read_scope, only: %i[index show]
-  before_action -> { authorize_scope!(:read_write) }, only: %i[create update destroy apply]
-  before_action :reject_guest_writes!, only: %i[create update destroy apply]
+  before_action -> { authorize_scope!(:read_write) }, only: %i[create update destroy apply reorder]
+  before_action :reject_guest_writes!, only: %i[create update destroy apply reorder]
   before_action :set_rule, only: %i[show update destroy apply]
 
   def index
     return render_invalid_resource_type_filter if invalid_resource_type_filter?
 
     @per_page = safe_per_page_param
-    rules_query = current_resource_owner.family.rules
-      .includes(:actions, conditions: :sub_conditions)
-      .order(:created_at, :id)
+    rules_query = current_resource_owner.family.rules.includes(*RULE_INCLUDES).ordered
 
     rules_query = rules_query.where(resource_type: params[:resource_type]) if params[:resource_type].present?
     if params[:active].present?
@@ -69,6 +69,16 @@ class Api::V1::RulesController < Api::V1::BaseController
     head :no_content
   end
 
+  # Same order the web's drag and drop sets (Rule::Layout), sent as the whole
+  # flat list of the family's rules.
+  def reorder
+    Rule::FlatReorder.new(current_resource_owner.family).reorder!(params.require(:rule_ids))
+    @rules = current_resource_owner.family.rules.includes(*RULE_INCLUDES).ordered
+    render :reorder
+  rescue ArgumentError => e
+    render_validation_error(e.message)
+  end
+
   # The web shows a confirmation (affected count, rules above, AI cost) before
   # every apply, so the API asks for confirm: true and otherwise returns what
   # that dialog shows.
@@ -108,9 +118,7 @@ class Api::V1::RulesController < Api::V1::BaseController
   private
 
     def set_rule
-      @rule = current_resource_owner.family.rules
-        .includes(:actions, conditions: :sub_conditions)
-        .find(params[:id])
+      @rule = current_resource_owner.family.rules.includes(*RULE_INCLUDES).find(params[:id])
     end
 
     def ensure_read_scope
@@ -147,7 +155,7 @@ class Api::V1::RulesController < Api::V1::BaseController
       return render_rule_errors unless save_rule
 
       @warnings = @rule.notification_baseline_timed_out? ? [ notification_baseline_timed_out_message ] : []
-      @rule = current_resource_owner.family.rules.includes(:actions, conditions: :sub_conditions).find(@rule.id)
+      @rule = current_resource_owner.family.rules.includes(*RULE_INCLUDES).find(@rule.id)
       render :saved, status: status
     end
 
