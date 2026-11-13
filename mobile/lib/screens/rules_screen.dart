@@ -10,10 +10,13 @@ import '../utils/rule_text.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
 import 'rule_detail_screen.dart';
+import 'rule_editor_sheet.dart';
 import 'settings_links.dart';
 
-/// The family's rules from `GET /api/v1/rules`, read-only. Tap one for its
-/// conditions, actions and recent runs; creating and editing is on the web.
+/// The family's rules from `GET /api/v1/rules`. Tap one for its conditions,
+/// actions and recent runs. On a Sure+ server with `rules.write` "+" opens
+/// the rule editor; elsewhere creating and editing is on the web. Reordering
+/// is always on the web (the API has no ordering).
 class RulesScreen extends StatefulWidget {
   const RulesScreen({
     super.key,
@@ -21,6 +24,7 @@ class RulesScreen extends StatefulWidget {
     this.accessTokenLoader,
     this.onUnauthorized,
     this.nameLookup,
+    this.editorChoices,
   });
 
   final RulesService? service;
@@ -35,6 +39,9 @@ class RulesScreen extends StatefulWidget {
   /// app's providers (see [ruleNameLookupFromProviders]).
   final RuleNameLookup? nameLookup;
 
+  /// What the editor's pickers offer; defaults to the app's providers.
+  final RuleEditorChoices? editorChoices;
+
   static const webPath = '/rules';
 
   @override
@@ -45,6 +52,9 @@ class _RulesScreenState extends State<RulesScreen> {
   late final RulesService _service;
   List<Rule>? _rules;
   bool _loading = true;
+
+  /// `warnings` from the last save, shown until the next one.
+  List<String> _warnings = const [];
 
   @override
   void initState() {
@@ -92,8 +102,8 @@ class _RulesScreenState extends State<RulesScreen> {
     });
   }
 
-  void _open(Rule rule) {
-    Navigator.of(context).push(MaterialPageRoute<void>(
+  Future<void> _open(Rule rule) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => RuleDetailScreen(
         ruleId: rule.id,
         initialRule: rule,
@@ -101,14 +111,42 @@ class _RulesScreenState extends State<RulesScreen> {
         accessTokenLoader: widget.accessTokenLoader,
         onUnauthorized: widget.onUnauthorized,
         nameLookup: widget.nameLookup,
+        editorChoices: widget.editorChoices,
       ),
     ));
+    // The rule may have been edited, duplicated, applied or deleted.
+    if (mounted) await _load();
+  }
+
+  Future<void> _create() async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await showRuleEditorSheet(
+      context,
+      choices:
+          widget.editorChoices ?? RuleEditorChoices.fromProviders(context),
+      save: (body) async {
+        final token = await _token();
+        if (token == null) {
+          await _unauthorized();
+          return {'success': false, 'error': 'unauthorized'};
+        }
+        final result = await _service.createRule(accessToken: token, body: body);
+        if (result['error'] == 'unauthorized') await _unauthorized();
+        return result;
+      },
+    );
+    if (result == null || !mounted) return;
+    messenger.showSnackBar(SnackBar(content: Text(l.sprRuleSaved)));
+    setState(() => _warnings = result.warnings);
+    await _load();
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
+    final canWrite = rulesWriteEnabled(context);
     final rules = _rules;
     final text = RuleText(l,
         lookup: widget.nameLookup ?? ruleNameLookupFromProviders(context));
@@ -135,7 +173,7 @@ class _RulesScreenState extends State<RulesScreen> {
         _centered(SureEmptyState(
           icon: SureIcons.listChecks,
           title: l.p3roRulesEmpty,
-          body: l.p3roRulesEmptyBody,
+          body: canWrite ? l.sprRulesEmptyBody : l.p3roRulesEmptyBody,
         )),
       ];
     } else {
@@ -177,8 +215,24 @@ class _RulesScreenState extends State<RulesScreen> {
       leading: Navigator.of(context).canPop()
           ? SureBackButton(label: l.shellSettingsTitle)
           : null,
+      actions: [
+        if (canWrite)
+          SureNavIconButton(
+            key: const ValueKey('rulesAdd'),
+            icon: SureIcons.plus,
+            semanticLabel: l.sprRuleNew,
+            onPressed: rules == null ? null : _create,
+          ),
+      ],
       onRefresh: _load,
       slivers: [
+        for (final warning in _warnings)
+          SliverToBoxAdapter(
+            child: SureBanner(
+              message: warning,
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            ),
+          ),
         SliverToBoxAdapter(
           child: SurePanel.rows(
             margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -187,7 +241,9 @@ class _RulesScreenState extends State<RulesScreen> {
               SureListRow(
                 leading: SureIcon(SureIcons.pencil,
                     size: 20, color: palette.textPrimary),
-                title: l.p3roRulesManageOnWeb,
+                title: canWrite
+                    ? l.sprRulesReorderOnWeb
+                    : l.p3roRulesManageOnWeb,
                 trailing: const SettingsWebMark(),
                 onTap: () => openWebFallback(context,
                     title: l.shellRules, path: RulesScreen.webPath),
