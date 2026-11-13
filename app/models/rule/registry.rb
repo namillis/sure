@@ -1,6 +1,7 @@
 class Rule::Registry
   UnsupportedActionError = Class.new(StandardError)
   UnsupportedConditionError = Class.new(StandardError)
+  AI_ACTION_KEYS = [].freeze
 
   def initialize(rule)
     @rule = rule
@@ -16,6 +17,10 @@ class Rule::Registry
 
   def action_executors
     []
+  end
+
+  def known_action_executors
+    action_executors
   end
 
   def get_filter!(key)

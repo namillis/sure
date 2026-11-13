@@ -862,6 +862,7 @@ Rails.application.routes.draw do
         patch :reorder, on: :collection
         post :apply_all, on: :collection
         post :apply, on: :member
+        get :catalog, on: :collection, to: "rule_catalogs#show"
       end
       resources :rule_groups, only: [ :index, :create, :update, :destroy ]
       resources :rule_runs, only: [ :index, :show ]

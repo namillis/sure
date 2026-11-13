@@ -5,6 +5,8 @@
 module SurePlus
   module Features
     NAMES = %w[
+      accounts.loan_rates
+      accounts.permissions
       accounts.write
       budgets.allocations
       budgets.permissions
@@ -20,6 +22,7 @@ module SurePlus
       profile.write
       recurring.category
       rules.apply_all
+      rules.catalog
       rules.groups
       rules.reorder
       rules.write
