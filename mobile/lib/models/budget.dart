@@ -18,6 +18,7 @@ class Budget {
     required this.currency,
     required this.initialized,
     required this.current,
+    this.canEdit,
     this.budgetedSpending,
     this.budgetedSpendingCents,
     this.expectedIncome,
@@ -41,6 +42,10 @@ class Budget {
   final String currency;
   final bool initialized;
   final bool current;
+
+  /// Sure+ `budgets.permissions`: whether the user may change this budget.
+  /// Null on servers that don't send `can_edit`.
+  final bool? canEdit;
 
   final String? budgetedSpending;
   final int? budgetedSpendingCents;
@@ -87,6 +92,7 @@ class Budget {
       currency: json['currency']?.toString() ?? '',
       initialized: json['initialized'] == true,
       current: json['current'] == true,
+      canEdit: json['can_edit'] is bool ? json['can_edit'] as bool : null,
       budgetedSpending: _string(json['budgeted_spending']),
       budgetedSpendingCents: _int(json['budgeted_spending_cents']),
       expectedIncome: _string(json['expected_income']),
@@ -159,6 +165,8 @@ class BudgetCategory {
     this.availableToSpend,
     this.availableToSpendCents,
     this.sharedBudgetCents,
+    this.medianSpent,
+    this.medianSpentCents,
   });
 
   final String id;
@@ -190,6 +198,11 @@ class BudgetCategory {
   /// own allocation. Set by [BudgetCategoryGroup.build].
   final int? sharedBudgetCents;
 
+  /// Sure+ `budgets.permissions`: the median monthly spending across every
+  /// month with spending (the web's "/m avg" line). Show responses only.
+  final String? medianSpent;
+  final int? medianSpentCents;
+
   /// A copy carrying [sharedBudgetCents].
   BudgetCategory withSharedBudgetCents(int cents) => BudgetCategory(
         id: id,
@@ -211,6 +224,8 @@ class BudgetCategory {
         availableToSpend: availableToSpend,
         availableToSpendCents: availableToSpendCents,
         sharedBudgetCents: cents,
+        medianSpent: medianSpent,
+        medianSpentCents: medianSpentCents,
       );
 
   String get name => category.name;
@@ -292,6 +307,8 @@ class BudgetCategory {
       rolledOverAmountCents: _int(json['rolled_over_amount_cents']),
       availableToSpend: _string(json['available_to_spend']),
       availableToSpendCents: _int(json['available_to_spend_cents']),
+      medianSpent: _string(json['median_spent']),
+      medianSpentCents: _int(json['median_spent_cents']),
     );
   }
 }

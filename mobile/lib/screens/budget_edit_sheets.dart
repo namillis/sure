@@ -263,10 +263,21 @@ class _BudgetCategorySheetState extends State<BudgetCategorySheet> {
                     fit: BoxFit.scaleDown,
                     child: _AmountSentence(
                       key: const ValueKey('budgetCategorySpent'),
-                      template: widget.budget.current
-                          ? l.spbSpentThisMonth
-                          : l.spbSpentInPeriod,
-                      amount: spent,
+                      parts: [
+                        (
+                          widget.budget.current
+                              ? l.spbSpentThisMonth
+                              : l.spbSpentInPeriod,
+                          spent,
+                        ),
+                        // Sure+ `budgets.permissions`: the web's "/m avg".
+                        if ((bc.medianSpentCents ?? 0) != 0 &&
+                            bc.medianSpent != null)
+                          (
+                            l.sb2AvgSuffix,
+                            MoneyMasker.mask(bc.medianSpent!, hidden: hidden),
+                          ),
+                      ],
                       color: palette.textSecondary,
                     ),
                   ),
@@ -495,37 +506,44 @@ class _BudgetTotalsSheetState extends State<BudgetTotalsSheet> {
   }
 }
 
-/// "Spent $128 this month": the localized sentence with only the amount in
-/// mono.
+/// "Spent $128 this month · avg $95": localized sentences, one per
+/// (template, amount) part, with only the amounts in mono.
 class _AmountSentence extends StatelessWidget {
   const _AmountSentence({
     super.key,
-    required this.template,
-    required this.amount,
+    required this.parts,
     required this.color,
   });
 
-  final String Function(String amount) template;
-  final String amount;
+  final List<(String Function(String amount), String)> parts;
   final Color color;
 
   static const _marker = '\u0000';
 
   @override
   Widget build(BuildContext context) {
-    final parts = template(_marker).split(_marker);
     final style = TextStyle(fontSize: 13, color: color);
     return Text.rich(
       TextSpan(
         style: style,
         children: [
-          TextSpan(text: parts.first),
-          TextSpan(text: amount, style: SureMoney.tabular(style)),
-          if (parts.length > 1) TextSpan(text: parts.sublist(1).join()),
+          for (final (template, amount) in parts)
+            ..._spans(template(_marker).split(_marker), amount, style),
         ],
       ),
       maxLines: 1,
       textAlign: TextAlign.center,
     );
   }
+
+  static List<InlineSpan> _spans(
+    List<String> pieces,
+    String amount,
+    TextStyle style,
+  ) =>
+      [
+        TextSpan(text: pieces.first),
+        TextSpan(text: amount, style: SureMoney.tabular(style)),
+        if (pieces.length > 1) TextSpan(text: pieces.sublist(1).join()),
+      ];
 }

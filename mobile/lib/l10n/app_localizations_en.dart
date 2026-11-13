@@ -4826,4 +4826,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get spaInvestEmptyBody =>
       'Add an investment or crypto account, or connect a brokerage.';
+
+  @override
+  String get sb2Move => 'Move';
+
+  @override
+  String get sb2MoveTitle => 'Move budget';
+
+  @override
+  String get sb2From => 'From';
+
+  @override
+  String get sb2To => 'To';
+
+  @override
+  String get sb2Choose => 'Choose';
+
+  @override
+  String sb2AmountLeft(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String get sb2Moved => 'Budget moved';
+
+  @override
+  String get sb2MoveFailed => 'Couldn\'t move the budget. Try again.';
+
+  @override
+  String get sb2ErrInsufficientFunds =>
+      'This category doesn\'t have that much budget to move.';
+
+  @override
+  String get sb2ErrDifferentBudgets =>
+      'Both categories must be in the same budget.';
+
+  @override
+  String get sb2ErrNonPositive => 'Enter an amount greater than 0.';
+
+  @override
+  String get sb2ErrSameCategory => 'Pick a different category to move to.';
+
+  @override
+  String get sb2ErrParentChild =>
+      'You can\'t move budget between a category and its own subcategory.';
+
+  @override
+  String get sb2ErrUncategorized => 'Uncategorized can\'t hold a budget.';
+
+  @override
+  String sb2AvgSuffix(String amount) {
+    return ' · avg $amount';
+  }
+
+  @override
+  String get sb2NoBudgetBody =>
+      'Copy an earlier month\'s amounts or start with an empty budget.';
+
+  @override
+  String sb2CopyMonth(String month) {
+    return 'Copy $month';
+  }
+
+  @override
+  String get sb2StartFromScratch => 'Start from scratch';
+
+  @override
+  String get sb2NothingToCopy => 'There\'s no earlier budget to copy.';
+
+  @override
+  String get sb2SetupFailed => 'Couldn\'t set up the budget. Try again.';
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,7 @@ import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
 import 'budget_category_transactions_screen.dart';
 import 'budget_edit_sheets.dart';
+import 'budget_move_sheet.dart';
 
 /// Monthly budget overview, matching the web Budgets page: month switcher,
 /// a "left to spend" hero with a progress bar, then one panel of category
@@ -45,8 +47,12 @@ class BudgetsScreen extends StatefulWidget {
 
   /// The web budget page for the period starting [month]
   /// (`/budgets/nov-2026`, the Rails `Budget#to_param`).
-  static String webPath(DateTime month) =>
-      '/budgets/${DateFormat('MMM-yyyy', 'en').format(month).toLowerCase()}';
+  static String webPath(DateTime month) => '/budgets/${monthParam(month)}';
+
+  /// The web's month param (`nov-2026`), which the copy_previous endpoint
+  /// takes too.
+  static String monthParam(DateTime month) =>
+      DateFormat('MMM-yyyy', 'en').format(month).toLowerCase();
 
   @override
   State<BudgetsScreen> createState() => _BudgetsScreenState();
@@ -58,6 +64,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   late final BudgetsProvider _provider;
   late final bool _ownsProvider;
   _CategoryFilter _filter = _CategoryFilter.all;
+
+  /// Months (`nov-2026`) the server had nothing to copy into (422
+  /// `no_source`): only Start from scratch is offered there.
+  final Set<String> _noSourceMonths = {};
+  bool _settingUp = false;
 
   @override
   void initState() {
@@ -159,6 +170,70 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       onOpenTransactions: () => _openCategory(budget, bc, ids),
       onUnauthorized: _provider.markUnauthorized,
     );
+  }
+
+  /// Sure+ `budgets.allocations`: Move swipe action and native month setup.
+  bool _hasAllocations(BuildContext context) =>
+      context
+          .watch<ServerFeaturesProvider?>()
+          ?.has(ServerFeaturesProvider.budgetsAllocations) ??
+      false;
+
+  void _moveFrom(BudgetCategory bc) {
+    showBudgetMoveSheet(
+      context,
+      provider: _provider,
+      from: bc,
+      categories: _provider.categories,
+      accessToken: _accessToken,
+      onUnauthorized: _provider.markUnauthorized,
+    );
+  }
+
+  /// Copies the previous month (or, with [copy] false, starts an empty
+  /// budget) for [month], then shows it.
+  Future<void> _setUpMonth(DateTime month, {required bool copy}) async {
+    if (_settingUp) return;
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final token = await _accessToken();
+    if (!mounted) return;
+    if (token == null) {
+      _provider.markUnauthorized();
+      return;
+    }
+    setState(() => _settingUp = true);
+    final param = BudgetsScreen.monthParam(month);
+    final result = copy
+        ? await _provider.copyPreviousMonth(
+            accessToken: token,
+            monthParam: param,
+          )
+        : await _provider.startMonth(accessToken: token);
+    if (!mounted) return;
+    setState(() => _settingUp = false);
+    if (result['success'] == true || result['code'] == 'already_set_up') {
+      return;
+    }
+    if (result['error'] == 'unauthorized') {
+      _provider.markUnauthorized();
+      return;
+    }
+    final String message;
+    switch (result['code']) {
+      case 'no_source':
+        setState(() => _noSourceMonths.add(param));
+        message = l.sb2NothingToCopy;
+      case 'insufficient_scope':
+        message = l.spmReadOnlyAccess;
+      case 'forbidden':
+        message = l.spbSharedReadOnly;
+      case 'validation_failed':
+        message = result['error']?.toString() ?? l.sb2SetupFailed;
+      default:
+        message = l.sb2SetupFailed;
+    }
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _editTotals(Budget budget) {
@@ -327,15 +402,18 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       final monthLabel = month.year == provider.today.year
           ? DateFormat.MMMM(locale).format(month)
           : DateFormat.yMMMM(locale).format(month);
-      return [
-        _state(SureEmptyState(
-          icon: SureIcons.chartPie,
-          title: l.budgetsNoBudgetTitle(monthLabel),
-          body: l.ds2pNoBudgetBody,
-          primaryLabel: l.ds2pSetUpOnWeb,
-          onPrimary: () => _openWeb(month),
-        )),
-      ];
+      if (!_hasAllocations(context)) {
+        return [
+          _state(SureEmptyState(
+            icon: SureIcons.chartPie,
+            title: l.budgetsNoBudgetTitle(monthLabel),
+            body: l.ds2pNoBudgetBody,
+            primaryLabel: l.ds2pSetUpOnWeb,
+            onPrimary: () => _openWeb(month),
+          )),
+        ];
+      }
+      return [_buildSetUpMonth(context, provider, month, monthLabel)];
     }
 
     final widgets = <Widget>[];
@@ -430,6 +508,57 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     return widgets;
   }
 
+  /// The empty month on a Sure+ server with `budgets.allocations`: copy the
+  /// previous month, start from scratch, or set it up on the web.
+  Widget _buildSetUpMonth(
+    BuildContext context,
+    BudgetsProvider provider,
+    DateTime month,
+    String monthLabel,
+  ) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    final locale = Localizations.localeOf(context).toString();
+    final previous = DateTime(month.year, month.month - 1);
+    final previousLabel = previous.year == provider.today.year
+        ? DateFormat.MMMM(locale).format(previous)
+        : DateFormat.yMMMM(locale).format(previous);
+    final canCopy =
+        !_noSourceMonths.contains(BudgetsScreen.monthParam(month));
+    void copy() => _setUpMonth(month, copy: true);
+    void start() => _setUpMonth(month, copy: false);
+
+    return _state(Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SureEmptyState(
+          icon: SureIcons.chartPie,
+          title: l.budgetsNoBudgetTitle(monthLabel),
+          body: l.sb2NoBudgetBody,
+          primaryLabel:
+              canCopy ? l.sb2CopyMonth(previousLabel) : l.sb2StartFromScratch,
+          onPrimary: canCopy ? copy : start,
+          secondaryLabel: canCopy ? l.sb2StartFromScratch : null,
+          onSecondary: canCopy ? start : null,
+        ),
+        if (_settingUp)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        TextButton(
+          key: const ValueKey('budgetSetUpOnWeb'),
+          onPressed: () => _openWeb(month),
+          style: TextButton.styleFrom(foregroundColor: palette.textSecondary),
+          child: Text(l.ds2pSetUpOnWeb, style: const TextStyle(fontSize: 13)),
+        ),
+      ],
+    ));
+  }
+
   Widget _state(Widget child) => Padding(
         padding: const EdgeInsets.only(top: 48),
         child: Center(child: child),
@@ -448,20 +577,34 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     final filter = overCount == 0 ? _CategoryFilter.all : _filter;
     final canEdit = _canEdit(context);
     final editable = canEdit && !provider.isReadOnly;
+    final movable = _hasAllocations(context) && !provider.isReadOnly;
 
     final rows = <Widget>[];
     void addRow(BudgetCategory bc, List<String> ids, {bool indented = false}) {
-      rows.add(
-        BudgetCategoryRow(
-          key: ValueKey('budget-category-${bc.id}'),
-          budgetCategory: bc,
-          hideAmounts: hideAmounts,
-          indented: indented,
-          onTap: editable
-              ? () => _editCategory(budget, bc, ids)
-              : () => _openCategory(budget, bc, ids),
-        ),
+      final row = BudgetCategoryRow(
+        key: ValueKey('budget-category-${bc.id}'),
+        budgetCategory: bc,
+        hideAmounts: hideAmounts,
+        indented: indented,
+        onTap: editable
+            ? () => _editCategory(budget, bc, ids)
+            : () => _openCategory(budget, bc, ids),
       );
+      if (!movable) {
+        rows.add(row);
+        return;
+      }
+      void move() => _moveFrom(bc);
+      rows.add(Semantics(
+        customSemanticsActions: {CustomSemanticsAction(label: l.sb2Move): move},
+        child: SureSwipeActions(
+          key: ValueKey('budget-move-swipe-${bc.id}'),
+          actions: [
+            SureSwipeAction(label: l.sb2Move, color: palette.link, onPressed: move),
+          ],
+          child: ColoredBox(color: palette.container, child: row),
+        ),
+      ));
     }
 
     for (final group in groups) {
@@ -490,8 +633,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     return [
       SureSectionHeader(
         label: l.budgetsCategoriesTitle,
-        // Kept with native editing too: allocation moves only exist on the
-        // web.
+        // Kept with native editing too: the web has more (category
+        // groups, the full allocation view).
         actionLabel: l.ds2pEditOnWeb,
         actionIcon: SureIcons.arrowUpRight,
         onAction: () => _openWeb(budget.startDate),

@@ -21,6 +21,8 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const holdingsStableOrder = 'holdings.stable_order';
   static const recurringCategory = 'recurring.category';
   static const budgetsWrite = 'budgets.write';
+  static const budgetsAllocations = 'budgets.allocations';
+  static const budgetsPermissions = 'budgets.permissions';
   static const categoriesWrite = 'categories.write';
   static const merchantsWrite = 'merchants.write';
   static const profileWrite = 'profile.write';

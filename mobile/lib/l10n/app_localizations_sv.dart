@@ -4860,4 +4860,74 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get spaInvestEmptyBody =>
       'Lägg till ett investerings- eller kryptokonto, eller anslut en mäklare.';
+
+  @override
+  String get sb2Move => 'Flytta';
+
+  @override
+  String get sb2MoveTitle => 'Flytta budget';
+
+  @override
+  String get sb2From => 'Från';
+
+  @override
+  String get sb2To => 'Till';
+
+  @override
+  String get sb2Choose => 'Välj';
+
+  @override
+  String sb2AmountLeft(String amount) {
+    return '$amount kvar';
+  }
+
+  @override
+  String get sb2Moved => 'Budgeten flyttades';
+
+  @override
+  String get sb2MoveFailed => 'Det gick inte att flytta budgeten. Försök igen.';
+
+  @override
+  String get sb2ErrInsufficientFunds =>
+      'Kategorin har inte så mycket budget att flytta.';
+
+  @override
+  String get sb2ErrDifferentBudgets =>
+      'Båda kategorierna måste finnas i samma budget.';
+
+  @override
+  String get sb2ErrNonPositive => 'Ange ett belopp större än 0.';
+
+  @override
+  String get sb2ErrSameCategory => 'Välj en annan kategori att flytta till.';
+
+  @override
+  String get sb2ErrParentChild =>
+      'Du kan inte flytta budget mellan en kategori och dess egen underkategori.';
+
+  @override
+  String get sb2ErrUncategorized => 'Okategoriserat kan inte ha någon budget.';
+
+  @override
+  String sb2AvgSuffix(String amount) {
+    return ' · snitt $amount';
+  }
+
+  @override
+  String get sb2NoBudgetBody =>
+      'Kopiera beloppen från en tidigare månad eller börja med en tom budget.';
+
+  @override
+  String sb2CopyMonth(String month) {
+    return 'Kopiera $month';
+  }
+
+  @override
+  String get sb2StartFromScratch => 'Börja från noll';
+
+  @override
+  String get sb2NothingToCopy => 'Det finns ingen tidigare budget att kopiera.';
+
+  @override
+  String get sb2SetupFailed => 'Det gick inte att skapa budgeten. Försök igen.';
 }

@@ -8287,6 +8287,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add an investment or crypto account, or connect a brokerage.'**
   String get spaInvestEmptyBody;
+
+  /// Swipe action on a budget category row and the action of the move sheet: moves part of its budget to another category.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get sb2Move;
+
+  /// Title of the sheet that moves budget from one category to another.
+  ///
+  /// In en, this message translates to:
+  /// **'Move budget'**
+  String get sb2MoveTitle;
+
+  /// Row label in the move-budget sheet for the category the money leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get sb2From;
+
+  /// Row label in the move-budget sheet for the category the money goes to.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get sb2To;
+
+  /// Value of the To row before a category is picked.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get sb2Choose;
+
+  /// Subtitle of the From row: what is left to spend in the category.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left'**
+  String sb2AmountLeft(String amount);
+
+  /// Snackbar after a budget move succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget moved'**
+  String get sb2Moved;
+
+  /// Generic error when a budget move fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t move the budget. Try again.'**
+  String get sb2MoveFailed;
+
+  /// Move refused: the amount is more than the source category can give.
+  ///
+  /// In en, this message translates to:
+  /// **'This category doesn\'t have that much budget to move.'**
+  String get sb2ErrInsufficientFunds;
+
+  /// Move refused: the categories belong to different budgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Both categories must be in the same budget.'**
+  String get sb2ErrDifferentBudgets;
+
+  /// Move refused or blocked: the amount is zero, negative or not a number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than 0.'**
+  String get sb2ErrNonPositive;
+
+  /// Move refused: source and destination are the same category.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a different category to move to.'**
+  String get sb2ErrSameCategory;
+
+  /// Move refused: one category is the parent of the other.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t move budget between a category and its own subcategory.'**
+  String get sb2ErrParentChild;
+
+  /// Move refused: one side is Uncategorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncategorized can\'t hold a budget.'**
+  String get sb2ErrUncategorized;
+
+  /// Appended to the Spent line in the budget category sheet: the median monthly spending.
+  ///
+  /// In en, this message translates to:
+  /// **' · avg {amount}'**
+  String sb2AvgSuffix(String amount);
+
+  /// Body of the empty state for a month without a budget, when it can be set up in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy an earlier month\'s amounts or start with an empty budget.'**
+  String get sb2NoBudgetBody;
+
+  /// Primary button of the empty budget month: copies the previous month's budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy {month}'**
+  String sb2CopyMonth(String month);
+
+  /// Secondary button of the empty budget month: sets up an empty budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from scratch'**
+  String get sb2StartFromScratch;
+
+  /// Shown when copying the previous month fails because no earlier month is set up.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no earlier budget to copy.'**
+  String get sb2NothingToCopy;
+
+  /// Generic error when copying or starting a budget month fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t set up the budget. Try again.'**
+  String get sb2SetupFailed;
 }
 
 class _AppLocalizationsDelegate
