@@ -30,6 +30,7 @@ import '../models/custom_proxy_header.dart';
 import '../services/api_config.dart';
 import '../services/custom_proxy_headers_service.dart';
 import '../widgets/custom_proxy_headers_editor.dart';
+import '../widgets/household_settings_rows.dart';
 import '../l10n/app_localizations.dart';
 
 /// The label of the app-lock switch: "Face ID lock" / "Touch ID lock" on iOS
@@ -708,6 +709,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         path: '/settings/profile',
                       ),
             ),
+            const HouseholdSettingsRows(),
             const SettingsLinkGroups(),
             SureSectionHeader(label: l.settingsSectionDisplay),
             SurePanel.rows(
