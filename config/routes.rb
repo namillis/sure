@@ -874,38 +874,28 @@ Rails.application.routes.draw do
       resources :security_prices, only: [ :index, :show, :create ]
       resources :tags, only: [ :index, :show, :create, :update, :destroy ]
 
+      # Sure+ transaction actions
+      resources :attachments, only: [ :show ], controller: :transaction_attachments
       resources :transactions, only: [] do
+        resources :attachments, only: [ :create, :destroy ], controller: :transaction_attachments
         member do
           post :merge_duplicate, to: "transaction_duplicates#merge_duplicate"
           post :dismiss_duplicate, to: "transaction_duplicates#dismiss_duplicate"
           get :pending_merge_candidates, to: "transaction_duplicates#pending_merge_candidates"
           post :pending_merge, to: "transaction_duplicates#pending_merge"
-        end
-      end
-
-      resources :transactions, only: [] do
-        member do
           post :unlock, to: "transaction_locks#unlock"
           patch :reconcile, to: "transaction_locks#reconcile"
-        end
-      # Sure+ transactions.attachments
-      resources :attachments, only: [ :show ], controller: :transaction_attachments
-        resources :attachments, only: [ :create, :destroy ], controller: :transaction_attachments
-      end
-
-      resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do
-        resource :split, only: [ :show, :create, :update, :destroy ]
-      end
-      resources :transactions, only: [] do
-        member do
           get :transfer_candidates, to: "transaction_transfer_matches#candidates"
           post :transfer_match, to: "transaction_transfer_matches#create"
           delete :transfer_match, to: "transaction_transfer_matches#destroy"
           post :mark_as_recurring, to: "transaction_recurring_marks#create"
-      # Sure+ transactions.convert_to_trade
           get :convert_to_trade, to: "transaction_trade_conversions#show"
           post :convert_to_trade, to: "transaction_trade_conversions#create"
         end
+      end
+
+      resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do
+        resource :split, only: [ :show, :create, :update, :destroy ]
       end
       resources :trades, only: [ :index, :show, :create, :update, :destroy ]
       resources :holdings, only: [ :index, :show ]

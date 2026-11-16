@@ -1184,7 +1184,9 @@ RSpec.configure do |config|
                 type: :boolean,
                 description: 'Whether to offer the reconcile control: the family turned on manual reconciliation, ' \
                              'the account has no bank sync, and the user can edit the account.'
+              },
               attachments: {
+                type: :array,
                 description: 'Receipts and other files attached to the transaction (Sure+ feature transactions.attachments).',
                 items: { '$ref' => '#/components/schemas/TransactionAttachment' }
               },
