@@ -874,6 +874,12 @@ Rails.application.routes.draw do
       resources :security_prices, only: [ :index, :show, :create ]
       resources :tags, only: [ :index, :show, :create, :update, :destroy ]
 
+      # Sure+ transactions.attachments
+      resources :attachments, only: [ :show ], controller: :transaction_attachments
+      resources :transactions, only: [] do
+        resources :attachments, only: [ :create, :destroy ], controller: :transaction_attachments
+      end
+
       resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do
         resource :split, only: [ :show, :create, :update, :destroy ]
       end

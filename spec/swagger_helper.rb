@@ -1131,8 +1131,29 @@ RSpec.configure do |config|
                 items: { '$ref' => '#/components/schemas/Tag' }
               },
               transfer: { '$ref' => '#/components/schemas/Transfer', nullable: true },
+              attachments: {
+                type: :array,
+                description: 'Receipts and other files attached to the transaction (Sure+ feature transactions.attachments).',
+                items: { '$ref' => '#/components/schemas/TransactionAttachment' }
+              },
               created_at: { type: :string, format: :'date-time' },
               updated_at: { type: :string, format: :'date-time' }
+            }
+          },
+          TransactionAttachment: {
+            type: :object,
+            required: %w[id filename content_type byte_size created_at url],
+            properties: {
+              id: { type: :string, format: :uuid },
+              filename: { type: :string },
+              content_type: { type: :string },
+              byte_size: { type: :integer },
+              created_at: { type: :string, format: :'date-time' },
+              url: {
+                type: :string,
+                format: :uri,
+                description: 'GET /api/v1/attachments/{id}. Needs the same API key or OAuth token as any other call; there is no public link to the file.'
+              }
             }
           },
           TransactionCollection: {
