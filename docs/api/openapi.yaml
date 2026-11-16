@@ -1832,6 +1832,13 @@ components:
           type: string
         currency:
           type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - confirmed
+          description: 'pending: an automatic match nobody has confirmed yet; both
+            legs still count as ordinary transactions'
         other_account:
           "$ref": "#/components/schemas/Account"
           nullable: true
@@ -2115,12 +2122,129 @@ components:
         transfer:
           "$ref": "#/components/schemas/Transfer"
           nullable: true
+        pending:
+          type: boolean
+          description: Whether the bank still reports the transaction as pending.
+        duplicate_suspected:
+          type: boolean
+          description: Whether a sync flagged this pending transaction as possibly
+            the same purchase as a posted one, and the user has not dismissed it.
+            Resolve with merge_duplicate or dismiss_duplicate.
+        duplicate_confidence:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          nullable: true
+          description: How sure the match is. The web shows low as "Review" and the
+            others as "Possible duplicate".
+        duplicate_candidate:
+          type: object
+          nullable: true
+          description: The suggested posted transaction, or null.
+          required:
+          - id
+          - entry_id
+          - date
+          - name
+          - amount
+          - amount_cents
+          - signed_amount_cents
+          - currency
+          properties:
+            id:
+              type: string
+              format: uuid
+            entry_id:
+              type: string
+              format: uuid
+            date:
+              type: string
+              format: date
+            name:
+              type: string
+            amount:
+              type: string
+            amount_cents:
+              type: integer
+            signed_amount_cents:
+              type: integer
+            currency:
+              type: string
+        sync_locked:
+          type: boolean
+          description: Whether the transaction is protected from bank sync because
+            the user edited it or it came from an import (the web's "Protected from
+            sync" panel). Unlock with POST unlock.
+        locked_attributes:
+          type: array
+          description: The fields the user changed, which a sync will not overwrite,
+            with when each was locked. Names are the attribute names, e.g. name, date,
+            amount, notes, category_id, merchant_id.
+          items:
+            type: object
+            required:
+            - field
+            - locked_at
+            properties:
+              field:
+                type: string
+              locked_at:
+                type: string
+                format: date-time
+                nullable: true
+        reconciled_status:
+          type: string
+          enum:
+          - unreconciled
+          - cleared
+          - reconciled
+          description: Manual statement check-off status. See PATCH reconcile.
+        reconcilable:
+          type: boolean
+          description: 'Whether to offer the reconcile control: the family turned
+            on manual reconciliation, the account has no bank sync, and the user can
+            edit the account.'
+        attachments:
+          type: array
+          description: Receipts and other files attached to the transaction (Sure+
+            feature transactions.attachments).
+          items:
+            "$ref": "#/components/schemas/TransactionAttachment"
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
+    TransactionAttachment:
+      type: object
+      required:
+      - id
+      - filename
+      - content_type
+      - byte_size
+      - created_at
+      - url
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        content_type:
+          type: string
+        byte_size:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+          format: uri
+          description: GET /api/v1/attachments/{id}. Needs the same API key or OAuth
+            token as any other call; there is no public link to the file.
     TransactionCollection:
       type: object
       required:
@@ -5108,6 +5232,218 @@ components:
         error:
           type: string
 paths:
+  "/api/v1/accounts/{id}/sharing":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Show who an account is shared with
+      description: Sure+ `accounts.sharing`. The web's sharing dialog. The owner gets
+        every active family member with a permission (`none` means not shared); a
+        member the account is shared with gets their own permission and `include_in_finances`.
+      tags:
+      - Account Sharing (Sure+)
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: sharing shown
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - account_id
+                - is_owner
+                - owner
+                - permission
+                - include_in_finances
+                - permissions
+                - members
+                properties:
+                  account_id:
+                    type: string
+                    format: uuid
+                  is_owner:
+                    type: boolean
+                  owner:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                  permission:
+                    type: string
+                    nullable: true
+                    enum:
+                    - full_control
+                    - read_write
+                    - read_only
+                    -
+                    description: The caller's own share permission; null for the owner.
+                  include_in_finances:
+                    type: boolean
+                    nullable: true
+                    description: Whether the account counts in the caller's finances;
+                      null for the owner.
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  members:
+                    type: array
+                    description: Owner only; empty for anyone else.
+                    items:
+                      type: object
+                      required:
+                      - user_id
+                      - name
+                      - permission
+                      properties:
+                        user_id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        permission:
+                          type: string
+                          enum:
+                          - none
+                          - full_control
+                          - read_write
+                          - read_only
+        '404':
+          description: account not accessible
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Change who an account is shared with
+      description: 'Sure+ `accounts.sharing`. Owner: `members` with a permission each
+        (`none` unshares; new shares count in the member''s finances, as on the web).
+        Members not listed are left alone. A member the account is shared with may
+        only send `include_in_finances`; sending `members` is 403. Unknown permissions
+        or users are 422.'
+      tags:
+      - Account Sharing (Sure+)
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: sharing updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - account_id
+                - is_owner
+                - owner
+                - permission
+                - include_in_finances
+                - permissions
+                - members
+                properties:
+                  account_id:
+                    type: string
+                    format: uuid
+                  is_owner:
+                    type: boolean
+                  owner:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                  permission:
+                    type: string
+                    nullable: true
+                    enum:
+                    - full_control
+                    - read_write
+                    - read_only
+                    -
+                    description: The caller's own share permission; null for the owner.
+                  include_in_finances:
+                    type: boolean
+                    nullable: true
+                    description: Whether the account counts in the caller's finances;
+                      null for the owner.
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  members:
+                    type: array
+                    description: Owner only; empty for anyone else.
+                    items:
+                      type: object
+                      required:
+                      - user_id
+                      - name
+                      - permission
+                      properties:
+                        user_id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        permission:
+                          type: string
+                          enum:
+                          - none
+                          - full_control
+                          - read_write
+                          - read_only
+        '422':
+          description: invalid permission or member
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - sharing
+              properties:
+                sharing:
+                  type: object
+                  properties:
+                    members:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - user_id
+                        - permission
+                        properties:
+                          user_id:
+                            type: string
+                            format: uuid
+                          permission:
+                            type: string
+                            enum:
+                            - none
+                            - full_control
+                            - read_write
+                            - read_only
+                    include_in_finances:
+                      type: boolean
+        required: true
   "/api/v1/account_statements":
     get:
       summary: List statements in the Statement Vault
@@ -5648,6 +5984,948 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
         '404':
           description: account not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/settings/ai":
+    get:
+      summary: Show the AI prompts and classifier settings
+      tags:
+      - Settings
+      security:
+      - apiKeyAuth: []
+      description: Settings → AI prompts and Settings → Classifier. Family admins
+        only, as the web page is; members and guests get 403 `forbidden`. Never includes
+        provider keys.
+      responses:
+        '200':
+          description: AI settings
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - ai_settings
+                properties:
+                  ai_settings:
+                    type: object
+                    required:
+                    - ai_available
+                    - ai_enabled
+                    - prompt_max_length
+                    - prompts
+                    - classifier
+                    properties:
+                      ai_available:
+                        type: boolean
+                        description: Whether this server has an AI provider for the
+                          user (User#ai_available?)
+                      ai_enabled:
+                        type: boolean
+                        description: Whether the user has AI turned on and it is available
+                      prompt_max_length:
+                        type: integer
+                      prompts:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - key
+                          - value
+                          - default
+                          - custom
+                          - format_risk
+                          - format_risk_key
+                          properties:
+                            key:
+                              type: string
+                              enum:
+                              - chat_system
+                              - categorizer_openai
+                              - categorizer_anthropic
+                              - merchant_openai
+                              - merchant_anthropic
+                              - insight_dig_in
+                            value:
+                              type: string
+                              nullable: true
+                              description: The family's override, or null when it
+                                runs the default
+                            default:
+                              type: string
+                              description: The built-in prompt this server sends without
+                                an override
+                            custom:
+                              type: boolean
+                            format_risk:
+                              type: boolean
+                              description: The override dropped the JSON key the custom-endpoint
+                                prompt asks for (advisory)
+                            format_risk_key:
+                              type: string
+                              nullable: true
+                      classifier:
+                        type: object
+                        required:
+                        - settings
+                        - defaults
+                        - default
+                        - ranges
+                        - choices
+                        - rules
+                        - evaluation
+                        properties:
+                          settings:
+                            type: object
+                            additionalProperties: true
+                            description: Every Family::BayesSettings value
+                          defaults:
+                            type: object
+                            additionalProperties: true
+                          default:
+                            type: boolean
+                            description: All settings are at their defaults
+                          ranges:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              properties:
+                                min:
+                                  type: number
+                                max:
+                                  type: number
+                          choices:
+                            type: object
+                            additionalProperties:
+                              type: array
+                              items:
+                                type: string
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                              - action_type
+                              - name
+                              - exists
+                              - active
+                              properties:
+                                action_type:
+                                  type: string
+                                  enum:
+                                  - fill_similar_merchants
+                                  - bayes_categorize
+                                name:
+                                  type: string
+                                exists:
+                                  type: boolean
+                                  description: False once the rule was deleted on
+                                    the Rules page
+                                active:
+                                  type: boolean
+                          evaluation:
+                            type: object
+                            properties:
+                              running:
+                                type: boolean
+                              ran_at:
+                                type: string
+                                format: date-time
+                                nullable: true
+                              action:
+                                type: string
+                                nullable: true
+                              settings_changed_since:
+                                type: boolean
+                                nullable: true
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Update the AI prompts and classifier settings
+      tags:
+      - Settings
+      security:
+      - apiKeyAuth: []
+      description: |
+        Family admins only, as the web page is; members and guests get 403 `forbidden`. Needs `read_write`. Send any of the three parts; the rest stay as they are.
+        A blank or null prompt resets it to the default. Classifier numbers are clamped to `ranges`, as on the web.
+        Turning on a classifier rule that was deleted returns 422 `classifier_rule_missing`; add it with
+        `POST /api/v1/settings/ai/classifier/rules`. All changes save together or not at all.
+      parameters: []
+      responses:
+        '200':
+          description: AI settings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - ai_settings
+                properties:
+                  ai_settings:
+                    type: object
+                    required:
+                    - ai_available
+                    - ai_enabled
+                    - prompt_max_length
+                    - prompts
+                    - classifier
+                    properties:
+                      ai_available:
+                        type: boolean
+                        description: Whether this server has an AI provider for the
+                          user (User#ai_available?)
+                      ai_enabled:
+                        type: boolean
+                        description: Whether the user has AI turned on and it is available
+                      prompt_max_length:
+                        type: integer
+                      prompts:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - key
+                          - value
+                          - default
+                          - custom
+                          - format_risk
+                          - format_risk_key
+                          properties:
+                            key:
+                              type: string
+                              enum:
+                              - chat_system
+                              - categorizer_openai
+                              - categorizer_anthropic
+                              - merchant_openai
+                              - merchant_anthropic
+                              - insight_dig_in
+                            value:
+                              type: string
+                              nullable: true
+                              description: The family's override, or null when it
+                                runs the default
+                            default:
+                              type: string
+                              description: The built-in prompt this server sends without
+                                an override
+                            custom:
+                              type: boolean
+                            format_risk:
+                              type: boolean
+                              description: The override dropped the JSON key the custom-endpoint
+                                prompt asks for (advisory)
+                            format_risk_key:
+                              type: string
+                              nullable: true
+                      classifier:
+                        type: object
+                        required:
+                        - settings
+                        - defaults
+                        - default
+                        - ranges
+                        - choices
+                        - rules
+                        - evaluation
+                        properties:
+                          settings:
+                            type: object
+                            additionalProperties: true
+                            description: Every Family::BayesSettings value
+                          defaults:
+                            type: object
+                            additionalProperties: true
+                          default:
+                            type: boolean
+                            description: All settings are at their defaults
+                          ranges:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              properties:
+                                min:
+                                  type: number
+                                max:
+                                  type: number
+                          choices:
+                            type: object
+                            additionalProperties:
+                              type: array
+                              items:
+                                type: string
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                              - action_type
+                              - name
+                              - exists
+                              - active
+                              properties:
+                                action_type:
+                                  type: string
+                                  enum:
+                                  - fill_similar_merchants
+                                  - bayes_categorize
+                                name:
+                                  type: string
+                                exists:
+                                  type: boolean
+                                  description: False once the rule was deleted on
+                                    the Rules page
+                                active:
+                                  type: boolean
+                          evaluation:
+                            type: object
+                            properties:
+                              running:
+                                type: boolean
+                              ran_at:
+                                type: string
+                                format: date-time
+                                nullable: true
+                              action:
+                                type: string
+                                nullable: true
+                              settings_changed_since:
+                                type: boolean
+                                nullable: true
+        '422':
+          description: invalid settings
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - ai_settings
+              properties:
+                ai_settings:
+                  type: object
+                  properties:
+                    prompts:
+                      type: object
+                      additionalProperties:
+                        type: string
+                        nullable: true
+                      description: Prompt key => text
+                    classifier:
+                      type: object
+                      properties:
+                        settings:
+                          type: object
+                          additionalProperties: true
+                          description: Any classifier setting keys, e.g. threshold,
+                            excluded_category_ids
+                        rules_active:
+                          type: object
+                          additionalProperties:
+                            type: boolean
+                          description: action_type => on/off
+  "/api/v1/settings/ai/classifier/run":
+    post:
+      summary: Run the classifier over uncategorized transactions
+      tags:
+      - Settings
+      security:
+      - apiKeyAuth: []
+      description: 'Settings → Classifier → Run: queues the matcher (when its rule
+        is on) and Bayes. Family admins only, as the web page is; members and guests
+        get 403 `forbidden`. Needs `read_write`.'
+      responses:
+        '202':
+          description: classifier queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - status
+                    - job
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - queued
+                      job:
+                        type: string
+  "/api/v1/settings/ai/classifier/clear_locks":
+    post:
+      summary: Unlock what the classifier locked
+      tags:
+      - Settings
+      security:
+      - apiKeyAuth: []
+      description: 'Settings → Classifier → Clear locks: queues unlocking the categories
+        and merchants Bayes and the matcher locked. Family admins only, as the web
+        page is; members and guests get 403 `forbidden`. Needs `read_write`.'
+      responses:
+        '202':
+          description: unlock queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - status
+                    - job
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - queued
+                      job:
+                        type: string
+  "/api/v1/settings/ai/classifier/rules":
+    post:
+      summary: Add a deleted classifier rule again
+      tags:
+      - Settings
+      security:
+      - apiKeyAuth: []
+      description: Adds the rule at the top of the rule order, active, as the web's
+        "add it again?" dialog does. 409 if it exists. Family admins only, as the
+        web page is; members and guests get 403 `forbidden`.
+      parameters: []
+      responses:
+        '201':
+          description: rule added
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - ai_settings
+                properties:
+                  ai_settings:
+                    type: object
+                    required:
+                    - ai_available
+                    - ai_enabled
+                    - prompt_max_length
+                    - prompts
+                    - classifier
+                    properties:
+                      ai_available:
+                        type: boolean
+                        description: Whether this server has an AI provider for the
+                          user (User#ai_available?)
+                      ai_enabled:
+                        type: boolean
+                        description: Whether the user has AI turned on and it is available
+                      prompt_max_length:
+                        type: integer
+                      prompts:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - key
+                          - value
+                          - default
+                          - custom
+                          - format_risk
+                          - format_risk_key
+                          properties:
+                            key:
+                              type: string
+                              enum:
+                              - chat_system
+                              - categorizer_openai
+                              - categorizer_anthropic
+                              - merchant_openai
+                              - merchant_anthropic
+                              - insight_dig_in
+                            value:
+                              type: string
+                              nullable: true
+                              description: The family's override, or null when it
+                                runs the default
+                            default:
+                              type: string
+                              description: The built-in prompt this server sends without
+                                an override
+                            custom:
+                              type: boolean
+                            format_risk:
+                              type: boolean
+                              description: The override dropped the JSON key the custom-endpoint
+                                prompt asks for (advisory)
+                            format_risk_key:
+                              type: string
+                              nullable: true
+                      classifier:
+                        type: object
+                        required:
+                        - settings
+                        - defaults
+                        - default
+                        - ranges
+                        - choices
+                        - rules
+                        - evaluation
+                        properties:
+                          settings:
+                            type: object
+                            additionalProperties: true
+                            description: Every Family::BayesSettings value
+                          defaults:
+                            type: object
+                            additionalProperties: true
+                          default:
+                            type: boolean
+                            description: All settings are at their defaults
+                          ranges:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              properties:
+                                min:
+                                  type: number
+                                max:
+                                  type: number
+                          choices:
+                            type: object
+                            additionalProperties:
+                              type: array
+                              items:
+                                type: string
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                              - action_type
+                              - name
+                              - exists
+                              - active
+                              properties:
+                                action_type:
+                                  type: string
+                                  enum:
+                                  - fill_similar_merchants
+                                  - bayes_categorize
+                                name:
+                                  type: string
+                                exists:
+                                  type: boolean
+                                  description: False once the rule was deleted on
+                                    the Rules page
+                                active:
+                                  type: boolean
+                          evaluation:
+                            type: object
+                            properties:
+                              running:
+                                type: boolean
+                              ran_at:
+                                type: string
+                                format: date-time
+                                nullable: true
+                              action:
+                                type: string
+                                nullable: true
+                              settings_changed_since:
+                                type: boolean
+                                nullable: true
+        '409':
+          description: rule already exists
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - action_type
+              properties:
+                action_type:
+                  type: string
+                  enum:
+                  - fill_similar_merchants
+                  - bayes_categorize
+  "/api/v1/settings/ai/usage":
+    get:
+      summary: Show LLM usage and estimated cost
+      tags:
+      - Settings
+      security:
+      - apiKeyAuth: []
+      description: |
+        Settings → LLM usage's totals for the range, plus per model and per day (the family's time zone).
+        Defaults to the 30 days before `end_date`, which defaults to today. Family admins only, as the web page is; members and guests get 403 `forbidden`.
+      parameters:
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: usage
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - llm_usage
+                properties:
+                  llm_usage:
+                    type: object
+                    properties:
+                      start_date:
+                        type: string
+                        format: date
+                      end_date:
+                        type: string
+                        format: date
+                      currency:
+                        type: string
+                        enum:
+                        - USD
+                      total_requests:
+                        type: integer
+                      requests_with_cost:
+                        type: integer
+                        description: Requests with a known price; costs only count
+                          these
+                      total_prompt_tokens:
+                        type: integer
+                      total_completion_tokens:
+                        type: integer
+                      total_tokens:
+                        type: integer
+                      total_cost:
+                        type: string
+                        description: Total, formatted in USD as the web page shows
+                          it
+                      total_cost_cents:
+                        type: integer
+                        description: Rounded to whole cents
+                      total_cost_amount:
+                        type: string
+                        description: Unrounded decimal USD; most single requests cost
+                          under a cent
+                      avg_cost:
+                        type: string
+                        description: Average per priced request, formatted in USD
+                          as the web page shows it
+                      avg_cost_cents:
+                        type: integer
+                        description: Rounded to whole cents
+                      avg_cost_amount:
+                        type: string
+                        description: Unrounded decimal USD; most single requests cost
+                          under a cent
+                      by_operation:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            operation:
+                              type: string
+                            label:
+                              type: string
+                            cost:
+                              type: string
+                              description: Cost, formatted in USD as the web page
+                                shows it
+                            cost_cents:
+                              type: integer
+                              description: Rounded to whole cents
+                            cost_amount:
+                              type: string
+                              description: Unrounded decimal USD; most single requests
+                                cost under a cent
+                      by_model:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            model:
+                              type: string
+                            total_requests:
+                              type: integer
+                            requests_with_cost:
+                              type: integer
+                              description: Requests with a known price; costs only
+                                count these
+                            total_prompt_tokens:
+                              type: integer
+                            total_completion_tokens:
+                              type: integer
+                            total_tokens:
+                              type: integer
+                            cost:
+                              type: string
+                              description: Cost, formatted in USD as the web page
+                                shows it
+                            cost_cents:
+                              type: integer
+                              description: Rounded to whole cents
+                            cost_amount:
+                              type: string
+                              description: Unrounded decimal USD; most single requests
+                                cost under a cent
+                      by_day:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            total_requests:
+                              type: integer
+                            requests_with_cost:
+                              type: integer
+                              description: Requests with a known price; costs only
+                                count these
+                            total_prompt_tokens:
+                              type: integer
+                            total_completion_tokens:
+                              type: integer
+                            total_tokens:
+                              type: integer
+                            cost:
+                              type: string
+                              description: Cost, formatted in USD as the web page
+                                shows it
+                            cost_cents:
+                              type: integer
+                              description: Rounded to whole cents
+                            cost_amount:
+                              type: string
+                              description: Unrounded decimal USD; most single requests
+                                cost under a cent
+        '422':
+          description: invalid date range
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/api_keys":
+    get:
+      summary: List API keys
+      tags:
+      - API Keys
+      description: The signed-in user's active API keys, newest first. Keys are masked;
+        the full key is only in the create response.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: API keys listed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - scopes
+                      - display_key
+                      - current
+                      - created_at
+                      - last_used_at
+                      - expires_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        scopes:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                            - read
+                            - read_write
+                        display_key:
+                          type: string
+                          description: 'Masked key: asterisks and the last four characters'
+                        current:
+                          type: boolean
+                          description: Whether this key authenticated the request
+                        created_at:
+                          type: string
+                          format: date-time
+                        last_used_at:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        expires_at:
+                          type: string
+                          format: date-time
+                          nullable: true
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      summary: Create an API key
+      tags:
+      - API Keys
+      description: Creates a key for the signed-in user and returns it in full once,
+        in plain_key. Needs read_write. Limited to 10 keys per user per hour.
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: API key created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - id
+                    - name
+                    - scopes
+                    - display_key
+                    - current
+                    - created_at
+                    - last_used_at
+                    - expires_at
+                    - plain_key
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                      scopes:
+                        type: array
+                        items:
+                          type: string
+                          enum:
+                          - read
+                          - read_write
+                      display_key:
+                        type: string
+                        description: 'Masked key: asterisks and the last four characters'
+                      current:
+                        type: boolean
+                        description: Whether this key authenticated the request
+                      created_at:
+                        type: string
+                        format: date-time
+                      last_used_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      expires_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      plain_key:
+                        type: string
+                        description: The full key, shown only here
+        '422':
+          description: validation failed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - api_key
+              properties:
+                api_key:
+                  type: object
+                  required:
+                  - name
+                  - scopes
+                  properties:
+                    name:
+                      type: string
+                      description: Unique among the user's active keys
+                    scopes:
+                      type: array
+                      items:
+                        type: string
+                        enum:
+                        - read
+                        - read_write
+                      description: Exactly one scope
+  "/api/v1/api_keys/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: API key ID
+      schema:
+        type: string
+    delete:
+      summary: Revoke an API key
+      tags:
+      - API Keys
+      description: Revokes one of the user's keys. The key authenticating the request
+        cannot be revoked (422 cannot_revoke_current_key).
+      security:
+      - apiKeyAuth: []
+      responses:
+        '204':
+          description: API key revoked
+        '404':
+          description: API key not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: cannot revoke the current key
           content:
             application/json:
               schema:
@@ -6863,6 +8141,149 @@ paths:
                     rollover_enabled:
                       type: boolean
                       description: Carry unspent allocation into the next month
+        required: true
+  "/api/v1/budget_shares":
+    get:
+      summary: Show who can see the caller's personal budget
+      description: 'Sure+ `budgets.sharing`. The budget sharing section of Settings
+        > Preferences: every other active family member and the access the caller
+        grants them (`none` means not shared).'
+      tags:
+      - Budget Sharing (Sure+)
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: shares shown
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - personal_budgets
+                - permissions
+                - members
+                properties:
+                  personal_budgets:
+                    type: boolean
+                    description: Whether the family uses personal budgets; the web
+                      only shows budget sharing when it does.
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - user_id
+                      - name
+                      - permission
+                      properties:
+                        user_id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        permission:
+                          type: string
+                          enum:
+                          - none
+                          - read_only
+                          - read_write
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Change who can see the caller's personal budget
+      description: 'Sure+ `budgets.sharing`. Same as the web form: one permission
+        per member, `none` revokes. Members not listed are left alone. Unknown permissions
+        or users are 422.'
+      tags:
+      - Budget Sharing (Sure+)
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: shares updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - personal_budgets
+                - permissions
+                - members
+                properties:
+                  personal_budgets:
+                    type: boolean
+                    description: Whether the family uses personal budgets; the web
+                      only shows budget sharing when it does.
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - user_id
+                      - name
+                      - permission
+                      properties:
+                        user_id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        permission:
+                          type: string
+                          enum:
+                          - none
+                          - read_only
+                          - read_write
+        '422':
+          description: invalid permission or member
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - budget_shares
+              properties:
+                budget_shares:
+                  type: object
+                  required:
+                  - members
+                  properties:
+                    members:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - user_id
+                        - permission
+                        properties:
+                          user_id:
+                            type: string
+                            format: uuid
+                          permission:
+                            type: string
+                            enum:
+                            - none
+                            - read_only
+                            - read_write
         required: true
   "/api/v1/budgets/{id}":
     parameters:
@@ -14034,6 +15455,285 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/family/members":
+    get:
+      summary: List household members and pending invitations
+      description: Sure+ `household.members`. The members and pending invitations
+        Settings > Profile shows. Invitation tokens and accept links are never returned.
+        `avatar_url` is a short-lived signed URL, or null when there is no avatar
+        or the storage service is public. `invitations_enabled` is false on a self-hosted
+        server closed to sign-ups. `invitation_delivery` is `link_only` on self-hosted
+        servers, which send no invitation email; the admin shares the link from the
+        web.
+      tags:
+      - Household (Sure+)
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: members listed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - members
+                - pending_invitations
+                - can_manage_invitations
+                - invitations_enabled
+                - invitation_delivery
+                properties:
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - email
+                      - role
+                      - avatar_url
+                      - is_current_user
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        role:
+                          type: string
+                          enum:
+                          - guest
+                          - member
+                          - admin
+                          - super_admin
+                        avatar_url:
+                          type: string
+                          nullable: true
+                        is_current_user:
+                          type: boolean
+                  pending_invitations:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - email
+                      - role
+                      - created_at
+                      - expires_at
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        email:
+                          type: string
+                        role:
+                          type: string
+                          enum:
+                          - admin
+                          - member
+                          - guest
+                        created_at:
+                          type: string
+                          format: date-time
+                        expires_at:
+                          type: string
+                          format: date-time
+                  can_manage_invitations:
+                    type: boolean
+                  invitations_enabled:
+                    type: boolean
+                  invitation_delivery:
+                    type: string
+                    enum:
+                    - email
+                    - link_only
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/invitations":
+    post:
+      summary: Invite someone to the household
+      description: Sure+ `household.members`. Admins only, as on the web. Sends the
+        web's invitation email (managed servers only). 422 `validation_failed` for
+        a bad email or role, an existing member, an existing pending invitation or
+        the admin's own email; 422 `invitations_disabled` when the self-hosted server
+        is closed to sign-ups.
+      tags:
+      - Household (Sure+)
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: invitation created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - email
+                - role
+                - created_at
+                - expires_at
+                - delivery
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  email:
+                    type: string
+                  role:
+                    type: string
+                    enum:
+                    - admin
+                    - member
+                    - guest
+                  created_at:
+                    type: string
+                    format: date-time
+                  expires_at:
+                    type: string
+                    format: date-time
+                  delivery:
+                    type: string
+                    enum:
+                    - email
+                    - link_only
+        '422':
+          description: invalid, duplicate or disabled
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - invitation
+              properties:
+                invitation:
+                  type: object
+                  required:
+                  - email
+                  - role
+                  properties:
+                    email:
+                      type: string
+                    role:
+                      type: string
+                      enum:
+                      - admin
+                      - member
+                      - guest
+        required: true
+  "/api/v1/invitations/bulk":
+    post:
+      summary: Invite several people at once
+      description: 'Sure+ `household.members`. The web''s bulk invite: members and
+        guests only (no admin), at most 50 addresses. `emails` is an array or the
+        web''s comma/space separated string. Each address gets a result: `sent`, `link_only`
+        (self-hosted, no email) or `invalid` with `detail`.'
+      tags:
+      - Household (Sure+)
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: batch processed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - sent
+                - link_only
+                - invalid
+                - results
+                properties:
+                  sent:
+                    type: integer
+                  link_only:
+                    type: integer
+                  invalid:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        email:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                          - sent
+                          - link_only
+                          - invalid
+                        detail:
+                          type: string
+                          nullable: true
+        '422':
+          description: bad role, empty or too many
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bulk_invitation
+              properties:
+                bulk_invitation:
+                  type: object
+                  required:
+                  - emails
+                  - role
+                  properties:
+                    emails:
+                      oneOf:
+                      - type: array
+                        items:
+                          type: string
+                      - type: string
+                    role:
+                      type: string
+                      enum:
+                      - member
+                      - guest
+        required: true
+  "/api/v1/invitations/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    delete:
+      summary: Revoke an invitation
+      description: Sure+ `household.members`. Admins only.
+      tags:
+      - Household (Sure+)
+      security:
+      - apiKeyAuth: []
+      responses:
+        '204':
+          description: invitation revoked
+        '404':
+          description: not found
   "/api/v1/import_sessions":
     post:
       summary: Create import session
@@ -15622,6 +17322,145 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/provider_connections/{id}/sync_schedule":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Provider connection ID
+      schema:
+        type: string
+    - name: provider
+      in: query
+      required: false
+      description: Provider key; needed only when two connections share an id
+      schema:
+        type: string
+    get:
+      summary: Show a connection's sync schedule
+      tags:
+      - Provider Connections
+      description: How often this connection syncs on its own on top of the daily
+        family sync. Only people who can manage the connection (admins, or the owning
+        member for per-connection providers) may see it.
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: sync schedule shown
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - provider_connection_id
+                    - provider
+                    - interval_minutes
+                    - next_run_at
+                    - allowed_intervals
+                    properties:
+                      provider_connection_id:
+                        type: string
+                        format: uuid
+                      provider:
+                        type: string
+                        description: Provider key, as in GET /api/v1/provider_connections
+                      interval_minutes:
+                        type: integer
+                        nullable: true
+                        description: Null when the connection only takes part in the
+                          daily family sync
+                      next_run_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      allowed_intervals:
+                        type: array
+                        items:
+                          type: integer
+                        description: Intervals the server accepts, in minutes
+        '404':
+          description: connection not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Set a connection's sync schedule
+      tags:
+      - Provider Connections
+      description: Sets the interval, or removes the schedule when interval_minutes
+        is null.
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: sync schedule updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - provider_connection_id
+                    - provider
+                    - interval_minutes
+                    - next_run_at
+                    - allowed_intervals
+                    properties:
+                      provider_connection_id:
+                        type: string
+                        format: uuid
+                      provider:
+                        type: string
+                        description: Provider key, as in GET /api/v1/provider_connections
+                      interval_minutes:
+                        type: integer
+                        nullable: true
+                        description: Null when the connection only takes part in the
+                          daily family sync
+                      next_run_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      allowed_intervals:
+                        type: array
+                        items:
+                          type: integer
+                        description: Intervals the server accepts, in minutes
+        '422':
+          description: interval not allowed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - sync_schedule
+              properties:
+                sync_schedule:
+                  type: object
+                  required:
+                  - interval_minutes
+                  properties:
+                    interval_minutes:
+                      type: integer
+                      nullable: true
+                      description: One of allowed_intervals, or null
   "/api/v1/provider_connections":
     get:
       summary: Lists provider connection status summaries
@@ -18212,6 +20051,793 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{transaction_id}/attachments":
+    parameters:
+    - name: transaction_id
+      in: path
+      format: uuid
+      required: true
+      schema:
+        type: string
+    post:
+      summary: Attach a file to a transaction
+      description: 'Uploads a receipt or other file, with the same rules as the web:
+        JPEG, PNG, GIF, WebP or PDF (image/jpeg, image/jpg, image/png, image/gif,
+        image/webp, application/pdf), at most 10 MB, and at most 10 files per transaction.
+        The type is detected from the file content, so HEIC photos are rejected; convert
+        them to JPEG first. Needs owner, full_control or read_write access to the
+        account.'
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: attachment stored
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TransactionAttachment"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: API key without write scope, or a read_only share
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: transaction not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: disallowed type, too large, too many attachments, or no file
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+        required: true
+        description: The file to attach
+  "/api/v1/transactions/{transaction_id}/attachments/{id}":
+    parameters:
+    - name: transaction_id
+      in: path
+      format: uuid
+      required: true
+      schema:
+        type: string
+    - name: id
+      in: path
+      format: uuid
+      required: true
+      schema:
+        type: string
+    delete:
+      summary: Delete an attachment
+      description: Deletes the file. Needs owner or full_control access to the account;
+        a read_write share can add files but not delete them, as on the web.
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      responses:
+        '204':
+          description: attachment deleted
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: attachment not found on this transaction
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/attachments/{id}":
+    parameters:
+    - name: id
+      in: path
+      format: uuid
+      required: true
+      schema:
+        type: string
+    - name: disposition
+      in: query
+      required: false
+      description: attachment to ask for a download; inline (default) otherwise
+      schema:
+        type: string
+        enum:
+        - inline
+        - attachment
+    get:
+      summary: Download an attachment
+      description: Streams the file. This is the url in each transaction attachment.
+        It needs the same credentials as any other call; any share of the account
+        may download.
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: the file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: attachment not found, or on an account the caller cannot see
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{id}/merge_duplicate":
+    parameters:
+    - name: id
+      in: path
+      description: Pending transaction ID
+      required: true
+      schema:
+        type: string
+    post:
+      summary: Merge a pending transaction into its suggested duplicate
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: 'For a pending transaction whose duplicate_suspected is true: confirms
+        that it and duplicate_candidate are the same purchase. The pending transaction
+        is deleted and the posted one is kept. Unless the posted transaction was already
+        locked against sync, it takes the pending date and category; it keeps its
+        own name and merchant, gains the pending notes, tags and attachments, and
+        is then locked against sync changes. Returns the surviving posted transaction.
+        Needs owner or full-control access to the account.'
+      responses:
+        '200':
+          description: merged; the surviving posted transaction
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Transaction"
+        '422':
+          description: not pending (not_pending), no suggestion (no_duplicate), or
+            the merge was refused (merge_failed)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{id}/dismiss_duplicate":
+    parameters:
+    - name: id
+      in: path
+      description: Pending transaction ID
+      required: true
+      schema:
+        type: string
+    post:
+      summary: Keep both transactions
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: Says the suggested duplicate is a different purchase. The suggestion
+        is hidden (duplicate_suspected becomes false) and both transactions stay.
+        Returns the transaction. Needs owner or full-control access to the account.
+      responses:
+        '200':
+          description: suggestion dismissed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Transaction"
+        '422':
+          description: no suggestion to dismiss (no_duplicate)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{id}/pending_merge_candidates":
+    parameters:
+    - name: id
+      in: path
+      description: Pending transaction ID
+      required: true
+      schema:
+        type: string
+    - name: offset
+      in: query
+      required: false
+      description: Number of candidates to skip. Pages are 10 long.
+      schema:
+        type: integer
+    get:
+      summary: List posted transactions a pending one can be merged into
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: The recent posted transactions in the same account and currency,
+        newest first, that the user can pick when the bank booked a pending transaction
+        under a different amount or name. Pass a candidate's entry_id to pending_merge.
+      responses:
+        '200':
+          description: candidates listed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - candidates
+                - pagination
+                properties:
+                  candidates:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Transaction"
+                  pagination:
+                    type: object
+                    required:
+                    - offset
+                    - limit
+                    - has_more
+                    properties:
+                      offset:
+                        type: integer
+                      limit:
+                        type: integer
+                      has_more:
+                        type: boolean
+        '422':
+          description: the transaction is not pending (not_pending)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{id}/pending_merge":
+    parameters:
+    - name: id
+      in: path
+      description: Pending transaction ID
+      required: true
+      schema:
+        type: string
+    post:
+      summary: Merge a pending transaction into a chosen posted transaction
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: Merges the pending transaction into a posted one the user picked
+        from pending_merge_candidates, with the same result as merge_duplicate. Returns
+        the surviving posted transaction. Needs owner, full-control or read-write
+        access to the account, as on the web.
+      parameters: []
+      responses:
+        '200':
+          description: merged; the surviving posted transaction
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Transaction"
+        '422':
+          description: missing posted_entry_id (validation_failed), not a candidate
+            (invalid_posted_entry), not pending (not_pending) or the merge was refused
+            (merge_failed)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - pending_merge
+              properties:
+                pending_merge:
+                  type: object
+                  required:
+                  - posted_entry_id
+                  properties:
+                    posted_entry_id:
+                      type: string
+                      format: uuid
+                      description: entry_id of a pending_merge_candidates item
+  "/api/v1/transactions/{id}/unlock":
+    parameters:
+    - name: id
+      in: path
+      description: Transaction ID
+      required: true
+      schema:
+        type: string
+    post:
+      summary: Let bank sync update a transaction again
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: Removes the sync protection a user edit or an import put on the
+        transaction (sync_locked and locked_attributes). The next bank sync may then
+        overwrite the user's changes. Returns the transaction. Needs owner or full-control
+        access to the account.
+      responses:
+        '200':
+          description: unlocked
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Transaction"
+        '403':
+          description: read-only key, or no write access to the account
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{id}/reconcile":
+    parameters:
+    - name: id
+      in: path
+      description: Transaction ID
+      required: true
+      schema:
+        type: string
+    patch:
+      summary: Advance the reconciled status
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: 'Reconciling means ticking a transaction off against a bank or
+        card statement, the way you would in a paper checkbook. It is only for accounts
+        without bank sync, and only when the family has turned on manual reconciliation
+        (the transaction''s reconcilable is true). Each call moves reconciled_status
+        one step: unreconciled ("Not yet checked against a statement") to cleared
+        ("Seen on a statement, not fully reconciled yet") to reconciled ("Statement
+        period fully reconciled") and back to unreconciled. The web labels the control
+        with the current status: Unreconciled, Cleared or Reconciled. Takes no body,
+        like the web. Returns the transaction. Needs owner or full-control access
+        to the account.'
+      responses:
+        '200':
+          description: status advanced
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Transaction"
+        '422':
+          description: manual reconciliation is off (reconciliation_disabled), the
+            account has bank sync (not_manual_account), or the update failed (reconcile_failed)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{id}/mark_as_recurring":
+    parameters:
+    - name: id
+      in: path
+      description: Transaction ID
+      required: true
+      schema:
+        type: string
+    post:
+      summary: Mark a transaction as recurring
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: Creates a manual recurring transaction from this transaction, as
+        the web's "Mark as recurring" does. Returns 409 with the existing recurring
+        transaction when one already covers this transaction or holds the same pattern
+        (an ended one included); `recurring_transaction` is null when you cannot see
+        it. Needs write access (owner or full control) to the account. Requires the
+        `read_write` scope.
+      responses:
+        '201':
+          description: recurring transaction created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/RecurringTransaction"
+        '409':
+          description: a recurring transaction already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - error
+                - message
+                - recurring_transaction
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  recurring_transaction:
+                    "$ref": "#/components/schemas/RecurringTransaction"
+                    nullable: true
+  "/api/v1/transactions/{id}/convert_to_trade":
+    parameters:
+    - name: id
+      in: path
+      description: Transaction ID
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Get the defaults for converting a transaction to a trade
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: Returns what the web "Convert to trade" form starts with. The trade
+        is always booked in the transaction's own account, which must be an investment
+        account or a crypto exchange. security_options lists the securities the account
+        already holds, with today's stored price when there is one. When ticker_search_available
+        is true, a typed ticker sent as custom_ticker is looked up through the securities
+        provider. Requires write access to the account, as on the web.
+      responses:
+        '200':
+          description: conversion defaults
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - transaction_id
+                - date
+                - name
+                - amount
+                - amount_cents
+                - currency
+                - account
+                - defaults
+                - investment_activity_labels
+                - ticker_search_available
+                - security_options
+                properties:
+                  transaction_id:
+                    type: string
+                    format: uuid
+                  date:
+                    type: string
+                    format: date
+                  name:
+                    type: string
+                  amount:
+                    type: string
+                    description: Unsigned, formatted
+                  amount_cents:
+                    type: integer
+                    description: Unsigned, in minor units
+                  currency:
+                    type: string
+                  account:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                      account_type:
+                        type: string
+                  defaults:
+                    type: object
+                    properties:
+                      investment_activity_label:
+                        type: string
+                        enum:
+                        - Buy
+                        - Sell
+                        description: Buy for money out, Sell for money in
+                      security_id:
+                        type: string
+                        nullable: true
+                      qty:
+                        type: string
+                        nullable: true
+                      price:
+                        type: string
+                        nullable: true
+                  investment_activity_labels:
+                    type: array
+                    items:
+                      type: string
+                  ticker_search_available:
+                    type: boolean
+                  security_options:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        ticker:
+                          type: string
+                        name:
+                          type: string
+                          nullable: true
+                        exchange_operating_mic:
+                          type: string
+                          nullable: true
+                        current_price:
+                          type: string
+                          nullable: true
+                        current_price_cents:
+                          type: integer
+                          nullable: true
+                        current_price_currency:
+                          type: string
+                          nullable: true
+        '422':
+          description: the account cannot hold trades, or the transaction is already
+            converted
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      summary: Convert a transaction to a trade
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: 'Creates a trade in the transaction''s account with the transaction''s
+        date and currency, and excludes the original transaction, as the web does.
+        Identify the security with security_id, ticker ("SYMBOL|EXCHANGE|PROVIDER")
+        or custom_ticker. Send qty or price; the other is inferred from the transaction
+        amount. Without investment_activity_label, money out is a Buy and money in
+        is a Sell. Errors return 422 with error set to the web''s reason: not_investment_account,
+        already_converted, select_security, security_not_found, enter_ticker, enter_qty_or_price,
+        invalid_qty_or_price, or validation_failed.'
+      parameters: []
+      responses:
+        '201':
+          description: trade created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Trade"
+        '422':
+          description: invalid security, quantity or price
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - trade
+              properties:
+                trade:
+                  type: object
+                  properties:
+                    security_id:
+                      type: string
+                      format: uuid
+                    ticker:
+                      type: string
+                      description: Securities search id, SYMBOL|EXCHANGE|PROVIDER
+                    custom_ticker:
+                      type: string
+                    exchange_operating_mic:
+                      type: string
+                    qty:
+                      type: number
+                    price:
+                      type: number
+                    investment_activity_label:
+                      type: string
+                      enum:
+                      - Buy
+                      - Sell
+                    trade_name:
+                      type: string
+  "/api/v1/transactions/{id}/transfer_candidates":
+    parameters:
+    - name: id
+      in: path
+      description: Transaction ID
+      required: true
+      schema:
+        type: string
+    get:
+      summary: List transfer match candidates
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: 'What the web''s "match as transfer" dialog offers. `candidates`
+        are existing opposite transactions on accounts you can write to, likeliest
+        first; pass a candidate''s `transaction.entry_id` as `matched_entry_id` to
+        match it. `accounts` are the accounts `method: "new"` can create the other
+        side in. Requires the `read` scope.'
+      responses:
+        '200':
+          description: candidates returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - candidates
+                - accounts
+                properties:
+                  candidates:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - transaction
+                      - account
+                      properties:
+                        transaction:
+                          "$ref": "#/components/schemas/Transaction"
+                        account:
+                          type: object
+                          required:
+                          - id
+                          - name
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            name:
+                              type: string
+                  accounts:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - account_type
+                      - currency
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        account_type:
+                          type: string
+                        currency:
+                          type: string
+        '404':
+          description: transaction not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/transactions/{id}/transfer_match":
+    parameters:
+    - name: id
+      in: path
+      description: Transaction ID
+      required: true
+      schema:
+        type: string
+    post:
+      summary: Mark a transaction as a transfer
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: 'Links the transaction into a confirmed transfer, as the web''s
+        "match as transfer" dialog does. `method: "existing"` pairs it with `matched_entry_id`
+        (an entry id from `transfer_candidates`); `method: "new"` creates the opposite
+        transaction in `target_account_id`. Needs write access (owner or full control)
+        to both accounts. Returns 422 with a `reason` (not_a_candidate, already_linked,
+        same_account, split_transaction, excluded_transaction, invalid_transfer) when
+        the pair is not valid. Requires the `read_write` scope.'
+      parameters: []
+      responses:
+        '201':
+          description: transfer created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - transfer
+                - inflow
+                - outflow
+                properties:
+                  transfer:
+                    "$ref": "#/components/schemas/TransferDecision"
+                  inflow:
+                    "$ref": "#/components/schemas/Transaction"
+                  outflow:
+                    "$ref": "#/components/schemas/Transaction"
+        '422':
+          description: the pair cannot form a transfer
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - transfer_match
+              properties:
+                transfer_match:
+                  type: object
+                  required:
+                  - method
+                  properties:
+                    method:
+                      type: string
+                      enum:
+                      - existing
+                      - new
+                    matched_entry_id:
+                      type: string
+                      format: uuid
+                      description: Entry id of the other side, for method existing
+                    target_account_id:
+                      type: string
+                      format: uuid
+                      description: Account for the new other side, for method new
+    delete:
+      summary: Unmatch a transfer
+      tags:
+      - Transactions
+      security:
+      - apiKeyAuth: []
+      description: When the transaction is part of a transfer, removes the transfer
+        and records the pair as rejected so automatic matching does not pair them
+        again (the web's "Reject match"). Otherwise records every pair the web's transfer
+        hint suggests for it as rejected (the web's "Not a transfer"). Returns the
+        transaction. Requires the `read_write` scope.
+      responses:
+        '200':
+          description: unmatched
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Transaction"
   "/api/v1/transactions":
     get:
       summary: List transactions

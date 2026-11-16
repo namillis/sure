@@ -11,7 +11,8 @@ class Api::V1::InvitationsController < Api::V1::BaseController
   before_action :require_invitations_enabled, only: %i[create bulk_create]
 
   def create
-    invitation = family.invitations.build(params.require(:invitation).permit(:email, :role))
+    invitation = family.invitations.build(params.require(:invitation).permit(:email))
+    invitation.role = params.dig(:invitation, :role).to_s
     invitation.inviter = current_resource_owner
 
     if invitation.email.present? && family.users.find_by_email_with_legacy_fallback(invitation.email)
