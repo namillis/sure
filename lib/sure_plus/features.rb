@@ -28,6 +28,7 @@ module SurePlus
       rules.reorder
       rules.write
       settings.api_keys
+      settings.sync_schedule
     ].freeze
   end
 end
