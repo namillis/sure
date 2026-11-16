@@ -4,7 +4,9 @@ class Api::V1::ProviderConnectionsController < Api::V1::BaseController
   before_action :ensure_read_scope
 
   def index
-    @provider_connections = ProviderConnectionStatus.for_family(current_resource_owner.family)
+    @provider_connections = ProviderConnectionCatalog.with_reconnect_paths(
+      ProviderConnectionStatus.for_family(current_resource_owner.family), user: current_resource_owner
+    )
     render :index
   rescue StandardError => e
     Rails.logger.error "ProviderConnectionsController#index error: #{e.message}"

@@ -944,6 +944,10 @@ Rails.application.routes.draw do
       # Sure+ web handoff
       resources :web_handoffs, only: :create
 
+      # Sure+ connections the user may add
+      get "provider_connections/available", to: "available_provider_connections#index",
+        as: :available_provider_connections
+
       resources :provider_connections, only: [] do
         resource :sync_schedule, only: %i[show update], controller: "provider_connection_sync_schedules"
       end

@@ -15,6 +15,7 @@ module SurePlus
       budgets.write
       categories.write
       charts.series
+      connections.available
       connections.manage
       connections.web_handoff
       goals
