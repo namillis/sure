@@ -27,6 +27,7 @@ module SurePlus
       rules.groups
       rules.reorder
       rules.write
+      settings.ai
     ].freeze
   end
 end
