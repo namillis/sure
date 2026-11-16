@@ -12,6 +12,13 @@ class ConnectivityService with ChangeNotifier {
   bool get isOnline => _isOnline;
   bool get isOffline => !_isOnline;
 
+  /// Only "none" means no network. `other` is a real connection the
+  /// platform can't name (iOS reports it for some VPN, tethered and
+  /// Simulator setups); treating it as offline froze the app on stale data.
+  @visibleForTesting
+  static bool isOnlineFor(List<ConnectivityResult> results) =>
+      results.any((result) => result != ConnectivityResult.none);
+
   ConnectivityService() {
     _log.info('ConnectivityService', 'Initializing connectivity service');
     _initConnectivity().then((_) {
@@ -36,12 +43,7 @@ class ConnectivityService with ChangeNotifier {
     final wasOnline = _isOnline;
 
     // Check if any result indicates connectivity
-    _isOnline = results.any((result) =>
-        result == ConnectivityResult.mobile ||
-        result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.ethernet ||
-        result == ConnectivityResult.vpn ||
-        result == ConnectivityResult.bluetooth);
+    _isOnline = isOnlineFor(results);
 
     _log.info('ConnectivityService', 'Connectivity changed: $results -> ${_isOnline ? "ONLINE" : "OFFLINE"}');
 
