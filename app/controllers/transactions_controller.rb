@@ -587,15 +587,10 @@ class TransactionsController < ApplicationController
         "#{Current.family.recurring_transaction_merchants_version}/#{Current.account_share_version}"
     end
 
-    def covering_series_for(entry)
-      Current.family.recurring_transactions.accessible_by(Current.user).covering(entry)
-    end
-
     def mark_recurring_blocked_message(transaction)
-      if covering_series_for(transaction.entry)
-        t("recurring_transactions.already_covered")
-      elsif RecurringTransaction.identity_taken_by(transaction)
-        t("recurring_transactions.already_exists")
+      case RecurringTransaction::TransactionMarker.new(transaction, user: Current.user).blocker&.reason
+      when :covered then t("recurring_transactions.already_covered")
+      when :exists then t("recurring_transactions.already_exists")
       end
     end
 
