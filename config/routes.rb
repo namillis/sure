@@ -930,6 +930,7 @@ Rails.application.routes.draw do
       resources :invitations, only: [ :create, :destroy ]
       get "accounts/:id/sharing", to: "account_sharings#show", as: :account_sharing
       patch "accounts/:id/sharing", to: "account_sharings#update"
+      resource :budget_shares, only: [ :show, :update ], controller: :budget_shares
 
       # Test routes for API controller testing (only available in test environment)
       if Rails.env.test?

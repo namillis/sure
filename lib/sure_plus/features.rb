@@ -11,6 +11,7 @@ module SurePlus
       accounts.write
       budgets.allocations
       budgets.permissions
+      budgets.sharing
       budgets.write
       categories.write
       charts.series
