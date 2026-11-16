@@ -27,6 +27,7 @@ module SurePlus
       rules.groups
       rules.reorder
       rules.write
+      settings.api_keys
     ].freeze
   end
 end
