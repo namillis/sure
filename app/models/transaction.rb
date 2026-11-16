@@ -477,6 +477,10 @@ class Transaction < ApplicationRecord
     Entry.find_by(id: potential_posted_match_data["entry_id"])
   end
 
+  def potential_duplicate_entry_id
+    potential_posted_match_data["entry_id"] if has_potential_duplicate?
+  end
+
   def potential_duplicate_reason
     potential_posted_match_data&.dig("reason")
   end
@@ -660,6 +664,37 @@ class Transaction < ApplicationRecord
       .order(date: :desc, created_at: :desc)
       .limit(limit)
       .offset(offset)
+  end
+
+  # The posted entry with this id, if it is one the user may merge this pending
+  # transaction into: same constraints as pending_duplicate_candidates, without its paging.
+  def eligible_posted_entry_for_merge(entry_id)
+    return nil unless pending? && entry.present?
+
+    entry.account.entries
+      .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id AND entries.entryable_type = 'Transaction'")
+      .where(id: entry_id)
+      .where(currency: entry.currency)
+      .where.not(id: entry.id)
+      .where(Transaction.not_pending_sql)
+      .first
+  end
+
+  # Records a user-chosen posted match and merges into it straight away.
+  def merge_with_posted_entry!(posted_entry)
+    update!(
+      extra: (extra || {}).merge(
+        "potential_posted_match" => {
+          "entry_id" => posted_entry.id,
+          "reason" => "manual_match",
+          "posted_amount" => posted_entry.amount.to_s,
+          "confidence" => "high",
+          "detected_at" => Date.current.to_s
+        }
+      )
+    )
+
+    merge_with_duplicate!
   end
 
   private

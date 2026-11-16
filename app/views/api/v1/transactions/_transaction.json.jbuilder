@@ -120,3 +120,5 @@ end
 # Additional metadata
 json.created_at transaction.created_at.iso8601
 json.updated_at transaction.updated_at.iso8601
+
+json.partial! "api/v1/transactions/transaction_sure_plus_duplicates", transaction: transaction

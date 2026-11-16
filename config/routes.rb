@@ -874,6 +874,15 @@ Rails.application.routes.draw do
       resources :security_prices, only: [ :index, :show, :create ]
       resources :tags, only: [ :index, :show, :create, :update, :destroy ]
 
+      resources :transactions, only: [] do
+        member do
+          post :merge_duplicate, to: "transaction_duplicates#merge_duplicate"
+          post :dismiss_duplicate, to: "transaction_duplicates#dismiss_duplicate"
+          get :pending_merge_candidates, to: "transaction_duplicates#pending_merge_candidates"
+          post :pending_merge, to: "transaction_duplicates#pending_merge"
+        end
+      end
+
       resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do
         resource :split, only: [ :show, :create, :update, :destroy ]
       end

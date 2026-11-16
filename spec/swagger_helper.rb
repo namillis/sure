@@ -1131,6 +1131,31 @@ RSpec.configure do |config|
                 items: { '$ref' => '#/components/schemas/Tag' }
               },
               transfer: { '$ref' => '#/components/schemas/Transfer', nullable: true },
+              pending: { type: :boolean, description: 'Whether the bank still reports the transaction as pending.' },
+              duplicate_suspected: {
+                type: :boolean,
+                description: 'Whether a sync flagged this pending transaction as possibly the same purchase as a ' \
+                             'posted one, and the user has not dismissed it. Resolve with merge_duplicate or dismiss_duplicate.'
+              },
+              duplicate_confidence: {
+                type: :string, enum: %w[low medium high], nullable: true,
+                description: 'How sure the match is. The web shows low as "Review" and the others as "Possible duplicate".'
+              },
+              duplicate_candidate: {
+                type: :object, nullable: true,
+                description: 'The suggested posted transaction, or null.',
+                required: %w[id entry_id date name amount amount_cents signed_amount_cents currency],
+                properties: {
+                  id: { type: :string, format: :uuid },
+                  entry_id: { type: :string, format: :uuid },
+                  date: { type: :string, format: :date },
+                  name: { type: :string },
+                  amount: { type: :string },
+                  amount_cents: { type: :integer },
+                  signed_amount_cents: { type: :integer },
+                  currency: { type: :string }
+                }
+              },
               created_at: { type: :string, format: :'date-time' },
               updated_at: { type: :string, format: :'date-time' }
             }

@@ -27,6 +27,7 @@ module SurePlus
       rules.groups
       rules.reorder
       rules.write
+      transactions.duplicates
     ].freeze
   end
 end
