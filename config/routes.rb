@@ -877,6 +877,13 @@ Rails.application.routes.draw do
       resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do
         resource :split, only: [ :show, :create, :update, :destroy ]
       end
+      # Sure+ transactions.convert_to_trade
+      resources :transactions, only: [] do
+        member do
+          get :convert_to_trade, to: "transaction_trade_conversions#show"
+          post :convert_to_trade, to: "transaction_trade_conversions#create"
+        end
+      end
       resources :trades, only: [ :index, :show, :create, :update, :destroy ]
       resources :holdings, only: [ :index, :show ]
       resources :transfers, only: [ :index, :show ]

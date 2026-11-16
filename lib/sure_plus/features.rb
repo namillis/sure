@@ -27,6 +27,7 @@ module SurePlus
       rules.groups
       rules.reorder
       rules.write
+      transactions.convert_to_trade
     ].freeze
   end
 end
