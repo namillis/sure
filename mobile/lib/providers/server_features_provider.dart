@@ -53,6 +53,10 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const householdMembers = 'household.members';
   static const accountsSharing = 'accounts.sharing';
   static const budgetsSharing = 'budgets.sharing';
+  // Section 4: settings.
+  static const settingsApiKeys = 'settings.api_keys';
+  static const settingsSyncSchedule = 'settings.sync_schedule';
+  static const settingsAi = 'settings.ai';
 
   static const _prefsPrefix = 'server_features:';
 
