@@ -1,3 +1,5 @@
+import 'transaction_attachment.dart';
+
 /// The `transfer` block of a transaction that is one side of a transfer:
 /// the transfer's id and the account on the other side.
 class TransactionTransfer {
@@ -86,6 +88,15 @@ class Transaction {
   /// the API.
   final TransactionTransfer? transfer;
 
+  // Section 2 (receipts and convert to trade).
+  /// Receipts and files on this transaction (`transactions.attachments`);
+  /// null when the server doesn't send them.
+  final List<TransactionAttachment>? attachments;
+
+  /// `account.account_type` (`investment`, `depository`, ...), or null.
+  final String? accountType;
+  // End of section 2.
+
   Transaction({
     this.id,
     required this.accountId,
@@ -110,6 +121,9 @@ class Transaction {
     this.splitParent,
     this.entryId,
     this.transfer,
+    // Section 2 (receipts and convert to trade).
+    this.attachments,
+    this.accountType,
   })  : tagIds = List.unmodifiable(tagIds),
         tagNames = List.unmodifiable(tagNames),
         categoryProvided =
@@ -224,6 +238,11 @@ class Transaction {
           json['split_parent'] is bool ? json['split_parent'] as bool : null,
       entryId: _nonEmptyString(json['entry_id']),
       transfer: TransactionTransfer.fromJson(json['transfer']),
+      // Section 2 (receipts and convert to trade).
+      attachments: TransactionAttachment.listFromJson(json['attachments']),
+      accountType: json['account'] is Map
+          ? _nonEmptyString(json['account']['account_type'])
+          : null,
     );
   }
 

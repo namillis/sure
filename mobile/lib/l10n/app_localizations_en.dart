@@ -5234,4 +5234,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sa2PrincipalOnlySub => 'Interest is recorded separately';
+
+  @override
+  String get s4rReceipts => 'Receipts';
+
+  @override
+  String get s4rAddReceipt => 'Add receipt';
+
+  @override
+  String get s4rTakePhoto => 'Take photo';
+
+  @override
+  String get s4rChoosePhoto => 'Choose photo';
+
+  @override
+  String get s4rChooseFile => 'Choose file';
+
+  @override
+  String get s4rTooMany => 'A transaction can have at most 10 attachments.';
+
+  @override
+  String get s4rTooLarge => 'Files can be at most 10 MB.';
+
+  @override
+  String get s4rWrongType =>
+      'Only JPEG, PNG, GIF, WebP and PDF files can be attached.';
+
+  @override
+  String get s4rUploading => 'Uploading…';
+
+  @override
+  String get s4rAttached => 'Receipt added';
+
+  @override
+  String get s4rPickFailed => 'Couldn\'t open the camera or photos.';
+
+  @override
+  String get s4rDeleteTitle => 'Delete attachment?';
+
+  @override
+  String s4rDeleteContent(String name) {
+    return '“$name” will be removed from this transaction.';
+  }
+
+  @override
+  String get s4rDeleted => 'Attachment deleted';
+
+  @override
+  String get s4rLoadFailed => 'Couldn\'t load the file.';
+
+  @override
+  String s4rOpenFile(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String get s4rConvertToTrade => 'Convert to trade';
+
+  @override
+  String get s4rConvert => 'Convert';
+
+  @override
+  String get s4rConverted => 'Converted';
+
+  @override
+  String get s4rSecurity => 'Security';
+
+  @override
+  String get s4rOtherTicker => 'Other ticker…';
+
+  @override
+  String get s4rTicker => 'Ticker';
+
+  @override
+  String get s4rTickerHint => 'e.g. AAPL';
+
+  @override
+  String get s4rExactTickerHint => 'Enter the exact ticker';
+
+  @override
+  String get s4rShares => 'Shares';
+
+  @override
+  String get s4rSharesOrPriceNote =>
+      'Enter shares or price. The other is worked out from the amount.';
+
+  @override
+  String get s4rErrNotInvestment => 'Only investment accounts can have trades.';
+
+  @override
+  String get s4rErrAlreadyConverted =>
+      'This transaction has already been converted.';
+
+  @override
+  String get s4rErrSelectSecurity => 'Choose a security.';
+
+  @override
+  String get s4rErrSecurityNotFound => 'That security wasn\'t found.';
+
+  @override
+  String get s4rErrEnterTicker => 'Enter a ticker.';
+
+  @override
+  String get s4rErrEnterQtyOrPrice => 'Enter shares or price.';
+
+  @override
+  String get s4rErrInvalidQtyOrPrice =>
+      'Shares and price must be more than zero.';
 }

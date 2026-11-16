@@ -8971,6 +8971,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest is recorded separately'**
   String get sa2PrincipalOnlySub;
+
+  /// Title of the transaction's receipts row.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get s4rReceipts;
+
+  /// Title of the sheet and label of the + tile that attach a file.
+  ///
+  /// In en, this message translates to:
+  /// **'Add receipt'**
+  String get s4rAddReceipt;
+
+  /// Add-receipt option: open the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get s4rTakePhoto;
+
+  /// Add-receipt option: pick from the photo library.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get s4rChoosePhoto;
+
+  /// Add-receipt option: pick a PDF or image file.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get s4rChooseFile;
+
+  /// Refusal before upload when 10 files are attached.
+  ///
+  /// In en, this message translates to:
+  /// **'A transaction can have at most 10 attachments.'**
+  String get s4rTooMany;
+
+  /// Refusal before upload of a file over 10 MB.
+  ///
+  /// In en, this message translates to:
+  /// **'Files can be at most 10 MB.'**
+  String get s4rTooLarge;
+
+  /// Refusal before upload of another file type.
+  ///
+  /// In en, this message translates to:
+  /// **'Only JPEG, PNG, GIF, WebP and PDF files can be attached.'**
+  String get s4rWrongType;
+
+  /// Accessibility label of the + tile while a file uploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get s4rUploading;
+
+  /// Snackbar after a file is attached.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt added'**
+  String get s4rAttached;
+
+  /// Snackbar when the camera or photo picker fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the camera or photos.'**
+  String get s4rPickFailed;
+
+  /// Confirm dialog title for deleting an attachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete attachment?'**
+  String get s4rDeleteTitle;
+
+  /// Confirm dialog body for deleting an attachment.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” will be removed from this transaction.'**
+  String s4rDeleteContent(String name);
+
+  /// Snackbar after an attachment is deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment deleted'**
+  String get s4rDeleted;
+
+  /// Shown when an attachment can't be downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the file.'**
+  String get s4rLoadFailed;
+
+  /// Accessibility label of an attachment thumbnail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}'**
+  String s4rOpenFile(String name);
+
+  /// Action row and sheet title: turn the transaction into a trade.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to trade'**
+  String get s4rConvertToTrade;
+
+  /// Sheet action that converts the transaction into a trade.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert'**
+  String get s4rConvert;
+
+  /// Snackbar after the transaction became a trade.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted'**
+  String get s4rConverted;
+
+  /// Section header of the security choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get s4rSecurity;
+
+  /// Security option that reveals a ticker text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Other ticker…'**
+  String get s4rOtherTicker;
+
+  /// Label of the ticker text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticker'**
+  String get s4rTicker;
+
+  /// Hint of the ticker field when the server can look tickers up.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. AAPL'**
+  String get s4rTickerHint;
+
+  /// Hint of the ticker field when the server can't look tickers up.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the exact ticker'**
+  String get s4rExactTickerHint;
+
+  /// Label of the share count field.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares'**
+  String get s4rShares;
+
+  /// Note under the shares and price fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter shares or price. The other is worked out from the amount.'**
+  String get s4rSharesOrPriceNote;
+
+  /// Convert error not_investment_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Only investment accounts can have trades.'**
+  String get s4rErrNotInvestment;
+
+  /// Convert error already_converted.
+  ///
+  /// In en, this message translates to:
+  /// **'This transaction has already been converted.'**
+  String get s4rErrAlreadyConverted;
+
+  /// Convert error select_security.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a security.'**
+  String get s4rErrSelectSecurity;
+
+  /// Convert error security_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'That security wasn\'t found.'**
+  String get s4rErrSecurityNotFound;
+
+  /// Convert error enter_ticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a ticker.'**
+  String get s4rErrEnterTicker;
+
+  /// Convert error enter_qty_or_price.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter shares or price.'**
+  String get s4rErrEnterQtyOrPrice;
+
+  /// Convert error invalid_qty_or_price.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares and price must be more than zero.'**
+  String get s4rErrInvalidQtyOrPrice;
 }
 
 class _AppLocalizationsDelegate

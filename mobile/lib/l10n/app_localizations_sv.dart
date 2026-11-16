@@ -5269,4 +5269,110 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get sa2PrincipalOnlySub => 'Räntan bokförs separat';
+
+  @override
+  String get s4rReceipts => 'Kvitton';
+
+  @override
+  String get s4rAddReceipt => 'Lägg till kvitto';
+
+  @override
+  String get s4rTakePhoto => 'Ta foto';
+
+  @override
+  String get s4rChoosePhoto => 'Välj foto';
+
+  @override
+  String get s4rChooseFile => 'Välj fil';
+
+  @override
+  String get s4rTooMany => 'En transaktion kan ha högst 10 bilagor.';
+
+  @override
+  String get s4rTooLarge => 'Filer får vara högst 10 MB.';
+
+  @override
+  String get s4rWrongType =>
+      'Endast JPEG-, PNG-, GIF-, WebP- och PDF-filer kan bifogas.';
+
+  @override
+  String get s4rUploading => 'Laddar upp…';
+
+  @override
+  String get s4rAttached => 'Kvittot har lagts till';
+
+  @override
+  String get s4rPickFailed => 'Det gick inte att öppna kameran eller bilderna.';
+
+  @override
+  String get s4rDeleteTitle => 'Ta bort bilagan?';
+
+  @override
+  String s4rDeleteContent(String name) {
+    return '”$name” tas bort från transaktionen.';
+  }
+
+  @override
+  String get s4rDeleted => 'Bilagan har tagits bort';
+
+  @override
+  String get s4rLoadFailed => 'Det gick inte att läsa in filen.';
+
+  @override
+  String s4rOpenFile(String name) {
+    return 'Öppna $name';
+  }
+
+  @override
+  String get s4rConvertToTrade => 'Konvertera till affär';
+
+  @override
+  String get s4rConvert => 'Konvertera';
+
+  @override
+  String get s4rConverted => 'Konverterad';
+
+  @override
+  String get s4rSecurity => 'Värdepapper';
+
+  @override
+  String get s4rOtherTicker => 'Annan ticker…';
+
+  @override
+  String get s4rTicker => 'Ticker';
+
+  @override
+  String get s4rTickerHint => 't.ex. AAPL';
+
+  @override
+  String get s4rExactTickerHint => 'Ange exakt ticker';
+
+  @override
+  String get s4rShares => 'Andelar';
+
+  @override
+  String get s4rSharesOrPriceNote =>
+      'Ange andelar eller pris. Det andra räknas ut från beloppet.';
+
+  @override
+  String get s4rErrNotInvestment => 'Endast investeringskonton kan ha affärer.';
+
+  @override
+  String get s4rErrAlreadyConverted => 'Transaktionen har redan konverterats.';
+
+  @override
+  String get s4rErrSelectSecurity => 'Välj ett värdepapper.';
+
+  @override
+  String get s4rErrSecurityNotFound => 'Värdepappret hittades inte.';
+
+  @override
+  String get s4rErrEnterTicker => 'Ange en ticker.';
+
+  @override
+  String get s4rErrEnterQtyOrPrice => 'Ange andelar eller pris.';
+
+  @override
+  String get s4rErrInvalidQtyOrPrice =>
+      'Andelar och pris måste vara större än noll.';
 }

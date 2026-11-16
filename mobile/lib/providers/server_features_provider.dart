@@ -41,6 +41,9 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const accountsPermissions = 'accounts.permissions';
   static const accountsLoanRates = 'accounts.loan_rates';
   static const chartsSeries = 'charts.series';
+  // Section 2 (receipts and convert to trade).
+  static const transactionsAttachments = 'transactions.attachments';
+  static const transactionsConvertToTrade = 'transactions.convert_to_trade';
 
   static const _prefsPrefix = 'server_features:';
 
