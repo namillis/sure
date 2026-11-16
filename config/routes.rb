@@ -888,6 +888,9 @@ Rails.application.routes.draw do
           post :unlock, to: "transaction_locks#unlock"
           patch :reconcile, to: "transaction_locks#reconcile"
         end
+      # Sure+ transactions.attachments
+      resources :attachments, only: [ :show ], controller: :transaction_attachments
+        resources :attachments, only: [ :create, :destroy ], controller: :transaction_attachments
       end
 
       resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do

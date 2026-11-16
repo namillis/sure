@@ -124,3 +124,4 @@ json.updated_at transaction.updated_at.iso8601
 json.partial! "api/v1/transactions/transaction_sure_plus_transfers", transaction: transaction
 json.partial! "api/v1/transactions/transaction_sure_plus_duplicates", transaction: transaction
 json.partial! "api/v1/transactions/transaction_sure_plus_locks", transaction: transaction
+json.partial! "api/v1/transactions/transaction_sure_plus_attachments", transaction: transaction
