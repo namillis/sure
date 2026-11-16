@@ -44,6 +44,7 @@ class UserProfile {
     this.locale,
     this.defaultPeriod,
     required this.household,
+    this.role,
   });
 
   final String email;
@@ -55,6 +56,11 @@ class UserProfile {
   final String? defaultPeriod;
   final HouseholdProfile household;
 
+  /// `admin`, `member`, `guest` or `super_admin` (Section 4: the AI row).
+  final String? role;
+
+  bool get isAdmin => role == 'admin' || role == 'super_admin';
+
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final family = json['family'];
     return UserProfile(
@@ -65,6 +71,7 @@ class UserProfile {
       defaultPeriod: json['default_period']?.toString(),
       household: HouseholdProfile.fromJson(
           family is Map<String, dynamic> ? family : const {}),
+      role: json['role']?.toString(),
     );
   }
 }

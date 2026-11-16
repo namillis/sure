@@ -41,6 +41,10 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const accountsPermissions = 'accounts.permissions';
   static const accountsLoanRates = 'accounts.loan_rates';
   static const chartsSeries = 'charts.series';
+  // Section 4: settings.
+  static const settingsApiKeys = 'settings.api_keys';
+  static const settingsSyncSchedule = 'settings.sync_schedule';
+  static const settingsAi = 'settings.ai';
 
   static const _prefsPrefix = 'server_features:';
 

@@ -8971,6 +8971,774 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest is recorded separately'**
   String get sa2PrincipalOnlySub;
+
+  /// Settings row that opens the API keys list.
+  ///
+  /// In en, this message translates to:
+  /// **'API keys'**
+  String get s4sSettingsApiKeys;
+
+  /// Settings row that opens the AI settings (admins only).
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get s4sSettingsAi;
+
+  /// Generic failure message for a settings action.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get s4sActionFailed;
+
+  /// Title of the API keys screen.
+  ///
+  /// In en, this message translates to:
+  /// **'API keys'**
+  String get s4sApiKeysTitle;
+
+  /// Shown when the API key list fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load API keys.'**
+  String get s4sApiKeysLoadFailed;
+
+  /// Empty state title of the API keys screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No API keys'**
+  String get s4sApiKeysEmpty;
+
+  /// Empty state body of the API keys screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a key to connect another app or script to your account.'**
+  String get s4sApiKeysEmptyBody;
+
+  /// Title of the create-key sheet and label of the + button.
+  ///
+  /// In en, this message translates to:
+  /// **'New API key'**
+  String get s4sApiKeyNew;
+
+  /// Action of the create-key sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get s4sApiKeyCreate;
+
+  /// Name field of the create-key sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get s4sApiKeyName;
+
+  /// Placeholder of the key name field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Budget script'**
+  String get s4sApiKeyNameHint;
+
+  /// Validation error for an empty key name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get s4sApiKeyNameRequired;
+
+  /// Label of the read / read & write choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Access'**
+  String get s4sApiKeyAccess;
+
+  /// API key scope: read only.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get s4sApiKeyScopeRead;
+
+  /// API key scope: read and write.
+  ///
+  /// In en, this message translates to:
+  /// **'Read & write'**
+  String get s4sApiKeyScopeReadWrite;
+
+  /// Marks the key this app is signed in with.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get s4sApiKeyThisDevice;
+
+  /// An API key that was never used.
+  ///
+  /// In en, this message translates to:
+  /// **'Never used'**
+  String get s4sApiKeyNeverUsed;
+
+  /// An API key used under a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Used just now'**
+  String get s4sApiKeyUsedJustNow;
+
+  /// An API key used minutes ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {count}m ago'**
+  String s4sApiKeyUsedMinutesAgo(int count);
+
+  /// An API key used hours ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {count}h ago'**
+  String s4sApiKeyUsedHoursAgo(int count);
+
+  /// An API key used days ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {count}d ago'**
+  String s4sApiKeyUsedDaysAgo(int count);
+
+  /// An API key last used on a date, e.g. 'Used Nov 10'.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {date}'**
+  String s4sApiKeyUsedOn(String date);
+
+  /// Swipe action and confirm button that revokes an API key.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get s4sApiKeyRevoke;
+
+  /// Title of the revoke confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke “{name}”?'**
+  String s4sApiKeyRevokeTitle(String name);
+
+  /// Body of the revoke confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps and scripts using this key stop working right away. This can\'t be undone.'**
+  String get s4sApiKeyRevokeBody;
+
+  /// Snackbar after revoking a key.
+  ///
+  /// In en, this message translates to:
+  /// **'API key revoked'**
+  String get s4sApiKeyRevoked;
+
+  /// Title of the banner that shows a new key once.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” created'**
+  String s4sApiKeyCreated(String name);
+
+  /// Warning under a newly created key.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown once. Store it somewhere safe.'**
+  String get s4sApiKeyShownOnce;
+
+  /// Button that copies the new key.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get s4sApiKeyCopy;
+
+  /// Snackbar after copying the new key.
+  ///
+  /// In en, this message translates to:
+  /// **'Key copied'**
+  String get s4sApiKeyCopied;
+
+  /// Hides the banner with the new key.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get s4sApiKeyDismiss;
+
+  /// Shown on 429 when creating a key.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many keys created. Try again later.'**
+  String get s4sApiKeyTooMany;
+
+  /// Shown on 403 insufficient_scope for key writes.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating or revoking a key needs a sign-in with read & write access.'**
+  String get s4sApiKeyNeedsWrite;
+
+  /// Swipe action on a connection that opens its sync schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get s4sSchedule;
+
+  /// Title of the sync schedule sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync schedule'**
+  String get s4sScheduleTitle;
+
+  /// Sync schedule option: the usual sync, no extra schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get s4sScheduleDefault;
+
+  /// Sync schedule option in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} min'**
+  String s4sScheduleEveryMinutes(int count);
+
+  /// Sync schedule option in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every hour} other{Every {count} hours}}'**
+  String s4sScheduleEveryHours(int count);
+
+  /// Under the schedule list: when the next scheduled sync runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Next sync {time}'**
+  String s4sScheduleNext(String time);
+
+  /// Shown when the schedule fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the sync schedule.'**
+  String get s4sScheduleLoadFailed;
+
+  /// Snackbar after changing a schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync schedule saved'**
+  String get s4sScheduleSaved;
+
+  /// Title of the AI settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get s4sAiTitle;
+
+  /// Shown when AI settings fail to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load AI settings.'**
+  String get s4sAiLoadFailed;
+
+  /// Section header for the Bayes classifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Classifier'**
+  String get s4sAiClassifierSection;
+
+  /// Switch that turns the Category classifier rule on or off.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorize with the classifier'**
+  String get s4sAiClassifierSwitch;
+
+  /// Subtitle of the classifier switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorizes uncategorized transactions after each sync, before any AI provider.'**
+  String get s4sAiClassifierSwitchSub;
+
+  /// Row that queues a classifier run.
+  ///
+  /// In en, this message translates to:
+  /// **'Run now'**
+  String get s4sAiRunNow;
+
+  /// Title of the run confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Run the classifier now?'**
+  String get s4sAiRunNowTitle;
+
+  /// Body of the run confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'It categorizes your uncategorized transactions. This may take a few moments.'**
+  String get s4sAiRunNowBody;
+
+  /// Confirm button of the run confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get s4sAiRun;
+
+  /// Row that queues clearing the classifier's locks.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear category locks'**
+  String get s4sAiClearLocks;
+
+  /// Title of the clear-locks confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the classifier\'s locks?'**
+  String get s4sAiClearLocksTitle;
+
+  /// Body of the clear-locks confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocks the categories the classifier locked and the merchants the matcher locked, so rules and AI can change them again. The categories and merchants stay.'**
+  String get s4sAiClearLocksBody;
+
+  /// Confirm button of the clear-locks confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear locks'**
+  String get s4sAiClearLocksConfirm;
+
+  /// Snackbar after a classifier job is queued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get s4sAiQueued;
+
+  /// Row that opens the classifier settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Classifier settings'**
+  String get s4sAiClassifierSettings;
+
+  /// Banner shown on classifier_rule_missing.
+  ///
+  /// In en, this message translates to:
+  /// **'The Category classifier rule was deleted, so there\'s nothing to turn on.'**
+  String get s4sAiRuleMissing;
+
+  /// Banner action that recreates the classifier rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the classifier rule again'**
+  String get s4sAiRuleAddAgain;
+
+  /// Snackbar after recreating the classifier rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Classifier rule added'**
+  String get s4sAiRuleAdded;
+
+  /// Section header for the AI prompts.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompts'**
+  String get s4sAiPromptsSection;
+
+  /// A prompt that has a custom override.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get s4sAiPromptCustom;
+
+  /// A prompt that uses the built-in text.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get s4sAiPromptDefault;
+
+  /// Prompt name: chat_system.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat system prompt'**
+  String get s4sAiPromptChatSystem;
+
+  /// Prompt name: categorizer_openai.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorizer (OpenAI)'**
+  String get s4sAiPromptCategorizerOpenai;
+
+  /// Prompt name: categorizer_anthropic.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorizer (Anthropic)'**
+  String get s4sAiPromptCategorizerAnthropic;
+
+  /// Prompt name: merchant_openai.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant detector (OpenAI)'**
+  String get s4sAiPromptMerchantOpenai;
+
+  /// Prompt name: merchant_anthropic.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant detector (Anthropic)'**
+  String get s4sAiPromptMerchantAnthropic;
+
+  /// Prompt name: insight_dig_in.
+  ///
+  /// In en, this message translates to:
+  /// **'Insight dig-in message'**
+  String get s4sAiPromptInsightDigIn;
+
+  /// Character count of a prompt against the maximum length.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {max}'**
+  String s4sAiPromptCount(String count, String max);
+
+  /// Shown when a prompt exceeds the maximum length.
+  ///
+  /// In en, this message translates to:
+  /// **'This prompt is too long.'**
+  String get s4sAiPromptTooLong;
+
+  /// Button that resets a prompt to the built-in text.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get s4sAiPromptReset;
+
+  /// Title of the reset confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to the default prompt?'**
+  String get s4sAiPromptResetTitle;
+
+  /// Body of the reset confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'This discards your custom prompt and restores the built-in instructions.'**
+  String get s4sAiPromptResetBody;
+
+  /// Confirm button of the prompt reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get s4sAiPromptReset2;
+
+  /// Warning shown when a custom prompt dropped its JSON example.
+  ///
+  /// In en, this message translates to:
+  /// **'This prompt no longer includes the “{key}” JSON example. Requests still ask for that shape, so it usually works, but a prompt that asks for another output format will break it.'**
+  String s4sAiPromptFormatRisk(String key);
+
+  /// Snackbar after saving a prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt saved'**
+  String get s4sAiPromptSaved;
+
+  /// Section header for AI usage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage · last 30 days'**
+  String get s4sAiUsageSection;
+
+  /// AI usage row: estimated total cost.
+  ///
+  /// In en, this message translates to:
+  /// **'Total cost'**
+  String get s4sAiUsageCost;
+
+  /// AI usage row: number of requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get s4sAiUsageRequests;
+
+  /// AI usage row that opens the per-model list.
+  ///
+  /// In en, this message translates to:
+  /// **'By model'**
+  String get s4sAiUsageByModel;
+
+  /// Subtitle of a model in the per-model usage list.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} request} other{{count} requests}}'**
+  String s4sAiUsageModelRequests(int count);
+
+  /// Empty state of the per-model usage list.
+  ///
+  /// In en, this message translates to:
+  /// **'No AI requests in the last 30 days.'**
+  String get s4sAiUsageNone;
+
+  /// Shown when AI usage fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load usage.'**
+  String get s4sAiUsageLoadFailed;
+
+  /// Title of the classifier settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Classifier settings'**
+  String get s4sClsTitle;
+
+  /// Classifier settings group.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get s4sClsTraining;
+
+  /// Classifier settings group.
+  ///
+  /// In en, this message translates to:
+  /// **'Words'**
+  String get s4sClsWords;
+
+  /// Classifier settings group.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get s4sClsAmount;
+
+  /// Classifier settings group.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and merchant'**
+  String get s4sClsAccountMerchant;
+
+  /// Classifier settings group.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant matcher'**
+  String get s4sClsMatcher;
+
+  /// Classifier settings group.
+  ///
+  /// In en, this message translates to:
+  /// **'Scoring'**
+  String get s4sClsScoring;
+
+  /// Classifier settings group.
+  ///
+  /// In en, this message translates to:
+  /// **'Classifier'**
+  String get s4sClsClassifier;
+
+  /// Classifier settings group for settings the app has no label for.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get s4sClsOther;
+
+  /// Classifier setting skip_self_labels.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t learn from its own unconfirmed guesses'**
+  String get s4sClsSkipSelfLabels;
+
+  /// Classifier setting self_label_grace_days.
+  ///
+  /// In en, this message translates to:
+  /// **'Count a guess as accepted after (days)'**
+  String get s4sClsSelfLabelGraceDays;
+
+  /// Classifier setting exclude_transfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude transfers'**
+  String get s4sClsExcludeTransfers;
+
+  /// Classifier setting max_training_transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Training transactions'**
+  String get s4sClsMaxTraining;
+
+  /// Classifier setting include_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Include notes'**
+  String get s4sClsIncludeNotes;
+
+  /// Classifier setting word_split.
+  ///
+  /// In en, this message translates to:
+  /// **'Words are made of'**
+  String get s4sClsWordSplit;
+
+  /// word_split choice ascii.
+  ///
+  /// In en, this message translates to:
+  /// **'a–z, 0–9'**
+  String get s4sClsWordSplitAscii;
+
+  /// word_split choice unicode.
+  ///
+  /// In en, this message translates to:
+  /// **'Any script'**
+  String get s4sClsWordSplitUnicode;
+
+  /// word_split choice symbols.
+  ///
+  /// In en, this message translates to:
+  /// **'With symbols'**
+  String get s4sClsWordSplitSymbols;
+
+  /// Classifier setting drop_numbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude numbers'**
+  String get s4sClsDropNumbers;
+
+  /// Classifier setting keep_single_chars.
+  ///
+  /// In en, this message translates to:
+  /// **'Include one-character words'**
+  String get s4sClsKeepSingleChars;
+
+  /// Classifier setting drop_codes.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude reference codes'**
+  String get s4sClsDropCodes;
+
+  /// Classifier setting spread_filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude words every category uses alike'**
+  String get s4sClsSpreadFilter;
+
+  /// Classifier setting spread_margin.
+  ///
+  /// In en, this message translates to:
+  /// **'Spread margin'**
+  String get s4sClsSpreadMargin;
+
+  /// Classifier setting bigrams.
+  ///
+  /// In en, this message translates to:
+  /// **'Include word pairs'**
+  String get s4sClsBigrams;
+
+  /// Classifier setting merchant_name_words.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the merchant\'s name as words'**
+  String get s4sClsMerchantNameWords;
+
+  /// Classifier setting amount_field.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the amount'**
+  String get s4sClsAmountField;
+
+  /// Classifier setting amount_by_direction.
+  ///
+  /// In en, this message translates to:
+  /// **'Include money in or out'**
+  String get s4sClsAmountByDirection;
+
+  /// Classifier setting account_field.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the account'**
+  String get s4sClsAccountField;
+
+  /// Classifier setting merchant_field.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the merchant'**
+  String get s4sClsMerchantField;
+
+  /// Classifier setting lock_similar_merchants.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock the merchants the matcher sets'**
+  String get s4sClsLockSimilarMerchants;
+
+  /// Classifier setting similar_threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Similarity'**
+  String get s4sClsSimilarThreshold;
+
+  /// Classifier setting similar_min_neighbours.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchants agreeing'**
+  String get s4sClsSimilarMinNeighbours;
+
+  /// Classifier setting similar_common_share.
+  ///
+  /// In en, this message translates to:
+  /// **'Cutoff'**
+  String get s4sClsSimilarCommonShare;
+
+  /// Classifier setting similar_skip_self.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t copy from its own unconfirmed merchants'**
+  String get s4sClsSimilarSkipSelf;
+
+  /// Classifier setting similar_self_grace_days.
+  ///
+  /// In en, this message translates to:
+  /// **'Count a merchant as accepted after (days)'**
+  String get s4sClsSimilarSelfGraceDays;
+
+  /// Classifier setting complement.
+  ///
+  /// In en, this message translates to:
+  /// **'Use complement naive Bayes'**
+  String get s4sClsComplement;
+
+  /// Classifier setting smoothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Smoothing'**
+  String get s4sClsSmoothing;
+
+  /// Classifier setting prior.
+  ///
+  /// In en, this message translates to:
+  /// **'Include how often each category is used'**
+  String get s4sClsPrior;
+
+  /// Classifier setting binary.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude repeated words'**
+  String get s4sClsBinary;
+
+  /// Classifier setting separate_fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Score the merchant and account apart'**
+  String get s4sClsSeparateFields;
+
+  /// Classifier setting threshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold'**
+  String get s4sClsThreshold;
+
+  /// Classifier setting lock_results.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock the categories the classifier sets'**
+  String get s4sClsLockResults;
+
+  /// Allowed range under a numeric classifier setting.
+  ///
+  /// In en, this message translates to:
+  /// **'{min}–{max}'**
+  String s4sClsRange(String min, String max);
+
+  /// Semantic label of a stepper's minus button.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease'**
+  String get s4sClsDecrease;
+
+  /// Semantic label of a stepper's plus button.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase'**
+  String get s4sClsIncrease;
 }
 
 class _AppLocalizationsDelegate

@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/provider_connection.dart';
+import '../models/sync_schedule.dart';
 import 'api_config.dart';
+import 'api_error_result.dart';
 import 'log_service.dart';
 import 'response_list_parser.dart';
 
@@ -97,6 +99,65 @@ class ProviderConnectionsService {
         path: '',
         fallback: 'Failed to disconnect the connection',
       );
+
+  // Section 4 (settings.sync_schedule): per-connection sync schedules.
+
+  /// `GET .../:id/sync_schedule`. `'schedule'` holds the [SyncSchedule].
+  Future<Map<String, dynamic>> syncSchedule({
+    required String accessToken,
+    required ProviderConnection connection,
+  }) =>
+      _schedule(accessToken, connection, 'GET', null);
+
+  /// `PATCH .../:id/sync_schedule` with [intervalMinutes]; null returns the
+  /// connection to the usual sync. `'schedule'` holds the saved schedule.
+  Future<Map<String, dynamic>> updateSyncSchedule({
+    required String accessToken,
+    required ProviderConnection connection,
+    required int? intervalMinutes,
+  }) =>
+      _schedule(accessToken, connection, 'PATCH', {
+        'sync_schedule': {'interval_minutes': intervalMinutes},
+      });
+
+  Future<Map<String, dynamic>> _schedule(
+    String accessToken,
+    ProviderConnection connection,
+    String method,
+    Map<String, dynamic>? body,
+  ) async {
+    const fallback = 'Failed to load the sync schedule';
+    final url = Uri.parse(
+      '${ApiConfig.baseUrl}/api/v1/provider_connections/'
+      '${Uri.encodeComponent(connection.id)}/sync_schedule',
+    ).replace(queryParameters: {'provider': connection.provider});
+    try {
+      final request = http.Request(method, url)
+        ..headers.addAll(ApiConfig.getAuthHeaders(accessToken));
+      if (body != null) {
+        request.headers['Content-Type'] = 'application/json';
+        request.body = jsonEncode(body);
+      }
+      final response = await http.Response.fromStream(
+          await _client.send(request).timeout(_timeout));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return {
+          'success': true,
+          'schedule':
+              SyncSchedule.fromJson(data['data'] as Map<String, dynamic>),
+        };
+      }
+      if (response.statusCode == 401) {
+        return {'success': false, 'error': 'unauthorized'};
+      }
+      return errorResult(response, fallback: fallback);
+    } catch (e) {
+      LogService.instance.error('ProviderConnectionsService',
+          '$method sync schedule failed with ${e.runtimeType}');
+      return {'success': false, 'error': fallback};
+    }
+  }
 
   /// Always sends `provider`: item ids live in per-provider tables and can
   /// collide (422 `ambiguous_connection` without it).
