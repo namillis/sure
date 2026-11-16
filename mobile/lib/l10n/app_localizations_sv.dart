@@ -5269,4 +5269,170 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get sa2PrincipalOnlySub => 'Räntan bokförs separat';
+
+  @override
+  String get s4tDuplicateReview => 'Granska';
+
+  @override
+  String get s4tDuplicatePossible => 'Möjlig dubblett';
+
+  @override
+  String get s4tDuplicateMerge => 'Slå ihop';
+
+  @override
+  String get s4tDuplicateDismiss => 'Inte en dubblett';
+
+  @override
+  String get s4tPendingMatch => 'Matcha mot bokförd transaktion';
+
+  @override
+  String get s4tPendingMatchTitle => 'Bokförd transaktion';
+
+  @override
+  String get s4tPendingMatchEmpty => 'Inga bokförda transaktioner att matcha';
+
+  @override
+  String get s4tLoadMore => 'Visa fler';
+
+  @override
+  String get s4tLoadFailed => 'Det gick inte att läsa in listan.';
+
+  @override
+  String get s4tMarkAsTransfer => 'Markera som överföring';
+
+  @override
+  String get s4tTransferMatching => 'Matchande transaktioner';
+
+  @override
+  String get s4tTransferCreateIn => 'Eller skapa andra sidan i';
+
+  @override
+  String get s4tTransferNoMatches => 'Inga matchande transaktioner';
+
+  @override
+  String get s4tTransferNoAccounts => 'Inga andra konton';
+
+  @override
+  String get s4tTransferPending => 'Väntande';
+
+  @override
+  String get s4tTransferConfirmed => 'Bekräftad';
+
+  @override
+  String s4tTransferValue(String status, String account) {
+    return '$status · $account';
+  }
+
+  @override
+  String s4tTransferWith(String account) {
+    return 'Med $account';
+  }
+
+  @override
+  String get s4tNotATransfer => 'Inte en överföring';
+
+  @override
+  String get s4tNotATransferTitle => 'Inte en överföring?';
+
+  @override
+  String get s4tNotATransferBody =>
+      'Kopplingen tas bort och transaktionerna matchas inte igen. Båda transaktionerna finns kvar.';
+
+  @override
+  String get s4tNotATransferHintBody =>
+      'De föreslagna matchningarna för transaktionen visas inte igen.';
+
+  @override
+  String get s4tReasonNotACandidate =>
+      'Den transaktionen kan inte matchas med den här.';
+
+  @override
+  String get s4tReasonAlreadyLinked =>
+      'En av transaktionerna ingår redan i en överföring.';
+
+  @override
+  String get s4tReasonSameAccount =>
+      'Båda sidorna av en överföring kan inte ligga i samma konto.';
+
+  @override
+  String get s4tReasonSplit =>
+      'En uppdelad transaktion kan inte ingå i en överföring.';
+
+  @override
+  String get s4tReasonExcluded =>
+      'En exkluderad transaktion kan inte ingå i en överföring.';
+
+  @override
+  String get s4tReasonInvalidTransfer =>
+      'Transaktionerna kan inte bilda en överföring.';
+
+  @override
+  String get s4tSyncLockedTitle => 'Skyddad mot synk';
+
+  @override
+  String s4tSyncLockedFields(String fields) {
+    return 'Låsta: $fields';
+  }
+
+  @override
+  String get s4tSyncLockedNoFields =>
+      'Dina ändringar skrivs inte över vid synk.';
+
+  @override
+  String get s4tUnlock => 'Lås upp';
+
+  @override
+  String get s4tUnlockTitle => 'Låta synk uppdatera?';
+
+  @override
+  String get s4tUnlockBody =>
+      'Dina ändringar i transaktionen kan skrivas över vid nästa synk.';
+
+  @override
+  String get s4tFieldName => 'Namn';
+
+  @override
+  String get s4tFieldDate => 'Datum';
+
+  @override
+  String get s4tFieldAmount => 'Belopp';
+
+  @override
+  String get s4tFieldNotes => 'Anteckningar';
+
+  @override
+  String get s4tFieldCategory => 'Kategori';
+
+  @override
+  String get s4tFieldMerchant => 'Handlare';
+
+  @override
+  String get s4tFieldTags => 'Taggar';
+
+  @override
+  String get s4tFieldKind => 'Typ';
+
+  @override
+  String get s4tFieldCurrency => 'Valuta';
+
+  @override
+  String get s4tStatus => 'Status';
+
+  @override
+  String get s4tStatusUnreconciled => 'Ej avstämd';
+
+  @override
+  String get s4tStatusCleared => 'Klar';
+
+  @override
+  String get s4tStatusReconciled => 'Avstämd';
+
+  @override
+  String get s4tAddedToRecurring => 'Tillagd i återkommande';
+
+  @override
+  String get s4tAlreadyRecurring => 'Redan återkommande';
+
+  @override
+  String get s4tOpen => 'Öppna';
 }

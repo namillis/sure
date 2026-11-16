@@ -8,9 +8,14 @@ class TransactionTransfer {
     this.otherAccountId,
     this.otherAccountName,
     this.otherAccountType,
+    this.status,
   });
 
   final String id;
+
+  /// Section 1 (transaction actions): `pending` for an automatic match nobody
+  /// has confirmed, `confirmed` otherwise. Null when the server predates it.
+  final String? status;
 
   /// The transferred amount, formatted by the server and unsigned.
   final String? amount;
@@ -36,9 +41,71 @@ class TransactionTransfer {
       otherAccountType: other is Map
           ? Transaction._nonEmptyString(other['account_type'])
           : null,
+      status: Transaction._nonEmptyString(json['status']),
     );
   }
 }
+
+// --- Section 1 (round 4b): transaction actions.
+
+/// The suggested posted match of a pending transaction (`duplicate_candidate`).
+class TransactionDuplicateCandidate {
+  const TransactionDuplicateCandidate({
+    required this.id,
+    this.entryId,
+    this.date,
+    this.name,
+    this.amount,
+    this.signedAmountCents,
+    this.currency,
+  });
+
+  final String id;
+  final String? entryId;
+  final String? date;
+  final String? name;
+
+  /// Formatted by the server, in the entry's sign convention.
+  final String? amount;
+
+  /// Income positive, expense negative.
+  final int? signedAmountCents;
+  final String? currency;
+
+  static TransactionDuplicateCandidate? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final cents = json['signed_amount_cents'];
+    return TransactionDuplicateCandidate(
+      id: json['id']?.toString() ?? '',
+      entryId: Transaction._nonEmptyString(json['entry_id']),
+      date: Transaction._nonEmptyString(json['date']),
+      name: Transaction._nonEmptyString(json['name']),
+      amount: Transaction._nonEmptyString(json['amount']),
+      signedAmountCents: cents is num ? cents.toInt() : null,
+      currency: Transaction._nonEmptyString(json['currency']),
+    );
+  }
+}
+
+/// One field a sync may no longer overwrite (`locked_attributes`).
+class TransactionLockedAttribute {
+  const TransactionLockedAttribute({required this.field, this.lockedAt});
+
+  /// The attribute name, e.g. `name`, `category_id`, `tag_ids`.
+  final String field;
+  final String? lockedAt;
+
+  static TransactionLockedAttribute? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final field = Transaction._nonEmptyString(json['field']);
+    if (field == null) return null;
+    return TransactionLockedAttribute(
+      field: field,
+      lockedAt: Transaction._nonEmptyString(json['locked_at']),
+    );
+  }
+}
+// --- end Section 1
 
 class Transaction {
   final String? id;
@@ -86,6 +153,29 @@ class Transaction {
   /// the API.
   final TransactionTransfer? transfer;
 
+  // --- Section 1 (round 4b): transaction actions. Null / empty when the
+  // server predates the fields.
+
+  /// A pending (not yet posted) transaction from a provider sync.
+  final bool? pending;
+
+  /// The web's duplicate banner: a suggested posted match exists.
+  final bool? duplicateSuspected;
+
+  /// `low` ("Review"), `medium` or `high` ("Possible duplicate").
+  final String? duplicateConfidence;
+  final TransactionDuplicateCandidate? duplicateCandidate;
+
+  /// The web's "Protected from sync" panel is shown.
+  final bool? syncLocked;
+  final List<TransactionLockedAttribute> lockedAttributes;
+
+  /// `unreconciled`, `cleared` or `reconciled`.
+  final String? reconciledStatus;
+
+  /// Whether to show the reconcile control.
+  final bool? reconcilable;
+  // --- end Section 1
   Transaction({
     this.id,
     required this.accountId,
@@ -110,7 +200,17 @@ class Transaction {
     this.splitParent,
     this.entryId,
     this.transfer,
-  })  : tagIds = List.unmodifiable(tagIds),
+    // Section 1 (round 4b): transaction actions.
+    this.pending,
+    this.duplicateSuspected,
+    this.duplicateConfidence,
+    this.duplicateCandidate,
+    this.syncLocked,
+    List<TransactionLockedAttribute> lockedAttributes = const [],
+    this.reconciledStatus,
+    this.reconcilable,
+  })  : lockedAttributes = List.unmodifiable(lockedAttributes),
+        tagIds = List.unmodifiable(tagIds),
         tagNames = List.unmodifiable(tagNames),
         categoryProvided =
             categoryProvided ?? (categoryId != null || categoryName != null),
@@ -224,6 +324,25 @@ class Transaction {
           json['split_parent'] is bool ? json['split_parent'] as bool : null,
       entryId: _nonEmptyString(json['entry_id']),
       transfer: TransactionTransfer.fromJson(json['transfer']),
+      // Section 1 (round 4b): transaction actions.
+      pending: json['pending'] is bool ? json['pending'] as bool : null,
+      duplicateSuspected: json['duplicate_suspected'] is bool
+          ? json['duplicate_suspected'] as bool
+          : null,
+      duplicateConfidence: _nonEmptyString(json['duplicate_confidence']),
+      duplicateCandidate:
+          TransactionDuplicateCandidate.fromJson(json['duplicate_candidate']),
+      syncLocked:
+          json['sync_locked'] is bool ? json['sync_locked'] as bool : null,
+      lockedAttributes: [
+        if (json['locked_attributes'] is List)
+          for (final item in json['locked_attributes'] as List)
+            if (TransactionLockedAttribute.fromJson(item) case final lock?)
+              lock,
+      ],
+      reconciledStatus: _nonEmptyString(json['reconciled_status']),
+      reconcilable:
+          json['reconcilable'] is bool ? json['reconcilable'] as bool : null,
     );
   }
 

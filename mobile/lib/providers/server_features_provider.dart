@@ -41,6 +41,11 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const accountsPermissions = 'accounts.permissions';
   static const accountsLoanRates = 'accounts.loan_rates';
   static const chartsSeries = 'charts.series';
+  // Round 4b, section 1: transaction actions.
+  static const transactionsTransfers = 'transactions.transfers';
+  static const transactionsDuplicates = 'transactions.duplicates';
+  static const transactionsMarkRecurring = 'transactions.mark_recurring';
+  static const transactionsLocks = 'transactions.locks';
 
   static const _prefsPrefix = 'server_features:';
 

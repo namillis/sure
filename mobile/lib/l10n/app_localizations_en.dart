@@ -5234,4 +5234,170 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sa2PrincipalOnlySub => 'Interest is recorded separately';
+
+  @override
+  String get s4tDuplicateReview => 'Review';
+
+  @override
+  String get s4tDuplicatePossible => 'Possible duplicate';
+
+  @override
+  String get s4tDuplicateMerge => 'Merge';
+
+  @override
+  String get s4tDuplicateDismiss => 'Not a duplicate';
+
+  @override
+  String get s4tPendingMatch => 'Match to posted transaction';
+
+  @override
+  String get s4tPendingMatchTitle => 'Posted transaction';
+
+  @override
+  String get s4tPendingMatchEmpty => 'No posted transactions to match';
+
+  @override
+  String get s4tLoadMore => 'Load more';
+
+  @override
+  String get s4tLoadFailed => 'Couldn\'t load this list.';
+
+  @override
+  String get s4tMarkAsTransfer => 'Mark as transfer';
+
+  @override
+  String get s4tTransferMatching => 'Matching transactions';
+
+  @override
+  String get s4tTransferCreateIn => 'Or create the other side in';
+
+  @override
+  String get s4tTransferNoMatches => 'No matching transactions';
+
+  @override
+  String get s4tTransferNoAccounts => 'No other accounts';
+
+  @override
+  String get s4tTransferPending => 'Pending';
+
+  @override
+  String get s4tTransferConfirmed => 'Confirmed';
+
+  @override
+  String s4tTransferValue(String status, String account) {
+    return '$status · $account';
+  }
+
+  @override
+  String s4tTransferWith(String account) {
+    return 'With $account';
+  }
+
+  @override
+  String get s4tNotATransfer => 'Not a transfer';
+
+  @override
+  String get s4tNotATransferTitle => 'Not a transfer?';
+
+  @override
+  String get s4tNotATransferBody =>
+      'The transfer link is removed and these transactions won\'t be matched again. Both transactions stay.';
+
+  @override
+  String get s4tNotATransferHintBody =>
+      'The suggested matches for this transaction won\'t be offered again.';
+
+  @override
+  String get s4tReasonNotACandidate =>
+      'That transaction can\'t be matched with this one.';
+
+  @override
+  String get s4tReasonAlreadyLinked =>
+      'One of these transactions is already part of a transfer.';
+
+  @override
+  String get s4tReasonSameAccount =>
+      'Both sides of a transfer can\'t be in the same account.';
+
+  @override
+  String get s4tReasonSplit =>
+      'A split transaction can\'t be part of a transfer.';
+
+  @override
+  String get s4tReasonExcluded =>
+      'An excluded transaction can\'t be part of a transfer.';
+
+  @override
+  String get s4tReasonInvalidTransfer =>
+      'These transactions can\'t make a transfer.';
+
+  @override
+  String get s4tSyncLockedTitle => 'Protected from sync';
+
+  @override
+  String s4tSyncLockedFields(String fields) {
+    return 'Locked: $fields';
+  }
+
+  @override
+  String get s4tSyncLockedNoFields =>
+      'Your edits won\'t be overwritten by sync.';
+
+  @override
+  String get s4tUnlock => 'Unlock';
+
+  @override
+  String get s4tUnlockTitle => 'Allow sync to update?';
+
+  @override
+  String get s4tUnlockBody =>
+      'Your changes to this transaction may be overwritten on the next sync.';
+
+  @override
+  String get s4tFieldName => 'Name';
+
+  @override
+  String get s4tFieldDate => 'Date';
+
+  @override
+  String get s4tFieldAmount => 'Amount';
+
+  @override
+  String get s4tFieldNotes => 'Notes';
+
+  @override
+  String get s4tFieldCategory => 'Category';
+
+  @override
+  String get s4tFieldMerchant => 'Merchant';
+
+  @override
+  String get s4tFieldTags => 'Tags';
+
+  @override
+  String get s4tFieldKind => 'Type';
+
+  @override
+  String get s4tFieldCurrency => 'Currency';
+
+  @override
+  String get s4tStatus => 'Status';
+
+  @override
+  String get s4tStatusUnreconciled => 'Unreconciled';
+
+  @override
+  String get s4tStatusCleared => 'Cleared';
+
+  @override
+  String get s4tStatusReconciled => 'Reconciled';
+
+  @override
+  String get s4tAddedToRecurring => 'Added to recurring';
+
+  @override
+  String get s4tAlreadyRecurring => 'Already recurring';
+
+  @override
+  String get s4tOpen => 'Open';
 }

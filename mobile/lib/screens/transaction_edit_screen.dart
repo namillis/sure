@@ -16,6 +16,7 @@ import '../providers/tags_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/connectivity_service.dart';
+import '../services/transaction_actions_service.dart';
 import '../services/recurring_transactions_service.dart';
 import '../services/transaction_split_service.dart';
 import '../services/transactions_service.dart';
@@ -32,6 +33,7 @@ import '../widgets/metadata_picker_sheet.dart';
 import '../widgets/transaction_metadata_pickers.dart';
 import 'recurring_form_screen.dart';
 import 'recurring_screen.dart' show recurringCadenceLabel;
+import 'transaction_actions.dart';
 import 'transaction_split_screen.dart';
 import 'web_view_screen.dart';
 
@@ -64,6 +66,7 @@ class TransactionEditScreen extends StatefulWidget {
   final TransactionsService? transactionsService;
   final TransactionSplitService? splitService;
   final RecurringTransactionsService? recurringService;
+  final TransactionActionsService? actionsService;
 
   const TransactionEditScreen({
     super.key,
@@ -73,6 +76,7 @@ class TransactionEditScreen extends StatefulWidget {
     this.transactionsService,
     this.splitService,
     this.recurringService,
+    this.actionsService,
   });
 
   @override
@@ -89,6 +93,8 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   late final TransactionSplitService _splitService =
       widget.splitService ?? TransactionSplitService();
   late final RecurringTransactionsService _recurringService;
+  late final TransactionActionsService _actionsService =
+      widget.actionsService ?? TransactionActionsService();
   final _pickers = TransactionMetadataPickers();
 
   late final TextEditingController _nameController;
@@ -124,7 +130,11 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   bool _isDeleting = false;
   String? _error;
 
-  OfflineTransaction get _txn => widget.transaction;
+  /// Set when a duplicate merge replaced the transaction with the one that
+  /// survived (section 1).
+  OfflineTransaction? _merged;
+
+  OfflineTransaction get _txn => _merged ?? widget.transaction;
   bool get _isSplitParent => _fresh?.splitParent == true;
 
   @override
@@ -159,6 +169,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   @override
   void dispose() {
     if (widget.recurringService == null) _recurringService.close();
+    if (widget.actionsService == null) _actionsService.close();
     _nameController.dispose();
     _notesController.dispose();
     _amountController.dispose();
@@ -342,6 +353,46 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
       widget.onChanged?.call();
       await _loadDetails();
     }
+  }
+
+  // Section 1: transaction actions. A write shows the server's copy and,
+  // like a split change, makes the screen pop true so the list reloads.
+  void _applyAction(Transaction updated) {
+    setState(() {
+      _fresh = updated;
+      _splitChanged = true;
+    });
+    widget.onChanged?.call();
+  }
+
+  /// A duplicate merge removed this transaction: show the one that survived.
+  void _adoptMerged(Transaction survivor) {
+    final merged = OfflineTransaction.fromTransaction(survivor,
+        localId: survivor.id ?? widget.transaction.localId);
+    setState(() {
+      _merged = merged;
+      _nameController.text = merged.name;
+      _notesController.text = merged.notes ?? '';
+      _amountController.text = _initialAmountText =
+          SplitMath.toEditText(_amountUnits(survivor).abs(), locale: _locale());
+      _date = merged.date;
+      _nature = merged.nature;
+      _selectedCategoryId = merged.categoryId;
+      _selectedCategoryLabel = merged.categoryName;
+      _selectedMerchantId = merged.merchantId;
+      _selectedMerchantLabel = merged.merchantName;
+      _selectedTagIds = [...merged.tagIds];
+      for (var i = 0; i < merged.tagIds.length; i++) {
+        if (i < merged.tagNames.length && merged.tagNames[i].isNotEmpty) {
+          _tagLabels[merged.tagIds[i]] = merged.tagNames[i];
+        }
+      }
+      if (_recurringItems case final items?) {
+        _recurringMatch = findRecurringMatch(survivor, items);
+      }
+    });
+    _applyAction(survivor);
+    _loadDetails();
   }
 
   void _openWeb(String title, String path) {
@@ -766,6 +817,15 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
                 icon: SureIcons.cloudOff,
                 margin: const EdgeInsets.only(bottom: 12),
               ),
+            if (_fresh case final fresh? when canEdit && online)
+              TransactionActionBanners(
+                transaction: fresh,
+                features: TransactionActionFeatures.of(context),
+                service: _actionsService,
+                enabled: enabled,
+                onUpdated: _applyAction,
+                onReplaced: _adoptMerged,
+              ),
             _buildHero(l, palette, categories, hidden, account, enabled,
                 financialEnabled),
             const SizedBox(height: 20),
@@ -776,6 +836,24 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
                 l, palette, merchants, tags, online, enabled, financialEnabled),
             const SizedBox(height: 16),
             _buildRecurringPanel(l, palette, online),
+            if (TransactionActionFeatures.of(context).markRecurring &&
+                canEdit &&
+                online &&
+                _fresh != null) ...[
+              const SizedBox(height: 16),
+              SurePanel.rows(children: [
+                TransactionMarkRecurringRow(
+                  transactionId: _txn.id!,
+                  service: _actionsService,
+                  enabled: enabled,
+                  onMarked: (series) {
+                    if (series == null) return;
+                    setState(() => _recurringMatch = series);
+                  },
+                  onOpen: (_) => _openRecurring(),
+                ),
+              ]),
+            ],
             const SizedBox(height: 16),
             _buildWebPanel(l, palette, online),
             if (_error != null) ...[
@@ -1201,7 +1279,25 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
             onTap: financialEnabled ? _pickDate : null,
           ),
         ),
-        if (_fresh?.transfer case final transfer?)
+        if (TransactionActionFeatures.of(context) case final actions
+            when _fresh != null && (actions.transfers || actions.locks)) ...[
+          if (actions.transfers)
+            TransactionTransferRow(
+              transaction: _fresh!,
+              service: _actionsService,
+              enabled: enabled && online,
+              onUpdated: _applyAction,
+            ),
+          if (actions.locks && _fresh!.reconcilable == true)
+            TransactionReconcileRow(
+              transaction: _fresh!,
+              service: _actionsService,
+              enabled: enabled && online,
+              onUpdated: _applyAction,
+            ),
+        ],
+        if (_fresh?.transfer case final transfer?
+            when !TransactionActionFeatures.of(context).transfers)
           SureListRow(
             key: const ValueKey('transaction-transfer-row'),
             title: l.dsTransfer,
@@ -1234,12 +1330,15 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
         onTap: _openRecurring,
       ));
     } else if (loaded) {
-      rows.add(SureListRow(
-        key: const ValueKey('transaction-recurring-row'),
-        title: l.txnParityMarkRecurring,
-        titleColor: palette.link,
-        onTap: _openRecurring,
-      ));
+      // With the server's "Mark as recurring" the actions panel offers it.
+      if (!TransactionActionFeatures.of(context).markRecurring) {
+        rows.add(SureListRow(
+          key: const ValueKey('transaction-recurring-row'),
+          title: l.txnParityMarkRecurring,
+          titleColor: palette.link,
+          onTap: _openRecurring,
+        ));
+      }
     } else {
       rows.add(SureListRow(
         key: const ValueKey('transaction-recurring-row'),
@@ -1290,6 +1389,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
       ));
     }
 
+    if (rows.isEmpty) return const SizedBox.shrink();
     return SurePanel.rows(children: rows);
   }
 
