@@ -15,11 +15,9 @@ class BrexItemsController < ApplicationController
   end
 
   def create
-    @brex_item = Current.family.brex_items.build(brex_item_params)
-    @brex_item.name = t("brex_items.default_connection_name") if @brex_item.name.blank?
+    @brex_item = BrexItem::AccountSetup.create(Current.family, brex_item_params)
 
-    if @brex_item.save
-      @brex_item.sync_later
+    if @brex_item.persisted?
       redirect_to accounts_path, notice: t(".success"), status: :see_other
     else
       render_provider_panel("brex", alert: @brex_item.errors.full_messages.join(", "))

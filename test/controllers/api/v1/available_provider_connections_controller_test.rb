@@ -31,7 +31,7 @@ class Api::V1::AvailableProviderConnectionsControllerTest < ActionDispatch::Inte
                    "connect_path" => "/settings/providers/simplefin/connect_form", "kind" => "token" }, by_provider["simplefin"])
     assert_equal "web", by_provider["enable_banking"]["kind"]
     assert_equal "web", by_provider["snaptrade"]["kind"]
-    assert_equal SurePlus::TokenProviders::KEYS.sort,
+    assert_equal ProviderConnectionSetup::SETUP_CLASSES.keys.sort,
       entries.select { |entry| entry["kind"] == "token" }.map { |entry| entry["provider"] }.sort
     entries.each do |entry|
       assert WebHandoff::RoutePolicy.entry_path_allowed?(entry["connect_path"]), entry["connect_path"]

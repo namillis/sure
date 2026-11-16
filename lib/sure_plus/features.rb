@@ -17,6 +17,7 @@ module SurePlus
       charts.series
       connections.available
       connections.manage
+      connections.token_create
       connections.web_handoff
       goals
       goals.lifecycle

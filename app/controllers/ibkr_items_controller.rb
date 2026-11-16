@@ -3,12 +3,9 @@ class IbkrItemsController < ApplicationController
   before_action :require_admin!, only: [ :create, :select_accounts, :select_existing_account, :link_existing_account, :update, :destroy, :sync, :setup_accounts, :complete_account_setup ]
 
   def create
-    @ibkr_item = Current.family.ibkr_items.build(ibkr_item_params)
-    @ibkr_item.name = @ibkr_item.name.presence || default_item_name
+    @ibkr_item = IbkrItem::AccountSetup.create(Current.family, ibkr_item_params)
 
-    if @ibkr_item.save
-      @ibkr_item.sync_later
-
+    if @ibkr_item.persisted?
       redirect_to accounts_path, notice: t(".success"), status: :see_other
     else
       render_provider_panel("ibkr", alert: @ibkr_item.errors.full_messages.join(", "), new_item_name: ibkr_item_params[:name])
@@ -147,29 +144,7 @@ class IbkrItemsController < ApplicationController
 
   def complete_account_setup
     selected_accounts = Array(params[:account_ids]).reject(&:blank?)
-    created_accounts = []
-
-    selected_accounts.each do |ibkr_account_id|
-      ibkr_account = @ibkr_item.ibkr_accounts.find_by(id: ibkr_account_id)
-      next unless ibkr_account
-
-      ibkr_account.with_lock do
-        next if ibkr_account.current_account.present?
-
-        account = Account.create_from_ibkr_account(ibkr_account)
-        ibkr_account.ensure_account_provider!(account)
-        created_accounts << account
-      end
-
-      begin
-        IbkrAccount::Processor.new(ibkr_account.reload).process
-      rescue => e
-        Rails.logger.error("Failed to process IBKR account #{ibkr_account.id} after setup: #{e.class} - #{e.message}")
-      end
-    end
-
-    @ibkr_item.update!(pending_account_setup: @ibkr_item.unlinked_accounts_count.positive?)
-    @ibkr_item.sync_later if created_accounts.any?
+    created_accounts = IbkrItem::AccountSetup.new(@ibkr_item).complete!(selected_accounts)[:created_accounts]
 
     if created_accounts.any?
       redirect_to accounts_path, notice: t(".success", count: created_accounts.count), status: :see_other
@@ -191,15 +166,6 @@ class IbkrItemsController < ApplicationController
       return active_items.find_by(id: params[:ibkr_item_id]) if params[:ibkr_item_id].present?
 
       active_items.syncable.ordered.first || active_items.ordered.first
-    end
-
-    # "Interactive Brokers", then "Interactive Brokers 2", "Interactive Brokers 3"...
-    def default_item_name
-      base = t("ibkr_items.defaults.name")
-      existing = Current.family.ibkr_items.active.pluck(:name)
-      return base unless existing.include?(base)
-
-      (2..).lazy.map { |n| "#{base} #{n}" }.find { |name| !existing.include?(name) }
     end
 
     def ibkr_item_params

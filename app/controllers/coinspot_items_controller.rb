@@ -10,12 +10,9 @@ class CoinspotItemsController < ApplicationController
   # Creates a new CoinSpot connection from the settings panel form, sets its
   # institution branding, and queues the first sync.
   def create
-    @coinspot_item = Current.family.coinspot_items.build(coinspot_item_params)
-    @coinspot_item.name ||= t(".default_name")
+    @coinspot_item = CoinspotItem::AccountSetup.create(Current.family, coinspot_item_params)
 
-    if @coinspot_item.save
-      @coinspot_item.set_coinspot_institution_defaults!
-      @coinspot_item.sync_later
+    if @coinspot_item.persisted?
       redirect_to settings_providers_path, notice: t(".success"), status: :see_other
     else
       render_provider_panel("coinspot", alert: @coinspot_item.errors.full_messages.join(", "))
@@ -188,37 +185,9 @@ class CoinspotItemsController < ApplicationController
   def complete_account_setup
     selected_accounts = Array(params[:selected_accounts]).reject(&:blank?)
     return_to = safe_return_to_path(params[:return_to])
-    created_accounts = []
-    failed_accounts = 0
-
-    selected_accounts.each do |coinspot_account_id|
-      coinspot_account = @coinspot_item.coinspot_accounts.find_by(id: coinspot_account_id)
-      next unless coinspot_account
-
-      coinspot_account.with_lock do
-        if coinspot_account.account_provider.blank?
-          account = Account.create_from_coinspot_account(coinspot_account)
-          provider_link = coinspot_account.ensure_account_provider!(account)
-          provider_link ? created_accounts << account : account.destroy!
-        end
-      end
-
-      CoinspotAccount::Processor.new(coinspot_account.reload).process
-    rescue StandardError => e
-      failed_accounts += 1
-      DebugLogEntry.capture(
-        category: "provider_sync_error",
-        level: "error",
-        message: "Failed to setup account for CoinspotAccount: #{e.message}",
-        source: self.class.name,
-        provider_key: "coinspot",
-        family: @coinspot_item.family,
-        metadata: { coinspot_account_id: coinspot_account_id, error_class: e.class.name }
-      )
-    end
-
-    @coinspot_item.update!(pending_account_setup: unlinked_accounts_for(@coinspot_item).exists?)
-    @coinspot_item.sync_later if created_accounts.any?
+    result = CoinspotItem::AccountSetup.new(@coinspot_item).complete!(selected_accounts)
+    created_accounts = result[:created_accounts]
+    failed_accounts = result[:failed_count]
 
     notice = if created_accounts.any?
       t(".success", count: created_accounts.count)

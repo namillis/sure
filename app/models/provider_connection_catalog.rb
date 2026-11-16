@@ -46,7 +46,7 @@ class ProviderConnectionCatalog
           key: key,
           name: name,
           connect_path: connect_path,
-          kind: SurePlus::TokenProviders::KEYS.include?(provider) ? "token" : "web"
+          kind: ProviderConnectionSetup::SETUP_CLASSES.key?(provider) ? "token" : "web"
         }
       end
 

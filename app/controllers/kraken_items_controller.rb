@@ -5,12 +5,9 @@ class KrakenItemsController < ApplicationController
   before_action :require_admin!, only: %i[create select_accounts link_accounts select_existing_account link_existing_account update destroy sync setup_accounts complete_account_setup]
 
   def create
-    @kraken_item = Current.family.kraken_items.build(kraken_item_params)
-    @kraken_item.name ||= t(".default_name")
+    @kraken_item = KrakenItem::AccountSetup.create(Current.family, kraken_item_params)
 
-    if @kraken_item.save
-      @kraken_item.set_kraken_institution_defaults!
-      @kraken_item.sync_later
+    if @kraken_item.persisted?
       redirect_to settings_providers_path, notice: t(".success"), status: :see_other
     else
       render_provider_panel("kraken", alert: @kraken_item.errors.full_messages.join(", "))
@@ -120,27 +117,7 @@ class KrakenItemsController < ApplicationController
 
   def complete_account_setup
     selected_accounts = Array(params[:selected_accounts]).reject(&:blank?)
-    created_accounts = []
-
-    selected_accounts.each do |kraken_account_id|
-      kraken_account = @kraken_item.kraken_accounts.find_by(id: kraken_account_id)
-      next unless kraken_account
-
-      kraken_account.with_lock do
-        next if kraken_account.account_provider.present?
-
-        account = Account.create_from_kraken_account(kraken_account)
-        provider_link = kraken_account.ensure_account_provider!(account)
-        provider_link ? created_accounts << account : account.destroy!
-      end
-
-      KrakenAccount::Processor.new(kraken_account.reload).process
-    rescue StandardError => e
-      Rails.logger.error("Failed to setup account for KrakenAccount #{kraken_account_id}: #{e.message}")
-    end
-
-    @kraken_item.update!(pending_account_setup: unlinked_accounts_for(@kraken_item).exists?)
-    @kraken_item.sync_later if created_accounts.any?
+    created_accounts = KrakenItem::AccountSetup.new(@kraken_item).complete!(selected_accounts)[:created_accounts]
 
     notice = if created_accounts.any?
       t(".success", count: created_accounts.count)
