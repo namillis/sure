@@ -7,9 +7,11 @@ module SurePlus
     NAMES = %w[
       accounts.loan_rates
       accounts.permissions
+      accounts.sharing
       accounts.write
       budgets.allocations
       budgets.permissions
+      budgets.sharing
       budgets.write
       categories.write
       charts.series
@@ -19,6 +21,7 @@ module SurePlus
       goals.pledges
       goals.summary
       holdings.stable_order
+      household.members
       merchants.write
       profile.write
       recurring.category
@@ -27,6 +30,13 @@ module SurePlus
       rules.groups
       rules.reorder
       rules.write
+      settings.ai
+      settings.api_keys
+      settings.sync_schedule
+      transactions.attachments
+      transactions.convert_to_trade
+      transactions.duplicates
+      transactions.locks
       transactions.mark_recurring
       transactions.transfers
     ].freeze

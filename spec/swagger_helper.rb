@@ -1133,6 +1133,58 @@ RSpec.configure do |config|
                 items: { '$ref' => '#/components/schemas/Tag' }
               },
               transfer: { '$ref' => '#/components/schemas/Transfer', nullable: true },
+              pending: { type: :boolean, description: 'Whether the bank still reports the transaction as pending.' },
+              duplicate_suspected: {
+                type: :boolean,
+                description: 'Whether a sync flagged this pending transaction as possibly the same purchase as a ' \
+                             'posted one, and the user has not dismissed it. Resolve with merge_duplicate or dismiss_duplicate.'
+              },
+              duplicate_confidence: {
+                type: :string, enum: %w[low medium high], nullable: true,
+                description: 'How sure the match is. The web shows low as "Review" and the others as "Possible duplicate".'
+              },
+              duplicate_candidate: {
+                type: :object, nullable: true,
+                description: 'The suggested posted transaction, or null.',
+                required: %w[id entry_id date name amount amount_cents signed_amount_cents currency],
+                properties: {
+                  id: { type: :string, format: :uuid },
+                  entry_id: { type: :string, format: :uuid },
+                  date: { type: :string, format: :date },
+                  name: { type: :string },
+                  amount: { type: :string },
+                  amount_cents: { type: :integer },
+                  signed_amount_cents: { type: :integer },
+                  currency: { type: :string }
+                }
+              },
+              sync_locked: {
+                type: :boolean,
+                description: 'Whether the transaction is protected from bank sync because the user edited it or ' \
+                             'it came from an import (the web\'s "Protected from sync" panel). Unlock with POST unlock.'
+              },
+              locked_attributes: {
+                type: :array,
+                description: 'The fields the user changed, which a sync will not overwrite, with when each was locked. ' \
+                             'Names are the attribute names, e.g. name, date, amount, notes, category_id, merchant_id.',
+                items: {
+                  type: :object,
+                  required: %w[field locked_at],
+                  properties: {
+                    field: { type: :string },
+                    locked_at: { type: :string, format: :'date-time', nullable: true }
+                  }
+                }
+              },
+              reconciled_status: {
+                type: :string, enum: Entry.reconciled_statuses.keys,
+                description: 'Manual statement check-off status. See PATCH reconcile.'
+              },
+              reconcilable: {
+                type: :boolean,
+                description: 'Whether to offer the reconcile control: the family turned on manual reconciliation, ' \
+                             'the account has no bank sync, and the user can edit the account.'
+              },
               created_at: { type: :string, format: :'date-time' },
               updated_at: { type: :string, format: :'date-time' }
             }

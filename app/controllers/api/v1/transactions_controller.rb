@@ -3,6 +3,7 @@
 class Api::V1::TransactionsController < Api::V1::BaseController
   include Pagy::Backend
   include Api::V1::TransactionLookup
+  include Api::V1::TransactionDuplicateCandidates
 
   # Ensure proper scope authorization for read vs write access
   before_action :ensure_read_scope, only: [ :index, :show ]
@@ -43,6 +44,7 @@ class Api::V1::TransactionsController < Api::V1::BaseController
     @per_page = safe_per_page_param
 
     @split_parent_entry_ids = split_parent_entry_ids_for(@transactions)
+    @sure_plus_duplicate_candidates = duplicate_candidate_entries_for(@transactions)
 
     # Rails will automatically use app/views/api/v1/transactions/index.json.jbuilder
     render :index

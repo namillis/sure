@@ -26,28 +26,14 @@ class PendingDuplicateMergesController < ApplicationController
     end
 
     # Validate the posted entry is an eligible candidate (same account, currency, not pending)
-    posted_entry = find_eligible_posted_entry(merge_params[:posted_entry_id])
+    posted_entry = @transaction.eligible_posted_entry_for_merge(merge_params[:posted_entry_id])
 
     unless posted_entry
       redirect_back_or_to transactions_path, alert: t(".invalid_transaction")
       return
     end
 
-    # Store the merge suggestion and immediately execute it
-    @transaction.update!(
-      extra: (@transaction.extra || {}).merge(
-        "potential_posted_match" => {
-          "entry_id" => posted_entry.id,
-          "reason" => "manual_match",
-          "posted_amount" => posted_entry.amount.to_s,
-          "confidence" => "high",  # Manual matches are high confidence
-          "detected_at" => Date.current.to_s
-        }
-      )
-    )
-
-    # Immediately merge
-    if @transaction.merge_with_duplicate!
+    if @transaction.merge_with_posted_entry!(posted_entry)
       redirect_back_or_to transactions_path, notice: t(".merge_success")
     else
       redirect_back_or_to transactions_path, alert: t(".merge_failed")
@@ -66,18 +52,6 @@ class PendingDuplicateMergesController < ApplicationController
       unless @transaction.is_a?(Transaction) && @transaction.pending?
         redirect_to transactions_path, alert: t("pending_duplicate_merges.set_transaction.pending_only")
       end
-    end
-
-    def find_eligible_posted_entry(entry_id)
-      # Constrain to same account, currency, and ensure it's a posted transaction
-      # Use the same logic as pending_duplicate_candidates to ensure consistency
-      @transaction.entry.account.entries
-        .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id AND entries.entryable_type = 'Transaction'")
-        .where(id: entry_id)
-        .where(currency: @transaction.entry.currency)
-        .where.not(id: @transaction.entry.id)
-        .where(Transaction.not_pending_sql)
-        .first
     end
 
     def merge_params
