@@ -928,6 +928,8 @@ Rails.application.routes.draw do
       get "family/members", to: "family_members#index", as: :family_members
       post "invitations/bulk", to: "invitations#bulk_create", as: :bulk_invitations
       resources :invitations, only: [ :create, :destroy ]
+      get "accounts/:id/sharing", to: "account_sharings#show", as: :account_sharing
+      patch "accounts/:id/sharing", to: "account_sharings#update"
 
       # Test routes for API controller testing (only available in test environment)
       if Rails.env.test?
