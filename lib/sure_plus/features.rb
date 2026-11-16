@@ -16,6 +16,7 @@ module SurePlus
       categories.write
       charts.series
       connections.manage
+      connections.token_create
       goals
       goals.lifecycle
       goals.pledges

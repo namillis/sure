@@ -65,31 +65,10 @@ class SimplefinItemsController < ApplicationController
   def create
     setup_token = simplefin_params[:setup_token]
 
-    return render_error(t(".errors.blank_token")) if setup_token.blank?
-
-    begin
-      @simplefin_item = Current.family.create_simplefin_item!(
-        setup_token: setup_token,
-        item_name: "SimpleFIN Connection"
-      )
-
-      redirect_to accounts_path, notice: t(".success"), status: :see_other
-    rescue ArgumentError, URI::InvalidURIError
-      render_error(t(".errors.invalid_token"), setup_token)
-    rescue Provider::Simplefin::SimplefinError => e
-      error_message = case e.error_type
-      when :token_compromised
-        t(".errors.token_compromised")
-      when :invalid_url
-        t(".errors.invalid_token")
-      else
-        t(".errors.create_failed", message: e.message)
-      end
-      render_error(error_message, setup_token)
-    rescue => e
-      Rails.logger.error("SimpleFin connection error: #{e.message}")
-      render_error(t(".errors.unexpected"), setup_token)
-    end
+    @simplefin_item = SimplefinItem::AccountSetup.create(Current.family, setup_token: setup_token)
+    redirect_to accounts_path, notice: t(".success"), status: :see_other
+  rescue ProviderConnectionManager::Unprocessable => e
+    render_error(e.message, setup_token)
   end
 
   def destroy
@@ -149,72 +128,11 @@ class SimplefinItemsController < ApplicationController
   end
 
   def setup_accounts
-    # Only show unlinked accounts - check both legacy FK and AccountProvider
-    @simplefin_accounts = @simplefin_item.simplefin_accounts
-      .left_joins(:account, :account_provider)
-      .where(accounts: { id: nil }, account_providers: { id: nil })
-    @account_type_options = [
-      [ "Skip this account", "skip" ],
-      [ "Checking or Savings Account", "Depository" ],
-      [ "Credit Card", "CreditCard" ],
-      [ "Investment Account", "Investment" ],
-      [ "Crypto Account", "Crypto" ],
-      [ "Loan or Mortgage", "Loan" ],
-      [ "Other Asset", "OtherAsset" ]
-    ]
-
-    # Compute UI-only suggestions (preselect only when high confidence)
-    @inferred_map = {}
-    @simplefin_accounts.each do |sfa|
-      holdings = sfa.raw_holdings_payload.presence || sfa.raw_payload.to_h["holdings"]
-      institution_name = nil
-      begin
-        od = sfa.org_data
-        institution_name = od["name"] if od.is_a?(Hash)
-      rescue
-        institution_name = nil
-      end
-      inf = Simplefin::AccountTypeMapper.infer(
-        name: sfa.name,
-        holdings: holdings,
-        extra: sfa.extra,
-        balance: sfa.current_balance,
-        available_balance: sfa.available_balance,
-        institution: institution_name
-      )
-      @inferred_map[sfa.id] = { type: inf.accountable_type, subtype: inf.subtype, confidence: inf.confidence }
-    end
-
-    # Subtype options for each account type
-    @subtype_options = {
-      "Depository" => {
-        label: "Account Subtype:",
-        options: Depository::SUBTYPES.map { |k, v| [ v[:long], k ] }
-      },
-      "CreditCard" => {
-        label: "",
-        options: [],
-        message: "Credit cards will be automatically set up as credit card accounts."
-      },
-      "Investment" => {
-        label: "Investment Type:",
-        options: Investment::SUBTYPES.map { |k, v| [ v[:long], k ] }
-      },
-      "Loan" => {
-        label: "Loan Type:",
-        options: Loan::SUBTYPES.map { |k, v| [ v[:long], k ] }
-      },
-      "Crypto" => {
-        label: nil,
-        options: [],
-        message: "Crypto accounts track cryptocurrency holdings."
-      },
-      "OtherAsset" => {
-        label: nil,
-        options: [],
-        message: "No additional options needed for Other Assets."
-      }
-    }
+    account_setup = SimplefinItem::AccountSetup.new(@simplefin_item)
+    @simplefin_accounts = account_setup.unlinked_accounts
+    @account_type_options = [ [ "Skip this account", "skip" ] ] + account_setup.account_type_options
+    @inferred_map = account_setup.inferred_map(@simplefin_accounts)
+    @subtype_options = account_setup.subtype_options
 
     # Detect stale accounts: linked in DB but no longer in upstream SimpleFin API
     @stale_simplefin_accounts = detect_stale_simplefin_accounts
@@ -242,60 +160,12 @@ class SimplefinItemsController < ApplicationController
     stale_results = process_stale_account_actions(stale_account_actions)
     stale_action_errors = stale_results[:errors] || []
 
-    # Valid account types for this provider (plus Crypto and OtherAsset which SimpleFIN UI allows)
-    valid_types = Provider::SimplefinAdapter.supported_account_types + [ "Crypto", "OtherAsset" ]
-
-    created_accounts = []
-    skipped_count = 0
-
-    account_types.each do |simplefin_account_id, selected_type|
-      # Skip accounts marked as "skip"
-      if selected_type == "skip" || selected_type.blank?
-        skipped_count += 1
-        next
-      end
-
-      # Validate account type is supported
-      unless valid_types.include?(selected_type)
-        Rails.logger.warn("Invalid account type '#{selected_type}' submitted for SimpleFIN account #{simplefin_account_id}")
-        next
-      end
-
-      # Find account - scoped to this item to prevent cross-item manipulation
-      simplefin_account = @simplefin_item.simplefin_accounts.find_by(id: simplefin_account_id)
-      unless simplefin_account
-        Rails.logger.warn("SimpleFIN account #{simplefin_account_id} not found for item #{@simplefin_item.id}")
-        next
-      end
-
-      # Skip if already linked (race condition protection)
-      if simplefin_account.account.present?
-        Rails.logger.info("SimpleFIN account #{simplefin_account_id} already linked, skipping")
-        next
-      end
-
-      selected_subtype = account_subtypes[simplefin_account_id]
-
-      # Default subtype for CreditCard since it only has one option
-      selected_subtype = "credit_card" if selected_type == "CreditCard" && selected_subtype.blank?
-
-      # Create account with user-selected type and subtype
-      account = Account.create_from_simplefin_account(
-        simplefin_account,
-        selected_type,
-        selected_subtype
-      )
-      simplefin_account.update!(account: account)
-      # Also create AccountProvider for consistency with the new linking system
-      simplefin_account.ensure_account_provider!
-      created_accounts << account
-    end
-
-    # Clear pending status and mark as complete
-    @simplefin_item.update!(pending_account_setup: false)
-
-    # Trigger a sync to process the imported SimpleFin data (transactions and holdings)
-    @simplefin_item.sync_later if created_accounts.any?
+    result = SimplefinItem::AccountSetup.new(@simplefin_item).complete!(
+      account_types: account_types,
+      account_subtypes: account_subtypes
+    )
+    created_accounts = result[:created_accounts]
+    skipped_count = result[:skipped_count]
 
     # Set appropriate flash message
     if created_accounts.any?

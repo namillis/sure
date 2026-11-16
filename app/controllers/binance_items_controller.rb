@@ -19,13 +19,9 @@ class BinanceItemsController < ApplicationController
   end
 
   def create
-    @binance_item = Current.family.binance_items.build(binance_item_params)
-    @binance_item.name ||= t(".default_name")
+    @binance_item = BinanceItem::AccountSetup.create(Current.family, binance_item_params)
 
-    if @binance_item.save
-      @binance_item.set_binance_institution_defaults!
-      @binance_item.sync_later
-
+    if @binance_item.persisted?
       redirect_to settings_providers_path, notice: t(".success"), status: :see_other
     else
       render_provider_panel("binance", alert: @binance_item.errors.full_messages.join(", "))
@@ -193,60 +189,14 @@ class BinanceItemsController < ApplicationController
 
   def complete_account_setup
     setup_params = complete_account_setup_params
+    account_setup = BinanceItem::AccountSetup.new(@binance_item)
 
-    if setup_params[:sync_start_date].present?
-      parsed_date = begin
-        Date.parse(setup_params[:sync_start_date].to_s)
-      rescue ArgumentError
-        nil
-      end
-
-      if parsed_date.present? && parsed_date <= Date.current
-        @binance_item.update!(sync_start_date: parsed_date)
-      else
-        flash.now[:alert] = t(".invalid_sync_start_date")
-      end
+    if setup_params[:sync_start_date].present? && !account_setup.update_sync_start_date(setup_params[:sync_start_date])
+      flash.now[:alert] = t(".invalid_sync_start_date")
     end
 
     selected_accounts = Array(setup_params[:selected_accounts]).reject(&:blank?)
-    created_accounts = []
-
-    selected_accounts.each do |binance_account_id|
-      ba = @binance_item.binance_accounts.find_by(id: binance_account_id)
-      next unless ba
-
-      begin
-        ba.with_lock do
-          next if ba.account.present?
-
-          account = Account.create_from_binance_account(ba)
-          provider_link = ba.ensure_account_provider!(account)
-
-          if provider_link
-            created_accounts << account
-          else
-            account.destroy!
-          end
-        end
-      rescue StandardError => e
-        Rails.logger.error("Failed to setup account for BinanceAccount #{ba.id}: #{e.message}")
-        next
-      end
-
-      ba.reload
-
-      begin
-        BinanceAccount::HoldingsProcessor.new(ba).process
-      rescue StandardError => e
-        Rails.logger.error("Failed to process holdings for #{ba.id}: #{e.message}")
-      end
-    end
-
-    unlinked_remaining = @binance_item.binance_accounts
-      .left_joins(:account_provider)
-      .where(account_providers: { id: nil })
-      .count
-    @binance_item.update!(pending_account_setup: unlinked_remaining > 0)
+    created_accounts = account_setup.complete!(selected_accounts)[:created_accounts]
 
     if created_accounts.any?
       flash.now[:notice] = t(".success", count: created_accounts.count)
@@ -255,8 +205,6 @@ class BinanceItemsController < ApplicationController
     else
       flash.now[:notice] = t(".no_accounts")
     end
-
-    @binance_item.sync_later if created_accounts.any?
 
     if turbo_frame_request?
       @binance_items = Current.family.binance_items.ordered.includes(:syncs)

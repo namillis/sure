@@ -941,6 +941,13 @@ Rails.application.routes.draw do
         resource :sync_schedule, only: %i[show update], controller: "provider_connection_sync_schedules"
       end
 
+      resources :provider_connections, only: [ :create ], controller: "provider_connection_setups" do
+        member do
+          get :pending_accounts
+          post :complete_setup
+        end
+      end
+
       resources :provider_connections, only: [ :index ]
       resources :provider_connections, only: [ :destroy ], controller: "provider_connection_management" do
         post :sync, on: :member
