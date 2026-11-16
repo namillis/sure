@@ -924,6 +924,11 @@ Rails.application.routes.draw do
       get "users/me", to: "profiles#show"
       patch "users/me", to: "profiles#update"
 
+      # Sure+ household sharing
+      get "family/members", to: "family_members#index", as: :family_members
+      post "invitations/bulk", to: "invitations#bulk_create", as: :bulk_invitations
+      resources :invitations, only: [ :create, :destroy ]
+
       # Test routes for API controller testing (only available in test environment)
       if Rails.env.test?
         get "test", to: "test#index"

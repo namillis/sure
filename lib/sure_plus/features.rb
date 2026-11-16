@@ -19,6 +19,7 @@ module SurePlus
       goals.pledges
       goals.summary
       holdings.stable_order
+      household.members
       merchants.write
       profile.write
       recurring.category
