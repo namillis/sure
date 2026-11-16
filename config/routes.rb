@@ -933,6 +933,14 @@ Rails.application.routes.draw do
       end
       resources :push_subscriptions, only: [ :create, :destroy ]
       resource :family_settings, only: [ :show ], controller: :family_settings
+      scope "settings/ai", controller: :ai_settings, as: :settings_ai do
+        get "/", action: :show, as: ""
+        patch "/", action: :update
+        get :usage
+        post "classifier/run", action: :run_classifier, as: :classifier_run
+        post "classifier/clear_locks", action: :clear_classifier_locks, as: :classifier_clear_locks
+        post "classifier/rules", action: :add_classifier_rule, as: :classifier_rules
+      end
       post :sync, to: "sync#create", as: :sync_job
       resources :syncs, only: [ :index, :show ] do
         get :latest, on: :collection
