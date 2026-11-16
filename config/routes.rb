@@ -877,6 +877,13 @@ Rails.application.routes.draw do
       resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do
         resource :split, only: [ :show, :create, :update, :destroy ]
       end
+      resources :transactions, only: [] do
+        member do
+          get :transfer_candidates, to: "transaction_transfer_matches#candidates"
+          post :transfer_match, to: "transaction_transfer_matches#create"
+          delete :transfer_match, to: "transaction_transfer_matches#destroy"
+        end
+      end
       resources :trades, only: [ :index, :show, :create, :update, :destroy ]
       resources :holdings, only: [ :index, :show ]
       resources :transfers, only: [ :index, :show ]

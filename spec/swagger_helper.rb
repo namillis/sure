@@ -1021,6 +1021,8 @@ RSpec.configure do |config|
               id: { type: :string, format: :uuid },
               amount: { type: :string },
               currency: { type: :string },
+              status: { type: :string, enum: %w[pending confirmed],
+                        description: 'pending: an automatic match nobody has confirmed yet; both legs still count as ordinary transactions' },
               other_account: { '$ref' => '#/components/schemas/Account', nullable: true }
             }
           },
