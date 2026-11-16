@@ -875,39 +875,47 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
             ],
             const SizedBox(height: 16),
             _buildRecurringPanel(l, palette, online),
-            if (TransactionActionFeatures.of(context).markRecurring &&
-                canEdit &&
-                online &&
-                _fresh != null) ...[
-              const SizedBox(height: 16),
-              SurePanel.rows(children: [
-                TransactionMarkRecurringRow(
-                  transactionId: _txn.id!,
-                  service: _actionsService,
-                  enabled: enabled,
-                  onMarked: (series) {
-                    if (series == null) return;
-                    setState(() => _recurringMatch = series);
-                  },
-                  onOpen: (_) => _openRecurring(),
-                ),
-              ]),
-            ],
+            // One actions panel for Mark as recurring and Convert to trade.
+            ...() {
+              final actions = <Widget>[
+                if (TransactionActionFeatures.of(context).markRecurring &&
+                    canEdit &&
+                    online &&
+                    _fresh != null)
+                  TransactionMarkRecurringRow(
+                    transactionId: _txn.id!,
+                    service: _actionsService,
+                    enabled: enabled,
+                    onMarked: (series) {
+                      if (series == null) return;
+                      setState(() => _recurringMatch = series);
+                    },
+                    onOpen: (_) => _openRecurring(),
+                  ),
+                if (canConvertToTrade(
+                  feature:
+                      _has(ServerFeaturesProvider.transactionsConvertToTrade),
+                  transaction: _fresh,
+                  accountType: account?.accountType,
+                  accountCanEdit: account?.canEdit,
+                ))
+                  ConvertToTradePanel(
+                    transaction: _fresh!,
+                    enabled: enabled && online,
+                    service: widget.tradeConversionService,
+                    onConverted: _converted,
+                    inPanel: false,
+                  ),
+              ];
+              if (actions.isEmpty) return const <Widget>[];
+              return [
+                const SizedBox(height: 16),
+                SurePanel.rows(
+                    key: const ValueKey('transaction-actions-panel'),
+                    children: actions),
+              ];
+            }(),
             const SizedBox(height: 16),
-            if (canConvertToTrade(
-              feature: _has(ServerFeaturesProvider.transactionsConvertToTrade),
-              transaction: _fresh,
-              accountType: account?.accountType,
-              accountCanEdit: account?.canEdit,
-            )) ...[
-              ConvertToTradePanel(
-                transaction: _fresh!,
-                enabled: enabled && online,
-                service: widget.tradeConversionService,
-                onConverted: _converted,
-              ),
-              const SizedBox(height: 16),
-            ],
             _buildWebPanel(l, palette, online),
             if (_error != null) ...[
               const SizedBox(height: 16),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/household.dart';
+import '../providers/accounts_provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/household_service.dart';
 import '../theme/sure_colors.dart';
@@ -256,11 +257,30 @@ class _AccountSharingScreenState extends State<AccountSharingScreen>
     final result = await runHousehold((token) => _service.setIncludeInFinances(
         accessToken: token, accountId: widget.accountId, include: include));
     if (result == null) return;
+    final ok = result['success'] == true;
     setState(() {
       _savingInclude = false;
-      if (result['success'] == true) _sharing = result['sharing'] as AccountSharing;
+      if (ok) _sharing = result['sharing'] as AccountSharing;
     });
-    if (result['success'] != true) showHouseholdError(result);
+    if (ok) {
+      // Totals on Home and in groups change with this switch: reload them.
+      _refreshAccounts();
+    } else {
+      showHouseholdError(result);
+    }
+  }
+
+  Future<void> _refreshAccounts() async {
+    final AccountsProvider accounts;
+    final AuthProvider auth;
+    try {
+      accounts = context.read<AccountsProvider>();
+      auth = context.read<AuthProvider>();
+    } on ProviderNotFoundException {
+      return;
+    }
+    final token = await auth.getValidAccessToken();
+    if (token != null) await accounts.fetchAccounts(accessToken: token);
   }
 
   String _permissionLabel(AppLocalizations l, String? permission) =>

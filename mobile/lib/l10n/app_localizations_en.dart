@@ -5400,4 +5400,674 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get s4tOpen => 'Open';
+
+  @override
+  String get s4rReceipts => 'Receipts';
+
+  @override
+  String get s4rAddReceipt => 'Add receipt';
+
+  @override
+  String get s4rTakePhoto => 'Take photo';
+
+  @override
+  String get s4rChoosePhoto => 'Choose photo';
+
+  @override
+  String get s4rChooseFile => 'Choose file';
+
+  @override
+  String get s4rTooMany => 'A transaction can have at most 10 attachments.';
+
+  @override
+  String get s4rTooLarge => 'Files can be at most 10 MB.';
+
+  @override
+  String get s4rWrongType =>
+      'Only JPEG, PNG, GIF, WebP and PDF files can be attached.';
+
+  @override
+  String get s4rUploading => 'Uploading…';
+
+  @override
+  String get s4rAttached => 'Receipt added';
+
+  @override
+  String get s4rPickFailed => 'Couldn\'t open the camera or photos.';
+
+  @override
+  String get s4rDeleteTitle => 'Delete attachment?';
+
+  @override
+  String s4rDeleteContent(String name) {
+    return '“$name” will be removed from this transaction.';
+  }
+
+  @override
+  String get s4rDeleted => 'Attachment deleted';
+
+  @override
+  String get s4rLoadFailed => 'Couldn\'t load the file.';
+
+  @override
+  String s4rOpenFile(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String get s4rConvertToTrade => 'Convert to trade';
+
+  @override
+  String get s4rConvert => 'Convert';
+
+  @override
+  String get s4rConverted => 'Converted';
+
+  @override
+  String get s4rSecurity => 'Security';
+
+  @override
+  String get s4rOtherTicker => 'Other ticker…';
+
+  @override
+  String get s4rTicker => 'Ticker';
+
+  @override
+  String get s4rTickerHint => 'e.g. AAPL';
+
+  @override
+  String get s4rExactTickerHint => 'Enter the exact ticker';
+
+  @override
+  String get s4rShares => 'Shares';
+
+  @override
+  String get s4rSharesOrPriceNote =>
+      'Enter shares or price. The other is worked out from the amount.';
+
+  @override
+  String get s4rErrNotInvestment => 'Only investment accounts can have trades.';
+
+  @override
+  String get s4rErrAlreadyConverted =>
+      'This transaction has already been converted.';
+
+  @override
+  String get s4rErrSelectSecurity => 'Choose a security.';
+
+  @override
+  String get s4rErrSecurityNotFound => 'That security wasn\'t found.';
+
+  @override
+  String get s4rErrEnterTicker => 'Enter a ticker.';
+
+  @override
+  String get s4rErrEnterQtyOrPrice => 'Enter shares or price.';
+
+  @override
+  String get s4rErrInvalidQtyOrPrice =>
+      'Shares and price must be more than zero.';
+
+  @override
+  String get s4hHousehold => 'Household';
+
+  @override
+  String get s4hMembers => 'Members';
+
+  @override
+  String get s4hInvited => 'Invited';
+
+  @override
+  String s4hYou(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get s4hRoleAdmin => 'Admin';
+
+  @override
+  String get s4hRoleMember => 'Member';
+
+  @override
+  String get s4hRoleGuest => 'Guest';
+
+  @override
+  String get s4hRoleSuperAdmin => 'Super admin';
+
+  @override
+  String s4hInvitedSubtitle(String role, String date) {
+    return '$role · expires $date';
+  }
+
+  @override
+  String get s4hRevoke => 'Revoke';
+
+  @override
+  String s4hRevokeTitle(String email) {
+    return 'Revoke the invitation to $email?';
+  }
+
+  @override
+  String get s4hRevokeBody => 'Their invite link will stop working.';
+
+  @override
+  String get s4hRevoked => 'Invitation revoked';
+
+  @override
+  String get s4hInvite => 'Invite';
+
+  @override
+  String get s4hInviteTitle => 'Invite someone';
+
+  @override
+  String get s4hEmail => 'Email';
+
+  @override
+  String get s4hEmailInvalid => 'Enter an email address';
+
+  @override
+  String get s4hRole => 'Role';
+
+  @override
+  String s4hInviteSent(String email) {
+    return 'Invitation sent to $email';
+  }
+
+  @override
+  String get s4hInviteCreated =>
+      'Invitation created. Copy the accept link from your profile on the web.';
+
+  @override
+  String get s4hLinkOnlyNote =>
+      'Invitations on this server aren\'t emailed. Copy the accept link from your profile on the web.';
+
+  @override
+  String get s4hOpenProfileOnWeb => 'Open profile on the web';
+
+  @override
+  String get s4hLoadFailed => 'Couldn\'t load your household';
+
+  @override
+  String get s4hSharing => 'Sharing';
+
+  @override
+  String get s4hSharingLoadFailed => 'Couldn\'t load sharing';
+
+  @override
+  String get s4hPermNone => 'None';
+
+  @override
+  String get s4hPermView => 'View';
+
+  @override
+  String get s4hPermEdit => 'Edit';
+
+  @override
+  String get s4hPermFull => 'Full';
+
+  @override
+  String s4hSharedBy(String owner, String permission) {
+    return 'Shared by $owner · $permission';
+  }
+
+  @override
+  String get s4hPermissionFullControl => 'Full control';
+
+  @override
+  String get s4hPermissionReadWrite => 'Can edit';
+
+  @override
+  String get s4hPermissionReadOnly => 'View only';
+
+  @override
+  String get s4hIncludeInFinances => 'Include in my finances';
+
+  @override
+  String get s4hNoOtherMembers => 'No one else is in your household yet.';
+
+  @override
+  String get s4hAccountSharingFooter =>
+      'Choose what each person can do with this account.';
+
+  @override
+  String get s4hBudgetSharing => 'Budget sharing';
+
+  @override
+  String get s4hBudgetSharingFooter =>
+      'Choose who can view or edit your personal budget.';
+
+  @override
+  String get s4sSettingsApiKeys => 'API keys';
+
+  @override
+  String get s4sSettingsAi => 'AI';
+
+  @override
+  String get s4sActionFailed => 'Something went wrong. Try again.';
+
+  @override
+  String get s4sApiKeysTitle => 'API keys';
+
+  @override
+  String get s4sApiKeysLoadFailed => 'Couldn\'t load API keys.';
+
+  @override
+  String get s4sApiKeysEmpty => 'No API keys';
+
+  @override
+  String get s4sApiKeysEmptyBody =>
+      'Create a key to connect another app or script to your account.';
+
+  @override
+  String get s4sApiKeyNew => 'New API key';
+
+  @override
+  String get s4sApiKeyCreate => 'Create';
+
+  @override
+  String get s4sApiKeyName => 'Name';
+
+  @override
+  String get s4sApiKeyNameHint => 'e.g. Budget script';
+
+  @override
+  String get s4sApiKeyNameRequired => 'Enter a name';
+
+  @override
+  String get s4sApiKeyAccess => 'Access';
+
+  @override
+  String get s4sApiKeyScopeRead => 'Read';
+
+  @override
+  String get s4sApiKeyScopeReadWrite => 'Read & write';
+
+  @override
+  String get s4sApiKeyThisDevice => 'This device';
+
+  @override
+  String get s4sApiKeyNeverUsed => 'Never used';
+
+  @override
+  String get s4sApiKeyUsedJustNow => 'Used just now';
+
+  @override
+  String s4sApiKeyUsedMinutesAgo(int count) {
+    return 'Used ${count}m ago';
+  }
+
+  @override
+  String s4sApiKeyUsedHoursAgo(int count) {
+    return 'Used ${count}h ago';
+  }
+
+  @override
+  String s4sApiKeyUsedDaysAgo(int count) {
+    return 'Used ${count}d ago';
+  }
+
+  @override
+  String s4sApiKeyUsedOn(String date) {
+    return 'Used $date';
+  }
+
+  @override
+  String get s4sApiKeyRevoke => 'Revoke';
+
+  @override
+  String s4sApiKeyRevokeTitle(String name) {
+    return 'Revoke “$name”?';
+  }
+
+  @override
+  String get s4sApiKeyRevokeBody =>
+      'Apps and scripts using this key stop working right away. This can\'t be undone.';
+
+  @override
+  String get s4sApiKeyRevoked => 'API key revoked';
+
+  @override
+  String s4sApiKeyCreated(String name) {
+    return '“$name” created';
+  }
+
+  @override
+  String get s4sApiKeyShownOnce => 'Shown once. Store it somewhere safe.';
+
+  @override
+  String get s4sApiKeyCopy => 'Copy';
+
+  @override
+  String get s4sApiKeyCopied => 'Key copied';
+
+  @override
+  String get s4sApiKeyDismiss => 'Done';
+
+  @override
+  String get s4sApiKeyTooMany => 'Too many keys created. Try again later.';
+
+  @override
+  String get s4sApiKeyNeedsWrite =>
+      'Creating or revoking a key needs a sign-in with read & write access.';
+
+  @override
+  String get s4sSchedule => 'Schedule';
+
+  @override
+  String get s4sScheduleTitle => 'Sync schedule';
+
+  @override
+  String get s4sScheduleDefault => 'Default';
+
+  @override
+  String s4sScheduleEveryMinutes(int count) {
+    return 'Every $count min';
+  }
+
+  @override
+  String s4sScheduleEveryHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count hours',
+      one: 'Every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String s4sScheduleNext(String time) {
+    return 'Next sync $time';
+  }
+
+  @override
+  String get s4sScheduleLoadFailed => 'Couldn\'t load the sync schedule.';
+
+  @override
+  String get s4sScheduleSaved => 'Sync schedule saved';
+
+  @override
+  String get s4sAiTitle => 'AI';
+
+  @override
+  String get s4sAiLoadFailed => 'Couldn\'t load AI settings.';
+
+  @override
+  String get s4sAiClassifierSection => 'Classifier';
+
+  @override
+  String get s4sAiClassifierSwitch => 'Categorize with the classifier';
+
+  @override
+  String get s4sAiClassifierSwitchSub =>
+      'Categorizes uncategorized transactions after each sync, before any AI provider.';
+
+  @override
+  String get s4sAiRunNow => 'Run now';
+
+  @override
+  String get s4sAiRunNowTitle => 'Run the classifier now?';
+
+  @override
+  String get s4sAiRunNowBody =>
+      'It categorizes your uncategorized transactions. This may take a few moments.';
+
+  @override
+  String get s4sAiRun => 'Run';
+
+  @override
+  String get s4sAiClearLocks => 'Clear category locks';
+
+  @override
+  String get s4sAiClearLocksTitle => 'Clear the classifier\'s locks?';
+
+  @override
+  String get s4sAiClearLocksBody =>
+      'Unlocks the categories the classifier locked and the merchants the matcher locked, so rules and AI can change them again. The categories and merchants stay.';
+
+  @override
+  String get s4sAiClearLocksConfirm => 'Clear locks';
+
+  @override
+  String get s4sAiQueued => 'Queued';
+
+  @override
+  String get s4sAiClassifierSettings => 'Classifier settings';
+
+  @override
+  String get s4sAiRuleMissing =>
+      'The Category classifier rule was deleted, so there\'s nothing to turn on.';
+
+  @override
+  String get s4sAiRuleAddAgain => 'Add the classifier rule again';
+
+  @override
+  String get s4sAiRuleAdded => 'Classifier rule added';
+
+  @override
+  String get s4sAiPromptsSection => 'Prompts';
+
+  @override
+  String get s4sAiPromptCustom => 'Custom';
+
+  @override
+  String get s4sAiPromptDefault => 'Default';
+
+  @override
+  String get s4sAiPromptChatSystem => 'Chat system prompt';
+
+  @override
+  String get s4sAiPromptCategorizerOpenai => 'Categorizer (OpenAI)';
+
+  @override
+  String get s4sAiPromptCategorizerAnthropic => 'Categorizer (Anthropic)';
+
+  @override
+  String get s4sAiPromptMerchantOpenai => 'Merchant detector (OpenAI)';
+
+  @override
+  String get s4sAiPromptMerchantAnthropic => 'Merchant detector (Anthropic)';
+
+  @override
+  String get s4sAiPromptInsightDigIn => 'Insight dig-in message';
+
+  @override
+  String s4sAiPromptCount(String count, String max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get s4sAiPromptTooLong => 'This prompt is too long.';
+
+  @override
+  String get s4sAiPromptReset => 'Reset to default';
+
+  @override
+  String get s4sAiPromptResetTitle => 'Reset to the default prompt?';
+
+  @override
+  String get s4sAiPromptResetBody =>
+      'This discards your custom prompt and restores the built-in instructions.';
+
+  @override
+  String get s4sAiPromptReset2 => 'Reset';
+
+  @override
+  String s4sAiPromptFormatRisk(String key) {
+    return 'This prompt no longer includes the “$key” JSON example. Requests still ask for that shape, so it usually works, but a prompt that asks for another output format will break it.';
+  }
+
+  @override
+  String get s4sAiPromptSaved => 'Prompt saved';
+
+  @override
+  String get s4sAiUsageSection => 'Usage · last 30 days';
+
+  @override
+  String get s4sAiUsageCost => 'Total cost';
+
+  @override
+  String get s4sAiUsageRequests => 'Requests';
+
+  @override
+  String get s4sAiUsageByModel => 'By model';
+
+  @override
+  String s4sAiUsageModelRequests(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count requests',
+      one: '$count request',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get s4sAiUsageNone => 'No AI requests in the last 30 days.';
+
+  @override
+  String get s4sAiUsageLoadFailed => 'Couldn\'t load usage.';
+
+  @override
+  String get s4sClsTitle => 'Classifier settings';
+
+  @override
+  String get s4sClsTraining => 'Training';
+
+  @override
+  String get s4sClsWords => 'Words';
+
+  @override
+  String get s4sClsAmount => 'Amount';
+
+  @override
+  String get s4sClsAccountMerchant => 'Account and merchant';
+
+  @override
+  String get s4sClsMatcher => 'Merchant matcher';
+
+  @override
+  String get s4sClsScoring => 'Scoring';
+
+  @override
+  String get s4sClsClassifier => 'Classifier';
+
+  @override
+  String get s4sClsOther => 'Other';
+
+  @override
+  String get s4sClsSkipSelfLabels =>
+      'Don\'t learn from its own unconfirmed guesses';
+
+  @override
+  String get s4sClsSelfLabelGraceDays =>
+      'Count a guess as accepted after (days)';
+
+  @override
+  String get s4sClsExcludeTransfers => 'Exclude transfers';
+
+  @override
+  String get s4sClsMaxTraining => 'Training transactions';
+
+  @override
+  String get s4sClsIncludeNotes => 'Include notes';
+
+  @override
+  String get s4sClsWordSplit => 'Words are made of';
+
+  @override
+  String get s4sClsWordSplitAscii => 'a–z, 0–9';
+
+  @override
+  String get s4sClsWordSplitUnicode => 'Any script';
+
+  @override
+  String get s4sClsWordSplitSymbols => 'With symbols';
+
+  @override
+  String get s4sClsDropNumbers => 'Exclude numbers';
+
+  @override
+  String get s4sClsKeepSingleChars => 'Include one-character words';
+
+  @override
+  String get s4sClsDropCodes => 'Exclude reference codes';
+
+  @override
+  String get s4sClsSpreadFilter => 'Exclude words every category uses alike';
+
+  @override
+  String get s4sClsSpreadMargin => 'Spread margin';
+
+  @override
+  String get s4sClsBigrams => 'Include word pairs';
+
+  @override
+  String get s4sClsMerchantNameWords => 'Include the merchant\'s name as words';
+
+  @override
+  String get s4sClsAmountField => 'Include the amount';
+
+  @override
+  String get s4sClsAmountByDirection => 'Include money in or out';
+
+  @override
+  String get s4sClsAccountField => 'Include the account';
+
+  @override
+  String get s4sClsMerchantField => 'Include the merchant';
+
+  @override
+  String get s4sClsLockSimilarMerchants =>
+      'Lock the merchants the matcher sets';
+
+  @override
+  String get s4sClsSimilarThreshold => 'Similarity';
+
+  @override
+  String get s4sClsSimilarMinNeighbours => 'Merchants agreeing';
+
+  @override
+  String get s4sClsSimilarCommonShare => 'Cutoff';
+
+  @override
+  String get s4sClsSimilarSkipSelf =>
+      'Don\'t copy from its own unconfirmed merchants';
+
+  @override
+  String get s4sClsSimilarSelfGraceDays =>
+      'Count a merchant as accepted after (days)';
+
+  @override
+  String get s4sClsComplement => 'Use complement naive Bayes';
+
+  @override
+  String get s4sClsSmoothing => 'Smoothing';
+
+  @override
+  String get s4sClsPrior => 'Include how often each category is used';
+
+  @override
+  String get s4sClsBinary => 'Exclude repeated words';
+
+  @override
+  String get s4sClsSeparateFields => 'Score the merchant and account apart';
+
+  @override
+  String get s4sClsThreshold => 'Threshold';
+
+  @override
+  String get s4sClsLockResults => 'Lock the categories the classifier sets';
+
+  @override
+  String s4sClsRange(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get s4sClsDecrease => 'Decrease';
+
+  @override
+  String get s4sClsIncrease => 'Increase';
 }

@@ -417,8 +417,11 @@ class ConvertToTradePanel extends StatelessWidget {
     required this.enabled,
     required this.onConverted,
     this.service,
+    this.inPanel = true,
   });
 
+  /// False to build only the row, for a panel the caller owns.
+  final bool inPanel;
   final Transaction transaction;
   final bool enabled;
   final VoidCallback onConverted;
@@ -428,8 +431,7 @@ class ConvertToTradePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
-    return SurePanel.rows(children: [
-      SureListRow(
+    final row = SureListRow(
         key: const ValueKey('transaction-convert-to-trade-row'),
         title: l.s4rConvertToTrade,
         titleColor: palette.link,
@@ -446,7 +448,9 @@ class ConvertToTradePanel extends StatelessWidget {
                 if (converted == true) onConverted();
               }
             : null,
-      ),
-    ]);
+      );
+    // As one row of the transaction screen's shared actions panel.
+    if (!inPanel) return row;
+    return SurePanel.rows(children: [row]);
   }
 }

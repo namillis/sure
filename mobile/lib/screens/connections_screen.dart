@@ -476,7 +476,7 @@ class _ConnectionPanel extends StatelessWidget {
       if (schedule != null)
         SureSwipeAction(
           label: l.s4sSchedule,
-          color: palette.textSubdued,
+          color: palette.warning,
           onPressed: schedule,
         ),
       if (disconnect != null)

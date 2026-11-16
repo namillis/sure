@@ -5435,4 +5435,677 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get s4tOpen => 'Öppna';
+
+  @override
+  String get s4rReceipts => 'Kvitton';
+
+  @override
+  String get s4rAddReceipt => 'Lägg till kvitto';
+
+  @override
+  String get s4rTakePhoto => 'Ta foto';
+
+  @override
+  String get s4rChoosePhoto => 'Välj foto';
+
+  @override
+  String get s4rChooseFile => 'Välj fil';
+
+  @override
+  String get s4rTooMany => 'En transaktion kan ha högst 10 bilagor.';
+
+  @override
+  String get s4rTooLarge => 'Filer får vara högst 10 MB.';
+
+  @override
+  String get s4rWrongType =>
+      'Endast JPEG-, PNG-, GIF-, WebP- och PDF-filer kan bifogas.';
+
+  @override
+  String get s4rUploading => 'Laddar upp…';
+
+  @override
+  String get s4rAttached => 'Kvittot har lagts till';
+
+  @override
+  String get s4rPickFailed => 'Det gick inte att öppna kameran eller bilderna.';
+
+  @override
+  String get s4rDeleteTitle => 'Ta bort bilagan?';
+
+  @override
+  String s4rDeleteContent(String name) {
+    return '”$name” tas bort från transaktionen.';
+  }
+
+  @override
+  String get s4rDeleted => 'Bilagan har tagits bort';
+
+  @override
+  String get s4rLoadFailed => 'Det gick inte att läsa in filen.';
+
+  @override
+  String s4rOpenFile(String name) {
+    return 'Öppna $name';
+  }
+
+  @override
+  String get s4rConvertToTrade => 'Konvertera till affär';
+
+  @override
+  String get s4rConvert => 'Konvertera';
+
+  @override
+  String get s4rConverted => 'Konverterad';
+
+  @override
+  String get s4rSecurity => 'Värdepapper';
+
+  @override
+  String get s4rOtherTicker => 'Annan ticker…';
+
+  @override
+  String get s4rTicker => 'Ticker';
+
+  @override
+  String get s4rTickerHint => 't.ex. AAPL';
+
+  @override
+  String get s4rExactTickerHint => 'Ange exakt ticker';
+
+  @override
+  String get s4rShares => 'Andelar';
+
+  @override
+  String get s4rSharesOrPriceNote =>
+      'Ange andelar eller pris. Det andra räknas ut från beloppet.';
+
+  @override
+  String get s4rErrNotInvestment => 'Endast investeringskonton kan ha affärer.';
+
+  @override
+  String get s4rErrAlreadyConverted => 'Transaktionen har redan konverterats.';
+
+  @override
+  String get s4rErrSelectSecurity => 'Välj ett värdepapper.';
+
+  @override
+  String get s4rErrSecurityNotFound => 'Värdepappret hittades inte.';
+
+  @override
+  String get s4rErrEnterTicker => 'Ange en ticker.';
+
+  @override
+  String get s4rErrEnterQtyOrPrice => 'Ange andelar eller pris.';
+
+  @override
+  String get s4rErrInvalidQtyOrPrice =>
+      'Andelar och pris måste vara större än noll.';
+
+  @override
+  String get s4hHousehold => 'Hushåll';
+
+  @override
+  String get s4hMembers => 'Medlemmar';
+
+  @override
+  String get s4hInvited => 'Inbjudna';
+
+  @override
+  String s4hYou(String name) {
+    return '$name (du)';
+  }
+
+  @override
+  String get s4hRoleAdmin => 'Administratör';
+
+  @override
+  String get s4hRoleMember => 'Medlem';
+
+  @override
+  String get s4hRoleGuest => 'Gäst';
+
+  @override
+  String get s4hRoleSuperAdmin => 'Superadministratör';
+
+  @override
+  String s4hInvitedSubtitle(String role, String date) {
+    return '$role · upphör $date';
+  }
+
+  @override
+  String get s4hRevoke => 'Återkalla';
+
+  @override
+  String s4hRevokeTitle(String email) {
+    return 'Återkalla inbjudan till $email?';
+  }
+
+  @override
+  String get s4hRevokeBody => 'Inbjudningslänken slutar fungera.';
+
+  @override
+  String get s4hRevoked => 'Inbjudan återkallad';
+
+  @override
+  String get s4hInvite => 'Bjud in';
+
+  @override
+  String get s4hInviteTitle => 'Bjud in någon';
+
+  @override
+  String get s4hEmail => 'E-post';
+
+  @override
+  String get s4hEmailInvalid => 'Ange en e-postadress';
+
+  @override
+  String get s4hRole => 'Roll';
+
+  @override
+  String s4hInviteSent(String email) {
+    return 'Inbjudan skickad till $email';
+  }
+
+  @override
+  String get s4hInviteCreated =>
+      'Inbjudan skapad. Kopiera länken för att acceptera från din profil på webben.';
+
+  @override
+  String get s4hLinkOnlyNote =>
+      'Inbjudningar skickas inte med e-post på den här servern. Kopiera länken för att acceptera från din profil på webben.';
+
+  @override
+  String get s4hOpenProfileOnWeb => 'Öppna profilen på webben';
+
+  @override
+  String get s4hLoadFailed => 'Det gick inte att läsa in ditt hushåll';
+
+  @override
+  String get s4hSharing => 'Delning';
+
+  @override
+  String get s4hSharingLoadFailed => 'Det gick inte att läsa in delningen';
+
+  @override
+  String get s4hPermNone => 'Ingen';
+
+  @override
+  String get s4hPermView => 'Visa';
+
+  @override
+  String get s4hPermEdit => 'Ändra';
+
+  @override
+  String get s4hPermFull => 'Full';
+
+  @override
+  String s4hSharedBy(String owner, String permission) {
+    return 'Delat av $owner · $permission';
+  }
+
+  @override
+  String get s4hPermissionFullControl => 'Full kontroll';
+
+  @override
+  String get s4hPermissionReadWrite => 'Kan ändra';
+
+  @override
+  String get s4hPermissionReadOnly => 'Endast visning';
+
+  @override
+  String get s4hIncludeInFinances => 'Ta med i min ekonomi';
+
+  @override
+  String get s4hNoOtherMembers => 'Det finns ingen annan i ditt hushåll än.';
+
+  @override
+  String get s4hAccountSharingFooter =>
+      'Välj vad varje person får göra med det här kontot.';
+
+  @override
+  String get s4hBudgetSharing => 'Budgetdelning';
+
+  @override
+  String get s4hBudgetSharingFooter =>
+      'Välj vem som får se eller ändra din personliga budget.';
+
+  @override
+  String get s4sSettingsApiKeys => 'API-nycklar';
+
+  @override
+  String get s4sSettingsAi => 'AI';
+
+  @override
+  String get s4sActionFailed => 'Något gick fel. Försök igen.';
+
+  @override
+  String get s4sApiKeysTitle => 'API-nycklar';
+
+  @override
+  String get s4sApiKeysLoadFailed => 'Det gick inte att läsa in API-nycklarna.';
+
+  @override
+  String get s4sApiKeysEmpty => 'Inga API-nycklar';
+
+  @override
+  String get s4sApiKeysEmptyBody =>
+      'Skapa en nyckel för att koppla en annan app eller ett skript till ditt konto.';
+
+  @override
+  String get s4sApiKeyNew => 'Ny API-nyckel';
+
+  @override
+  String get s4sApiKeyCreate => 'Skapa';
+
+  @override
+  String get s4sApiKeyName => 'Namn';
+
+  @override
+  String get s4sApiKeyNameHint => 't.ex. Budgetskript';
+
+  @override
+  String get s4sApiKeyNameRequired => 'Ange ett namn';
+
+  @override
+  String get s4sApiKeyAccess => 'Åtkomst';
+
+  @override
+  String get s4sApiKeyScopeRead => 'Läsa';
+
+  @override
+  String get s4sApiKeyScopeReadWrite => 'Läsa och skriva';
+
+  @override
+  String get s4sApiKeyThisDevice => 'Den här enheten';
+
+  @override
+  String get s4sApiKeyNeverUsed => 'Aldrig använd';
+
+  @override
+  String get s4sApiKeyUsedJustNow => 'Använd nyss';
+
+  @override
+  String s4sApiKeyUsedMinutesAgo(int count) {
+    return 'Använd för $count min sedan';
+  }
+
+  @override
+  String s4sApiKeyUsedHoursAgo(int count) {
+    return 'Använd för $count tim sedan';
+  }
+
+  @override
+  String s4sApiKeyUsedDaysAgo(int count) {
+    return 'Använd för $count d sedan';
+  }
+
+  @override
+  String s4sApiKeyUsedOn(String date) {
+    return 'Använd $date';
+  }
+
+  @override
+  String get s4sApiKeyRevoke => 'Återkalla';
+
+  @override
+  String s4sApiKeyRevokeTitle(String name) {
+    return 'Återkalla ”$name”?';
+  }
+
+  @override
+  String get s4sApiKeyRevokeBody =>
+      'Appar och skript som använder nyckeln slutar fungera direkt. Det går inte att ångra.';
+
+  @override
+  String get s4sApiKeyRevoked => 'API-nyckeln har återkallats';
+
+  @override
+  String s4sApiKeyCreated(String name) {
+    return '”$name” har skapats';
+  }
+
+  @override
+  String get s4sApiKeyShownOnce =>
+      'Visas bara en gång. Spara den på ett säkert ställe.';
+
+  @override
+  String get s4sApiKeyCopy => 'Kopiera';
+
+  @override
+  String get s4sApiKeyCopied => 'Nyckeln har kopierats';
+
+  @override
+  String get s4sApiKeyDismiss => 'Klar';
+
+  @override
+  String get s4sApiKeyTooMany =>
+      'För många nycklar har skapats. Försök igen senare.';
+
+  @override
+  String get s4sApiKeyNeedsWrite =>
+      'Att skapa eller återkalla en nyckel kräver en inloggning med läs- och skrivåtkomst.';
+
+  @override
+  String get s4sSchedule => 'Schema';
+
+  @override
+  String get s4sScheduleTitle => 'Synkschema';
+
+  @override
+  String get s4sScheduleDefault => 'Standard';
+
+  @override
+  String s4sScheduleEveryMinutes(int count) {
+    return 'Var $count:e minut';
+  }
+
+  @override
+  String s4sScheduleEveryHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Var $count:e timme',
+      one: 'Varje timme',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String s4sScheduleNext(String time) {
+    return 'Nästa synk $time';
+  }
+
+  @override
+  String get s4sScheduleLoadFailed => 'Det gick inte att läsa in synkschemat.';
+
+  @override
+  String get s4sScheduleSaved => 'Synkschemat har sparats';
+
+  @override
+  String get s4sAiTitle => 'AI';
+
+  @override
+  String get s4sAiLoadFailed => 'Det gick inte att läsa in AI-inställningarna.';
+
+  @override
+  String get s4sAiClassifierSection => 'Klassificerare';
+
+  @override
+  String get s4sAiClassifierSwitch => 'Kategorisera med klassificeraren';
+
+  @override
+  String get s4sAiClassifierSwitchSub =>
+      'Kategoriserar okategoriserade transaktioner efter varje synk, före alla AI-leverantörer.';
+
+  @override
+  String get s4sAiRunNow => 'Kör nu';
+
+  @override
+  String get s4sAiRunNowTitle => 'Köra klassificeraren nu?';
+
+  @override
+  String get s4sAiRunNowBody =>
+      'Den kategoriserar dina okategoriserade transaktioner. Det kan ta en liten stund.';
+
+  @override
+  String get s4sAiRun => 'Kör';
+
+  @override
+  String get s4sAiClearLocks => 'Rensa kategorilås';
+
+  @override
+  String get s4sAiClearLocksTitle => 'Rensa klassificerarens lås?';
+
+  @override
+  String get s4sAiClearLocksBody =>
+      'Låser upp de kategorier som klassificeraren låste och de handlare som matcharen låste, så att regler och AI kan ändra dem igen. Kategorierna och handlarna ligger kvar.';
+
+  @override
+  String get s4sAiClearLocksConfirm => 'Rensa lås';
+
+  @override
+  String get s4sAiQueued => 'Köad';
+
+  @override
+  String get s4sAiClassifierSettings => 'Klassificerarens inställningar';
+
+  @override
+  String get s4sAiRuleMissing =>
+      'Regeln för kategoriklassificeraren har tagits bort, så det finns inget att slå på.';
+
+  @override
+  String get s4sAiRuleAddAgain => 'Lägg till klassificerarregeln igen';
+
+  @override
+  String get s4sAiRuleAdded => 'Klassificerarregeln har lagts till';
+
+  @override
+  String get s4sAiPromptsSection => 'Promptar';
+
+  @override
+  String get s4sAiPromptCustom => 'Anpassad';
+
+  @override
+  String get s4sAiPromptDefault => 'Standard';
+
+  @override
+  String get s4sAiPromptChatSystem => 'Systemprompt för chatten';
+
+  @override
+  String get s4sAiPromptCategorizerOpenai => 'Kategorisering (OpenAI)';
+
+  @override
+  String get s4sAiPromptCategorizerAnthropic => 'Kategorisering (Anthropic)';
+
+  @override
+  String get s4sAiPromptMerchantOpenai => 'Handlaridentifiering (OpenAI)';
+
+  @override
+  String get s4sAiPromptMerchantAnthropic => 'Handlaridentifiering (Anthropic)';
+
+  @override
+  String get s4sAiPromptInsightDigIn => 'Meddelande för att gräva i en insikt';
+
+  @override
+  String s4sAiPromptCount(String count, String max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get s4sAiPromptTooLong => 'Prompten är för lång.';
+
+  @override
+  String get s4sAiPromptReset => 'Återställ till standard';
+
+  @override
+  String get s4sAiPromptResetTitle => 'Återställa till standardprompten?';
+
+  @override
+  String get s4sAiPromptResetBody =>
+      'Din anpassade prompt tas bort och de inbyggda instruktionerna återställs.';
+
+  @override
+  String get s4sAiPromptReset2 => 'Återställ';
+
+  @override
+  String s4sAiPromptFormatRisk(String key) {
+    return 'Prompten innehåller inte längre JSON-exemplet ”$key”. Förfrågningarna ber fortfarande om det formatet, så det fungerar oftast, men en prompt som ber om ett annat utdataformat förstör det.';
+  }
+
+  @override
+  String get s4sAiPromptSaved => 'Prompten har sparats';
+
+  @override
+  String get s4sAiUsageSection => 'Användning · senaste 30 dagarna';
+
+  @override
+  String get s4sAiUsageCost => 'Total kostnad';
+
+  @override
+  String get s4sAiUsageRequests => 'Förfrågningar';
+
+  @override
+  String get s4sAiUsageByModel => 'Per modell';
+
+  @override
+  String s4sAiUsageModelRequests(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count förfrågningar',
+      one: '$count förfrågan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get s4sAiUsageNone => 'Inga AI-förfrågningar de senaste 30 dagarna.';
+
+  @override
+  String get s4sAiUsageLoadFailed => 'Det gick inte att läsa in användningen.';
+
+  @override
+  String get s4sClsTitle => 'Klassificerarens inställningar';
+
+  @override
+  String get s4sClsTraining => 'Träning';
+
+  @override
+  String get s4sClsWords => 'Ord';
+
+  @override
+  String get s4sClsAmount => 'Belopp';
+
+  @override
+  String get s4sClsAccountMerchant => 'Konto och handlare';
+
+  @override
+  String get s4sClsMatcher => 'Handlarmatchning';
+
+  @override
+  String get s4sClsScoring => 'Poängsättning';
+
+  @override
+  String get s4sClsClassifier => 'Klassificerare';
+
+  @override
+  String get s4sClsOther => 'Övrigt';
+
+  @override
+  String get s4sClsSkipSelfLabels => 'Lär inte av egna obekräftade gissningar';
+
+  @override
+  String get s4sClsSelfLabelGraceDays =>
+      'Räkna en gissning som godkänd efter (dagar)';
+
+  @override
+  String get s4sClsExcludeTransfers => 'Uteslut överföringar';
+
+  @override
+  String get s4sClsMaxTraining => 'Träningstransaktioner';
+
+  @override
+  String get s4sClsIncludeNotes => 'Ta med anteckningar';
+
+  @override
+  String get s4sClsWordSplit => 'Ord består av';
+
+  @override
+  String get s4sClsWordSplitAscii => 'a–z, 0–9';
+
+  @override
+  String get s4sClsWordSplitUnicode => 'Alla skrifttyper';
+
+  @override
+  String get s4sClsWordSplitSymbols => 'Med symboler';
+
+  @override
+  String get s4sClsDropNumbers => 'Uteslut siffror';
+
+  @override
+  String get s4sClsKeepSingleChars => 'Ta med ord med ett tecken';
+
+  @override
+  String get s4sClsDropCodes => 'Uteslut referenskoder';
+
+  @override
+  String get s4sClsSpreadFilter =>
+      'Uteslut ord som alla kategorier använder lika';
+
+  @override
+  String get s4sClsSpreadMargin => 'Spridningsmarginal';
+
+  @override
+  String get s4sClsBigrams => 'Ta med ordpar';
+
+  @override
+  String get s4sClsMerchantNameWords => 'Ta med handlarens namn som ord';
+
+  @override
+  String get s4sClsAmountField => 'Ta med beloppet';
+
+  @override
+  String get s4sClsAmountByDirection =>
+      'Ta med om pengar kommer in eller går ut';
+
+  @override
+  String get s4sClsAccountField => 'Ta med kontot';
+
+  @override
+  String get s4sClsMerchantField => 'Ta med handlaren';
+
+  @override
+  String get s4sClsLockSimilarMerchants =>
+      'Lås de handlare som matcharen sätter';
+
+  @override
+  String get s4sClsSimilarThreshold => 'Likhet';
+
+  @override
+  String get s4sClsSimilarMinNeighbours => 'Överensstämmande handlare';
+
+  @override
+  String get s4sClsSimilarCommonShare => 'Gräns';
+
+  @override
+  String get s4sClsSimilarSkipSelf =>
+      'Kopiera inte från egna obekräftade handlare';
+
+  @override
+  String get s4sClsSimilarSelfGraceDays =>
+      'Räkna en handlare som godkänd efter (dagar)';
+
+  @override
+  String get s4sClsComplement => 'Använd komplementär naiv Bayes';
+
+  @override
+  String get s4sClsSmoothing => 'Utjämning';
+
+  @override
+  String get s4sClsPrior => 'Ta med hur ofta varje kategori används';
+
+  @override
+  String get s4sClsBinary => 'Uteslut upprepade ord';
+
+  @override
+  String get s4sClsSeparateFields => 'Poängsätt handlare och konto separat';
+
+  @override
+  String get s4sClsThreshold => 'Tröskel';
+
+  @override
+  String get s4sClsLockResults =>
+      'Lås de kategorier som klassificeraren sätter';
+
+  @override
+  String s4sClsRange(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get s4sClsDecrease => 'Minska';
+
+  @override
+  String get s4sClsIncrease => 'Öka';
 }
