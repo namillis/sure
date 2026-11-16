@@ -49,6 +49,10 @@ class ServerFeaturesProvider with ChangeNotifier {
   // Section 2 (receipts and convert to trade).
   static const transactionsAttachments = 'transactions.attachments';
   static const transactionsConvertToTrade = 'transactions.convert_to_trade';
+  // Section 3 (round 4b): household and sharing.
+  static const householdMembers = 'household.members';
+  static const accountsSharing = 'accounts.sharing';
+  static const budgetsSharing = 'budgets.sharing';
 
   static const _prefsPrefix = 'server_features:';
 

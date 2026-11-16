@@ -5,17 +5,18 @@ import '../l10n/app_localizations.dart';
 import '../models/account.dart';
 import '../providers/server_features_provider.dart';
 import '../screens/account_form_sheet.dart';
+import '../screens/sharing_screens.dart';
 import '../screens/trade_form_screen.dart';
 import '../screens/update_balance_screen.dart';
 import '../theme/sure_colors.dart';
 import 'sure_icon.dart';
 import 'sync_now_dialog.dart';
 
-enum _AccountAction { updateBalance, addTrade, syncNow, edit }
+enum _AccountAction { updateBalance, addTrade, syncNow, edit, sharing }
 
 /// The account screen's nav-bar ⋯ menu: Update balance, Add trade
 /// (investment and crypto accounts), Sync now and, on Sure+ servers with
-/// `accounts.write`, Edit account. Calls [onChanged] after
+/// `accounts.write`, Edit account, and with `accounts.sharing`, Sharing. Calls [onChanged] after
 /// any of them changed data, so the screen can reload.
 class AccountActionsMenu extends StatelessWidget {
   const AccountActionsMenu({
@@ -56,6 +57,12 @@ class AccountActionsMenu extends StatelessWidget {
           return;
         }
         changed = result?.account != null;
+      case _AccountAction.sharing:
+        // Sharing changes only who sees the account; nothing here reloads.
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => AccountSharingScreen(
+                accountId: account.id, accountName: account.name)));
+        return;
     }
     if (changed) onChanged();
   }
@@ -65,13 +72,16 @@ class AccountActionsMenu extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final palette = SureColors.of(context).palette;
     bool canEdit;
+    bool sharing;
     try {
       final features = context.watch<ServerFeaturesProvider>();
+      sharing = features.has(ServerFeaturesProvider.accountsSharing);
       canEdit = features.has(ServerFeaturesProvider.accountsWrite) &&
           !(features.has(ServerFeaturesProvider.accountsPermissions) &&
               account.canEdit == false);
     } on ProviderNotFoundException {
       canEdit = false;
+      sharing = false;
     }
     Widget leading(String icon) =>
         SureIcon(icon, size: 20, color: palette.textSecondary);
@@ -111,6 +121,15 @@ class AccountActionsMenu extends StatelessWidget {
             child: ListTile(
               leading: leading(SureIcons.pencil),
               title: Text(l.spaEditAccount),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        if (sharing)
+          PopupMenuItem(
+            value: _AccountAction.sharing,
+            child: ListTile(
+              leading: leading(householdIcon),
+              title: Text(l.s4hSharing),
               contentPadding: EdgeInsets.zero,
             ),
           ),
