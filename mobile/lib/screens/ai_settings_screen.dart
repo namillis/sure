@@ -367,12 +367,9 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
       final locale = Localizations.localeOf(context).toString();
       children = [
         if (_ruleMissing)
-          SureBanner(
+          _RuleMissingBanner(
             key: const ValueKey('aiRuleMissingBanner'),
-            message: l.s4sAiRuleMissing,
-            actionLabel: l.s4sAiRuleAddAgain,
-            onAction: _addingRule ? null : _addRule,
-            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            onAdd: _addingRule ? null : _addRule,
           ),
         SureSectionHeader(label: l.s4sAiClassifierSection),
         SurePanel.rows(
@@ -484,6 +481,65 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The `classifier_rule_missing` banner. [SureBanner] is one line with an
+/// inline action, which a long action label overflows, so this one puts the
+/// message on its own lines and the action under it.
+class _RuleMissingBanner extends StatelessWidget {
+  const _RuleMissingBanner({super.key, required this.onAdd});
+
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final palette = SureColors.of(context).palette;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      decoration: BoxDecoration(
+        color: palette.warning.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(SureTokens.radiusLg),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SureIcon(SureIcons.triangleAlert,
+                  size: 16, color: palette.warning),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.s4sAiRuleMissing,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: SureTokens.weightMedium,
+                    color: palette.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: TextButton(
+              onPressed: onAdd,
+              style: TextButton.styleFrom(
+                foregroundColor: palette.link,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: Text(l.s4sAiRuleAddAgain,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
