@@ -31,12 +31,20 @@ module WebHandoffRestrictable
       return unless web_handoff_session?
       return finish_web_handoff!("error") unless web_handoff_credential_active?
       return if WebHandoff::RoutePolicy.session_request_allowed?(controller_path, action_name)
+      return if plaid_oauth_return?
 
       if web_handoff_top_level_navigation?
         finish_web_handoff!(web_handoff_navigation_finish_status)
       else
         head :forbidden
       end
+    end
+
+    # Plaid sends OAuth banks back to /accounts mid-flow; AccountsController forwards that to
+    # plaid_items#oauth_resume, so it must not end the handoff.
+    def plaid_oauth_return?
+      controller_path == "accounts" && action_name == "index" && request.get? &&
+        params[:oauth_state_id].present? && session[:plaid_oauth_resume].present?
     end
 
     def web_handoff_credential_active?

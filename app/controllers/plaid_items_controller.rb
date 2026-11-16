@@ -4,7 +4,7 @@ class PlaidItemsController < ApplicationController
   connects_provider PlaidItem
 
   before_action :set_plaid_item, only: %i[edit destroy sync]
-  before_action :require_connector_create!, only: %i[new create select_existing_account link_existing_account]
+  before_action :require_connector_create!, only: %i[new create select_existing_account link_existing_account oauth_resume]
   before_action :require_connector_manage!, only: %i[edit destroy sync]
 
   def new
@@ -17,6 +17,7 @@ class PlaidItemsController < ApplicationController
       accountable_type: params[:accountable_type] || "Depository",
       region: region
     )
+    remember_link_for_oauth_resume(region: region, item_id: "", is_update: false)
   rescue Plaid::ApiError => e
     handle_link_token_error(e)
   end
@@ -29,8 +30,27 @@ class PlaidItemsController < ApplicationController
       redirect_url: accounts_url,
       account_selection_enabled: @plaid_item.us? && params[:add_accounts] == "true",
     )
+    remember_link_for_oauth_resume(region: @plaid_item.plaid_region, item_id: @plaid_item.id, is_update: true)
   rescue Plaid::ApiError => e
     handle_link_token_error(e)
+  end
+
+  # Plaid sends OAuth banks back to the link token's redirect URI (/accounts) with an
+  # oauth_state_id when Link runs as a redirect (mobile browsers, in-app browser sheets)
+  # instead of a popup. Link must then be reopened with the same token and the URI it
+  # returned to, or the connection never completes.
+  def oauth_resume
+    resume = session[:plaid_oauth_resume]
+    if resume.blank? || params[:oauth_state_id].blank? || Time.zone.parse(resume["expires_at"].to_s)&.past?
+      session.delete(:plaid_oauth_resume)
+      return redirect_to accounts_path, alert: t(".expired")
+    end
+
+    @link_token = resume["link_token"]
+    @region = resume["region"]
+    @item_id = resume["item_id"]
+    @is_update = resume["is_update"]
+    @received_redirect_uri = accounts_url(oauth_state_id: params[:oauth_state_id])
   end
 
   # Plaid Link on the web holds back every event but OPEN and LAYER_* until the end of
@@ -140,6 +160,17 @@ class PlaidItemsController < ApplicationController
   end
 
   private
+    PLAID_OAUTH_RESUME_TTL = 30.minutes
+
+    def remember_link_for_oauth_resume(region:, item_id:, is_update:)
+      session[:plaid_oauth_resume] = {
+        "link_token" => @link_token,
+        "region" => region.to_s,
+        "item_id" => item_id.to_s,
+        "is_update" => is_update,
+        "expires_at" => PLAID_OAUTH_RESUME_TTL.from_now.iso8601
+      }
+    end
     def set_plaid_item
       @plaid_item = Current.family.plaid_items.find(params[:id])
     end

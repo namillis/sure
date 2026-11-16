@@ -1,4 +1,5 @@
 require "test_helper"
+require "ostruct"
 
 class WebHandoffsControllerTest < ActionDispatch::IntegrationTest
   APP_DONE_OK = "sureplus://connections/done?status=ok"
@@ -209,6 +210,27 @@ class WebHandoffsControllerTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_redirected_to APP_DONE_OK
+  end
+
+  test "a Plaid OAuth bank's return to accounts keeps the handoff and resumes Link" do
+    plaid_provider = mock
+    Provider::Registry.stubs(:plaid_provider_for_region).with(:us).returns(plaid_provider)
+    plaid_provider.stubs(:get_link_token).returns(OpenStruct.new(link_token: "link-sandbox-oauth"))
+    start_handoff("/plaid_items/new?region=us")
+    handoff_session = @user.sessions.order(:created_at).last
+
+    get new_plaid_item_url(region: "us")
+    assert_response :success
+
+    get accounts_url(oauth_state_id: "state-123")
+    assert_redirected_to oauth_resume_plaid_items_path(oauth_state_id: "state-123")
+    follow_redirect!
+    assert_response :success
+    assert Session.exists?(handoff_session.id)
+    assert_select "[data-plaid-received-redirect-uri-value]"
+
+    get accounts_url
+    assert_redirected_to web_handoff_done_path(status: "ok")
   end
 
   test "following a flow's Cancel link reports cancelled" do

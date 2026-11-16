@@ -1014,6 +1014,7 @@ Rails.application.routes.draw do
     collection do
       get :select_existing_account
       post :link_existing_account
+      get :oauth_resume
     end
 
     member do
