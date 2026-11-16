@@ -1,3 +1,5 @@
+import 'transaction_attachment.dart';
+
 /// The `transfer` block of a transaction that is one side of a transfer:
 /// the transfer's id and the account on the other side.
 class TransactionTransfer {
@@ -176,6 +178,15 @@ class Transaction {
   /// Whether to show the reconcile control.
   final bool? reconcilable;
   // --- end Section 1
+  // Section 2 (receipts and convert to trade).
+  /// Receipts and files on this transaction (`transactions.attachments`);
+  /// null when the server doesn't send them.
+  final List<TransactionAttachment>? attachments;
+
+  /// `account.account_type` (`investment`, `depository`, ...), or null.
+  final String? accountType;
+  // End of section 2.
+
   Transaction({
     this.id,
     required this.accountId,
@@ -209,6 +220,9 @@ class Transaction {
     List<TransactionLockedAttribute> lockedAttributes = const [],
     this.reconciledStatus,
     this.reconcilable,
+    // Section 2 (receipts and convert to trade).
+    this.attachments,
+    this.accountType,
   })  : lockedAttributes = List.unmodifiable(lockedAttributes),
         tagIds = List.unmodifiable(tagIds),
         tagNames = List.unmodifiable(tagNames),
@@ -343,6 +357,11 @@ class Transaction {
       reconciledStatus: _nonEmptyString(json['reconciled_status']),
       reconcilable:
           json['reconcilable'] is bool ? json['reconcilable'] as bool : null,
+      // Section 2 (receipts and convert to trade).
+      attachments: TransactionAttachment.listFromJson(json['attachments']),
+      accountType: json['account'] is Map
+          ? _nonEmptyString(json['account']['account_type'])
+          : null,
     );
   }
 

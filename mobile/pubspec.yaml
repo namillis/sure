@@ -41,6 +41,9 @@ dependencies:
   # Exact pin: 12.0.2 is the newest release that still supports Flutter 3.27
   # (13.x needs Flutter 3.38). Used to hand data exports to the share sheet.
   share_plus: 12.0.2
+  # Exact pin: 1.2.0 is the newest release that still supports Flutter 3.27
+  # (1.2.1 needs 3.29). Takes and picks receipt photos for transactions.
+  image_picker: 1.2.0
 
 dev_dependencies:
   flutter_test:

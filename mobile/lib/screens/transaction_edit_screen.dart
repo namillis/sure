@@ -12,12 +12,15 @@ import '../providers/auth_provider.dart';
 import '../providers/categories_provider.dart';
 import '../providers/merchants_provider.dart';
 import '../providers/privacy_provider.dart';
+import '../providers/server_features_provider.dart';
 import '../providers/tags_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/connectivity_service.dart';
 import '../services/transaction_actions_service.dart';
 import '../services/recurring_transactions_service.dart';
+import '../services/trade_conversion_service.dart';
+import '../services/transaction_attachments_service.dart';
 import '../services/transaction_split_service.dart';
 import '../services/transactions_service.dart';
 import '../theme/sure_colors.dart';
@@ -30,7 +33,9 @@ import '../utils/split_math.dart';
 import '../utils/transaction_amount_display.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/metadata_picker_sheet.dart';
+import '../widgets/transaction_receipts_panel.dart';
 import '../widgets/transaction_metadata_pickers.dart';
+import 'convert_to_trade_sheet.dart';
 import 'recurring_form_screen.dart';
 import 'recurring_screen.dart' show recurringCadenceLabel;
 import 'transaction_actions.dart';
@@ -67,6 +72,8 @@ class TransactionEditScreen extends StatefulWidget {
   final TransactionSplitService? splitService;
   final RecurringTransactionsService? recurringService;
   final TransactionActionsService? actionsService;
+  final TransactionAttachmentsService? attachmentsService;
+  final TradeConversionService? tradeConversionService;
 
   const TransactionEditScreen({
     super.key,
@@ -77,6 +84,8 @@ class TransactionEditScreen extends StatefulWidget {
     this.splitService,
     this.recurringService,
     this.actionsService,
+    this.attachmentsService,
+    this.tradeConversionService,
   });
 
   @override
@@ -737,6 +746,25 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     return SureDates.shortOf(context, parsed);
   }
 
+  // Section 2 (receipts and convert to trade).
+  bool _has(String feature) {
+    try {
+      return context.watch<ServerFeaturesProvider>().has(feature);
+    } on ProviderNotFoundException {
+      return false;
+    }
+  }
+
+  /// The transaction is now a trade and excluded: close the screen.
+  void _converted() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context).s4rConverted)),
+    );
+    widget.onChanged?.call();
+    Navigator.pop(context, true);
+  }
+
   Account? _account() {
     try {
       final accounts = context.watch<AccountsProvider>().accounts;
@@ -834,6 +862,17 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
             const SizedBox(height: 16),
             _buildDetailsPanel(
                 l, palette, merchants, tags, online, enabled, financialEnabled),
+            // Section 2 (receipts and convert to trade).
+            if (_has(ServerFeaturesProvider.transactionsAttachments) &&
+                _fresh?.attachments != null) ...[
+              const SizedBox(height: 16),
+              TransactionReceiptsPanel(
+                transaction: _fresh!,
+                online: online && canEdit,
+                canDelete: account?.canEdit != false,
+                service: widget.attachmentsService,
+              ),
+            ],
             const SizedBox(height: 16),
             _buildRecurringPanel(l, palette, online),
             if (TransactionActionFeatures.of(context).markRecurring &&
@@ -855,6 +894,20 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
               ]),
             ],
             const SizedBox(height: 16),
+            if (canConvertToTrade(
+              feature: _has(ServerFeaturesProvider.transactionsConvertToTrade),
+              transaction: _fresh,
+              accountType: account?.accountType,
+              accountCanEdit: account?.canEdit,
+            )) ...[
+              ConvertToTradePanel(
+                transaction: _fresh!,
+                enabled: enabled && online,
+                service: widget.tradeConversionService,
+                onConverted: _converted,
+              ),
+              const SizedBox(height: 16),
+            ],
             _buildWebPanel(l, palette, online),
             if (_error != null) ...[
               const SizedBox(height: 16),

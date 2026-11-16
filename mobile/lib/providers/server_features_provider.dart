@@ -46,6 +46,9 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const transactionsDuplicates = 'transactions.duplicates';
   static const transactionsMarkRecurring = 'transactions.mark_recurring';
   static const transactionsLocks = 'transactions.locks';
+  // Section 2 (receipts and convert to trade).
+  static const transactionsAttachments = 'transactions.attachments';
+  static const transactionsConvertToTrade = 'transactions.convert_to_trade';
 
   static const _prefsPrefix = 'server_features:';
 

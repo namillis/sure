@@ -49,6 +49,10 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Authenticate with Face ID to unlock the app</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo of a receipt to attach it to a transaction.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a receipt photo to attach it to a transaction.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
