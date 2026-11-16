@@ -902,6 +902,9 @@ Rails.application.routes.draw do
           post :transfer_match, to: "transaction_transfer_matches#create"
           delete :transfer_match, to: "transaction_transfer_matches#destroy"
           post :mark_as_recurring, to: "transaction_recurring_marks#create"
+      # Sure+ transactions.convert_to_trade
+          get :convert_to_trade, to: "transaction_trade_conversions#show"
+          post :convert_to_trade, to: "transaction_trade_conversions#create"
         end
       end
       resources :trades, only: [ :index, :show, :create, :update, :destroy ]
