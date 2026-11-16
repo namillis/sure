@@ -883,6 +883,13 @@ Rails.application.routes.draw do
         end
       end
 
+      resources :transactions, only: [] do
+        member do
+          post :unlock, to: "transaction_locks#unlock"
+          patch :reconcile, to: "transaction_locks#reconcile"
+        end
+      end
+
       resources :transactions, only: [ :index, :show, :create, :update, :destroy ] do
         resource :split, only: [ :show, :create, :update, :destroy ]
       end

@@ -1156,6 +1156,33 @@ RSpec.configure do |config|
                   currency: { type: :string }
                 }
               },
+              sync_locked: {
+                type: :boolean,
+                description: 'Whether the transaction is protected from bank sync because the user edited it or ' \
+                             'it came from an import (the web\'s "Protected from sync" panel). Unlock with POST unlock.'
+              },
+              locked_attributes: {
+                type: :array,
+                description: 'The fields the user changed, which a sync will not overwrite, with when each was locked. ' \
+                             'Names are the attribute names, e.g. name, date, amount, notes, category_id, merchant_id.',
+                items: {
+                  type: :object,
+                  required: %w[field locked_at],
+                  properties: {
+                    field: { type: :string },
+                    locked_at: { type: :string, format: :'date-time', nullable: true }
+                  }
+                }
+              },
+              reconciled_status: {
+                type: :string, enum: Entry.reconciled_statuses.keys,
+                description: 'Manual statement check-off status. See PATCH reconcile.'
+              },
+              reconcilable: {
+                type: :boolean,
+                description: 'Whether to offer the reconcile control: the family turned on manual reconciliation, ' \
+                             'the account has no bank sync, and the user can edit the account.'
+              },
               created_at: { type: :string, format: :'date-time' },
               updated_at: { type: :string, format: :'date-time' }
             }
