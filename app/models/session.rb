@@ -22,6 +22,11 @@ class Session < ApplicationRecord
   # clock reasonably accurate without that cost.
   SESSION_TOUCH_INTERVAL = 1.hour
 
+  # A session minted by WebHandoff for the Sure+ app. It is limited to the provider connect flow
+  # (see WebHandoffRestrictable) and to WEB_HANDOFF_LIFETIME.
+  WEB_HANDOFF_KEY = "sure_plus_handoff"
+  WEB_HANDOFF_LIFETIME = 30.minutes
+
   belongs_to :user, counter_cache: :sessions_count
   belongs_to :active_impersonator_session,
     -> { where(status: :in_progress) },
@@ -60,13 +65,18 @@ class Session < ApplicationRecord
     #
     # Also refreshes the activity clock here (not per-caller) so any of these
     # paths keeps a session alive, not just cookie-based web requests.
-    def find_active_by_cookie(cookie_value)
+    #
+    # Handoff sessions are refused unless the caller enforces their restrictions, so a new entry
+    # point (OAuth authorization, admin constraints) can't widen what one can reach.
+    def find_active_by_cookie(cookie_value, allow_web_handoff: false)
       return nil if cookie_value.blank?
 
       session_record = includes(:user).find_by(id: cookie_value)
       return nil unless session_record
 
       if session_record.user&.active? && !session_record.expired?
+        return nil if session_record.web_handoff? && !allow_web_handoff
+
         session_record.touch if session_record.updated_at < SESSION_TOUCH_INTERVAL.ago
         session_record
       else
@@ -94,10 +104,28 @@ class Session < ApplicationRecord
   end
 
   def expired?
-    updated_at < INACTIVITY_TIMEOUT.ago
+    updated_at < INACTIVITY_TIMEOUT.ago || web_handoff_expired?
+  end
+
+  def web_handoff
+    handoff = data.is_a?(Hash) ? data[WEB_HANDOFF_KEY] : nil
+    handoff.is_a?(Hash) ? handoff : nil
+  end
+
+  def web_handoff?
+    web_handoff.present?
   end
 
   private
+
+    def web_handoff_expired?
+      return false unless web_handoff?
+
+      expires_at = Time.zone.parse(web_handoff["expires_at"].to_s)
+      expires_at.nil? || expires_at <= Time.current
+    rescue ArgumentError
+      true
+    end
 
     def capture_session_info
       self.user_agent = Current.user_agent

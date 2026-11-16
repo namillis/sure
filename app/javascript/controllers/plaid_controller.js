@@ -8,6 +8,7 @@ export default class extends Controller {
     region: { type: String, default: "us" },
     isUpdate: { type: Boolean, default: false },
     itemId: String,
+    receivedRedirectUri: String,
   };
 
   connect() {
@@ -81,6 +82,11 @@ export default class extends Controller {
 
     this._handler = Plaid.create({
       token: this.linkTokenValue,
+      // Set when Link comes back from an OAuth bank as a redirect (mobile and in-app browsers);
+      // Link resumes the same session from it.
+      ...(this.receivedRedirectUriValue
+        ? { receivedRedirectUri: this.receivedRedirectUriValue }
+        : {}),
       onSuccess: this.handleSuccess,
       onLoad: this.handleLoad,
       onExit: this.handleExit,

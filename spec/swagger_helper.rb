@@ -1735,7 +1735,11 @@ RSpec.configure do |config|
               accounts: { '$ref' => '#/components/schemas/ProviderConnectionAccounts' },
               sync: { '$ref' => '#/components/schemas/ProviderConnectionSync' },
               created_at: { type: :string, format: :'date-time' },
-              updated_at: { type: :string, format: :'date-time' }
+              updated_at: { type: :string, format: :'date-time' },
+              reconnect_path: {
+                type: :string, nullable: true,
+                description: "Sure+: the web page that repairs this connection when it needs attention and the user may open it; usable as a web handoff path."
+              }
             }
           },
           ProviderConnectionCollection: {

@@ -3191,6 +3191,11 @@ components:
         updated_at:
           type: string
           format: date-time
+        reconnect_path:
+          type: string
+          nullable: true
+          description: 'Sure+: the web page that repairs this connection when it needs
+            attention and the user may open it; usable as a web handoff path.'
     ProviderConnectionCollection:
       type: object
       required:
@@ -7528,6 +7533,61 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
         '403':
           description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/provider_connections/available":
+    get:
+      summary: Lists the connections the user may add
+      description: 'The providers this server lets the user connect, as /settings/providers
+        and the Plaid link page offer them: every provider panel for admins, plus
+        Plaid when the instance has Plaid credentials (members get Plaid only, guests
+        nothing). connect_path is a web handoff path. kind is token when the app can
+        create the connection natively from a token or API key, otherwise web.'
+      tags:
+      - Provider Connections
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: available connections listed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - provider
+                      - key
+                      - name
+                      - connect_path
+                      - kind
+                      properties:
+                        provider:
+                          type: string
+                          description: Matches provider on GET /api/v1/provider_connections
+                        key:
+                          type: string
+                          description: Unique per entry, e.g. plaid_us and plaid_eu
+                        name:
+                          type: string
+                        connect_path:
+                          type: string
+                          example: "/settings/providers/simplefin/connect_form"
+                        kind:
+                          type: string
+                          enum:
+                          - web
+                          - token
+        '401':
+          description: unauthorized
           content:
             application/json:
               schema:
@@ -17322,6 +17382,463 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/provider_connections":
+    post:
+      summary: Creates a token-based provider connection
+      description: 'Creates a connection from the credentials the provider''s web
+        form takes, as that form does, and queues its first sync. Supported providers
+        and their connection fields: simplefin (setup_token); lunchflow (api_key,
+        base_url, name, sync_start_date); mercury and brex (token, base_url, name,
+        sync_start_date); kraken, binance and coinspot (api_key, api_secret, name,
+        sync_start_date); ibkr (query_id, token, name). Other providers return 422
+        provider_not_supported. Credentials are never returned. Family admins only.'
+      tags:
+      - Provider Connections
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: connection created
+          content:
+            application/json:
+              schema:
+                allOf:
+                - "$ref": "#/components/schemas/ProviderConnection"
+                - type: object
+                  required:
+                  - setup_required
+                  - awaiting_accounts
+                  - pending_accounts
+                  properties:
+                    setup_required:
+                      type: boolean
+                      description: Accounts are waiting for setup, or will be once
+                        the first sync finds them
+                    awaiting_accounts:
+                      type: boolean
+                      description: The first sync hasn't found any accounts yet; poll
+                        pending_accounts
+                    pending_accounts:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - id
+                        - name
+                        - balance
+                        - balance_cents
+                        - currency
+                        - allowed_types
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            description: Provider account ID; send it back in complete_setup
+                          name:
+                            type: string
+                          institution:
+                            type: string
+                            nullable: true
+                          balance:
+                            type: string
+                            description: Formatted balance as the provider reports
+                              it
+                          balance_cents:
+                            type: integer
+                          currency:
+                            type: string
+                          suggested_accountable_type:
+                            type: string
+                            nullable: true
+                            description: What the web form preselects; null means
+                              it preselects Skip
+                          suggested_subtype:
+                            type: string
+                            nullable: true
+                          allowed_types:
+                            type: array
+                            description: The types the web setup form offers for this
+                              provider, with their subtypes
+                            items:
+                              type: object
+                              required:
+                              - accountable_type
+                              - label
+                              - subtypes
+                              properties:
+                                accountable_type:
+                                  type: string
+                                  example: Depository
+                                label:
+                                  type: string
+                                subtypes:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - value
+                                    - label
+                                    properties:
+                                      value:
+                                        type: string
+                                      label:
+                                        type: string
+                    created_account_ids:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: Only on complete_setup
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope, or not a family admin
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: invalid credentials (e.g. invalid_token, token_compromised,
+            blank_token), validation_failed, or provider_not_supported
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - provider
+              - connection
+              properties:
+                provider:
+                  type: string
+                  example: simplefin
+                connection:
+                  type: object
+                  properties:
+                    setup_token:
+                      type: string
+                    api_key:
+                      type: string
+                    api_secret:
+                      type: string
+                    token:
+                      type: string
+                    query_id:
+                      type: string
+                    base_url:
+                      type: string
+                    name:
+                      type: string
+                    sync_start_date:
+                      type: string
+                      format: date
+        required: true
+    get:
+      summary: Lists provider connection status summaries
+      description: List safe provider connection status metadata for the authenticated
+        user's family without exposing credentials, raw provider payloads, or raw
+        sync errors.
+      tags:
+      - Provider Connections
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: provider connection status summaries listed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ProviderConnectionCollection"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: insufficient scope
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/provider_connections/{id}/pending_accounts":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Provider connection ID
+      schema:
+        type: string
+    - name: provider
+      in: query
+      required: false
+      description: The connection's provider key from the list. Needed only when two
+        connections share an id.
+      schema:
+        type: string
+    get:
+      summary: Lists a connection's accounts waiting for setup
+      description: 'The accounts the web''s account setup page lists: the provider''s
+        accounts not yet linked to a Sure account. For Lunch Flow, Mercury and Brex
+        this fetches the account list from the provider when none is stored yet, as
+        that page does. Family admins only.'
+      tags:
+      - Provider Connections
+      security:
+      - apiKeyAuth: []
+      responses:
+        '200':
+          description: pending accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - awaiting_accounts
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - name
+                      - balance
+                      - balance_cents
+                      - currency
+                      - allowed_types
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: Provider account ID; send it back in complete_setup
+                        name:
+                          type: string
+                        institution:
+                          type: string
+                          nullable: true
+                        balance:
+                          type: string
+                          description: Formatted balance as the provider reports it
+                        balance_cents:
+                          type: integer
+                        currency:
+                          type: string
+                        suggested_accountable_type:
+                          type: string
+                          nullable: true
+                          description: What the web form preselects; null means it
+                            preselects Skip
+                        suggested_subtype:
+                          type: string
+                          nullable: true
+                        allowed_types:
+                          type: array
+                          description: The types the web setup form offers for this
+                            provider, with their subtypes
+                          items:
+                            type: object
+                            required:
+                            - accountable_type
+                            - label
+                            - subtypes
+                            properties:
+                              accountable_type:
+                                type: string
+                                example: Depository
+                              label:
+                                type: string
+                              subtypes:
+                                type: array
+                                items:
+                                  type: object
+                                  required:
+                                  - value
+                                  - label
+                                  properties:
+                                    value:
+                                      type: string
+                                    label:
+                                      type: string
+                  awaiting_accounts:
+                    type: boolean
+        '404':
+          description: connection not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/provider_connections/{id}/complete_setup":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      description: Provider connection ID
+      schema:
+        type: string
+    - name: provider
+      in: query
+      required: false
+      description: The connection's provider key from the list. Needed only when two
+        connections share an id.
+      schema:
+        type: string
+    post:
+      summary: Creates Sure accounts for a connection's pending accounts
+      description: 'Runs the web''s complete_account_setup: each account with import
+        true becomes a Sure account of the chosen type and subtype, and a sync is
+        queued. import false skips it; accounts left out stay pending. accountable_type
+        and subtype must come from that account''s allowed_types; providers with one
+        fixed type (Kraken, Binance, CoinSpot, IBKR) need neither. sync_start_date
+        is accepted for SimpleFIN and Binance, whose web setup step sets it. The whole
+        request is checked first, so a 422 changes nothing. Family admins only.'
+      tags:
+      - Provider Connections
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: accounts created and a sync queued
+          content:
+            application/json:
+              schema:
+                allOf:
+                - "$ref": "#/components/schemas/ProviderConnection"
+                - type: object
+                  required:
+                  - setup_required
+                  - awaiting_accounts
+                  - pending_accounts
+                  properties:
+                    setup_required:
+                      type: boolean
+                      description: Accounts are waiting for setup, or will be once
+                        the first sync finds them
+                    awaiting_accounts:
+                      type: boolean
+                      description: The first sync hasn't found any accounts yet; poll
+                        pending_accounts
+                    pending_accounts:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - id
+                        - name
+                        - balance
+                        - balance_cents
+                        - currency
+                        - allowed_types
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            description: Provider account ID; send it back in complete_setup
+                          name:
+                            type: string
+                          institution:
+                            type: string
+                            nullable: true
+                          balance:
+                            type: string
+                            description: Formatted balance as the provider reports
+                              it
+                          balance_cents:
+                            type: integer
+                          currency:
+                            type: string
+                          suggested_accountable_type:
+                            type: string
+                            nullable: true
+                            description: What the web form preselects; null means
+                              it preselects Skip
+                          suggested_subtype:
+                            type: string
+                            nullable: true
+                          allowed_types:
+                            type: array
+                            description: The types the web setup form offers for this
+                              provider, with their subtypes
+                            items:
+                              type: object
+                              required:
+                              - accountable_type
+                              - label
+                              - subtypes
+                              properties:
+                                accountable_type:
+                                  type: string
+                                  example: Depository
+                                label:
+                                  type: string
+                                subtypes:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - value
+                                    - label
+                                    properties:
+                                      value:
+                                        type: string
+                                      label:
+                                        type: string
+                    created_account_ids:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: Only on complete_setup
+        '422':
+          description: invalid_account_type, invalid_subtype, unknown_account, link_not_supported,
+            invalid_sync_start_date or validation_failed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - accounts
+              properties:
+                sync_start_date:
+                  type: string
+                  format: date
+                accounts:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - id
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      import:
+                        type: boolean
+                        default: true
+                      accountable_type:
+                        type: string
+                        example: Depository
+                      subtype:
+                        type: string
+                        nullable: true
+                        example: checking
+        required: true
   "/api/v1/provider_connections/{id}/sync_schedule":
     parameters:
     - name: id
@@ -17461,35 +17978,6 @@ paths:
                       type: integer
                       nullable: true
                       description: One of allowed_intervals, or null
-  "/api/v1/provider_connections":
-    get:
-      summary: Lists provider connection status summaries
-      description: List safe provider connection status metadata for the authenticated
-        user's family without exposing credentials, raw provider payloads, or raw
-        sync errors.
-      tags:
-      - Provider Connections
-      security:
-      - apiKeyAuth: []
-      responses:
-        '200':
-          description: provider connection status summaries listed
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ProviderConnectionCollection"
-        '401':
-          description: unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: insufficient scope
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/push_subscriptions":
     post:
       summary: Register an APNs device token
@@ -21592,3 +22080,71 @@ paths:
           description: missing or invalid credentials (default configuration)
         '403':
           description: insufficient scope
+  "/api/v1/web_handoffs":
+    post:
+      summary: Create a web handoff
+      tags:
+      - Web Handoffs
+      description: 'Returns a one-time URL, valid for 60 seconds, that opens a provider
+        connect or reconnect page in a web session for the API user, without another
+        sign-in. The session can only reach the providers page and the provider connection
+        pages, lasts at most 30 minutes, and ends by sending the browser to sureplus://connections/done?status=ok|cancelled|error.
+        Needs read_write. Limited to 10 per user per minute. Allowed paths: /settings/providers,
+        /settings/providers/{provider}/connect_form, and the GET new, edit, setup_accounts,
+        select_accounts, select_existing_account, select_profiles, select_bank, new_wallet
+        and connect pages of the *_items provider routes.'
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: handoff created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - url
+                - expires_at
+                properties:
+                  url:
+                    type: string
+                    description: Open once, in the app's auth sheet
+                  expires_at:
+                    type: string
+                    format: date-time
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: read-only credential or guest
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: path not allowed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - web_handoff
+              properties:
+                web_handoff:
+                  type: object
+                  required:
+                  - path
+                  properties:
+                    path:
+                      type: string
+                      example: "/plaid_items/new?region=us"
+                      description: A relative path on this server

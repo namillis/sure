@@ -807,6 +807,10 @@ Rails.application.routes.draw do
     end
   end
 
+  # Sure+ app web handoff (the token is a query parameter so request logs filter it)
+  get "web_handoffs/redeem", to: "web_handoffs#show", as: :redeem_web_handoff
+  get "web_handoffs/done", to: "web_handoffs#done", as: :web_handoff_done
+
   # API routes
   namespace :api do
     namespace :v1 do
@@ -937,8 +941,22 @@ Rails.application.routes.draw do
       end
       resources :api_keys, only: %i[index create destroy]
 
+      # Sure+ web handoff
+      resources :web_handoffs, only: :create
+
+      # Sure+ connections the user may add
+      get "provider_connections/available", to: "available_provider_connections#index",
+        as: :available_provider_connections
+
       resources :provider_connections, only: [] do
         resource :sync_schedule, only: %i[show update], controller: "provider_connection_sync_schedules"
+      end
+
+      resources :provider_connections, only: [ :create ], controller: "provider_connection_setups" do
+        member do
+          get :pending_accounts
+          post :complete_setup
+        end
       end
 
       resources :provider_connections, only: [ :index ]
@@ -996,6 +1014,7 @@ Rails.application.routes.draw do
     collection do
       get :select_existing_account
       post :link_existing_account
+      get :oauth_resume
     end
 
     member do

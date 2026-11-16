@@ -2,6 +2,7 @@ class AccountsController < ApplicationController
   include StreamExtensions
   include FilterClearable
 
+  before_action :resume_plaid_oauth, only: :index
   before_action :set_account, only: %i[show sparkline sync set_default remove_default clear_filter]
   before_action :set_manageable_account, only: %i[logo_options toggle_active toggle_exclude_from_reports destroy unlink confirm_unlink select_provider]
   before_action :ensure_linked_account, only: %i[confirm_unlink unlink]
@@ -389,6 +390,14 @@ class AccountsController < ApplicationController
   end
 
   private
+    # Plaid returns OAuth banks here (the link token's redirect URI) when Link ran as a
+    # redirect rather than a popup; hand back to Plaid Link so the connection completes.
+    def resume_plaid_oauth
+      return if params[:oauth_state_id].blank? || session[:plaid_oauth_resume].blank?
+
+      redirect_to oauth_resume_plaid_items_path(oauth_state_id: params[:oauth_state_id])
+    end
+
     # The form may hold a domain or name that is not saved yet.
     def render_logo_options(account)
       account.assign_attributes(params.permit(:institution_domain, :institution_name))

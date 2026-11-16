@@ -15,3 +15,5 @@ json.extract! provider_connection,
               :sync,
               :created_at,
               :updated_at
+
+json.partial! "api/v1/provider_connections/provider_connection_sure_plus_reconnect", provider_connection: provider_connection

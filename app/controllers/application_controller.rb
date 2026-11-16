@@ -6,6 +6,7 @@ class ApplicationController < ActionController::Base
   include Pundit::Authorization
   include CodespacesForgeryProtection
   include WebUsageTracking
+  include WebHandoffRestrictable
 
   include Pagy::Backend
 

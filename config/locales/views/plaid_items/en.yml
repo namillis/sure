@@ -4,6 +4,8 @@ en:
     auto_link_opener:
       create_failed: We couldn't confirm this connection was added. Reload the page to
         check before trying again.
+    oauth_resume:
+      expired: Your bank connection timed out before it finished. Start it again from Settings.
     create:
       already_connected: You already have a connection for this institution, so this
         one wasn't added.
