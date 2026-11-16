@@ -8971,6 +8971,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest is recorded separately'**
   String get sa2PrincipalOnlySub;
+
+  /// Settings row and screen title: the household's members and invitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Household'**
+  String get s4hHousehold;
+
+  /// Household screen: section header of the members list.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get s4hMembers;
+
+  /// Household screen: section header of the pending invitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited'**
+  String get s4hInvited;
+
+  /// Household screen: the signed-in user's own row title.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (you)'**
+  String s4hYou(String name);
+
+  /// Household role: admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get s4hRoleAdmin;
+
+  /// Household role: member.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get s4hRoleMember;
+
+  /// Household role: guest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get s4hRoleGuest;
+
+  /// Household role: the server's super admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Super admin'**
+  String get s4hRoleSuperAdmin;
+
+  /// Household screen: subtitle of a pending invitation.
+  ///
+  /// In en, this message translates to:
+  /// **'{role} · expires {date}'**
+  String s4hInvitedSubtitle(String role, String date);
+
+  /// Swipe action and confirm button that revokes an invitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get s4hRevoke;
+
+  /// Confirm dialog title before revoking an invitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke the invitation to {email}?'**
+  String s4hRevokeTitle(String email);
+
+  /// Confirm dialog body before revoking an invitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Their invite link will stop working.'**
+  String get s4hRevokeBody;
+
+  /// Snackbar after an invitation was revoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation revoked'**
+  String get s4hRevoked;
+
+  /// Nav-bar + label and the invite sheet's action.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get s4hInvite;
+
+  /// Title of the invite sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite someone'**
+  String get s4hInviteTitle;
+
+  /// Invite sheet: email field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get s4hEmail;
+
+  /// Invite sheet: validation error for a missing or malformed email.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an email address'**
+  String get s4hEmailInvalid;
+
+  /// Invite sheet: label of the role choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get s4hRole;
+
+  /// Snackbar after an emailed invitation was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent to {email}'**
+  String s4hInviteSent(String email);
+
+  /// Snackbar after an invitation was created on a server that does not email invitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation created. Copy the accept link from your profile on the web.'**
+  String get s4hInviteCreated;
+
+  /// Household screen: note under the list when the server sends no invitation email.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations on this server aren\'t emailed. Copy the accept link from your profile on the web.'**
+  String get s4hLinkOnlyNote;
+
+  /// Household screen: link to the web profile page where invite links are shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile on the web'**
+  String get s4hOpenProfileOnWeb;
+
+  /// Household screen: error when the members list failed to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your household'**
+  String get s4hLoadFailed;
+
+  /// Account menu item and screen title: who the account is shared with.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing'**
+  String get s4hSharing;
+
+  /// Sharing screens: error when loading failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load sharing'**
+  String get s4hSharingLoadFailed;
+
+  /// Sharing segment: not shared.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get s4hPermNone;
+
+  /// Sharing segment: read only.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get s4hPermView;
+
+  /// Sharing segment: read and write.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get s4hPermEdit;
+
+  /// Sharing segment: full control.
+  ///
+  /// In en, this message translates to:
+  /// **'Full'**
+  String get s4hPermFull;
+
+  /// Account sharing screen for someone the account is shared with.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by {owner} · {permission}'**
+  String s4hSharedBy(String owner, String permission);
+
+  /// The permission someone was given on a shared account: full control.
+  ///
+  /// In en, this message translates to:
+  /// **'Full control'**
+  String get s4hPermissionFullControl;
+
+  /// The permission someone was given on a shared account: read and write.
+  ///
+  /// In en, this message translates to:
+  /// **'Can edit'**
+  String get s4hPermissionReadWrite;
+
+  /// The permission someone was given on a shared account: read only.
+  ///
+  /// In en, this message translates to:
+  /// **'View only'**
+  String get s4hPermissionReadOnly;
+
+  /// Account sharing switch: count a shared account in the user's own totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Include in my finances'**
+  String get s4hIncludeInFinances;
+
+  /// Sharing screens: empty state when there is nobody to share with.
+  ///
+  /// In en, this message translates to:
+  /// **'No one else is in your household yet.'**
+  String get s4hNoOtherMembers;
+
+  /// Account sharing screen: note under the member list.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what each person can do with this account.'**
+  String get s4hAccountSharingFooter;
+
+  /// Settings row and screen title: who can see the user's personal budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget sharing'**
+  String get s4hBudgetSharing;
+
+  /// Budget sharing screen: note under the member list.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who can view or edit your personal budget.'**
+  String get s4hBudgetSharingFooter;
 }
 
 class _AppLocalizationsDelegate

@@ -5269,4 +5269,132 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get sa2PrincipalOnlySub => 'Räntan bokförs separat';
+
+  @override
+  String get s4hHousehold => 'Hushåll';
+
+  @override
+  String get s4hMembers => 'Medlemmar';
+
+  @override
+  String get s4hInvited => 'Inbjudna';
+
+  @override
+  String s4hYou(String name) {
+    return '$name (du)';
+  }
+
+  @override
+  String get s4hRoleAdmin => 'Administratör';
+
+  @override
+  String get s4hRoleMember => 'Medlem';
+
+  @override
+  String get s4hRoleGuest => 'Gäst';
+
+  @override
+  String get s4hRoleSuperAdmin => 'Superadministratör';
+
+  @override
+  String s4hInvitedSubtitle(String role, String date) {
+    return '$role · upphör $date';
+  }
+
+  @override
+  String get s4hRevoke => 'Återkalla';
+
+  @override
+  String s4hRevokeTitle(String email) {
+    return 'Återkalla inbjudan till $email?';
+  }
+
+  @override
+  String get s4hRevokeBody => 'Inbjudningslänken slutar fungera.';
+
+  @override
+  String get s4hRevoked => 'Inbjudan återkallad';
+
+  @override
+  String get s4hInvite => 'Bjud in';
+
+  @override
+  String get s4hInviteTitle => 'Bjud in någon';
+
+  @override
+  String get s4hEmail => 'E-post';
+
+  @override
+  String get s4hEmailInvalid => 'Ange en e-postadress';
+
+  @override
+  String get s4hRole => 'Roll';
+
+  @override
+  String s4hInviteSent(String email) {
+    return 'Inbjudan skickad till $email';
+  }
+
+  @override
+  String get s4hInviteCreated =>
+      'Inbjudan skapad. Kopiera länken för att acceptera från din profil på webben.';
+
+  @override
+  String get s4hLinkOnlyNote =>
+      'Inbjudningar skickas inte med e-post på den här servern. Kopiera länken för att acceptera från din profil på webben.';
+
+  @override
+  String get s4hOpenProfileOnWeb => 'Öppna profilen på webben';
+
+  @override
+  String get s4hLoadFailed => 'Det gick inte att läsa in ditt hushåll';
+
+  @override
+  String get s4hSharing => 'Delning';
+
+  @override
+  String get s4hSharingLoadFailed => 'Det gick inte att läsa in delningen';
+
+  @override
+  String get s4hPermNone => 'Ingen';
+
+  @override
+  String get s4hPermView => 'Visa';
+
+  @override
+  String get s4hPermEdit => 'Ändra';
+
+  @override
+  String get s4hPermFull => 'Full';
+
+  @override
+  String s4hSharedBy(String owner, String permission) {
+    return 'Delat av $owner · $permission';
+  }
+
+  @override
+  String get s4hPermissionFullControl => 'Full kontroll';
+
+  @override
+  String get s4hPermissionReadWrite => 'Kan ändra';
+
+  @override
+  String get s4hPermissionReadOnly => 'Endast visning';
+
+  @override
+  String get s4hIncludeInFinances => 'Ta med i min ekonomi';
+
+  @override
+  String get s4hNoOtherMembers => 'Det finns ingen annan i ditt hushåll än.';
+
+  @override
+  String get s4hAccountSharingFooter =>
+      'Välj vad varje person får göra med det här kontot.';
+
+  @override
+  String get s4hBudgetSharing => 'Budgetdelning';
+
+  @override
+  String get s4hBudgetSharingFooter =>
+      'Välj vem som får se eller ändra din personliga budget.';
 }

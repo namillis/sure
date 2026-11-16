@@ -41,6 +41,10 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const accountsPermissions = 'accounts.permissions';
   static const accountsLoanRates = 'accounts.loan_rates';
   static const chartsSeries = 'charts.series';
+  // Section 3 (round 4b): household and sharing.
+  static const householdMembers = 'household.members';
+  static const accountsSharing = 'accounts.sharing';
+  static const budgetsSharing = 'budgets.sharing';
 
   static const _prefsPrefix = 'server_features:';
 

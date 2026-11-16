@@ -5234,4 +5234,132 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sa2PrincipalOnlySub => 'Interest is recorded separately';
+
+  @override
+  String get s4hHousehold => 'Household';
+
+  @override
+  String get s4hMembers => 'Members';
+
+  @override
+  String get s4hInvited => 'Invited';
+
+  @override
+  String s4hYou(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get s4hRoleAdmin => 'Admin';
+
+  @override
+  String get s4hRoleMember => 'Member';
+
+  @override
+  String get s4hRoleGuest => 'Guest';
+
+  @override
+  String get s4hRoleSuperAdmin => 'Super admin';
+
+  @override
+  String s4hInvitedSubtitle(String role, String date) {
+    return '$role · expires $date';
+  }
+
+  @override
+  String get s4hRevoke => 'Revoke';
+
+  @override
+  String s4hRevokeTitle(String email) {
+    return 'Revoke the invitation to $email?';
+  }
+
+  @override
+  String get s4hRevokeBody => 'Their invite link will stop working.';
+
+  @override
+  String get s4hRevoked => 'Invitation revoked';
+
+  @override
+  String get s4hInvite => 'Invite';
+
+  @override
+  String get s4hInviteTitle => 'Invite someone';
+
+  @override
+  String get s4hEmail => 'Email';
+
+  @override
+  String get s4hEmailInvalid => 'Enter an email address';
+
+  @override
+  String get s4hRole => 'Role';
+
+  @override
+  String s4hInviteSent(String email) {
+    return 'Invitation sent to $email';
+  }
+
+  @override
+  String get s4hInviteCreated =>
+      'Invitation created. Copy the accept link from your profile on the web.';
+
+  @override
+  String get s4hLinkOnlyNote =>
+      'Invitations on this server aren\'t emailed. Copy the accept link from your profile on the web.';
+
+  @override
+  String get s4hOpenProfileOnWeb => 'Open profile on the web';
+
+  @override
+  String get s4hLoadFailed => 'Couldn\'t load your household';
+
+  @override
+  String get s4hSharing => 'Sharing';
+
+  @override
+  String get s4hSharingLoadFailed => 'Couldn\'t load sharing';
+
+  @override
+  String get s4hPermNone => 'None';
+
+  @override
+  String get s4hPermView => 'View';
+
+  @override
+  String get s4hPermEdit => 'Edit';
+
+  @override
+  String get s4hPermFull => 'Full';
+
+  @override
+  String s4hSharedBy(String owner, String permission) {
+    return 'Shared by $owner · $permission';
+  }
+
+  @override
+  String get s4hPermissionFullControl => 'Full control';
+
+  @override
+  String get s4hPermissionReadWrite => 'Can edit';
+
+  @override
+  String get s4hPermissionReadOnly => 'View only';
+
+  @override
+  String get s4hIncludeInFinances => 'Include in my finances';
+
+  @override
+  String get s4hNoOtherMembers => 'No one else is in your household yet.';
+
+  @override
+  String get s4hAccountSharingFooter =>
+      'Choose what each person can do with this account.';
+
+  @override
+  String get s4hBudgetSharing => 'Budget sharing';
+
+  @override
+  String get s4hBudgetSharingFooter =>
+      'Choose who can view or edit your personal budget.';
 }
