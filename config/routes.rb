@@ -937,6 +937,12 @@ Rails.application.routes.draw do
       resources :syncs, only: [ :index, :show ] do
         get :latest, on: :collection
       end
+      resources :api_keys, only: %i[index create destroy]
+
+      resources :provider_connections, only: [] do
+        resource :sync_schedule, only: %i[show update], controller: "provider_connection_sync_schedules"
+      end
+
       resources :provider_connections, only: [ :index ]
       resources :provider_connections, only: [ :destroy ], controller: "provider_connection_management" do
         post :sync, on: :member
