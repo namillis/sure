@@ -16,6 +16,7 @@ module SurePlus
       categories.write
       charts.series
       connections.manage
+      connections.web_handoff
       goals
       goals.lifecycle
       goals.pledges

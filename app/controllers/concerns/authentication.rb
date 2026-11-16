@@ -29,7 +29,8 @@ module Authentication
     end
 
     def find_session_by_cookie
-      session_record = Session.find_active_by_cookie(cookies.signed[:session_token])
+      # WebHandoffRestrictable confines handoff sessions on every ApplicationController request.
+      session_record = Session.find_active_by_cookie(cookies.signed[:session_token], allow_web_handoff: true)
       return session_record if session_record
 
       cookies.delete(:session_token)

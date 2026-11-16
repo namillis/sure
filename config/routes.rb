@@ -807,6 +807,10 @@ Rails.application.routes.draw do
     end
   end
 
+  # Sure+ app web handoff (the token is a query parameter so request logs filter it)
+  get "web_handoffs/redeem", to: "web_handoffs#show", as: :redeem_web_handoff
+  get "web_handoffs/done", to: "web_handoffs#done", as: :web_handoff_done
+
   # API routes
   namespace :api do
     namespace :v1 do
@@ -936,6 +940,9 @@ Rails.application.routes.draw do
         get :latest, on: :collection
       end
       resources :api_keys, only: %i[index create destroy]
+
+      # Sure+ web handoff
+      resources :web_handoffs, only: :create
 
       resources :provider_connections, only: [] do
         resource :sync_schedule, only: %i[show update], controller: "provider_connection_sync_schedules"

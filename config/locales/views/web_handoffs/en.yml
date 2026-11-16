@@ -1,0 +1,8 @@
+---
+en:
+  web_handoffs:
+    show:
+      invalid: This link has expired or was already used. Start again from the Sure+ app.
+    done:
+      title: Return to Sure+
+      return_to_app: Return to the Sure+ app
