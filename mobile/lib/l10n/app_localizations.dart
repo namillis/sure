@@ -8971,6 +8971,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest is recorded separately'**
   String get sa2PrincipalOnlySub;
+
+  /// Duplicate banner title when the server's duplicate confidence is low.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get s4tDuplicateReview;
+
+  /// Duplicate banner title when the server's duplicate confidence is medium or high.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible duplicate'**
+  String get s4tDuplicatePossible;
+
+  /// Duplicate banner action: merge this pending transaction into the suggested posted one.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get s4tDuplicateMerge;
+
+  /// Duplicate banner action: dismiss the duplicate suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a duplicate'**
+  String get s4tDuplicateDismiss;
+
+  /// Row on a pending transaction that opens a picker of posted transactions to merge it into.
+  ///
+  /// In en, this message translates to:
+  /// **'Match to posted transaction'**
+  String get s4tPendingMatch;
+
+  /// Title of the sheet that picks the posted transaction a pending one became.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted transaction'**
+  String get s4tPendingMatchTitle;
+
+  /// Empty state of the posted-transaction picker.
+  ///
+  /// In en, this message translates to:
+  /// **'No posted transactions to match'**
+  String get s4tPendingMatchEmpty;
+
+  /// Button that loads the next page of candidates.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get s4tLoadMore;
+
+  /// Error when a picker's list could not be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this list.'**
+  String get s4tLoadFailed;
+
+  /// Row and sheet title: mark this transaction as one side of a transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as transfer'**
+  String get s4tMarkAsTransfer;
+
+  /// Section header in the Mark as transfer sheet: transactions that could be the other side.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching transactions'**
+  String get s4tTransferMatching;
+
+  /// Section header in the Mark as transfer sheet: accounts where the other side can be created.
+  ///
+  /// In en, this message translates to:
+  /// **'Or create the other side in'**
+  String get s4tTransferCreateIn;
+
+  /// Shown when the Mark as transfer sheet has no candidate transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching transactions'**
+  String get s4tTransferNoMatches;
+
+  /// Shown when there is no account to create the other side of a transfer in.
+  ///
+  /// In en, this message translates to:
+  /// **'No other accounts'**
+  String get s4tTransferNoAccounts;
+
+  /// Transfer status: an automatic match nobody has confirmed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get s4tTransferPending;
+
+  /// Transfer status: a confirmed transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get s4tTransferConfirmed;
+
+  /// Transfer row value, e.g. 'Pending · Savings'.
+  ///
+  /// In en, this message translates to:
+  /// **'{status} · {account}'**
+  String s4tTransferValue(String status, String account);
+
+  /// Transfer sheet line naming the account on the other side.
+  ///
+  /// In en, this message translates to:
+  /// **'With {account}'**
+  String s4tTransferWith(String account);
+
+  /// Destructive action that unmatches a transfer or dismisses a transfer suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a transfer'**
+  String get s4tNotATransfer;
+
+  /// Title of the confirm dialog for Not a transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a transfer?'**
+  String get s4tNotATransferTitle;
+
+  /// Body of the confirm dialog when unmatching a transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'The transfer link is removed and these transactions won\'t be matched again. Both transactions stay.'**
+  String get s4tNotATransferBody;
+
+  /// Body of the confirm dialog when dismissing a transfer suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'The suggested matches for this transaction won\'t be offered again.'**
+  String get s4tNotATransferHintBody;
+
+  /// Transfer match error not_a_candidate.
+  ///
+  /// In en, this message translates to:
+  /// **'That transaction can\'t be matched with this one.'**
+  String get s4tReasonNotACandidate;
+
+  /// Transfer match error already_linked.
+  ///
+  /// In en, this message translates to:
+  /// **'One of these transactions is already part of a transfer.'**
+  String get s4tReasonAlreadyLinked;
+
+  /// Transfer match error same_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Both sides of a transfer can\'t be in the same account.'**
+  String get s4tReasonSameAccount;
+
+  /// Transfer match error split_transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'A split transaction can\'t be part of a transfer.'**
+  String get s4tReasonSplit;
+
+  /// Transfer match error excluded_transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'An excluded transaction can\'t be part of a transfer.'**
+  String get s4tReasonExcluded;
+
+  /// Transfer match error invalid_transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'These transactions can\'t make a transfer.'**
+  String get s4tReasonInvalidTransfer;
+
+  /// Banner title when the transaction's edits are protected from provider sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected from sync'**
+  String get s4tSyncLockedTitle;
+
+  /// Banner line listing the locked fields, e.g. 'Locked: Name, Category'.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked: {fields}'**
+  String s4tSyncLockedFields(String fields);
+
+  /// Banner line when the transaction is protected but no single field is listed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edits won\'t be overwritten by sync.'**
+  String get s4tSyncLockedNoFields;
+
+  /// Banner action: let provider sync update this transaction again.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get s4tUnlock;
+
+  /// Title of the unlock confirm dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow sync to update?'**
+  String get s4tUnlockTitle;
+
+  /// Body of the unlock confirm dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Your changes to this transaction may be overwritten on the next sync.'**
+  String get s4tUnlockBody;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get s4tFieldName;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get s4tFieldDate;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get s4tFieldAmount;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get s4tFieldNotes;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get s4tFieldCategory;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant'**
+  String get s4tFieldMerchant;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get s4tFieldTags;
+
+  /// Locked field name: the transaction kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get s4tFieldKind;
+
+  /// Locked field name.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get s4tFieldCurrency;
+
+  /// Reconcile row label; tapping moves the transaction to its next reconciled status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get s4tStatus;
+
+  /// Reconciled status.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreconciled'**
+  String get s4tStatusUnreconciled;
+
+  /// Reconciled status.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared'**
+  String get s4tStatusCleared;
+
+  /// Reconciled status.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconciled'**
+  String get s4tStatusReconciled;
+
+  /// Shown after Mark as recurring created a recurring series.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to recurring'**
+  String get s4tAddedToRecurring;
+
+  /// Shown when Mark as recurring finds an existing series.
+  ///
+  /// In en, this message translates to:
+  /// **'Already recurring'**
+  String get s4tAlreadyRecurring;
+
+  /// Link that opens the recurring series.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get s4tOpen;
 }
 
 class _AppLocalizationsDelegate
