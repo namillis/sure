@@ -17,11 +17,14 @@ import '../services/offline_storage_service.dart';
 import '../services/log_service.dart';
 import '../services/biometric_service.dart';
 import '../services/preferences_service.dart';
+import '../services/profile_service.dart';
 import '../services/user_service.dart';
 import '../theme/sure_colors.dart';
 import '../theme/sure_tokens.dart';
 import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
+import 'ai_settings_screen.dart';
+import 'api_keys_screen.dart';
 import 'backend_config_screen.dart';
 import 'log_viewer_screen.dart';
 import 'profile_screen.dart';
@@ -82,8 +85,22 @@ bool _hasNativeProfile(BuildContext context) {
   }
 }
 
+/// True when the server advertises [feature]. Off when the app's providers
+/// aren't mounted (tests).
+bool _hasFeature(BuildContext context, String feature) {
+  try {
+    return context.watch<ServerFeaturesProvider>().has(feature);
+  } on ProviderNotFoundException {
+    return false;
+  }
+}
+
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.adminLoader});
+
+  /// Whether the signed-in user is a household admin, for the AI row;
+  /// defaults to the role from `GET /api/v1/users/me`. Null means unknown.
+  final Future<bool?> Function()? adminLoader;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -107,6 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   List<CustomProxyHeader> _customHeaders = [];
   bool _isCheckingForUpdate = false;
   late final Upgrader _manualUpgrader;
+  bool _adminLoading = false;
 
   @override
   void initState() {
@@ -194,6 +212,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _manualUpgrader.dispose();
     super.dispose();
+  }
+
+  /// Learns the user's role once per session for the AI row (Section 4).
+  Future<void> _loadAdmin(String? userId) async {
+    if (_adminLoading) return;
+    _adminLoading = true;
+    try {
+      final loader = widget.adminLoader;
+      bool? admin;
+      if (loader != null) {
+        admin = await loader();
+      } else {
+        final token =
+            await context.read<AuthProvider>().getValidAccessToken();
+        if (token == null) return;
+        final service = ProfileService();
+        try {
+          final result = await service.getProfile(accessToken: token);
+          if (result['success'] == true) {
+            admin = (result['profile'] as UserProfile).isAdmin;
+          }
+        } finally {
+          service.close();
+        }
+      }
+      if (admin != null) AiSettingsAccess.setAdmin(userId, admin);
+      if (mounted) setState(() {});
+    } finally {
+      _adminLoading = false;
+    }
   }
 
   Future<void> _loadBiometricState() async {
@@ -683,6 +731,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final host = serverHost(ApiConfig.baseUrl);
     final busy = _activeDestructiveAction != null;
     final nativeProfile = _hasNativeProfile(context);
+    // Section 4: API keys and AI rows.
+    final apiKeys =
+        _hasFeature(context, ServerFeaturesProvider.settingsApiKeys);
+    final userId = user?.id;
+    final aiFeature = _hasFeature(context, ServerFeaturesProvider.settingsAi) &&
+        !AiSettingsAccess.hidden(userId);
+    final aiAdmin = aiFeature ? AiSettingsAccess.isAdmin(userId) : null;
+    if (aiFeature && aiAdmin == null && !_adminLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadAdmin(userId);
+      });
+    }
+    final showAi = aiFeature && aiAdmin == true;
     void openProfile() => Navigator.push(context,
         MaterialPageRoute<void>(builder: (_) => const ProfileScreen()));
 
@@ -772,12 +833,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: l.ds2sPasswordPasskeys,
                   path: '/settings/security',
                 ),
+                if (apiKeys)
+                  SureListRow(
+                    key: const ValueKey('settingsApiKeysRow'),
+                    title: l.s4sSettingsApiKeys,
+                    showChevron: true,
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (_) => const ApiKeysScreen())),
+                  ),
               ],
             ),
             SureSectionHeader(label: l.shellSectionApp),
             SurePanel.rows(
               margin: settingsPanelMargin,
               children: [
+                if (showAi)
+                  SureListRow(
+                    key: const ValueKey('settingsAiRow'),
+                    title: l.s4sSettingsAi,
+                    showChevron: true,
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (_) => AiSettingsScreen(
+                                  onForbidden: () {
+                                    AiSettingsAccess.hide(userId);
+                                    if (mounted) setState(() {});
+                                  },
+                                ))),
+                  ),
                 SureListRow(
                   key: const ValueKey('settingsServerRow'),
                   title: l.shellServer,

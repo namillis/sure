@@ -12,6 +12,7 @@ import '../widgets/ds/ds.dart';
 import '../widgets/open_on_web_action.dart';
 import '../widgets/sync_now_dialog.dart';
 import 'settings_links.dart';
+import 'sync_schedule_sheet.dart';
 
 /// The family's bank and broker connections from
 /// `GET /api/v1/provider_connections`. Connecting and reconnecting happen on
@@ -63,6 +64,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
   late final ProviderConnectionsService _service;
   List<ProviderConnection>? _connections;
   bool _loading = true;
+
+  /// Connections the server said can't have a sync schedule.
+  final Set<String> _noSchedule = {};
 
   @override
   void initState() {
@@ -199,6 +203,25 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
         _service.disconnect(accessToken: token, connection: connection));
   }
 
+  /// FinanceKit syncs from the device, so it never gets a schedule.
+  bool _schedulable(ProviderConnection c) =>
+      c.provider != 'financekit' &&
+      !_noSchedule.contains('${c.provider}:${c.id}');
+
+  Future<void> _schedule(ProviderConnection connection) async {
+    final unsupported = await showSyncScheduleSheet(
+      context,
+      connection: connection,
+      service: _service,
+      token: _token,
+      onUnauthorized: _unauthorized,
+      now: widget.now,
+    );
+    if (unsupported && mounted) {
+      setState(() => _noSchedule.add('${connection.provider}:${connection.id}'));
+    }
+  }
+
   void _openWeb() {
     openWebFallback(context,
         title: AppLocalizations.of(context).shellConnections,
@@ -219,6 +242,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     final canManage = context
             .watch<ServerFeaturesProvider?>()
             ?.has(ServerFeaturesProvider.connectionsManage) ??
+        false;
+    final canSchedule = context
+            .watch<ServerFeaturesProvider?>()
+            ?.has(ServerFeaturesProvider.settingsSyncSchedule) ??
         false;
 
     final List<Widget> content;
@@ -260,6 +287,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                 onFix: _openWeb,
                 onSync: canManage ? () => _syncConnection(connection) : null,
                 onDisconnect: canManage ? () => _disconnect(connection) : null,
+                onSchedule: canSchedule && _schedulable(connection)
+                    ? () => _schedule(connection)
+                    : null,
               ),
           ],
         ),
@@ -314,6 +344,7 @@ class _ConnectionPanel extends StatelessWidget {
     required this.onFix,
     this.onSync,
     this.onDisconnect,
+    this.onSchedule,
   });
 
   final ProviderConnection connection;
@@ -323,6 +354,9 @@ class _ConnectionPanel extends StatelessWidget {
   /// Swipe actions, offered with `connections.manage`; null hides them.
   final VoidCallback? onSync;
   final VoidCallback? onDisconnect;
+
+  /// Opens the sync schedule (`settings.sync_schedule`); null hides it.
+  final VoidCallback? onSchedule;
 
   @override
   Widget build(BuildContext context) {
@@ -431,12 +465,19 @@ class _ConnectionPanel extends StatelessWidget {
 
     final sync = c.scheduledForDeletion ? null : onSync;
     final disconnect = c.scheduledForDeletion ? null : onDisconnect;
+    final schedule = c.scheduledForDeletion ? null : onSchedule;
     final actions = [
       if (sync != null)
         SureSwipeAction(
           label: l.spdConnectionSyncNow,
           color: palette.link,
           onPressed: sync,
+        ),
+      if (schedule != null)
+        SureSwipeAction(
+          label: l.s4sSchedule,
+          color: palette.textSubdued,
+          onPressed: schedule,
         ),
       if (disconnect != null)
         SureSwipeAction(
@@ -456,6 +497,8 @@ class _ConnectionPanel extends StatelessWidget {
             customSemanticsActions: {
               if (sync != null)
                 CustomSemanticsAction(label: l.spdConnectionSyncNow): sync,
+              if (schedule != null)
+                CustomSemanticsAction(label: l.s4sSchedule): schedule,
               if (disconnect != null)
                 CustomSemanticsAction(label: l.spdConnectionDisconnect):
                     disconnect,
