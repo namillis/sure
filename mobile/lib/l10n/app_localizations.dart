@@ -6806,6 +6806,12 @@ abstract class AppLocalizations {
   /// **'Open'**
   String get spgStatusOpen;
 
+  /// Goal status for a dated goal whose linked accounts lack the balance history to measure a pace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace unknown'**
+  String get spgStatusPaceUnknown;
+
   /// Goal status for a reserve at its target.
   ///
   /// In en, this message translates to:
@@ -8323,6 +8329,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} reached'**
   String sg2SummaryReached(int count);
+
+  /// Goals summary On track tile subtitle part: active goals whose pace can't be measured, left out of the X of Y fraction.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} with pace unknown'**
+  String sg2SummaryPaceUnknown(int count);
 
   /// Goals summary row: total saved toward goals.
   ///

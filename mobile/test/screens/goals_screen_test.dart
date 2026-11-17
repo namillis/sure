@@ -377,6 +377,31 @@ void main() {
       expect(find.text('Delete goal'), findsOneWidget);
     });
 
+    testWidgets('a pace-unknown goal says so instead of a \$0 pace',
+        (tester) async {
+      const callout = "can't measure a pace from these accounts yet";
+      api.goals['g1']!
+        ..['status'] = 'pace_unknown'
+        ..['display_status'] = 'pace_unknown'
+        ..['behind_pace'] = false
+        ..['pace'] = '\$0.00'
+        ..['pace_cents'] = 0
+        ..['projected_completion_date'] = null
+        ..['status_callout'] = callout;
+      await pumpGoals(tester);
+      expect(
+          tester.widget<Text>(find.byKey(const ValueKey('goalStatus-g1'))).data,
+          'Pace unknown');
+      expect(find.text("Can't measure a pace from these accounts yet"),
+          findsOneWidget);
+
+      await tester.tap(find.text('Emergency fund'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pace unknown · 62%'), findsOneWidget);
+      expect(find.text('\$0.00/mo'), findsNothing);
+      expect(find.text('Projected completion'), findsNothing);
+    });
+
     testWidgets('without goals.pledges there is no pledge button or actions',
         (tester) async {
       await openDetail(tester, features: {'goals'});
@@ -530,6 +555,13 @@ void main() {
           lessThan(tester
               .getTopLeft(find.byKey(const ValueKey('goalsActiveHeader')))
               .dy));
+    });
+
+    testWidgets('counts pace-unknown goals next to reached', (tester) async {
+      api.summaryOverride =
+          http.Response(jsonEncode(goalsSummaryJson(paceUnknown: 1)), 200);
+      await pumpGoals(tester, features: withSummary);
+      expect(find.text('0 reached · 1 with pace unknown'), findsOneWidget);
     });
 
     testWidgets('without the feature there is no summary or request',

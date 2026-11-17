@@ -4013,6 +4013,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spgStatusOpen => 'Open';
 
   @override
+  String get spgStatusPaceUnknown => 'Pace unknown';
+
+  @override
   String get spgStatusFunded => 'Reserve intact';
 
   @override
@@ -4851,6 +4854,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String sg2SummaryReached(int count) {
     return '$count reached';
+  }
+
+  @override
+  String sg2SummaryPaceUnknown(int count) {
+    return '$count with pace unknown';
   }
 
   @override

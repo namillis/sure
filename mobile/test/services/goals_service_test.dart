@@ -168,6 +168,24 @@ void main() {
         [1, 2, 0, 1]);
     expect(s.saved!.formatted, '\$10,000.00');
     expect(s.target!.formatted, '\$23,000.00');
+    // An older server has no pace_unknown_count.
+    expect(s.paceUnknownCount, 0);
+  });
+
+  test('parses pace_unknown_count and a pace_unknown goal', () async {
+    final summary = await service((_) =>
+            http.Response(jsonEncode(goalsSummaryJson(paceUnknown: 2)), 200))
+        .getSummary(accessToken: 't');
+    expect((summary['summary'] as GoalsSummary).paceUnknownCount, 2);
+
+    final goal = Goal.fromJson(goalJson('g1', status: 'pace_unknown'));
+    expect(goal.status, 'pace_unknown');
+    expect(goal.displayStatus, 'pace_unknown');
+  });
+
+  test('a status the app does not know still decodes', () {
+    final goal = Goal.fromJson(goalJson('g1', status: 'some_future_status'));
+    expect(goal.status, 'some_future_status');
   });
 
   test('transitions and consumes, parsing available_actions', () async {

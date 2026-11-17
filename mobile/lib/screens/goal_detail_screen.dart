@@ -420,7 +420,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     final plan = <Widget>[
       if (goal.monthlyTargetAmount != null)
         _amountRow(l.spgMonthlyTarget, goalsMoney(context, goal.monthlyTargetAmount)),
-      if (goal.pace != null)
+      if (goal.status == 'pace_unknown')
+        SureListRow(title: l.spgPace, value: l.spgStatusPaceUnknown)
+      else if (goal.pace != null)
         _amountRow(l.spgPace, l.spgPerMonth(goalsMoney(context, goal.pace))),
       if (goal.projectedCompletionDate != null)
         SureListRow(

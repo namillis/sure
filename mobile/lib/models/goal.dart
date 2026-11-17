@@ -148,7 +148,9 @@ class Goal {
   /// Lifecycle: `active`, `paused`, `completed` or `archived`.
   final String state;
 
-  /// `reached`, `on_track`, `behind`, `no_target_date`, `funded`, `depleted`.
+  /// `reached`, `on_track`, `behind`, `no_target_date`, `pace_unknown`,
+  /// `funded` or `depleted`. Kept as a string so a status a later server adds
+  /// still decodes (it shows as "Open").
   final String status;
 
   /// [status], or the lifecycle [state] when paused, completed or archived.
@@ -254,6 +256,7 @@ class GoalsSummary {
     this.trackedTotal = 0,
     this.reachedCount = 0,
     this.behindCount = 0,
+    this.paceUnknownCount = 0,
     this.saved,
     this.target,
   });
@@ -263,9 +266,16 @@ class GoalsSummary {
   final GoalMoney? velocityPrior30d;
   final GoalMoney? needsThisMonth;
   final int onTrackCount;
+
+  /// The "X of Y on track" denominator. Leaves out reached, no-date,
+  /// pace-unknown, paused and maintained goals.
   final int trackedTotal;
   final int reachedCount;
   final int behindCount;
+
+  /// Active, unpaused goals whose accounts have too little history to measure
+  /// a pace (0 from a server older than upstream v0.7.7-alpha.7).
+  final int paceUnknownCount;
 
   /// Only goals in the family currency, as on the web.
   final GoalMoney? saved;
@@ -279,6 +289,8 @@ class GoalsSummary {
         trackedTotal: JsonParsing.parseInt(json['tracked_total']) ?? 0,
         reachedCount: JsonParsing.parseInt(json['reached_count']) ?? 0,
         behindCount: JsonParsing.parseInt(json['behind_count']) ?? 0,
+        paceUnknownCount:
+            JsonParsing.parseInt(json['pace_unknown_count']) ?? 0,
         saved: GoalMoney.fromJson(json, 'saved'),
         target: GoalMoney.fromJson(json, 'target'),
       );

@@ -149,6 +149,7 @@ List<String> goalActionsFor(String state) {
 Map<String, dynamic> goalsSummaryJson({
   String velocity = '\$420.00',
   String saved = '\$10,000.00',
+  int? paceUnknown,
 }) =>
     {
       'currency': 'USD',
@@ -172,4 +173,7 @@ Map<String, dynamic> goalsSummaryJson({
       'target': '\$23,000.00',
       'target_cents': 2300000,
       'pending_pledges_count': 1,
+      // Upstream v0.7.7-alpha.7 and later; null leaves it out like an older
+      // server.
+      if (paceUnknown != null) 'pace_unknown_count': paceUnknown,
     };

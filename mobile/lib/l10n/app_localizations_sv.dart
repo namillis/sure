@@ -4046,6 +4046,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get spgStatusOpen => 'Öppet';
 
   @override
+  String get spgStatusPaceUnknown => 'Okänd takt';
+
+  @override
   String get spgStatusFunded => 'Bufferten är full';
 
   @override
@@ -4885,6 +4888,11 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String sg2SummaryReached(int count) {
     return '$count uppnådda';
+  }
+
+  @override
+  String sg2SummaryPaceUnknown(int count) {
+    return '$count med okänd takt';
   }
 
   @override

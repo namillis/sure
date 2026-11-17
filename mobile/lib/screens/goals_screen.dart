@@ -74,6 +74,8 @@ String goalStatusLabel(AppLocalizations l, String status) {
       return l.spgStatusOnTrack;
     case 'behind':
       return l.spgStatusBehind;
+    case 'pace_unknown':
+      return l.spgStatusPaceUnknown;
     case 'reached':
       return l.spgStatusReached;
     case 'funded':
@@ -338,7 +340,11 @@ class GoalsSummaryHeader extends StatelessWidget {
                     label: l.spgStatusOnTrack,
                     value: l.sg2SummaryOnTrackValue(
                         s.onTrackCount, s.trackedTotal),
-                    subtitle: l.sg2SummaryReached(s.reachedCount),
+                    subtitle: [
+                      l.sg2SummaryReached(s.reachedCount),
+                      if (s.paceUnknownCount > 0)
+                        l.sg2SummaryPaceUnknown(s.paceUnknownCount),
+                    ].join(' · '),
                   ),
                 ),
               ],
