@@ -932,13 +932,16 @@ class _PendingAccountRow extends StatelessWidget {
                           ),
                         ),
                       ],
-                      MoneyText(
-                        MoneyMasker.mask(account.balance, hidden: hidden),
-                        trend: MoneyTrend.neutral,
-                        color: palette.textSecondary,
-                        maxLines: 1,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w400),
+                      Flexible(
+                        child: MoneyText(
+                          MoneyMasker.mask(account.balance, hidden: hidden),
+                          trend: MoneyTrend.neutral,
+                          color: palette.textSecondary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w400),
+                        ),
                       ),
                     ],
                   ),
