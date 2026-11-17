@@ -10465,6 +10465,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Increase'**
   String get s4sClsIncrease;
+
+  /// Title of the Add connection sheet and the + button's label.
+  ///
+  /// In en, this message translates to:
+  /// **'Add connection'**
+  String get s4cAddConnection;
+
+  /// Subtitle of the Plaid US entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Most US banks'**
+  String get s4cPlaidUs;
+
+  /// Subtitle of the Plaid EU entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Most EU banks'**
+  String get s4cPlaidEu;
+
+  /// Subtitle of the SimpleFIN entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a setup token'**
+  String get s4cPasteSetupToken;
+
+  /// Subtitle of a provider connected with an API key.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get s4cApiKeySubtitle;
+
+  /// Add connection sheet with no providers.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask an admin to add connections'**
+  String get s4cNoneAvailable;
+
+  /// Add connection sheet when the list fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the providers.'**
+  String get s4cLoadAvailableFailed;
+
+  /// Snackbar after a connection was added.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · syncing'**
+  String get s4cConnectedSyncing;
+
+  /// A web connect flow ended in an error.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t finish connecting. Try again, or open Connections on the web.'**
+  String get s4cConnectError;
+
+  /// Snackbar action that opens Connections on the web.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on web'**
+  String get s4cOpenOnWeb;
+
+  /// The server rate-limited handoff links.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in a minute.'**
+  String get s4cTooManyAttempts;
+
+  /// Banner for a connection that needs a new sign-in.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} needs you to sign in again'**
+  String s4cReconnectBanner(String name);
+
+  /// Banner and swipe action that reconnects a connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get s4cReconnect;
+
+  /// Bold action of the token connection sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get s4cConnect;
+
+  /// SimpleFIN setup token field.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup token'**
+  String get s4cSetupToken;
+
+  /// API key field.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get s4cApiKey;
+
+  /// API secret field.
+  ///
+  /// In en, this message translates to:
+  /// **'API secret'**
+  String get s4cApiSecret;
+
+  /// Access token field.
+  ///
+  /// In en, this message translates to:
+  /// **'Token'**
+  String get s4cToken;
+
+  /// IBKR Flex query ID field.
+  ///
+  /// In en, this message translates to:
+  /// **'Query ID'**
+  String get s4cQueryId;
+
+  /// Optional API base URL field.
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL'**
+  String get s4cBaseUrl;
+
+  /// Optional connection name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get s4cName;
+
+  /// Placeholder of an optional field.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get s4cOptional;
+
+  /// Placeholder and error of a required field.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get s4cRequired;
+
+  /// Section header of the optional connection fields.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get s4cMore;
+
+  /// Date row: how far back to import transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync history from'**
+  String get s4cSyncFrom;
+
+  /// SimpleFIN helper line; site is bridge.simplefin.org.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a setup token at {site}.'**
+  String s4cSimplefinHelp(String site);
+
+  /// SimpleFIN create error blank_token.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your setup token first.'**
+  String get s4cErrorBlankToken;
+
+  /// SimpleFIN create error invalid_token.
+  ///
+  /// In en, this message translates to:
+  /// **'That setup token isn\'t valid. Copy it again from SimpleFIN.'**
+  String get s4cErrorInvalidToken;
+
+  /// SimpleFIN create error token_compromised.
+  ///
+  /// In en, this message translates to:
+  /// **'That setup token was already used or has expired. Get a new one from SimpleFIN.'**
+  String get s4cErrorTokenCompromised;
+
+  /// SimpleFIN create error create_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'SimpleFIN couldn\'t set up the connection. Try again.'**
+  String get s4cErrorCreateFailed;
+
+  /// Create error unexpected, or any failure without a message.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while connecting. Try again.'**
+  String get s4cErrorUnexpected;
+
+  /// Title of the account setup sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up accounts'**
+  String get s4cSetupTitle;
+
+  /// Account setup while the provider's first sync runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {provider}… (first sync)'**
+  String s4cWaiting(String provider);
+
+  /// Account setup gave up waiting for the first sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Still syncing. You can finish setup later from Connections.'**
+  String get s4cStillSyncing;
+
+  /// Bold action of the account setup sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get s4cImport;
+
+  /// Closes account setup, leaving the accounts pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get s4cLater;
+
+  /// Snackbar after account setup.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Imported 1 account · syncing} other{Imported {count} accounts · syncing}}'**
+  String s4cImported(int count);
+
+  /// Account setup row that opens the web's link flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Link to an existing account instead?'**
+  String get s4cLinkExisting;
+
+  /// Picker title: the Sure account to link.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an account'**
+  String get s4cChooseAccount;
+
+  /// Picker title: the type of an imported account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account type'**
+  String get s4cAccountType;
+
+  /// Semantic label of an account's import checkbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {name}'**
+  String s4cImportAccount(String name);
+
+  /// Account setup failed to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the accounts.'**
+  String get s4cPendingLoadFailed;
+
+  /// Connection row: open account setup.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish setup'**
+  String get s4cFinishSetup;
+
+  /// complete_setup error invalid_account_type.
+  ///
+  /// In en, this message translates to:
+  /// **'One of the account types isn\'t allowed. Pick another type.'**
+  String get s4cErrorInvalidType;
+
+  /// complete_setup error invalid_subtype.
+  ///
+  /// In en, this message translates to:
+  /// **'One of the subtypes isn\'t allowed. Pick another.'**
+  String get s4cErrorInvalidSubtype;
+
+  /// complete_setup error unknown_account.
+  ///
+  /// In en, this message translates to:
+  /// **'An account is no longer waiting for setup. Close and try again.'**
+  String get s4cErrorUnknownAccount;
+
+  /// complete_setup error link_not_supported.
+  ///
+  /// In en, this message translates to:
+  /// **'Linking to an existing account happens on the web.'**
+  String get s4cErrorLinkNotSupported;
+
+  /// complete_setup error invalid_sync_start_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a start date no later than today.'**
+  String get s4cErrorInvalidDate;
+
+  /// complete_setup error setup_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'The accounts couldn\'t be created. Try again.'**
+  String get s4cErrorSetupFailed;
 }
 
 class _AppLocalizationsDelegate

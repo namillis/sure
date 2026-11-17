@@ -57,6 +57,10 @@ class ServerFeaturesProvider with ChangeNotifier {
   static const settingsApiKeys = 'settings.api_keys';
   static const settingsSyncSchedule = 'settings.sync_schedule';
   static const settingsAi = 'settings.ai';
+  // Round 4a: connecting banks from the app.
+  static const connectionsWebHandoff = 'connections.web_handoff';
+  static const connectionsAvailable = 'connections.available';
+  static const connectionsTokenCreate = 'connections.token_create';
 
   static const _prefsPrefix = 'server_features:';
 

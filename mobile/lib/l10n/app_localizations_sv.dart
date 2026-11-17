@@ -6108,4 +6108,180 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get s4sClsIncrease => 'Öka';
+
+  @override
+  String get s4cAddConnection => 'Lägg till koppling';
+
+  @override
+  String get s4cPlaidUs => 'De flesta amerikanska banker';
+
+  @override
+  String get s4cPlaidEu => 'De flesta banker i EU';
+
+  @override
+  String get s4cPasteSetupToken => 'Klistra in en installationstoken';
+
+  @override
+  String get s4cApiKeySubtitle => 'API-nyckel';
+
+  @override
+  String get s4cNoneAvailable =>
+      'Be en administratör att lägga till kopplingar';
+
+  @override
+  String get s4cLoadAvailableFailed =>
+      'Det gick inte att läsa in leverantörerna.';
+
+  @override
+  String get s4cConnectedSyncing => 'Kopplad · synkar';
+
+  @override
+  String get s4cConnectError =>
+      'Det gick inte att slutföra kopplingen. Försök igen eller öppna Kopplingar på webben.';
+
+  @override
+  String get s4cOpenOnWeb => 'Öppna på webben';
+
+  @override
+  String get s4cTooManyAttempts => 'För många försök. Försök igen om en minut.';
+
+  @override
+  String s4cReconnectBanner(String name) {
+    return '$name behöver att du loggar in igen';
+  }
+
+  @override
+  String get s4cReconnect => 'Koppla igen';
+
+  @override
+  String get s4cConnect => 'Koppla';
+
+  @override
+  String get s4cSetupToken => 'Installationstoken';
+
+  @override
+  String get s4cApiKey => 'API-nyckel';
+
+  @override
+  String get s4cApiSecret => 'API-hemlighet';
+
+  @override
+  String get s4cToken => 'Token';
+
+  @override
+  String get s4cQueryId => 'Fråge-ID';
+
+  @override
+  String get s4cBaseUrl => 'Bas-URL';
+
+  @override
+  String get s4cName => 'Namn';
+
+  @override
+  String get s4cOptional => 'Valfritt';
+
+  @override
+  String get s4cRequired => 'Obligatoriskt';
+
+  @override
+  String get s4cMore => 'Mer';
+
+  @override
+  String get s4cSyncFrom => 'Synka historik från';
+
+  @override
+  String s4cSimplefinHelp(String site) {
+    return 'Hämta en installationstoken på $site.';
+  }
+
+  @override
+  String get s4cErrorBlankToken => 'Klistra in din installationstoken först.';
+
+  @override
+  String get s4cErrorInvalidToken =>
+      'Installationstoken är inte giltig. Kopiera den igen från SimpleFIN.';
+
+  @override
+  String get s4cErrorTokenCompromised =>
+      'Installationstoken har redan använts eller gått ut. Hämta en ny från SimpleFIN.';
+
+  @override
+  String get s4cErrorCreateFailed =>
+      'SimpleFIN kunde inte skapa kopplingen. Försök igen.';
+
+  @override
+  String get s4cErrorUnexpected =>
+      'Något gick fel vid kopplingen. Försök igen.';
+
+  @override
+  String get s4cSetupTitle => 'Konfigurera konton';
+
+  @override
+  String s4cWaiting(String provider) {
+    return 'Väntar på $provider… (första synken)';
+  }
+
+  @override
+  String get s4cStillSyncing =>
+      'Synkar fortfarande. Du kan slutföra konfigurationen senare under Kopplingar.';
+
+  @override
+  String get s4cImport => 'Importera';
+
+  @override
+  String get s4cLater => 'Senare';
+
+  @override
+  String s4cImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Importerade $count konton · synkar',
+      one: 'Importerade 1 konto · synkar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get s4cLinkExisting => 'Länka till ett befintligt konto i stället?';
+
+  @override
+  String get s4cChooseAccount => 'Välj ett konto';
+
+  @override
+  String get s4cAccountType => 'Kontotyp';
+
+  @override
+  String s4cImportAccount(String name) {
+    return 'Importera $name';
+  }
+
+  @override
+  String get s4cPendingLoadFailed => 'Det gick inte att läsa in kontona.';
+
+  @override
+  String get s4cFinishSetup => 'Slutför konfigurationen';
+
+  @override
+  String get s4cErrorInvalidType =>
+      'En av kontotyperna är inte tillåten. Välj en annan typ.';
+
+  @override
+  String get s4cErrorInvalidSubtype =>
+      'En av undertyperna är inte tillåten. Välj en annan.';
+
+  @override
+  String get s4cErrorUnknownAccount =>
+      'Ett konto väntar inte längre på konfiguration. Stäng och försök igen.';
+
+  @override
+  String get s4cErrorLinkNotSupported =>
+      'Länkning till ett befintligt konto görs på webben.';
+
+  @override
+  String get s4cErrorInvalidDate =>
+      'Välj ett startdatum som inte är senare än i dag.';
+
+  @override
+  String get s4cErrorSetupFailed => 'Kontona kunde inte skapas. Försök igen.';
 }

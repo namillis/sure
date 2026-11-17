@@ -6070,4 +6070,178 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get s4sClsIncrease => 'Increase';
+
+  @override
+  String get s4cAddConnection => 'Add connection';
+
+  @override
+  String get s4cPlaidUs => 'Most US banks';
+
+  @override
+  String get s4cPlaidEu => 'Most EU banks';
+
+  @override
+  String get s4cPasteSetupToken => 'Paste a setup token';
+
+  @override
+  String get s4cApiKeySubtitle => 'API key';
+
+  @override
+  String get s4cNoneAvailable => 'Ask an admin to add connections';
+
+  @override
+  String get s4cLoadAvailableFailed => 'Couldn\'t load the providers.';
+
+  @override
+  String get s4cConnectedSyncing => 'Connected · syncing';
+
+  @override
+  String get s4cConnectError =>
+      'Couldn\'t finish connecting. Try again, or open Connections on the web.';
+
+  @override
+  String get s4cOpenOnWeb => 'Open on web';
+
+  @override
+  String get s4cTooManyAttempts => 'Too many attempts. Try again in a minute.';
+
+  @override
+  String s4cReconnectBanner(String name) {
+    return '$name needs you to sign in again';
+  }
+
+  @override
+  String get s4cReconnect => 'Reconnect';
+
+  @override
+  String get s4cConnect => 'Connect';
+
+  @override
+  String get s4cSetupToken => 'Setup token';
+
+  @override
+  String get s4cApiKey => 'API key';
+
+  @override
+  String get s4cApiSecret => 'API secret';
+
+  @override
+  String get s4cToken => 'Token';
+
+  @override
+  String get s4cQueryId => 'Query ID';
+
+  @override
+  String get s4cBaseUrl => 'Base URL';
+
+  @override
+  String get s4cName => 'Name';
+
+  @override
+  String get s4cOptional => 'Optional';
+
+  @override
+  String get s4cRequired => 'Required';
+
+  @override
+  String get s4cMore => 'More';
+
+  @override
+  String get s4cSyncFrom => 'Sync history from';
+
+  @override
+  String s4cSimplefinHelp(String site) {
+    return 'Get a setup token at $site.';
+  }
+
+  @override
+  String get s4cErrorBlankToken => 'Paste your setup token first.';
+
+  @override
+  String get s4cErrorInvalidToken =>
+      'That setup token isn\'t valid. Copy it again from SimpleFIN.';
+
+  @override
+  String get s4cErrorTokenCompromised =>
+      'That setup token was already used or has expired. Get a new one from SimpleFIN.';
+
+  @override
+  String get s4cErrorCreateFailed =>
+      'SimpleFIN couldn\'t set up the connection. Try again.';
+
+  @override
+  String get s4cErrorUnexpected =>
+      'Something went wrong while connecting. Try again.';
+
+  @override
+  String get s4cSetupTitle => 'Set up accounts';
+
+  @override
+  String s4cWaiting(String provider) {
+    return 'Waiting for $provider… (first sync)';
+  }
+
+  @override
+  String get s4cStillSyncing =>
+      'Still syncing. You can finish setup later from Connections.';
+
+  @override
+  String get s4cImport => 'Import';
+
+  @override
+  String get s4cLater => 'Later';
+
+  @override
+  String s4cImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Imported $count accounts · syncing',
+      one: 'Imported 1 account · syncing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get s4cLinkExisting => 'Link to an existing account instead?';
+
+  @override
+  String get s4cChooseAccount => 'Choose an account';
+
+  @override
+  String get s4cAccountType => 'Account type';
+
+  @override
+  String s4cImportAccount(String name) {
+    return 'Import $name';
+  }
+
+  @override
+  String get s4cPendingLoadFailed => 'Couldn\'t load the accounts.';
+
+  @override
+  String get s4cFinishSetup => 'Finish setup';
+
+  @override
+  String get s4cErrorInvalidType =>
+      'One of the account types isn\'t allowed. Pick another type.';
+
+  @override
+  String get s4cErrorInvalidSubtype =>
+      'One of the subtypes isn\'t allowed. Pick another.';
+
+  @override
+  String get s4cErrorUnknownAccount =>
+      'An account is no longer waiting for setup. Close and try again.';
+
+  @override
+  String get s4cErrorLinkNotSupported =>
+      'Linking to an existing account happens on the web.';
+
+  @override
+  String get s4cErrorInvalidDate => 'Pick a start date no later than today.';
+
+  @override
+  String get s4cErrorSetupFailed =>
+      'The accounts couldn\'t be created. Try again.';
 }

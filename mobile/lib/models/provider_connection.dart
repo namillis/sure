@@ -17,6 +17,7 @@ class ProviderConnection {
     this.lastSyncedAt,
     this.latestSyncStatus,
     this.syncErrorMessage,
+    this.reconnectPath,
   });
 
   final String id;
@@ -45,6 +46,10 @@ class ProviderConnection {
 
   /// Server text when the newest sync failed or went stale.
   final String? syncErrorMessage;
+
+  /// Sure+ (round 4a): the web page that repairs this connection, for a web
+  /// handoff. Null when it needs nothing or this user can't fix it.
+  final String? reconnectPath;
 
   /// The institution name when the server knows one, else the item name.
   String get displayName {
@@ -95,6 +100,7 @@ class ProviderConnection {
       lastSyncedAt: _date(sync['last_synced_at']),
       latestSyncStatus: latest['status']?.toString(),
       syncErrorMessage: errorMessage,
+      reconnectPath: json['reconnect_path']?.toString(),
     );
   }
 

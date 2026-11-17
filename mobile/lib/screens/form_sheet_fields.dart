@@ -115,6 +115,7 @@ class FormSheetFieldRow extends StatelessWidget {
     this.enabled = true,
     this.focusNode,
     this.onFieldSubmitted,
+    this.secret = false,
   });
 
   final String label;
@@ -133,6 +134,10 @@ class FormSheetFieldRow extends StatelessWidget {
   final bool enabled;
   final FocusNode? focusNode;
   final ValueChanged<String>? onFieldSubmitted;
+
+  /// A password-like value (API key, token): obscured, with autocorrect and
+  /// suggestions off.
+  final bool secret;
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +181,12 @@ class FormSheetFieldRow extends StatelessWidget {
                 textCapitalization: textCapitalization,
                 textInputAction: textInputAction,
                 onFieldSubmitted: onFieldSubmitted,
+                obscureText: secret,
+                autocorrect: !secret,
+                enableSuggestions: !secret,
                 textAlign: TextAlign.end,
                 minLines: 1,
-                maxLines: maxLines,
+                maxLines: secret ? 1 : maxLines,
                 style: mono ? SureMoney.tabular(style) : style,
                 decoration: formSheetInlineDecoration(
                   palette,
