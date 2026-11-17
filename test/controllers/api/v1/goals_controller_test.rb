@@ -275,7 +275,7 @@ class Api::V1::GoalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "USD", body["currency"]
     assert_equal 3, body["active_total"]
     assert_equal 1, body["paused_count"]
-    %w[on_track_count tracked_total reached_count behind_count no_date_count].each do |key|
+    %w[on_track_count tracked_total reached_count behind_count no_date_count pace_unknown_count].each do |key|
       assert_equal kpi[key.to_sym], body[key], key
     end
     assert_equal money_cents(kpi[:velocity_30d_signed_money]), body["velocity_30d_cents"]

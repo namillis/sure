@@ -10,8 +10,11 @@ class LlmUsage::Report
     @end_date = end_date
   end
 
+  # The web counts calls (a retried call is one); the API's counts stay per
+  # request, like its per-model and per-day breakdowns.
   def statistics
     @statistics ||= LlmUsage.statistics_for_family(family, start_date: range.begin, end_date: range.end)
+      .merge(requests_with_cost: scope.where.not(estimated_cost: nil).count)
   end
 
   def by_model

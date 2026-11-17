@@ -17,6 +17,7 @@ json.reached_count @kpi[:reached_count]
 json.behind_count @kpi[:behind_count]
 json.no_date_count @kpi[:no_date_count]
 json.paused_count @kpi[:paused_count]
+json.pace_unknown_count @kpi[:pace_unknown_count]
 json.active_total @kpi[:active_total]
 money_field.call(:saved, @totals[:saved_money])
 money_field.call(:target, @totals[:target_money])

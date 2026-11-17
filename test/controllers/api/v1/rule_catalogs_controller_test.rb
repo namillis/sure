@@ -20,7 +20,7 @@ class Api::V1::RuleCatalogsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "lists every condition filter and action executor in the registry" do
-    Provider::Registry.stubs(:preferred_llm_provider).returns(nil)
+    use_no_ai
 
     get catalog_api_v1_rules_url(resource_type: "transaction"), headers: api_headers(@api_key)
 
@@ -81,7 +81,7 @@ class Api::V1::RuleCatalogsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "marks AI actions unavailable without a provider" do
-    Provider::Registry.stubs(:preferred_llm_provider).returns(nil)
+    use_no_ai
 
     get catalog_api_v1_rules_url, headers: api_headers(@api_key)
 
@@ -95,7 +95,7 @@ class Api::V1::RuleCatalogsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "marks AI actions available with a provider" do
-    Provider::Registry.stubs(:preferred_llm_provider).returns(mock("llm_provider"))
+    use_ai_routes
 
     get catalog_api_v1_rules_url, headers: api_headers(@api_key)
 

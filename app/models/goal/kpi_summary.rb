@@ -44,6 +44,7 @@ class Goal::KpiSummary
     reached = active_goals.count { |g| g.status == :reached }
     no_date = active_goals.count { |g| g.status == :no_target_date }
     paused = active_goals.count(&:paused?)
+    pace_unknown = active_goals.count { |g| !g.paused? && g.status == :pace_unknown }
 
     # Denominator of the "Goals on track" tile. A goal only belongs in
     # the fraction if there is a benchmark to compare against:
@@ -58,10 +59,13 @@ class Goal::KpiSummary
     #   exclusions above, so without this it would land in the denominator
     #   and never in the numerator: a family with one reserve read
     #   "0 of 1 on track" for a goal that is working exactly as intended.
+    # - pace_unknown → its accounts give no measurable pace, so there is
+    #   nothing to compare the required pace against. Like no_target_date,
+    #   it can be neither on track nor behind.
     # When this hits zero the tile swaps to a celebration / empty
     # state in the view.
     tracked_total = active_goals.count do |g|
-      !g.paused? && !g.maintained? && g.status != :reached && g.status != :no_target_date
+      !g.paused? && !g.maintained? && !g.status.in?(%i[reached no_target_date pace_unknown])
     end
 
     {
@@ -79,6 +83,7 @@ class Goal::KpiSummary
       behind_count: behind,
       no_date_count: no_date,
       paused_count: paused,
+      pace_unknown_count: pace_unknown,
       tracked_total: tracked_total,
       active_total: active_goals.size
     }

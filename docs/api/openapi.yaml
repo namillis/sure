@@ -10286,6 +10286,7 @@ paths:
                           - on_track
                           - behind
                           - no_target_date
+                          - pace_unknown
                           - funded
                           - depleted
                         display_status:
@@ -10623,6 +10624,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -11021,6 +11023,9 @@ paths:
                     type: integer
                   paused_count:
                     type: integer
+                  pace_unknown_count:
+                    type: integer
+                    description: Goals whose accounts give no measurable pace
                   active_total:
                     type: integer
                     description: Active and paused goals
@@ -11124,6 +11129,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -11444,6 +11450,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -11856,6 +11863,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -12192,6 +12200,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -12528,6 +12537,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -12864,6 +12874,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -13200,6 +13211,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -13536,6 +13548,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -13876,6 +13889,7 @@ paths:
                     - on_track
                     - behind
                     - no_target_date
+                    - pace_unknown
                     - funded
                     - depleted
                   display_status:
@@ -14323,6 +14337,7 @@ paths:
                         - on_track
                         - behind
                         - no_target_date
+                        - pace_unknown
                         - funded
                         - depleted
                       display_status:
@@ -14744,6 +14759,7 @@ paths:
                         - on_track
                         - behind
                         - no_target_date
+                        - pace_unknown
                         - funded
                         - depleted
                       display_status:
@@ -15143,6 +15159,7 @@ paths:
                         - on_track
                         - behind
                         - no_target_date
+                        - pace_unknown
                         - funded
                         - depleted
                       display_status:
