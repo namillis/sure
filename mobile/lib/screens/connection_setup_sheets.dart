@@ -86,8 +86,13 @@ class _AddConnectionSheetState extends State<AddConnectionSheet> {
     }
     setState(() {
       if (result['success'] == true) {
-        _entries = (result['connections'] as List<dynamic>)
+        // Plaid covers most banks: list it first, then the server's order.
+        final all = (result['connections'] as List<dynamic>)
             .cast<AvailableConnection>();
+        _entries = [
+          ...all.where((e) => e.provider == 'plaid'),
+          ...all.where((e) => e.provider != 'plaid'),
+        ];
       } else {
         _failed = true;
       }

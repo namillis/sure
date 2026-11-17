@@ -56,6 +56,10 @@ Future<T?> showSureSheet<T>({
 /// [title] centered, and a bold [actionLabel] ("Save"/"Done") on the right.
 /// While [busy] is true the action shows a spinner and does nothing.
 class SureSheet extends StatelessWidget {
+  /// Width of the Cancel and action slots, equal so the title stays centered.
+  /// Fits a 16 pt bold label like "Connect" or "Import" with the 16 pt padding.
+  static const double _actionSlotWidth = 108;
+
   const SureSheet({
     super.key,
     required this.child,
@@ -117,7 +121,7 @@ class SureSheet extends StatelessWidget {
               child: Row(
                 children: [
                   SizedBox(
-                    width: 96,
+                    width: _actionSlotWidth,
                     child: showCancel
                         ? Align(
                             alignment: AlignmentDirectional.centerStart,
@@ -153,7 +157,7 @@ class SureSheet extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    width: 96,
+                    width: _actionSlotWidth,
                     child: onAction == null
                         ? null
                         : Align(
