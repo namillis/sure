@@ -44,6 +44,11 @@ dependencies:
   # Exact pin: 1.2.0 is the newest release that still supports Flutter 3.27
   # (1.2.1 needs 3.29). Takes and picks receipt photos for transactions.
   image_picker: 1.2.0
+  # Exact pin: 5.1.0 is the newest stable release (needs Flutter 3.24; the 6.x
+  # alphas need 3.47). Runs provider connect flows in ASWebAuthenticationSession
+  # without changing AppDelegate.swift, so the build's UIScene migration still
+  # applies.
+  flutter_web_auth_2: 5.1.0
 
 dev_dependencies:
   flutter_test:
